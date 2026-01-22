@@ -18,7 +18,7 @@ Terraform resource for managing an AWS API Gateway V2 Routing Rule.
 resource "aws_apigatewayv2_routing_rule" "example" {
   domain_name = "test.example.com"
 
-  conditions {
+  condition {
     match_headers {
       any_of {
         header     = "X-Example-Header"
@@ -29,7 +29,7 @@ resource "aws_apigatewayv2_routing_rule" "example" {
       any_of = ["example-path", "another-path"]
     }
   }
-  actions {
+  action {
     invoke_api {
       api_id          = "example-api-id"
       stage           = "example-stage"
@@ -44,8 +44,8 @@ resource "aws_apigatewayv2_routing_rule" "example" {
 
 The following arguments are required:
 
-* `actions` - (Required) Configuration of resulting action based on matching routing rules condition. See below.
-* `conditions` - (Required) Conditions configuration. See below.
+* `action` - (Required) Configuration of resulting action based on matching routing rules condition. See below.
+* `condition` - (Required) Conditions configuration. See below.
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 
 The following arguments are optional:
@@ -54,11 +54,11 @@ The following arguments are optional:
 * `priority` - (Optional) The order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### `actions`
+### `action`
 
 * `invoke_api` - (Required) Configuration to invoke a stage of a target API. Only REST APIs are supported. See below.
 
-### `conditions`
+### `condition`
 
 * `match_base_paths` - (Optional) The base path to be matched. See below.
 * `match_headers` - (Optional) The headers to be matched. See below.
@@ -86,30 +86,22 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Routing Rule. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `id` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `routing_rule_arn` - ARN of the Routing Rule.
+* `routing_rule_id` - ID of the Routing Rule.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway V2 Routing Rule using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway V2 Routing Rule using the `routing_rule_arn`. For example:
 
 ```terraform
 import {
   to = aws_apigatewayv2_routing_rule.example
-  id = "routing_rule-id-12345678"
+  id = "arn:aws:apigateway:us-east-1:123456789012:/domainnames/example.com/routingrules/rule1"
 }
 ```
 
-Using `terraform import`, import API Gateway V2 Routing Rule using the `example_id_arg`. For example:
+Using `terraform import`, import API Gateway V2 Routing Rule using the `routing_rule_arn`. For example:
 
 ```console
-% terraform import aws_apigatewayv2_routing_rule.example routing_rule-id-12345678
+% terraform import aws_apigatewayv2_routing_rule.example arn:aws:apigateway:us-east-1:123456789012:/domainnames/example.com/routingrules/rule1
 ```
