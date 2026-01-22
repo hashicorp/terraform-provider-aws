@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -111,7 +111,7 @@ func TestAccTransferProfile_disappears(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

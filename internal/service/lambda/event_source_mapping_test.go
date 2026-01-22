@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -29,6 +30,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestKafkaOrARNPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tflambda.KafkaOrARNPattern)
+
+	// Test the main issue: ESC regions should work in ARNs
+	escARNs := []string{
+		"arn:aws-eusc:lambda:us-east-1:123456789012:function:MyFunction",      //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:MyFunction", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:sqs:eusc-de-east-1:123456789012:my-queue",               //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range escARNs {
+		if !regex.MatchString(arn) {
+			t.Errorf("Expected ESC ARN %q to match KafkaOrARNPattern", arn)
+		}
+	}
+
+	// Test other valid patterns
+	otherValid := []string{
+		"", // empty string is valid per original pattern
+		"kafka://broker.example.com/topic",
+		"arn:aws:lambda:us-east-1:123456789012:function:MyFunction", //lintignore:AWSAT003,AWSAT005
+		"literally anything passes this very permissive regex",
+	}
+
+	for _, input := range otherValid {
+		if !regex.MatchString(input) {
+			t.Errorf("Expected %q to match KafkaOrARNPattern", input)
+		}
+	}
+}
 
 func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -448,7 +482,7 @@ func TestAccLambdaEventSourceMapping_disappears(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceEventSourceMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1101,6 +1135,50 @@ func TestAccLambdaEventSourceMapping_mskWithEventSourceConfigSchemaRegistry(t *t
 	})
 }
 
+func TestAccLambdaEventSourceMapping_mskWithOnFailureDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	eventSourceResourceName := "aws_msk_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckMSK(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID, "kafka"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_mskWithOnFailureDestination(rName, "100"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.0.destination_arn", "kafka://failed-records-topic"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "100"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambda.GetEventSourceMappingOutput
@@ -1182,7 +1260,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
@@ -1215,7 +1292,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.0.type", string(awstypes.KafkaSchemaRegistryAuthTypeBasicAuth)),
@@ -1247,7 +1323,6 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.access_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.schema_registry_config.0.event_record_format", string(awstypes.SchemaRegistryEventRecordFormatJson)),
@@ -1284,12 +1359,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "123", "null"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "123", "null", "group-name-123"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "123"),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioned_poller_config.0.minimum_pollers"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.poller_group_name", "group-name-123"),
 				),
 			},
 			{
@@ -1299,12 +1375,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15", "group-name-456"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "150"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "15"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.poller_group_name", "group-name-456"),
 				),
 			},
 			{
@@ -1313,6 +1390,48 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_selfManagedKafkaWithOnFailureDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithOnFailureDestination(rName, "100", "test1:9092,test2:9092"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.0.destination_arn", "kafka://failed-records-topic"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "100"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -2921,6 +3040,54 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, rName))
 }
 
+func testAccEventSourceMappingConfig_mskWithOnFailureDestination(rName, batchSize string) string {
+	if batchSize == "" {
+		batchSize = "null"
+	}
+
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 2
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = %[2]s
+  event_source_arn  = aws_msk_cluster.test.arn
+  enabled           = true
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  provisioned_poller_config {
+    maximum_pollers = 100
+    minimum_pollers = 1
+  }
+
+  destination_config {
+    on_failure {
+      destination_arn = "kafka://failed-records-topic"
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName, batchSize))
+}
+
 func testAccEventSourceMappingConfig_selfManagedKafka(rName, batchSize, kafkaBootstrapServers string) string {
 	if batchSize == "" {
 		batchSize = "null"
@@ -2970,7 +3137,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
   }
 
   self_managed_event_source {
@@ -3015,7 +3182,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
     schema_registry_config {
       access_config {
         type = "BASIC_AUTH"
@@ -3057,7 +3224,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByGlue(rName string) string {
 	return acctest.ConfigCompose(
 		testAccEventSourceMappingConfig_kafkaBase(rName),
-		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), `
+		testAccEventSourceMappingConfig_kafkaSchemaRegistryByGlueBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 100
   enabled           = false
@@ -3071,7 +3238,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   self_managed_kafka_event_source_config {
-    consumer_group_id = "self-managed-test-group-id"
+    consumer_group_id = "%[1]s-group-id"
     schema_registry_config {
       event_record_format = "JSON"
       schema_registry_uri = aws_glue_registry.test.arn
@@ -3103,10 +3270,10 @@ resource "aws_lambda_event_source_mapping" "test" {
     uri  = aws_security_group.test.id
   }
 }
-`)
+`, rName))
 }
 
-func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers string) string {
+func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName string) string {
 	if batchSize == "" {
 		batchSize = "null"
 	}
@@ -3145,11 +3312,58 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   provisioned_poller_config {
-    maximum_pollers = %[4]s
-    minimum_pollers = %[5]s
+    maximum_pollers   = %[4]s
+    minimum_pollers   = %[5]s
+    poller_group_name = %[6]q
   }
 }
-`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers))
+`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers, pollerGroupName))
+}
+
+func testAccEventSourceMappingConfig_selfManagedKafkaWithOnFailureDestination(rName, batchSize, kafkaBootstrapServers string) string {
+	if batchSize == "" {
+		batchSize = "null"
+	}
+
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = %[2]s
+  enabled           = false
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = %[3]q
+    }
+  }
+
+  dynamic "source_access_configuration" {
+    for_each = aws_subnet.test[*].id
+    content {
+      type = "VPC_SUBNET"
+      uri  = "subnet:${source_access_configuration.value}"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = aws_security_group.test.id
+  }
+
+  provisioned_poller_config {
+    maximum_pollers = 100
+    minimum_pollers = 1
+  }
+
+  destination_config {
+    on_failure {
+      destination_arn = "kafka://failed-records-topic"
+    }
+  }
+}
+`, rName, batchSize, kafkaBootstrapServers))
 }
 
 func testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, batchSize string) string {

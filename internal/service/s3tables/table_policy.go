@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3tables
 
@@ -218,7 +220,7 @@ func findTablePolicy(ctx context.Context, conn *s3tables.Client, input *s3tables
 	}
 
 	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

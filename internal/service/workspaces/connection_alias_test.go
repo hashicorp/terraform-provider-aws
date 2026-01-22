@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -76,7 +76,7 @@ func TestAccWorkSpacesConnectionAlias_disappears(t *testing.T) {
 				Config: testAccConnectionAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceConnectionAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspaces.ResourceConnectionAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

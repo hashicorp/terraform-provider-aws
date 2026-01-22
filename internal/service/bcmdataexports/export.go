@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bcmdataexports
 
@@ -40,6 +42,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(v60RefreshError=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
 
@@ -121,6 +124,7 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 				"table_configurations": schema.MapAttribute{
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
@@ -472,7 +476,7 @@ func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -498,7 +502,7 @@ type exportData struct {
 
 type dataQueryData struct {
 	QueryStatement      types.String             `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations" autoflex:",omitempty"`
 }
 
 type s3OutputConfigurations struct {

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -130,7 +130,7 @@ func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourceIdentitySource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourceIdentitySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

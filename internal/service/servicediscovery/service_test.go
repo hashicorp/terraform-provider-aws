@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery_test
@@ -236,7 +236,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicediscovery.ResourceService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicediscovery.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

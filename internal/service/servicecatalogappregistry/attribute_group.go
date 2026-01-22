@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalogappregistry
 
@@ -32,6 +34,7 @@ import (
 // @FrameworkResource("aws_servicecatalogappregistry_attribute_group", name="Attribute Group")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry;servicecatalogappregistry.GetAttributeGroupOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAttributeGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &attributeGroupResource{}, nil
 }
@@ -240,7 +243,7 @@ func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

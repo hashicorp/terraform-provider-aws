@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -88,7 +88,7 @@ func testAccVocabulary_disappears(t *testing.T) {
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceVocabulary(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

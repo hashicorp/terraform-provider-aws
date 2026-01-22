@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -84,7 +84,7 @@ func TestAccS3TablesNamespace_disappears(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfs3tables.ResourceNamespace, resourceName, namespaceDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfs3tables.ResourceNamespace, resourceName, namespaceDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package servicecatalog
 
@@ -34,6 +36,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;awstypes;awstypes.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Provisioned Product")
 // @Testing(tagsUpdateGetTagsIn=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -630,7 +633,7 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 	}
 
 	if output == nil || output.ProvisionedProductDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -682,7 +685,7 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 	}
 
 	if output == nil || output.RecordDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

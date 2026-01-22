@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -760,7 +762,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	}
 
 	if output == nil || output.TaskDefinition == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TaskDefinition, output.Tags, nil

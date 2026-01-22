@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appsync
 
@@ -347,7 +349,7 @@ func findSourceAPIAssociation(ctx context.Context, conn *appsync.Client, input *
 	}
 
 	if output == nil || output.SourceApiAssociation == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.SourceApiAssociation, nil
@@ -380,7 +382,7 @@ func waitSourceAPIAssociationCreated(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
@@ -399,7 +401,7 @@ func waitSourceAPIAssociationUpdated(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}
@@ -418,7 +420,7 @@ func waitSourceAPIAssociationDeleted(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SourceApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.SourceApiAssociationStatusDetail)))
 
 		return output, smarterr.NewError(err)
 	}

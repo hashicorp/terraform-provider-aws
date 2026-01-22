@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram_test
@@ -217,7 +217,7 @@ func TestAccRAMResourceShare_disappears(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceResourceShare(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceResourceShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

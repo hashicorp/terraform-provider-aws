@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appautoscaling_test
@@ -97,7 +97,7 @@ func TestAccAppAutoScalingScheduledAction_disappears(t *testing.T) {
 				Config: testAccScheduledActionConfig_dynamoDB(rName, schedule),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceScheduledAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappautoscaling.ResourceScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

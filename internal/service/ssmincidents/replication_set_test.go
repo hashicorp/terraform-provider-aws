@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents_test
@@ -268,8 +268,7 @@ func testAccReplicationSet_disappears(t *testing.T) {
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceReplicationSet(),
-						resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmincidents.ResourceReplicationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

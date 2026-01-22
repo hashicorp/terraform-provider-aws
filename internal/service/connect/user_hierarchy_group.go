@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -27,6 +29,7 @@ import (
 
 // @SDKResource("aws_connect_user_hierarchy_group", name="User Hierarchy Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserHierarchyGroupCreate,
@@ -270,7 +273,7 @@ func findUserHierarchyGroup(ctx context.Context, conn *connect.Client, input *co
 	}
 
 	if output == nil || output.HierarchyGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HierarchyGroup, nil

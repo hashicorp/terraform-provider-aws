@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -70,7 +70,7 @@ func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

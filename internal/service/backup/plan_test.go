@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -76,7 +76,7 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourcePlan(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourcePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

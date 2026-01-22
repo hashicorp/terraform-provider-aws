@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediapackagev2_test
@@ -117,7 +117,7 @@ func testAccMediaPackageV2ChannelGroup_disappears(t *testing.T) {
 				Config: testAccChannelGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelGroupExists(ctx, resourceName, &channelGroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmediapackagev2.ResourceChannelGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmediapackagev2.ResourceChannelGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -36,6 +36,7 @@ The following arguments are optional:
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `logging_configuration` - (Optional) Configuration block with logging configuration. Detailed below.
 * `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -62,6 +63,12 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
 * `container_tags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
+
+### logging_configuration
+
+The following arguments are optional:
+
+* `log_group_name` - (Optional) Name of the CloudWatch Log Group to send logs to.
 
 ### workflow
 

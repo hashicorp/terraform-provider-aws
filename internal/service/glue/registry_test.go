@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -152,7 +152,7 @@ func TestAccGlueRegistry_disappears(t *testing.T) {
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &registry),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceRegistry(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

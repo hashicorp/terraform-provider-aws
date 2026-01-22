@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -26,6 +28,7 @@ import (
 // @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
@@ -169,7 +172,7 @@ func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (stri
 	}
 
 	if output == nil || output.Policy == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.Policy), nil

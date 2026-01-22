@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -69,7 +69,7 @@ func testAccRetentionConfiguration_disappears(t *testing.T) {
 				Config: testAccRetentionConfigurationConfig_basic(90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceRetentionConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfconfig.ResourceRetentionConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

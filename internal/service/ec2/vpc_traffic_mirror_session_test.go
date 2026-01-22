@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -157,7 +157,7 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTrafficMirrorSession(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTrafficMirrorSession(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

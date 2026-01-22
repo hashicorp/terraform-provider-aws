@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -59,7 +59,7 @@ func TestAccEC2EIPDomainName_disappears(t *testing.T) {
 				Config: testAccEIPDomainNameConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPDomainNameExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIPDomainName, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceEIPDomainName, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

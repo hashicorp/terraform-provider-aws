@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -27,6 +29,7 @@ import (
 
 // @SDKResource("aws_dms_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,

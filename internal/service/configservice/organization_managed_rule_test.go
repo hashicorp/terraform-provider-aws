@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -75,7 +75,7 @@ func testAccOrganizationManagedRule_disappears(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationManagedRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceOrganizationManagedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

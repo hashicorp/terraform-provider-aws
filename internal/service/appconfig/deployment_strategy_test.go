@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -148,7 +148,7 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

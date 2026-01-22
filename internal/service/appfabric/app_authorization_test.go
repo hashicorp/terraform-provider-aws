@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric_test
@@ -80,7 +80,7 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceAppAuthorization, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -35,6 +37,7 @@ import (
 // @SDKResource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
 // @Testing(importIgnore="password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -2542,7 +2545,7 @@ func waitConnectionSucceeded(ctx context.Context, conn *dms.Client, endpointARN 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
 		return output, err
 	}
 

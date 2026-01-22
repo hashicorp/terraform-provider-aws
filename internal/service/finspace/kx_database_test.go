@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package finspace_test
@@ -80,7 +80,7 @@ func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
 				Config: testAccKxDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDatabase(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

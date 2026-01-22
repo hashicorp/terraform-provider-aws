@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -87,7 +87,7 @@ func TestAccKMSKey_disappears(t *testing.T) {
 				Config: testAccKeyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

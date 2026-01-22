@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -76,7 +76,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -97,7 +97,7 @@ func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 				Config: testAccVPCSubnetCIDRReservationConfig_testIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnetCIDRReservation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnetCIDRReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

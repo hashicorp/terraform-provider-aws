@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -131,7 +131,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

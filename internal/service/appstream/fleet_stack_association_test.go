@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -67,7 +67,7 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceFleetStackAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceFleetStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -117,8 +117,8 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSigningCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSigningCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

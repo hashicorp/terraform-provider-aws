@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -38,6 +38,7 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "serial_number", "iam", fmt.Sprintf("mfa/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
@@ -78,6 +79,7 @@ func TestAccIAMVirtualMFADevice_path(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa%s%s", path, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "serial_number", "iam", fmt.Sprintf("mfa%s%s", path, rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
 				),
 			},
@@ -111,7 +113,7 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceVirtualMFADevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

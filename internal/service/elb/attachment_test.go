@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -69,7 +69,7 @@ func TestAccELBAttachment_disappears(t *testing.T) {
 				Config: testAccAttachmentConfig_1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

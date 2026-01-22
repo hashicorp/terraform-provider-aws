@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -77,7 +77,7 @@ func testAccClientVPNRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

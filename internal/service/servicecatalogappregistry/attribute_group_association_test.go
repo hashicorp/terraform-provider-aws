@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalogappregistry_test
@@ -76,7 +76,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_disappears(t *tes
 				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicecatalogappregistry.ResourceAttributeGroupAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicecatalogappregistry.ResourceAttributeGroupAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datapipeline
 
@@ -26,6 +28,7 @@ import (
 // @SDKResource("aws_datapipeline_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="id", resourceType="Pipeline")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datapipeline/types;awstypes;awstypes.PipelineDescription")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,

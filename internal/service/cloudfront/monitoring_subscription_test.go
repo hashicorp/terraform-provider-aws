@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -63,7 +63,7 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3tables
 
@@ -45,6 +47,7 @@ import (
 // @Testing(importStateIdFunc="testAccTableBucketImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="6.19.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketResource{}, nil
 }
@@ -476,7 +479,7 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, input *s3tables
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -504,7 +507,7 @@ func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.
 	}
 
 	if output == nil || output.EncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfiguration, nil
@@ -532,7 +535,7 @@ func findTableBucketMaintenanceConfiguration(ctx context.Context, conn *s3tables
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

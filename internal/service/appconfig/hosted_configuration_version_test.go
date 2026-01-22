@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -68,7 +68,7 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostedConfigurationVersionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -73,7 +73,7 @@ func TestAccRoute53TrafficPolicyInstance_disappears(t *testing.T) {
 				Config: testAccTrafficPolicyInstanceConfig_basic(rName, zoneName, 360),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceTrafficPolicyInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceTrafficPolicyInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

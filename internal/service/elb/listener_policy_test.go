@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -114,7 +114,7 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 				Config: testAccListenerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceListenerPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceListenerPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

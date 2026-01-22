@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package applicationinsights
 
@@ -9,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,6 +30,7 @@ import (
 // @SDKResource("aws_applicationinsights_application", name="Application")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationinsights/types;types.ApplicationInfo")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -123,7 +125,8 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.ApplicationInsightsClient(ctx)
 
 	application, err := findApplicationByName(ctx, conn, d.Id())
 
@@ -138,14 +141,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	rgName := aws.ToString(application.ResourceGroupName)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "applicationinsights",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "application/resource-group/" + rgName,
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, applicationARN(ctx, c, rgName))
 	d.Set("auto_config_enabled", application.AutoConfigEnabled)
 	d.Set("cwe_monitor_enabled", application.CWEMonitorEnabled)
 	d.Set("ops_center_enabled", application.OpsCenterEnabled)
@@ -238,7 +234,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	}
 
 	if output == nil || output.ApplicationInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationInfo, nil
@@ -298,4 +294,8 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Cl
 	}
 
 	return nil, err
+}
+
+func applicationARN(ctx context.Context, c *conns.AWSClient, resourceGroupName string) string {
+	return c.RegionalARN(ctx, "applicationinsights", "application/resource-group/"+resourceGroupName)
 }

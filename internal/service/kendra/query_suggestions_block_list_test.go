@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -262,7 +262,7 @@ func TestAccKendraQuerySuggestionsBlockList_disappears(t *testing.T) {
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceQuerySuggestionsBlockList(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceQuerySuggestionsBlockList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

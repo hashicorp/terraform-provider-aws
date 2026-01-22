@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb_test
@@ -70,6 +70,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 			{
@@ -77,7 +78,6 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "3"),
 				),
 			},
@@ -101,7 +101,7 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,6 +135,7 @@ func TestAccDocDBClusterInstance_identifierGenerated(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 		},
@@ -168,6 +169,7 @@ func TestAccDocDBClusterInstance_identifierPrefix(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 		},
@@ -200,6 +202,7 @@ func TestAccDocDBClusterInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 			{
@@ -251,6 +254,7 @@ func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 					"enable_performance_insights",
 					"performance_insights_kms_key_id",
 				},
@@ -285,6 +289,7 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 		},
@@ -317,6 +322,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 		},
@@ -356,6 +362,7 @@ func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					"certificate_rotation_restart",
 				},
 			},
 		},
@@ -438,12 +445,12 @@ resource "aws_docdb_cluster_instance" "test" {
 func testAccClusterInstanceConfig_modified(rName string) string {
 	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_docdb_cluster_instance" "test" {
-  identifier                 = %[1]q
-  cluster_identifier         = aws_docdb_cluster.test.id
-  instance_class             = data.aws_docdb_orderable_db_instance.test.instance_class
-  apply_immediately          = true
-  auto_minor_version_upgrade = false
-  promotion_tier             = 3
+  identifier                   = %[1]q
+  cluster_identifier           = aws_docdb_cluster.test.id
+  instance_class               = data.aws_docdb_orderable_db_instance.test.instance_class
+  apply_immediately            = true
+  certificate_rotation_restart = false
+  promotion_tier               = 3
 }
 `, rName))
 }

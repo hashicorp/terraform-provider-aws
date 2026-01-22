@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -96,7 +96,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceDirectoryConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceDirectoryConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

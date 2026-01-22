@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package controltower
 
@@ -390,7 +392,7 @@ func findEnabledControlByARN(ctx context.Context, conn *controltower.Client, arn
 	}
 
 	if output == nil || output.EnabledControlDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EnabledControlDetails, nil
@@ -414,7 +416,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	}
 
 	if output == nil || output.ControlOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ControlOperation, nil
@@ -447,7 +449,7 @@ func waitOperationSucceeded(ctx context.Context, conn *controltower.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*controltower.GetControlOperationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ControlOperation.StatusMessage)))
 
 		return output.ControlOperation, err
 	}

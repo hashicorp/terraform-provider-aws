@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -284,7 +286,7 @@ func findAppByName(ctx context.Context, conn *sagemaker.Client, domainID, userPr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.Status; state == awstypes.AppStatusDeleted {
@@ -327,7 +329,7 @@ func listAppsByName(ctx context.Context, conn *sagemaker.Client, domainID, userP
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func decodeAppID(id string) (string, string, string, string, error) {

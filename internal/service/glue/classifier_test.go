@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -476,7 +476,7 @@ func TestAccGlueClassifier_disappears(t *testing.T) {
 				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceClassifier(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

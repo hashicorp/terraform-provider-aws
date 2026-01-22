@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -31,6 +33,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
@@ -187,11 +190,11 @@ func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func findOrganizationalUnitByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.OrganizationalUnit, error) {
-	input := &organizations.DescribeOrganizationalUnitInput{
+	input := organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(id),
 	}
 
-	return findOrganizationalUnit(ctx, conn, input)
+	return findOrganizationalUnit(ctx, conn, &input)
 }
 
 func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, input *organizations.DescribeOrganizationalUnitInput) (*awstypes.OrganizationalUnit, error) {
@@ -209,7 +212,7 @@ func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, inp
 	}
 
 	if output == nil || output.OrganizationalUnit == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OrganizationalUnit, nil

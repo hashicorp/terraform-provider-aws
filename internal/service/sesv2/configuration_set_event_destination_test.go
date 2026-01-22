@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -266,7 +266,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 				Config: testAccConfigurationSetEventDestinationConfig_basic(rName, "SEND"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceConfigurationSetEventDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceConfigurationSetEventDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

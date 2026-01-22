@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -88,7 +88,7 @@ func TestAccCloudFormationStackInstances_disappears(t *testing.T) {
 				Config: testAccStackInstancesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackInstances(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackInstances(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,8 +115,8 @@ func TestAccCloudFormationStackInstances_Disappears_stackSet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, stackSetResourceName, &stackSet1),
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackInstances(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStackSet(), stackSetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackInstances(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStackSet(), stackSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -110,7 +110,7 @@ func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 				Config: testAccLocationS3Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationS3(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationS3(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

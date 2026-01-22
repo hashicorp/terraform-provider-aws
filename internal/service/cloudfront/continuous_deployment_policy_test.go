@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -103,7 +103,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

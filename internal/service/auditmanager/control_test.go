@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package auditmanager_test
@@ -75,7 +75,7 @@ func TestAccAuditManagerControl_disappears(t *testing.T) {
 				Config: testAccControlConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfauditmanager.ResourceControl, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceControl, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

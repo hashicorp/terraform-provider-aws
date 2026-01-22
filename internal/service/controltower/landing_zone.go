@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package controltower
 
@@ -249,7 +251,7 @@ func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id stri
 	}
 
 	if output == nil || output.LandingZone == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LandingZone, nil
@@ -274,7 +276,7 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	}
 
 	if output == nil || output.OperationDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OperationDetails, nil
@@ -308,7 +310,7 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 
 	if output, ok := outputRaw.(*types.LandingZoneOperationDetail); ok {
 		if status := output.Status; status == types.LandingZoneOperationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
