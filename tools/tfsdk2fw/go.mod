@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.57.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.60.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connect v1.156.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.279.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.280.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0 // indirect
@@ -147,7 +147,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.39.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.72.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.72.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.1 // indirect
@@ -221,7 +221,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.100.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.101.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0 // indirect
