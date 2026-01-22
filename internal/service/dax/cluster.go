@@ -20,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -287,7 +288,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
-		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -456,7 +457,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		stateConf := &sdkretry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
-			Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "available", pending),
+			Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
@@ -522,7 +523,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
-		Refresh:    clusterStateRefreshFunc(ctx, conn, d.Id(), "", []string{}),
+		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "", []string{}),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -536,8 +537,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	return diags
 }
 
-func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, givenState string, pending []string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func clusterStateRefreshFunc(conn *dax.Client, clusterID, givenState string, pending []string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := dax.DescribeClustersInput{
 			ClusterNames: []string{clusterID},
 		}
