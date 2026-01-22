@@ -1655,56 +1655,42 @@ func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, 
 type resourcePlanModel struct {
 	framework.WithRegionModel
 	ARN                          types.String                                         `tfsdk:"arn"`
+	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
+	Description                  types.String                                         `tfsdk:"description"`
+	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
 	ID                           types.String                                         `tfsdk:"id"`
 	Name                         types.String                                         `tfsdk:"name"`
-	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
-	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
-	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
-	Description                  types.String                                         `tfsdk:"description"`
 	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
+	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
 	RecoveryTimeObjectiveMinutes types.Int64                                          `tfsdk:"recovery_time_objective_minutes"`
-	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
-	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
-	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
+	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
 	Tags                         tftags.Map                                           `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
+	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
+	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
 }
 
 type associatedAlarmModel struct {
-	MapBlockKey        types.String                           `tfsdk:"map_block_key"`
 	AlarmType          fwtypes.StringEnum[awstypes.AlarmType] `tfsdk:"alarm_type"`
-	ResourceIdentifier types.String                           `tfsdk:"resource_identifier"`
 	CrossAccountRole   types.String                           `tfsdk:"cross_account_role"`
 	ExternalID         types.String                           `tfsdk:"external_id"`
+	MapBlockKey        types.String                           `tfsdk:"map_block_key"`
+	ResourceIdentifier types.String                           `tfsdk:"resource_identifier"`
 }
 
 type workflowModel struct {
+	Steps                fwtypes.ListNestedObjectValueOf[stepModel]        `tfsdk:"step"`
+	WorkflowDescription  types.String                                      `tfsdk:"workflow_description"`
 	WorkflowTargetAction fwtypes.StringEnum[awstypes.WorkflowTargetAction] `tfsdk:"workflow_target_action"`
 	WorkflowTargetRegion types.String                                      `tfsdk:"workflow_target_region"`
-	WorkflowDescription  types.String                                      `tfsdk:"workflow_description"`
-	Steps                fwtypes.ListNestedObjectValueOf[stepModel]        `tfsdk:"step"`
-}
-
-type route53HealthCheckConfigModel struct {
-	HostedZoneID     types.String                                    `tfsdk:"hosted_zone_id"`
-	RecordName       types.String                                    `tfsdk:"record_name"`
-	CrossAccountRole types.String                                    `tfsdk:"cross_account_role"`
-	ExternalID       types.String                                    `tfsdk:"external_id"`
-	TimeoutMinutes   types.Int32                                     `tfsdk:"timeout_minutes"`
-	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_set"`
-}
-
-type recordSetModel struct {
-	RecordSetIdentifier types.String `tfsdk:"record_set_identifier"`
-	Region              types.String `tfsdk:"region"`
 }
 
 type stepModel struct {
-	Name                        types.String                                                      `tfsdk:"name"`
-	ExecutionBlockType          fwtypes.StringEnum[awstypes.ExecutionBlockType]                   `tfsdk:"execution_block_type"`
 	Description                 types.String                                                      `tfsdk:"description"`
 	ExecutionBlockConfiguration fwtypes.ListNestedObjectValueOf[executionBlockConfigurationModel] `tfsdk:"execution_block_configuration"`
+	ExecutionBlockType          fwtypes.StringEnum[awstypes.ExecutionBlockType]                   `tfsdk:"execution_block_type"`
+	Name                        types.String                                                      `tfsdk:"name"`
 }
 
 type executionBlockConfigurationModel struct {
@@ -1720,16 +1706,29 @@ type executionBlockConfigurationModel struct {
 	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
 }
 
-type executionApprovalConfigModel struct {
-	ApprovalRole   types.String `tfsdk:"approval_role"`
-	TimeoutMinutes types.Int32  `tfsdk:"timeout_minutes"`
+// ARC Routing Control Configuration Models
+type arcRoutingControlConfigModel struct {
+	CrossAccountRole         types.String                                                  `tfsdk:"cross_account_role"`
+	ExternalID               types.String                                                  `tfsdk:"external_id"`
+	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
+	TimeoutMinutes           types.Int32                                                   `tfsdk:"timeout_minutes"`
+}
+
+type regionAndRoutingControlsModel struct {
+	Region          types.String                                         `tfsdk:"region"`
+	RoutingControls fwtypes.ListNestedObjectValueOf[routingControlModel] `tfsdk:"routing_control"`
+}
+
+type routingControlModel struct {
+	RoutingControlArn fwtypes.ARN                                            `tfsdk:"routing_control_arn"`
+	State             fwtypes.StringEnum[awstypes.RoutingControlStateChange] `tfsdk:"state"`
 }
 
 type customActionLambdaConfigModel struct {
+	Lambdas              fwtypes.ListNestedObjectValueOf[lambdaModel]     `tfsdk:"lambda"`
 	RegionToRun          fwtypes.StringEnum[awstypes.RegionToRunIn]       `tfsdk:"region_to_run"`
 	RetryIntervalMinutes types.Float32                                    `tfsdk:"retry_interval_minutes"`
 	TimeoutMinutes       types.Int32                                      `tfsdk:"timeout_minutes"`
-	Lambdas              fwtypes.ListNestedObjectValueOf[lambdaModel]     `tfsdk:"lambda"`
 	Ungraceful           fwtypes.ListNestedObjectValueOf[ungracefulModel] `tfsdk:"ungraceful"`
 }
 
@@ -1746,31 +1745,16 @@ type ungracefulModel struct {
 // DocumentDB Configuration Models
 type documentDbConfigModel struct {
 	Behavior                fwtypes.StringEnum[awstypes.DocumentDbDefaultBehavior]     `tfsdk:"behavior"`
-	DatabaseClusterArns     fwtypes.ListOfARN                                          `tfsdk:"database_cluster_arns"`
-	GlobalClusterIdentifier types.String                                               `tfsdk:"global_cluster_identifier"`
 	CrossAccountRole        types.String                                               `tfsdk:"cross_account_role"`
+	DatabaseClusterArns     fwtypes.ListOfARN                                          `tfsdk:"database_cluster_arns"`
 	ExternalID              types.String                                               `tfsdk:"external_id"`
+	GlobalClusterIdentifier types.String                                               `tfsdk:"global_cluster_identifier"`
 	TimeoutMinutes          types.Int32                                                `tfsdk:"timeout_minutes"`
 	Ungraceful              fwtypes.ListNestedObjectValueOf[documentDbUngracefulModel] `tfsdk:"ungraceful"`
 }
 
 type documentDbUngracefulModel struct {
 	Ungraceful fwtypes.StringEnum[awstypes.DocumentDbUngracefulBehavior] `tfsdk:"ungraceful"`
-}
-
-// Global Aurora Configuration Models
-type globalAuroraConfigModel struct {
-	Behavior                fwtypes.StringEnum[awstypes.GlobalAuroraDefaultBehavior]     `tfsdk:"behavior"`
-	GlobalClusterIdentifier types.String                                                 `tfsdk:"global_cluster_identifier"`
-	DatabaseClusterARNs     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
-	CrossAccountRole        types.String                                                 `tfsdk:"cross_account_role"`
-	ExternalID              types.String                                                 `tfsdk:"external_id"`
-	TimeoutMinutes          types.Int32                                                  `tfsdk:"timeout_minutes"`
-	Ungraceful              fwtypes.ListNestedObjectValueOf[globalAuroraUngracefulModel] `tfsdk:"ungraceful"`
-}
-
-type globalAuroraUngracefulModel struct {
-	Ungraceful fwtypes.StringEnum[awstypes.GlobalAuroraUngracefulBehavior] `tfsdk:"ungraceful"`
 }
 
 // EC2 ASG Configuration Models
@@ -1803,9 +1787,9 @@ type ecsCapacityIncreaseConfigModel struct {
 
 type serviceModel struct {
 	ClusterARN       types.String `tfsdk:"cluster_arn"`
-	ServiceARN       types.String `tfsdk:"service_arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalID       types.String `tfsdk:"external_id"`
+	ServiceARN       types.String `tfsdk:"service_arn"`
 }
 
 type ecsUngracefulModel struct {
@@ -1815,11 +1799,11 @@ type ecsUngracefulModel struct {
 // EKS Configuration Models
 type eksResourceScalingConfigModel struct {
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EksCapacityMonitoringApproach]   `tfsdk:"capacity_monitoring_approach"`
+	EKSClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
+	KubernetesResourceType     fwtypes.ListNestedObjectValueOf[kubernetesResourceTypeModel] `tfsdk:"kubernetes_resource_type"`
+	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources"`
 	TargetPercent              types.Int64                                                  `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                  `tfsdk:"timeout_minutes"`
-	KubernetesResourceType     fwtypes.ListNestedObjectValueOf[kubernetesResourceTypeModel] `tfsdk:"kubernetes_resource_type"`
-	EKSClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
-	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[eksUngracefulModel]          `tfsdk:"ungraceful"`
 }
 
@@ -1840,32 +1824,34 @@ type scalingResourcesModel struct {
 }
 
 type kubernetesScalingResourceModel struct {
-	ResourceName types.String `tfsdk:"resource_name"`
+	HpaName      types.String `tfsdk:"hpa_name"`
 	Name         types.String `tfsdk:"name"`
 	Namespace    types.String `tfsdk:"namespace"`
-	HpaName      types.String `tfsdk:"hpa_name"`
+	ResourceName types.String `tfsdk:"resource_name"`
 }
 
 type eksUngracefulModel struct {
 	MinimumSuccessPercentage types.Int64 `tfsdk:"minimum_success_percentage"`
 }
 
-// ARC Routing Control Configuration Models
-type arcRoutingControlConfigModel struct {
-	CrossAccountRole         types.String                                                  `tfsdk:"cross_account_role"`
-	ExternalID               types.String                                                  `tfsdk:"external_id"`
-	TimeoutMinutes           types.Int32                                                   `tfsdk:"timeout_minutes"`
-	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
+type executionApprovalConfigModel struct {
+	ApprovalRole   types.String `tfsdk:"approval_role"`
+	TimeoutMinutes types.Int32  `tfsdk:"timeout_minutes"`
 }
 
-type regionAndRoutingControlsModel struct {
-	Region          types.String                                         `tfsdk:"region"`
-	RoutingControls fwtypes.ListNestedObjectValueOf[routingControlModel] `tfsdk:"routing_control"`
+// Global Aurora Configuration Models
+type globalAuroraConfigModel struct {
+	Behavior                fwtypes.StringEnum[awstypes.GlobalAuroraDefaultBehavior]     `tfsdk:"behavior"`
+	CrossAccountRole        types.String                                                 `tfsdk:"cross_account_role"`
+	DatabaseClusterARNs     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
+	ExternalID              types.String                                                 `tfsdk:"external_id"`
+	GlobalClusterIdentifier types.String                                                 `tfsdk:"global_cluster_identifier"`
+	TimeoutMinutes          types.Int32                                                  `tfsdk:"timeout_minutes"`
+	Ungraceful              fwtypes.ListNestedObjectValueOf[globalAuroraUngracefulModel] `tfsdk:"ungraceful"`
 }
 
-type routingControlModel struct {
-	RoutingControlArn fwtypes.ARN                                            `tfsdk:"routing_control_arn"`
-	State             fwtypes.StringEnum[awstypes.RoutingControlStateChange] `tfsdk:"state"`
+type globalAuroraUngracefulModel struct {
+	Ungraceful fwtypes.StringEnum[awstypes.GlobalAuroraUngracefulBehavior] `tfsdk:"ungraceful"`
 }
 
 // Parallel Configuration Models
@@ -1882,13 +1868,27 @@ type parallelStepModel struct {
 	Name                     types.String                                                   `tfsdk:"name"`
 }
 
+type route53HealthCheckConfigModel struct {
+	CrossAccountRole types.String                                    `tfsdk:"cross_account_role"`
+	ExternalID       types.String                                    `tfsdk:"external_id"`
+	HostedZoneID     types.String                                    `tfsdk:"hosted_zone_id"`
+	RecordName       types.String                                    `tfsdk:"record_name"`
+	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_set"`
+	TimeoutMinutes   types.Int32                                     `tfsdk:"timeout_minutes"`
+}
+
+type recordSetModel struct {
+	RecordSetIdentifier types.String `tfsdk:"record_set_identifier"`
+	Region              types.String `tfsdk:"region"`
+}
+
 // Trigger Configuration Models
 type triggerModel struct {
 	Action                           fwtypes.StringEnum[awstypes.WorkflowTargetAction] `tfsdk:"action"`
+	Conditions                       fwtypes.ListNestedObjectValueOf[conditionModel]   `tfsdk:"conditions"`
 	Description                      types.String                                      `tfsdk:"description"`
 	MinDelayMinutesBetweenExecutions types.Int64                                       `tfsdk:"min_delay_minutes_between_executions"`
 	TargetRegion                     types.String                                      `tfsdk:"target_region"`
-	Conditions                       fwtypes.ListNestedObjectValueOf[conditionModel]   `tfsdk:"conditions"`
 }
 
 type conditionModel struct {
