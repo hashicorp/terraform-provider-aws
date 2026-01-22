@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -170,9 +169,8 @@ func findChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -185,9 +183,7 @@ func findChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications
 		}
 	}
 
-	return &sdkretry.NotFoundError{
-		LastRequest: &input,
-	}
+	return &retry.NotFoundError{}
 }
 
 type channelAssociationResourceModel struct {

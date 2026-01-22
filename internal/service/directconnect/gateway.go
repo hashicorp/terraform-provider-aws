@@ -34,8 +34,9 @@ import (
 // @Region(global=true)
 // @IdentityAttribute("id")
 // @V60SDKv2Fix
-// @Testing(identityTest=false)
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/directconnect/types;awstypes;awstypes.DirectConnectGateway")
+// @Testing(randomBgpAsn="64512;65534")
 // @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{

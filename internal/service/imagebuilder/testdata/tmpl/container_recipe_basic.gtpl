@@ -15,7 +15,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
     repository_name = aws_ecr_repository.test.name
     service         = "ECR"
   }
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_ecr_repository" "test" {
