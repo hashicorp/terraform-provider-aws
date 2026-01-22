@@ -3,12 +3,12 @@ subcategory: "ARC (Application Recovery Controller) Region Switch"
 layout: "aws"
 page_title: "AWS: aws_arcregionswitch_plan"
 description: |-
-  Terraform resource for managing an AWS Application Recovery Controller Region Switch Plan.
+  Terraform resource for managing an Amazon ARC Region Switch Plan.
 ---
 
 # Resource: aws_arcregionswitch_plan
 
-Terraform resource for managing an AWS Application Recovery Controller Region Switch Plan.
+Terraform resource for managing an Amazon ARC Region Switch plan.
 
 ## Example Usage
 
