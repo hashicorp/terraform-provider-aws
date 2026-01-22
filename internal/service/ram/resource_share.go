@@ -35,7 +35,7 @@ const (
 )
 
 // @SDKResource("aws_ram_resource_share", name="Resource Share")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn", resourceType="ResourceShare")
 func resourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareCreate,
