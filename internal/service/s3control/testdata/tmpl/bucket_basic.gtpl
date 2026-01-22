@@ -2,7 +2,7 @@ resource "aws_s3control_bucket" "test" {
 {{- template "region" }}
   bucket     = var.rName
   outpost_id = data.aws_outposts_outpost.test.id
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 data "aws_outposts_outposts" "test" {}

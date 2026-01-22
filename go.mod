@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.19
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.19
@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.6
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.5
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.10
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.12
@@ -79,7 +79,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.57.19
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.60.1
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/connect v1.156.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
@@ -105,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.279.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.280.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
@@ -135,7 +135,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.10
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.17
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.39.7
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.72.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.72.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.1
@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.7
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.10
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.20
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.19
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.11
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.2
-	github.com/aws/aws-sdk-go-v2/service/odb v1.7.1
+	github.com/aws/aws-sdk-go-v2/service/odb v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.1
@@ -204,7 +204,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.11
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.100.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.101.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0
@@ -231,6 +231,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.230.1
+	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.18
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.1
@@ -265,7 +266,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.16
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.68.6
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.30.7
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.16
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.17

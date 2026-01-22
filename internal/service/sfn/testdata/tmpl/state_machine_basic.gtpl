@@ -26,7 +26,7 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_iam_role_policy" "for_lambda" {

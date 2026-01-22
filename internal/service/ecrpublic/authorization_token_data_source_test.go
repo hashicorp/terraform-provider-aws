@@ -17,7 +17,7 @@ func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecrpublic_authorization_token.repo"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
