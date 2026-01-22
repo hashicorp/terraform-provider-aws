@@ -363,7 +363,7 @@ resource "aws_api_gateway_stage" "test" {
 resource "aws_apigatewayv2_routing_rule" "test" {
   domain_name = aws_api_gateway_domain_name.test.domain_name
 
-  conditions {
+  condition {
     match_headers {
       any_of {
         header     = "X-Example-Header"
