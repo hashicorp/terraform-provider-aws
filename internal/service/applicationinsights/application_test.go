@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapplicationinsights "github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtFalse),
@@ -51,7 +49,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtTrue),
@@ -67,19 +65,19 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtTrue),
@@ -100,19 +98,19 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app awstypes.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_applicationinsights_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
+					testAccCheckApplicationExists(ctx, t, resourceName, &app),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapplicationinsights.ResourceApplication(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapplicationinsights.ResourceApplication(), resourceName),
 				),
@@ -122,9 +120,9 @@ func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ApplicationInsightsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_applicationinsights_application" {
@@ -148,14 +146,14 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, v *awstypes.ApplicationInfo) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, t *testing.T, n string, v *awstypes.ApplicationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ApplicationInsightsClient(ctx)
 
 		output, err := tfapplicationinsights.FindApplicationByName(ctx, conn, rs.Primary.ID)
 

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdax "github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,16 +30,16 @@ func TestAccDAXCluster_basic(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_dax_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dax", regexache.MustCompile("cache/.+")),
 					resource.TestCheckResourceAttr(
 						resourceName, "cluster_endpoint_encryption_type", "NONE"),
@@ -88,16 +87,16 @@ func TestAccDAXCluster_resize(t *testing.T) {
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_resizeSingleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 				),
@@ -110,7 +109,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 			{
 				Config: testAccClusterConfig_resizeMultiNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "2"),
 				),
@@ -118,7 +117,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 			{
 				Config: testAccClusterConfig_resizeSingleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 				),
@@ -133,16 +132,16 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encryption(rString, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 				),
@@ -179,16 +178,16 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encryption(rString, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
@@ -223,16 +222,16 @@ func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 	clusterEndpointEncryptionType := "NONE"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_endpointEncryption(rString, clusterEndpointEncryptionType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -273,16 +272,16 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 	resourceName := "aws_dax_cluster.test"
 	clusterEndpointEncryptionType := "TLS"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_endpointEncryption(rString, clusterEndpointEncryptionType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -315,16 +314,16 @@ func TestAccDAXCluster_disappears(t *testing.T) {
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dc),
+					testAccCheckClusterExists(ctx, t, resourceName, &dc),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -333,9 +332,9 @@ func TestAccDAXCluster_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_cluster" {
@@ -360,7 +359,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, t *testing.T, n string, v *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -371,7 +370,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
 		input := dax.DescribeClustersInput{
 			ClusterNames: []string{rs.Primary.ID},
 		}
@@ -391,7 +390,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
 
 	input := &dax.DescribeClustersInput{}
 
