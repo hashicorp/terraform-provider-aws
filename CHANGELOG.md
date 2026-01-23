@@ -86,6 +86,7 @@ BUG FIXES:
 * resource/aws_lambda_permission: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_lb_target_group: Fix update error when switching `health_check.protocol` from `HTTP` to `TCP` when `protocol` is `TCP` ([#46036](https://github.com/hashicorp/terraform-provider-aws/issues/46036))
 * resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_networkfirewall_firewall_policy: Support partner-managed rule groups via `firewall_policy.stateful_rule_group_reference.resource_arn` ([#46124](https://github.com/hashicorp/terraform-provider-aws/issues/46124))
 * resource/aws_pipes_pipe: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_placement_group: Correct validation of `partition_count` ([#45042](https://github.com/hashicorp/terraform-provider-aws/issues/45042))
 * resource/aws_rds_cluster: Properly set `iam_database_authentication_enabled` when restored from snapshot ([#39461](https://github.com/hashicorp/terraform-provider-aws/issues/39461))
