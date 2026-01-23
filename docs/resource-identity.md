@@ -34,7 +34,31 @@ The Resource Identity attributes for Singleton Identities cannot be overridden.
 
 ### Parameterized Identity
 
-TODO
+Many AWS resource types can be uniquely identified by a combination of one or more attributes, such as a name, within their region (or account for global resource types).
+
+Specify a Parameterized Identity using one or more `@IdentityAttribute("<attribute-name>")` annotations to the resource type's declaration.
+The attributes `account_id` and `region` are always present in Parameterized Identities, so must not be specified in `@IdentityAttribute` annotations.
+
+By default, the names of the Resource Identity attribute and the corresponding attribute on the resource match.
+In some rare cases, the Resource Identity attribute cannot use the same name.
+For example, in the resource type `aws_organizations_delegated_administrator`, one of the identifying resource attributes is `account_id`, which is reserved.
+Instead, the Resource Identity attribute is `delegated_account_id`.
+The annotation is `@IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")`.
+
+In some rare cases, an identifying attribute may allow `null` as a value.
+For example, the resource type `aws_route53_record` has an optional attribute `set_identifier` that differentiates between individual records in a set, such as multiple addresses for the same domain name.
+In simple routing cases, `set_identifier` is unused.
+To specify this, add the annotation parameter `optional=true` to the `@IdentityAttribute` annotation.
+As the `set_identifier` in `aws_route53_record` is optional,
+the full annotation is `@IdentityAttribute("set_identifier", optional="true")`.
+
+If a resource type has optional identifying attributes,
+the default generated test should be the case where all optional values are `null`.
+For other cases, manually create additional acceptance tests,
+at a minimum the equivalent of the `Basic` test as well as the `ExistingResource` test when adding Resource Identity to an exisiting resource type.
+
+If it is not possible to create a test case where all optional values are `null`,
+add the annotation parameter `testNotNull=true` to the corresponding `@IdentityAttribute` annotation.
 
 ## Enabling Resource Identity on New Resource Type
 
