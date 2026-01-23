@@ -267,7 +267,7 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
+				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
@@ -308,7 +308,7 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
+				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					// Bucket ACL cannot be destroyed, but we can verify Bucket deletion
@@ -341,7 +341,7 @@ func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
+				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
@@ -440,7 +440,7 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
+				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
@@ -570,7 +570,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
+				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
@@ -637,7 +637,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
+				Config: testAccBucketACLConfig_cannedACL(bucketName, string(types.BucketCannedACLPrivate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
@@ -706,7 +706,7 @@ func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestChe
 	}
 }
 
-func testAccBucketACLConfig_basic(rName, acl string) string {
+func testAccBucketACLConfig_cannedACL(rName, acl string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
