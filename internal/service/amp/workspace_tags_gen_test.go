@@ -32,7 +32,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -85,7 +85,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -131,7 +131,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -170,7 +170,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -209,7 +209,7 @@ func TestAccAMPWorkspace_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccAMPWorkspace_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -276,7 +276,7 @@ func TestAccAMPWorkspace_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccAMPWorkspace_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -339,7 +339,7 @@ func TestAccAMPWorkspace_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -348,7 +348,7 @@ func TestAccAMPWorkspace_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -371,7 +371,7 @@ func TestAccAMPWorkspace_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -420,7 +420,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -431,7 +431,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -469,7 +469,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -508,7 +508,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -519,7 +519,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -550,7 +550,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -594,7 +594,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -643,7 +643,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -654,7 +654,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -684,7 +684,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -732,7 +732,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -744,7 +744,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -786,7 +786,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -830,7 +830,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -868,7 +868,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -908,7 +908,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -922,7 +922,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -974,7 +974,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1025,7 +1025,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1065,7 +1065,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1079,7 +1079,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1130,7 +1130,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1185,7 +1185,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1238,7 +1238,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1249,7 +1249,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1281,7 +1281,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1328,7 +1328,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1340,7 +1340,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1367,7 +1367,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1417,7 +1417,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1431,7 +1431,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1483,7 +1483,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1495,7 +1495,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1541,7 +1541,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nullOverlappingResourceTag(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1555,7 +1555,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nullOverlappingResourceTag(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1604,7 +1604,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nullNonOverlappingResourceTag(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1618,7 +1618,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nullNonOverlappingResourceTag(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1667,7 +1667,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1676,7 +1676,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1723,7 +1723,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1734,7 +1734,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1765,7 +1765,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1820,7 +1820,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1831,7 +1831,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1860,7 +1860,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1907,7 +1907,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1925,7 +1925,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1973,7 +1973,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2021,7 +2021,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2069,7 +2069,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
-		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy: testAccCheckWorkspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2085,7 +2085,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2147,7 +2147,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2209,7 +2209,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

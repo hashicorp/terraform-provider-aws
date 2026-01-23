@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssm
 
 import (
@@ -36,6 +38,7 @@ import (
 // @IdentityAttribute("association_id")
 // @Testing(idAttrDuplicates="association_id")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datasync
 
 import (
@@ -33,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationSmbOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,

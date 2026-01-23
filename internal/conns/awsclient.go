@@ -40,6 +40,7 @@ type AWSClient struct {
 	partition                 endpoints.Partition
 	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
+	s3OriginalRegion          string // Original region for S3-compatible storage
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
@@ -353,6 +354,9 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 			c.s3USEast1RegionalEndpoint = NormalizeS3USEast1RegionalEndpoint(os.Getenv("AWS_S3_US_EAST_1_REGIONAL_ENDPOINT"))
 		}
 		m["s3_us_east_1_regional_endpoint"] = c.s3USEast1RegionalEndpoint
+		if c.s3OriginalRegion != "" {
+			m["s3_original_region"] = c.s3OriginalRegion
+		}
 	case names.STS:
 		m["sts_region"] = c.stsRegion
 	}

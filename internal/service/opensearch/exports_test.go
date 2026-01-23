@@ -5,6 +5,7 @@ package opensearch
 
 // Exports for use in tests only.
 var (
+	ResourceApplication                = newApplicationResource
 	ResourceAuthorizeVPCEndpointAccess = newAuthorizeVPCEndpointAccessResource
 	ResourceDomainSAMLOptions          = resourceDomainSAMLOptions
 	ResourceInboundConnectionAccepter  = resourceInboundConnectionAccepter
@@ -13,6 +14,7 @@ var (
 	ResourcePackageAssociation         = resourcePackageAssociation
 	ResourceVPCEndpoint                = resourceVPCEndpoint
 
+	FindApplicationByID                        = findApplicationByID
 	FindAuthorizeVPCEndpointAccessByTwoPartKey = findAuthorizeVPCEndpointAccessByTwoPartKey
 	FindDomainByName                           = findDomainByName
 	FindPackageByID                            = findPackageByID

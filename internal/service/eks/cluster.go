@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package eks
 
 import (
@@ -1930,7 +1932,7 @@ func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ 
 		storageConfigEnabled := storageConfig != nil && storageConfig.BlockStorage != nil && storageConfig.BlockStorage.Enabled != nil && aws.ToBool(storageConfig.BlockStorage.Enabled)
 
 		if computeConfigEnabled != kubernetesNetworkConfigEnabled || computeConfigEnabled != storageConfigEnabled {
-			return errors.New("compute_config.enabled, kubernetes_networking_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
+			return errors.New("compute_config.enabled, kubernetes_network_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
 		}
 	}
 

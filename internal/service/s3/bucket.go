@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -55,6 +57,7 @@ const (
 // @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,

@@ -67,16 +67,16 @@ import (
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
-func newDataSource{{ .DataSource }}(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSource{{ .DataSource }}{}, nil
+func new{{ .DataSource }}DataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &{{ .DataSourceLowerCamel }}DataSource{}, nil
 }
 
 const (
 	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }} Data Source"
 )
 
-type dataSource{{ .DataSource }} struct {
-	framework.DataSourceWithModel[dataSource{{ .DataSource }}Model]
+type {{ .DataSourceLowerCamel }}DataSource struct {
+	framework.DataSourceWithModel[{{ .DataSourceLowerCamel }}DataSourceModel]
 }
 
 {{ if .IncludeComments }}
@@ -104,7 +104,7 @@ type dataSource{{ .DataSource }} struct {
 // For more about schema options, visit
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 {{- end }}
-func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *{{ .DataSourceLowerCamel }}DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -152,7 +152,7 @@ func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource
 // TIP: ==== ASSIGN CRUD METHODS ====
 // Data sources only have a read method.
 {{- end }}
-func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *{{ .DataSourceLowerCamel }}DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== DATA SOURCE READ ====
 	// Generally, the Read function should do the following things. Make
@@ -173,8 +173,8 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
-	var data dataSource{{ .DataSource }}Model
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	var data {{ .DataSourceLowerCamel }}DataSourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,7 +191,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	// TIP: -- 4. Set the ID, arguments, and attributes
 	// Using a field name prefix allows mapping fields such as `{{ .DataSource }}Id` to `ID`
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}")), smerr.ID, data.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}")), smerr.ID, data.Name.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -208,7 +208,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{ if .IncludeComments -}}
 	// TIP: -- 6. Set the state
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
 }
 
 {{ if .IncludeComments }}
@@ -225,7 +225,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-type dataSource{{ .DataSource }}Model struct {
+type {{ .DataSourceLowerCamel }}DataSourceModel struct {
 	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`

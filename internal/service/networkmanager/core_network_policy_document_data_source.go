@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmanager
 
 import (
@@ -210,8 +212,9 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"dual-hop",
 							}, false),
 						},
-						"share_with":        setOfStringOptional,
-						"share_with_except": setOfStringOptional,
+						"share_with":           setOfStringOptional,
+						"share_with_except":    setOfStringOptional,
+						"routing_policy_names": setOfStringOptional,
 						"destination_cidr_blocks": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -700,6 +703,10 @@ func expandCoreNetworkPolicySegmentActions(tfList []any) ([]*coreNetworkPolicySe
 				apiObject.ShareWithExcept = shareWithExcept
 			}
 
+			if v := tfMap["routing_policy_names"].(*schema.Set).List(); len(v) > 0 {
+				apiObject.RoutingPolicyNames = coreNetworkPolicyExpandStringList(v)
+			}
+
 			if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
 				return nil, fmt.Errorf(`you must specify only 1 of "share_with" or "share_with_except". See segment_actions[%d]`, i)
 			}
@@ -912,7 +919,7 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []any) ([]*c
 
 		case names.AttrRegion, "resource-id", "account-id":
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("conditions %d: must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", \"account\", or \"account-id\"\n%[2]t, %[3]t, %[4]t", i, k[names.AttrKey], k["operator"], k[names.AttrValue])
+				return nil, fmt.Errorf("conditions %d: must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\"\n%[2]t, %[3]t, %[4]t", i, k[names.AttrKey], k["operator"], k[names.AttrValue])
 			}
 
 		case "attachment-type":

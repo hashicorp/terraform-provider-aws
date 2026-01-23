@@ -151,6 +151,39 @@ func TestAccCloudFrontMultiTenantDistribution_comprehensive(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontMultiTenantDistribution_s3OriginWithOAC(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_s3OriginWithOAC(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.origin_access_control_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"etag"},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontMultiTenantDistribution_tags(t *testing.T) {
 	t.Parallel()
 
@@ -563,4 +596,59 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 }
 `, comment, httpVersion, defaultRootObjectConfig)
+}
+
+func testAccMultiTenantDistributionConfig_s3OriginWithOAC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_cloudfront_origin_access_control" "test" {
+  name                              = %[1]q
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = true
+  comment = "Test Distribution with S3 OAC"
+
+  tenant_config {}
+
+  origin {
+    id                       = aws_s3_bucket.test.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.test.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.test.id
+
+    connection_attempts         = 3
+    connection_timeout          = 10
+    response_completion_timeout = 30
+  }
+
+  default_cache_behavior {
+    target_origin_id       = aws_s3_bucket.test.bucket_regional_domain_name
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    compress               = true
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, rName)
 }

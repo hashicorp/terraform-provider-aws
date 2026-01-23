@@ -20,11 +20,11 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameDataSourceConfig_regionalCertificateARN(rName, key, certificate),

@@ -201,7 +201,9 @@ func listVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInpu
 			}
 
 			for _, vpc := range page.Vpcs {
-				yield(vpc, nil)
+				if !yield(vpc, nil) {
+					return
+				}
 			}
 		}
 	}

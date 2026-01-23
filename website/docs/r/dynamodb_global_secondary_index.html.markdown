@@ -20,8 +20,8 @@ description: |-
 
 ```terraform
 resource "aws_dynamodb_global_secondary_index" "example" {
-  table = aws_dynamodb_table.example.name
-  name  = "GameTitleIndex"
+  table_name = aws_dynamodb_table.example.name
+  index_name = "GameTitleIndex"
 
   projection {
     projection_type    = "INCLUDE"

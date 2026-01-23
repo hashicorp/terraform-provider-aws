@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package apigateway
 
 import (
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -28,6 +29,8 @@ import (
 // @SDKResource("aws_api_gateway_usage_plan", name="Usage Plan")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetUsagePlanOutput")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanCreate,
@@ -512,9 +515,8 @@ func findUsagePlanByID(ctx context.Context, conn *apigateway.Client, id string) 
 	output, err := conn.GetUsagePlan(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

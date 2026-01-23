@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ce
 
 import (
@@ -37,6 +39,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalySubscription")
 // @Testing(emailAddress="email_address")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
