@@ -47,5 +47,6 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      # long-running test
-      - run: make TEST=./... modern-check
+      # Don't use make target as it downloads a Go version.
+      # - run: make TEST=./... modern-check
+      - run: go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -test ./...
