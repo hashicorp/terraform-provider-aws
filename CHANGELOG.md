@@ -46,6 +46,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster_instance: Add `certificate_rotation_restart` argument ([#45984](https://github.com/hashicorp/terraform-provider-aws/issues/45984))
 * resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
 * resource/aws_dynamodb_table: Adds warning when `stream_view_type` is set and `stream_enabled` is either `false` or unset. ([#45934](https://github.com/hashicorp/terraform-provider-aws/issues/45934))
+* resource/aws_ecr_account_setting: Add support for `BLOB_MOUNTING` account setting name with `ENABLED` and `DISABLED` values ([#46092](https://github.com/hashicorp/terraform-provider-aws/issues/46092))
 * resource/aws_fsx_windows_file_system: Add `domain_join_service_account_secret` argument to `self_managed_active_directory` configuration block ([#45852](https://github.com/hashicorp/terraform-provider-aws/issues/45852))
 * resource/aws_fsx_windows_file_system: Change `self_managed_active_directory.password` to Optional and `self_managed_active_directory.username` to Optional and Computed ([#45852](https://github.com/hashicorp/terraform-provider-aws/issues/45852))
 * resource/aws_lambda_function: Increase upper limit of `memory_size` from 10240 MB to 32768 MB ([#46065](https://github.com/hashicorp/terraform-provider-aws/issues/46065))
