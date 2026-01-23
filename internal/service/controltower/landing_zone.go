@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -240,9 +239,8 @@ func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id stri
 	output, err := conn.GetLandingZone(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -265,9 +263,8 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	output, err := conn.GetLandingZoneOperation(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -282,8 +279,8 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	return output.OperationDetails, nil
 }
 
-func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLandingZoneOperation(conn *controltower.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLandingZoneOperationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -299,10 +296,10 @@ func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, 
 }
 
 func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.LandingZoneOperationDetail, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LandingZoneOperationStatusInProgress),
 		Target:  enum.Slice(types.LandingZoneOperationStatusSucceeded),
-		Refresh: statusLandingZoneOperation(ctx, conn, id),
+		Refresh: statusLandingZoneOperation(conn, id),
 		Timeout: timeout,
 	}
 

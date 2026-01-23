@@ -11,16 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.FeatureStatusAvailable),
-		Refresh: statusFeature(ctx, conn, id),
+		Refresh: statusFeature(conn, id),
 		Timeout: timeout,
 	}
 
@@ -34,10 +33,10 @@ func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, 
 }
 
 func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FeatureStatusUpdating),
 		Target:  enum.Slice(awstypes.FeatureStatusAvailable),
-		Refresh: statusFeature(ctx, conn, id),
+		Refresh: statusFeature(conn, id),
 		Timeout: timeout,
 	}
 
@@ -51,10 +50,10 @@ func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, 
 }
 
 func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FeatureStatusAvailable),
 		Target:  []string{},
-		Refresh: statusFeature(ctx, conn, id),
+		Refresh: statusFeature(conn, id),
 		Timeout: timeout,
 	}
 
@@ -68,10 +67,10 @@ func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, 
 }
 
 func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Launch, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.LaunchStatusCreated),
-		Refresh: statusLaunch(ctx, conn, id),
+		Refresh: statusLaunch(conn, id),
 		Timeout: timeout,
 	}
 
@@ -89,10 +88,10 @@ func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, t
 }
 
 func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Launch, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LaunchStatusUpdating),
 		Target:  enum.Slice(awstypes.LaunchStatusCreated, awstypes.LaunchStatusRunning),
-		Refresh: statusLaunch(ctx, conn, id),
+		Refresh: statusLaunch(conn, id),
 		Timeout: timeout,
 	}
 
@@ -110,10 +109,10 @@ func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, t
 }
 
 func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Launch, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LaunchStatusCreated, awstypes.LaunchStatusCompleted, awstypes.LaunchStatusRunning, awstypes.LaunchStatusCancelled, awstypes.LaunchStatusUpdating),
 		Target:  []string{},
-		Refresh: statusLaunch(ctx, conn, id),
+		Refresh: statusLaunch(conn, id),
 		Timeout: timeout,
 	}
 
@@ -131,10 +130,10 @@ func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, t
 }
 
 func waitProjectCreated(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.ProjectStatusAvailable),
-		Refresh: statusProject(ctx, conn, nameOrARN),
+		Refresh: statusProject(conn, nameOrARN),
 		Timeout: timeout,
 	}
 
@@ -148,10 +147,10 @@ func waitProjectCreated(ctx context.Context, conn *evidently.Client, nameOrARN s
 }
 
 func waitProjectUpdated(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProjectStatusUpdating),
 		Target:  enum.Slice(awstypes.ProjectStatusAvailable),
-		Refresh: statusProject(ctx, conn, nameOrARN),
+		Refresh: statusProject(conn, nameOrARN),
 		Timeout: timeout,
 	}
 
@@ -165,10 +164,10 @@ func waitProjectUpdated(ctx context.Context, conn *evidently.Client, nameOrARN s
 }
 
 func waitProjectDeleted(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProjectStatusAvailable),
 		Target:  []string{},
-		Refresh: statusProject(ctx, conn, nameOrARN),
+		Refresh: statusProject(conn, nameOrARN),
 		Timeout: timeout,
 	}
 

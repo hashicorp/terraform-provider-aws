@@ -18,13 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -168,17 +167,7 @@ func resourceDomainName() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(),
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -196,6 +185,12 @@ func resourceDomainName() *schema.Resource {
 			"regional_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"routing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.RoutingMode](),
 			},
 			"security_policy": {
 				Type:             schema.TypeString,
@@ -264,6 +259,10 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("regional_certificate_name"); ok {
 		input.RegionalCertificateName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("routing_mode"); ok {
+		input.RoutingMode = types.RoutingMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_policy"); ok {
@@ -338,6 +337,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)
 	d.Set("regional_zone_id", output.RegionalHostedZoneId)
+	d.Set("routing_mode", output.RoutingMode)
 	d.Set("security_policy", output.SecurityPolicy)
 
 	setTagsOut(ctx, output.Tags)
@@ -465,6 +465,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				Op:    types.OpReplace,
 				Path:  aws.String("/regionalCertificateName"),
 				Value: aws.String(d.Get("regional_certificate_name").(string)),
+			})
+		}
+
+		if d.HasChange("routing_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/routingMode"),
+				Value: aws.String(d.Get("routing_mode").(string)),
 			})
 		}
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceNotificationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationRuleCreate,
@@ -235,9 +233,8 @@ func findNotificationRuleByARN(ctx context.Context, conn *codestarnotifications.
 	output, err := conn.DescribeNotificationRule(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
