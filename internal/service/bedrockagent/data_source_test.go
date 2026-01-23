@@ -406,17 +406,27 @@ func testAccDataSource_webConfiguration(t *testing.T) {
 }
 
 func testAccDataSource_bedrockDataAutomation(t *testing.T) {
+	acctest.SkipIfExeNotOnPath(t, "psql")
+	acctest.SkipIfExeNotOnPath(t, "jq")
+	acctest.SkipIfExeNotOnPath(t, "aws")
+
 	ctx := acctest.Context(t)
 	var dataSource types.DataSource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_data_source.test"
-	foundationModel := "amazon.titan-embed-text-v2:0"
+	foundationModel := "amazon.titan-embed-text-v1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceConfig_bedrockDataAutomation(rName, foundationModel),
@@ -765,7 +775,7 @@ resource "aws_bedrockagent_data_source" "test" {
 }
 
 func testAccDataSourceConfig_bedrockDataAutomation(rName, embeddingModel string) string {
-	return acctest.ConfigCompose(testAccDataSourceConfig_base(rName, embeddingModel), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_RDS_supplementalDataStorage(rName, embeddingModel), fmt.Sprintf(`
 resource "aws_bedrockagent_data_source" "test" {
   knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
   name              = %[1]q
