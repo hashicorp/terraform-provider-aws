@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -168,7 +168,7 @@ func findRegionByEC2Endpoint(ctx context.Context, endpoint string) (*endpoints.R
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func findRegionByName(_ context.Context, name string) (*endpoints.Region, error) {
@@ -180,7 +180,7 @@ func findRegionByName(_ context.Context, name string) (*endpoints.Region, error)
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func ec2Endpoint(ctx context.Context, region *endpoints.Region) (*url.URL, error) {
