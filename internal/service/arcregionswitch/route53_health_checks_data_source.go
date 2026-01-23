@@ -57,7 +57,7 @@ func (d *route53HealthChecksDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, healthChecks, &data.HealthChecks)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, healthChecks, &data.HealthChecks), smerr.ID, data.PlanARN.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}
