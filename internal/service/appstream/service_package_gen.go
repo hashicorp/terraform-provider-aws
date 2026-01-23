@@ -28,6 +28,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Image",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newImageBuilderStreamingURLDataSource,
+			TypeName: "aws_appstream_image_builder_streaming_url",
+			Name:     "Image Builder Streaming URL",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
