@@ -1259,7 +1259,7 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	}
 
 	if oldNodeGroupCount > newNodeGroupCount {
-		//Scalling down scenario.
+		// Scaling down scenario.
 
 		nodeGroupIDs := []string{}
 		rg, err := findReplicationGroupByID(ctx, conn, d.Id())
