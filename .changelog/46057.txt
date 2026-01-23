@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Add validation for `availability_zone` to prevent invalid AZ names that could cause data loss or misconfiguration
+```
