@@ -20,6 +20,69 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestParseRoutingRuleARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name                string
+		input               string
+		expectErr           bool
+		expectDomainName    string
+		expectRoutingRuleID string
+	}{
+		{
+			name:      "empty ARN",
+			expectErr: true,
+		},
+		{
+			name:      "unparsable ARN",
+			input:     "test",
+			expectErr: true,
+		},
+		{
+			name:      "invalid ARN resource parts 1",
+			input:     "arn:aws:apigateway:us-west-2:123456789012:/apis/test", //lintignore:AWSAT003,AWSAT005
+			expectErr: true,
+		},
+		{
+			name:      "invalid ARN resource parts 2",
+			input:     "arn:aws:apigateway:us-west-2:123456789012:/domainnames/example.com", //lintignore:AWSAT003,AWSAT005
+			expectErr: true,
+		},
+		{
+			name:      "invalid ARN resource parts 3",
+			input:     "arn:aws:apigateway:us-west-2:123456789012:/domainnames/example.com/test", //lintignore:AWSAT003,AWSAT005
+			expectErr: true,
+		},
+		{
+			name:                "valid ARN",
+			input:               "arn:aws:apigateway:us-west-2:123456789012:/domainnames/example.com/routingrules/test", //lintignore:AWSAT003,AWSAT005
+			expectDomainName:    "example.com",
+			expectRoutingRuleID: "test",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			gotDomainName, gotRoutingRuleID, err := tfapigatewayv2.ParseRoutingRuleARN(testCase.input)
+			if got, want := (err != nil), testCase.expectErr; got != want {
+				t.Errorf("ParseRoutingRuleARN(%q) error = %v, want error presence = %t", testCase.input, err, want)
+			}
+			if err != nil {
+				return
+			}
+			if got, want := gotDomainName, testCase.expectDomainName; got != want {
+				t.Errorf("ParseRoutingRuleARN(%q) DomainName = %v, want = %v", testCase.input, got, want)
+			}
+			if got, want := gotRoutingRuleID, testCase.expectRoutingRuleID; got != want {
+				t.Errorf("ParseRoutingRuleARN(%q) RoutingRuleID = %v, want = %v", testCase.input, got, want)
+			}
+		})
+	}
+}
+
 func TestAccAPIGatewayV2RoutingRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routingrule apigatewayv2.GetRoutingRuleOutput

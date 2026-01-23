@@ -35,4 +35,6 @@ var (
 	FindStageByTwoPartKey                 = findStageByTwoPartKey
 	FindStages                            = findStages
 	FindVPCLinkByID                       = findVPCLinkByID
+
+	ParseRoutingRuleARN = parseRoutingRuleARN
 )
