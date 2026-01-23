@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmediapackagev2 "github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
@@ -25,22 +23,22 @@ func testAccMediaPackageV2ChannelGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var channelGroup mediapackagev2.GetChannelGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_media_packagev2_channel_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &channelGroup),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &channelGroup),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediapackagev2", regexache.MustCompile(`channelGroup/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "egress_domain", regexache.MustCompile(fmt.Sprintf("^[0-9a-z]+.egress.[0-9a-z]+.mediapackagev2.%s.amazonaws.com$", acctest.Region()))),
 				),
@@ -61,21 +59,21 @@ func testAccMediaPackageV2ChannelGroup_description(t *testing.T) {
 
 	var channelGroup mediapackagev2.GetChannelGroupOutput
 	resourceName := "aws_media_packagev2_channel_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelGroupConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &channelGroup),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &channelGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -89,7 +87,7 @@ func testAccMediaPackageV2ChannelGroup_description(t *testing.T) {
 			{
 				Config: testAccChannelGroupConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &channelGroup),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &channelGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -101,22 +99,22 @@ func testAccMediaPackageV2ChannelGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var channelGroup mediapackagev2.GetChannelGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_media_packagev2_channel_group.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &channelGroup),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &channelGroup),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmediapackagev2.ResourceChannelGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -129,9 +127,9 @@ func testAccChannelGroupImportStateIdFunc(resourceName string) resource.ImportSt
 	return acctest.AttrImportStateIdFunc(resourceName, names.AttrName)
 }
 
-func testAccCheckChannelGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckChannelGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaPackageV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_media_packagev2_channel_group" {
@@ -156,14 +154,14 @@ func testAccCheckChannelGroupDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckChannelGroupExists(ctx context.Context, name string, channelGroup *mediapackagev2.GetChannelGroupOutput) resource.TestCheckFunc {
+func testAccCheckChannelGroupExists(ctx context.Context, t *testing.T, name string, channelGroup *mediapackagev2.GetChannelGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaPackageV2Client(ctx)
 		resp, err := tfmediapackagev2.FindChannelGroupByID(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
@@ -177,7 +175,7 @@ func testAccCheckChannelGroupExists(ctx context.Context, name string, channelGro
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaPackageV2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).MediaPackageV2Client(ctx)
 
 	input := &mediapackagev2.ListChannelGroupsInput{}
 
