@@ -34,13 +34,11 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the plan.
 * `execution_role` - Execution role ARN for the plan.
 * `name` - Name of the plan.
+* `owner` - Owner of the plan.
 * `primary_region` - Primary region for the plan.
 * `recovery_approach` - Recovery approach for the plan.
 * `recovery_time_objective_minutes` - Recovery time objective in minutes.
 * `regions` - List of regions included in the plan.
-* `route53_health_checks` - List of Route53 health checks associated with the plan. Each health check contains:
-    * `health_check_id` - ID of the Route53 health check.
-    * `hosted_zone_id` - Hosted zone ID for the health check.
-    * `record_name` - Record name for the health check.
-    * `region` - Region for the health check.
 * `tags` - Map of tags assigned to the resource.
+* `updated_at` - Timestamp when the plan was last updated (RFC3339 format).
+* `version` - Version of the plan.

@@ -6,14 +6,14 @@ package arcregionswitch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -21,16 +21,16 @@ import (
 )
 
 // @FrameworkDataSource("aws_arcregionswitch_plan", name="Plan")
-func newDataSourcePlan(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourcePlan{}
-	return d, nil
+// @Tags(identifierAttribute="arn")
+func newPlanDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &planDataSource{}, nil
 }
 
-type dataSourcePlan struct {
-	framework.DataSourceWithConfigure
+type planDataSource struct {
+	framework.DataSourceWithModel[planDataSourceModel]
 }
 
-func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *planDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: fwschema.StringAttribute{
@@ -39,37 +39,36 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 					fwvalidators.ARN(),
 				},
 			},
-			names.AttrName: fwschema.StringAttribute{
+			names.AttrDescription: fwschema.StringAttribute{
 				Computed: true,
 			},
 			"execution_role": fwschema.StringAttribute{
 				Computed: true,
 			},
-			"recovery_approach": fwschema.StringAttribute{
+			names.AttrName: fwschema.StringAttribute{
 				Computed: true,
 			},
-			"regions": fwschema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
-			},
-			names.AttrDescription: fwschema.StringAttribute{
+			names.AttrOwner: fwschema.StringAttribute{
 				Computed: true,
 			},
 			"primary_region": fwschema.StringAttribute{
 				Computed: true,
 			},
-			"recovery_time_objective_minutes": fwschema.Int64Attribute{
+			"recovery_approach": fwschema.StringAttribute{
 				Computed: true,
 			},
-			"route53_health_checks": fwschema.ListAttribute{
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"health_check_id":      types.StringType,
-						names.AttrHostedZoneID: types.StringType,
-						"record_name":          types.StringType,
-						names.AttrRegion:       types.StringType,
-					},
-				},
+			"recovery_time_objective_minutes": fwschema.Int32Attribute{
+				Computed: true,
+			},
+			"regions": fwschema.ListAttribute{
+				CustomType: fwtypes.ListOfStringType,
+				Computed:   true,
+			},
+			"updated_at": fwschema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			names.AttrVersion: fwschema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
@@ -78,8 +77,8 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 	}
 }
 
-func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourcePlanModel
+func (d *planDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data planDataSourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
@@ -93,110 +92,37 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	data.ARN = types.StringValue(aws.ToString(plan.Arn))
-	data.Name = types.StringValue(aws.ToString(plan.Name))
-	data.ExecutionRole = types.StringValue(aws.ToString(plan.ExecutionRole))
-	data.RecoveryApproach = types.StringValue(string(plan.RecoveryApproach))
-
-	regions, diags := types.ListValueFrom(ctx, types.StringType, plan.Regions)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
-	data.Regions = regions
-
-	if plan.Description != nil {
-		data.Description = types.StringValue(aws.ToString(plan.Description))
-	} else {
-		data.Description = types.StringNull()
-	}
-
-	if plan.PrimaryRegion != nil {
-		data.PrimaryRegion = types.StringValue(aws.ToString(plan.PrimaryRegion))
-	} else {
-		data.PrimaryRegion = types.StringNull()
-	}
-
-	if plan.RecoveryTimeObjectiveMinutes != nil {
-		data.RecoveryTimeObjectiveMinutes = types.Int64Value(int64(aws.ToInt32(plan.RecoveryTimeObjectiveMinutes)))
-	} else {
-		data.RecoveryTimeObjectiveMinutes = types.Int64Null()
-	}
-
-	// Fetch Route53 health checks
-	healthChecks, err := findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, plan, &data), smerr.ID, data.ARN.ValueString())
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Convert health checks to Framework types
-	if len(healthChecks) == 0 {
-		// Return known empty list (not unknown) when plan exists but has no health checks
-		data.Route53HealthChecks = types.ListValueMust(types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"health_check_id":      types.StringType,
-				names.AttrHostedZoneID: types.StringType,
-				"record_name":          types.StringType,
-				names.AttrRegion:       types.StringType,
-			},
-		}, []attr.Value{})
-		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
-		return
-	}
-
-	healthCheckElements := make([]attr.Value, len(healthChecks))
-	for i, hc := range healthChecks {
-		healthCheckAttrs := map[string]attr.Value{
-			"health_check_id":      types.StringValue(aws.ToString(hc.HealthCheckId)),
-			names.AttrHostedZoneID: types.StringValue(aws.ToString(hc.HostedZoneId)),
-			"record_name":          types.StringValue(aws.ToString(hc.RecordName)),
-			names.AttrRegion:       types.StringValue(aws.ToString(hc.Region)),
-		}
-		healthCheckObj, objDiags := types.ObjectValue(map[string]attr.Type{
-			"health_check_id":      types.StringType,
-			names.AttrHostedZoneID: types.StringType,
-			"record_name":          types.StringType,
-			names.AttrRegion:       types.StringType,
-		}, healthCheckAttrs)
-		smerr.AddEnrich(ctx, &resp.Diagnostics, objDiags)
-		healthCheckElements[i] = healthCheckObj
-	}
-
-	healthChecksList, listDiags := types.ListValue(types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"health_check_id":      types.StringType,
-			names.AttrHostedZoneID: types.StringType,
-			"record_name":          types.StringType,
-			names.AttrRegion:       types.StringType,
-		},
-	}, healthCheckElements)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, listDiags)
-	data.Route53HealthChecks = healthChecksList
 
 	tags, err := listTags(ctx, conn, data.ARN.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 		return
 	}
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().Map())
+	setTagsOut(ctx, tags.Map())
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-func (d *dataSourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schema) fwdiag.Diagnostics {
-	var diags fwdiag.Diagnostics
-	// Basic validation is handled by the schema validators
-	return diags
+type planDataSourceModel struct {
+	framework.WithRegionModel
+	planModel
+	Tags tftags.Map `tfsdk:"tags"`
 }
 
-type dataSourcePlanModel struct {
-	ARN                          types.String `tfsdk:"arn"`
-	Region                       types.String `tfsdk:"region"`
-	Name                         types.String `tfsdk:"name"`
-	ExecutionRole                types.String `tfsdk:"execution_role"`
-	RecoveryApproach             types.String `tfsdk:"recovery_approach"`
-	Regions                      types.List   `tfsdk:"regions"`
-	Description                  types.String `tfsdk:"description"`
-	PrimaryRegion                types.String `tfsdk:"primary_region"`
-	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
-	Route53HealthChecks          types.List   `tfsdk:"route53_health_checks"`
-	Tags                         tftags.Map   `tfsdk:"tags"`
+type planModel struct {
+	ARN                          types.String         `tfsdk:"arn"`
+	Description                  types.String         `tfsdk:"description"`
+	ExecutionRole                types.String         `tfsdk:"execution_role"`
+	Name                         types.String         `tfsdk:"name"`
+	Owner                        types.String         `tfsdk:"owner"`
+	PrimaryRegion                types.String         `tfsdk:"primary_region"`
+	RecoveryApproach             types.String         `tfsdk:"recovery_approach"`
+	RecoveryTimeObjectiveMinutes types.Int32          `tfsdk:"recovery_time_objective_minutes"`
+	Regions                      fwtypes.ListOfString `tfsdk:"regions"`
+	UpdatedAt                    timetypes.RFC3339    `tfsdk:"updated_at"`
+	Version                      types.String         `tfsdk:"version"`
 }

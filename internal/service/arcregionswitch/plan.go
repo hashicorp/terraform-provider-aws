@@ -38,9 +38,7 @@ import (
 
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
-// @Testing(useAlternateAccount=true)
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// Generating tags tests does not work because alternate region isn't working and tests require 2 regions
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
 
@@ -1673,7 +1671,7 @@ func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	return output.Plan, nil
 }
 
-func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planARN string) ([]awstypes.Route53HealthCheck, error) {
+func findRoute53HealthChecksByARN(ctx context.Context, conn *arcregionswitch.Client, planARN string) ([]awstypes.Route53HealthCheck, error) {
 	input := arcregionswitch.ListRoute53HealthChecksInput{
 		Arn: aws.String(planARN),
 	}
@@ -1993,7 +1991,7 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 
 func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
 	return func(_ context.Context) (any, string, error) {
-		healthChecks, err := findRoute53HealthChecks(ctx, conn, arn)
+		healthChecks, err := findRoute53HealthChecksByARN(ctx, conn, arn)
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
 		}

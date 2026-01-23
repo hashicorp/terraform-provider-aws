@@ -23,9 +23,18 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourcePlan,
+			Factory:  newPlanDataSource,
 			TypeName: "aws_arcregionswitch_plan",
 			Name:     "Plan",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newRoute53HealthChecksDataSource,
+			TypeName: "aws_arcregionswitch_route53_health_checks",
+			Name:     "Route53 Health Checks",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
