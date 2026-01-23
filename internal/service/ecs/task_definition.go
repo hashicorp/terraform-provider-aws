@@ -108,7 +108,6 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
@@ -295,6 +294,11 @@ func resourceTaskDefinition() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when state has "false" and config is unset (empty).
+								// This prevents perpetual diffs when the API returns false as default.
+								return old == "false" && new == ""
+							},
 						},
 						"docker_volume_configuration": {
 							Type:     schema.TypeList,
