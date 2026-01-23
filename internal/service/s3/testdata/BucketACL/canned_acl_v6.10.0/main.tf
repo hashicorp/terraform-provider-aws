@@ -5,20 +5,7 @@ resource "aws_s3_bucket_acl" "test" {
   depends_on = [aws_s3_bucket_ownership_controls.test]
 
   bucket = aws_s3_bucket.test.bucket
-
-  access_control_policy {
-    grant {
-      grantee {
-        id   = data.aws_canonical_user_id.current.id
-        type = "CanonicalUser"
-      }
-      permission = "FULL_CONTROL"
-    }
-
-    owner {
-      id = data.aws_canonical_user_id.current.id
-    }
-  }
+  acl    = "private"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -32,13 +19,12 @@ resource "aws_s3_bucket_ownership_controls" "test" {
   }
 }
 
-data "aws_canonical_user_id" "current" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
+
 terraform {
   required_providers {
     aws = {
