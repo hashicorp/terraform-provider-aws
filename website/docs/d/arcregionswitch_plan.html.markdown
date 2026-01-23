@@ -43,3 +43,4 @@ This data source exports the following attributes in addition to the arguments a
     * `hosted_zone_id` - Hosted zone ID for the health check.
     * `record_name` - Record name for the health check.
     * `region` - Region for the health check.
+* `tags` - Map of tags assigned to the resource.

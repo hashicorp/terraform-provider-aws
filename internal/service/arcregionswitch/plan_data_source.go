@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,6 +72,7 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 				},
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]fwschema.Block{},
 	}
@@ -169,6 +171,13 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 	smerr.AddEnrich(ctx, &resp.Diagnostics, listDiags)
 	data.Route53HealthChecks = healthChecksList
 
+	tags, err := listTags(ctx, conn, data.ARN.ValueString())
+	if err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
+		return
+	}
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().Map())
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
@@ -189,4 +198,5 @@ type dataSourcePlanModel struct {
 	PrimaryRegion                types.String `tfsdk:"primary_region"`
 	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
 	Route53HealthChecks          types.List   `tfsdk:"route53_health_checks"`
+	Tags                         tftags.Map   `tfsdk:"tags"`
 }

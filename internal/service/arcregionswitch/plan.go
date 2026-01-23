@@ -38,6 +38,9 @@ import (
 
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
+// @Testing(useAlternateAccount=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
 
