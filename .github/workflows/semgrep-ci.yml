@@ -33,7 +33,7 @@ jobs:
     container:
       image: "semgrep/semgrep:1.110.0"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: |
           semgrep --validate \
           --config .ci/.semgrep.yml \
@@ -48,7 +48,7 @@ jobs:
     container:
       image: "semgrep/semgrep:1.110.0"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: |
           semgrep --quiet --test .ci/semgrep/
 
@@ -59,7 +59,7 @@ jobs:
     container:
       image: "semgrep/semgrep:1.110.0"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: |
           semgrep $SEMGREP_ARGS \
           --config .ci/.semgrep.yml \
@@ -80,7 +80,7 @@ jobs:
       image: "semgrep/semgrep:1.110.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: semgrep --validate --config .ci/.semgrep-caps-aws-ec2.yml
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-caps-aws-ec2.yml
 
@@ -91,7 +91,7 @@ jobs:
       image: "semgrep/semgrep:1.110.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: semgrep --validate --config .ci/.semgrep-configs.yml
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-configs.yml
 
@@ -102,7 +102,7 @@ jobs:
       image: "semgrep/semgrep:1.110.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: semgrep --validate --config .ci/.semgrep-service-name0.yml
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name0.yml
 
@@ -113,7 +113,7 @@ jobs:
       image: "semgrep/semgrep:1.110.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: semgrep --validate --config .ci/.semgrep-service-name1.yml
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name1.yml
 
@@ -124,7 +124,7 @@ jobs:
       image: "semgrep/semgrep:1.110.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: semgrep --validate --config .ci/.semgrep-service-name2.yml
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name2.yml
 
@@ -135,6 +135,6 @@ jobs:
       image: "semgrep/semgrep:1.110.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - run: semgrep --validate --config .ci/.semgrep-service-name3.yml
       - run: semgrep $SEMGREP_ARGS --config .ci/.semgrep-service-name3.yml
