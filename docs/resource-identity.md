@@ -30,7 +30,7 @@ or in a single account for global resource types.
 
 Specify a Singleton Identity for a resource type by adding the annotation `@SingletonIdentity` to the resource type's declaration.
 
-The Resource Identity attributes for Singleton Identities cannot be overriden.
+The Resource Identity attributes for Singleton Identities cannot be overridden.
 
 ### Parameterized Identity
 
@@ -87,7 +87,7 @@ To specify other `PreCheck` functions, specify either
 `Testing(preCheckWithRegion=<reference>)` if the function has the signature `func(ctx context.Context, t *testing.T, region string)`.
 
 Some acceptance tests must ignore attribute differences when importing a resource.
-Specify this with the annotation `@Testing(importIgnore="...")` with a list of the atribute names separated by semi-colons (`;`).
+Specify this with the annotation `@Testing(importIgnore="...")` with a list of the attribute names separated by semi-colons (`;`).
 
 ### Manual Tests
 
