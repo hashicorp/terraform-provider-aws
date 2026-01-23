@@ -776,6 +776,11 @@ resource "aws_bedrockagent_data_source" "test" {
 
 func testAccDataSourceConfig_bedrockDataAutomation(rName, embeddingModel string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBaseConfig_RDS_supplementalDataStorage(rName, embeddingModel), fmt.Sprintf(`
+resource "aws_s3_bucket" "test2" {
+  bucket        = "%[1]s-2"
+  force_destroy = true
+}
+
 resource "aws_bedrockagent_data_source" "test" {
   knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
   name              = %[1]q
@@ -783,7 +788,7 @@ resource "aws_bedrockagent_data_source" "test" {
   data_source_configuration {
     type = "S3"
     s3_configuration {
-      bucket_arn = aws_s3_bucket.test.arn
+      bucket_arn = aws_s3_bucket.test2.arn
     }
   }
 
