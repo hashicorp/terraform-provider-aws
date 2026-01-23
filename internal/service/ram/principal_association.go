@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -212,17 +211,16 @@ func findPrincipalAssociationByTwoPartKey(ctx context.Context, conn *ram.Client,
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, err
 }
 
-func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPrincipalAssociation(conn *ram.Client, resourceShareARN, principal string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 		if retry.NotFound(err) {
@@ -241,10 +239,10 @@ func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, reso
 	const (
 		timeout = 3 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:         enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
-		Refresh:        statusPrincipalAssociation(ctx, conn, resourceShareARN, principal),
+		Refresh:        statusPrincipalAssociation(conn, resourceShareARN, principal),
 		Timeout:        timeout,
 		NotFoundChecks: 20,
 	}
@@ -264,10 +262,10 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 	const (
 		timeout = 3 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusPrincipalAssociation(ctx, conn, resourceShareARN, principal),
+		Refresh: statusPrincipalAssociation(conn, resourceShareARN, principal),
 		Timeout: timeout,
 	}
 

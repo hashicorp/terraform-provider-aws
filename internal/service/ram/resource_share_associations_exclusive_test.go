@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	networkfirewalltypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,21 +23,21 @@ import (
 func TestAccRAMResourceShareAssociationsExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_associations_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_share_arn", "aws_ram_resource_share.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "1"),
@@ -59,21 +57,21 @@ func TestAccRAMResourceShareAssociationsExclusive_basic(t *testing.T) {
 func TestAccRAMResourceShareAssociationsExclusive_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_associations_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfram.ResourceResourceShareAssociationsExclusive, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,12 +83,12 @@ func TestAccRAMResourceShareAssociationsExclusive_disappears(t *testing.T) {
 func TestAccRAMResourceShareAssociationsExclusive_exclusiveManagement(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_associations_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	var resourceShareARN string
 	var injectedFirewallPolicyARN string
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
@@ -98,12 +96,12 @@ func TestAccRAMResourceShareAssociationsExclusive_exclusiveManagement(t *testing
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			if err := testAccCheckResourceShareAssociationsExclusiveDestroy(ctx)(s); err != nil {
+			if err := testAccCheckResourceShareAssociationsExclusiveDestroy(ctx, t)(s); err != nil {
 				return err
 			}
 			// Clean up the injected firewall policy
 			if injectedFirewallPolicyARN != "" {
-				conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+				conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 				_, _ = conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 					FirewallPolicyArn: aws.String(injectedFirewallPolicyARN),
 				})
@@ -114,7 +112,7 @@ func TestAccRAMResourceShareAssociationsExclusive_exclusiveManagement(t *testing
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "1"),
 					// Capture the resource share ARN for use in PreConfig
@@ -131,8 +129,8 @@ func TestAccRAMResourceShareAssociationsExclusive_exclusiveManagement(t *testing
 			{
 				// Inject a Network Firewall policy outside of Terraform
 				PreConfig: func() {
-					ramConn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
-					nfConn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+					ramConn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
+					nfConn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 					// Create a new firewall policy outside of Terraform
 					policyName := rName + "-injected"
@@ -166,12 +164,12 @@ func TestAccRAMResourceShareAssociationsExclusive_exclusiveManagement(t *testing
 				// Re-run the same config - the exclusive resource should remove the injected association
 				Config: testAccResourceShareAssociationsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					// Verify the resource count is back to 1 (injected resource removed)
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "1"),
 					// Verify only 1 resource association exists in AWS
-					testAccCheckResourceShareAssociationsExclusiveResourceCount(ctx, &resourceShareARN, 1),
+					testAccCheckResourceShareAssociationsExclusiveResourceCount(ctx, t, &resourceShareARN, 1),
 				),
 			},
 		},
@@ -181,9 +179,9 @@ func TestAccRAMResourceShareAssociationsExclusive_exclusiveManagement(t *testing
 func TestAccRAMResourceShareAssociationsExclusive_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_associations_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
@@ -191,12 +189,12 @@ func TestAccRAMResourceShareAssociationsExclusive_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "1"),
 				),
@@ -204,7 +202,7 @@ func TestAccRAMResourceShareAssociationsExclusive_update(t *testing.T) {
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_updateResources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "2"),
 				),
@@ -219,7 +217,7 @@ func TestAccRAMResourceShareAssociationsExclusive_update(t *testing.T) {
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_updatePrincipals(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "2"),
 				),
@@ -238,21 +236,21 @@ func TestAccRAMResourceShareAssociationsExclusive_update(t *testing.T) {
 func TestAccRAMResourceShareAssociationsExclusive_servicePrincipalWithSources(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_associations_exclusive.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceShareAssociationsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceShareAssociationsExclusiveConfig_servicePrincipalWithSources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceShareAssociationsExclusiveExists(ctx, resourceName),
+					testAccCheckResourceShareAssociationsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_share_arn", "aws_ram_resource_share.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_arns.#", "1"),
@@ -274,14 +272,14 @@ func TestAccRAMResourceShareAssociationsExclusive_servicePrincipalWithSources(t 
 	})
 }
 
-func testAccCheckResourceShareAssociationsExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckResourceShareAssociationsExclusiveExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 		resourceShareARN := rs.Primary.Attributes["resource_share_arn"]
 
 		// Check if resource share exists
@@ -314,9 +312,9 @@ func testAccCheckResourceShareAssociationsExclusiveExists(ctx context.Context, n
 	}
 }
 
-func testAccCheckResourceShareAssociationsExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckResourceShareAssociationsExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_share_associations_exclusive" {
@@ -363,9 +361,9 @@ func testAccCaptureResourceShareARN(resourceName string, target *string) resourc
 }
 
 // testAccCheckResourceShareAssociationsExclusiveResourceCount verifies the number of resource associations in AWS.
-func testAccCheckResourceShareAssociationsExclusiveResourceCount(ctx context.Context, resourceShareARN *string, expectedCount int) resource.TestCheckFunc {
+func testAccCheckResourceShareAssociationsExclusiveResourceCount(ctx context.Context, t *testing.T, resourceShareARN *string, expectedCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 		_, resources, err := tfram.FindAssociationsForResourceShare(ctx, conn, *resourceShareARN)
 		if err != nil {
