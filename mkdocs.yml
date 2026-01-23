@@ -22,12 +22,14 @@ nav:
           - AWS Region: add-a-new-region.md
           - Import Support: add-import-support.md
           - Resource Filtering: resource-filtering.md
+          - Resource Identity: resource-identity.md
           - Resource Name Generation: resource-name-generation.md
           - Resource Tagging: resource-tagging.md
           - Tag Resource: adding-a-tag-resource.md
           - Bugs and Enhancements: bugs-and-enhancements.md
           - Documentation Changes: documentation-changes.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Generated Acceptance Tests: acc-test-generation.md
       - Unit Tests: unit-tests.md
       - Continuous Integration: continuous-integration.md
       - Changelog Process: changelog-process.md
