@@ -47,7 +47,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 

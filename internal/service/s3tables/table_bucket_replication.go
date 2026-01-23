@@ -37,7 +37,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="version_token")
 // @Testing(plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketReplicationResource{}, nil
 }
