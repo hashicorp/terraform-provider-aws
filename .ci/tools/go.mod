@@ -300,7 +300,7 @@ require (
 	github.com/sigstore/protobuf-specs v0.5.0 // indirect
 	github.com/sigstore/rekor v1.5.0 // indirect
 	github.com/sigstore/rekor-tiles v0.1.11 // indirect
-	github.com/sigstore/sigstore v1.10.3 // indirect
+	github.com/sigstore/sigstore v1.10.4 // indirect
 	github.com/sigstore/sigstore-go v1.1.3 // indirect
 	github.com/sigstore/timestamp-authority v1.2.9 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
