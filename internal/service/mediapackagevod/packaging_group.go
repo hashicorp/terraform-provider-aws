@@ -51,10 +51,6 @@ type resourcePackagingGroup struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourcePackagingGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_mediapackagevod_packaging_group"
-}
-
 func (r *resourcePackagingGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -79,10 +75,10 @@ func (r *resourcePackagingGroup) Schema(ctx context.Context, request resource.Sc
 				Optional:   true,
 				Computed:   true,
 				AttributeTypes: map[string]attr.Type{
-					"log_group_name": types.StringType,
+					names.AttrLogGroupName: types.StringType,
 				},
 			},
-			"domain_name": schema.StringAttribute{
+			names.AttrDomainName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -145,7 +141,7 @@ func (r *resourcePackagingGroup) Read(ctx context.Context, request resource.Read
 
 	output, err := findPackagingGroupByID(ctx, conn, data.Id.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -286,11 +282,11 @@ type authorizationModel struct {
 }
 
 func findPackagingGroupByID(ctx context.Context, conn *mediapackagevod.Client, name string) (*mediapackagevod.DescribePackagingGroupOutput, error) {
-	in := &mediapackagevod.DescribePackagingGroupInput{
+	in := mediapackagevod.DescribePackagingGroupInput{
 		Id: aws.String(name),
 	}
 
-	out, err := conn.DescribePackagingGroup(ctx, in)
+	out, err := conn.DescribePackagingGroup(ctx, &in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
