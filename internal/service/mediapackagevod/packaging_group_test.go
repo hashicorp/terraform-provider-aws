@@ -158,7 +158,7 @@ func testAccMediaPackageVODPackagingGroup_disappears(t *testing.T) {
 				Config: testAccPackagingGroupConfig_basic(packagingGroupRName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackagingGroupExists(ctx, resourceName, &packagingGroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmediapackagevod.ResourcePackagingGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmediapackagevod.ResourcePackagingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

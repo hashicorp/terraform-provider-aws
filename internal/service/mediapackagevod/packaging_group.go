@@ -113,7 +113,7 @@ func (r *resourcePackagingGroup) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreatePackagingGroup(ctx, &input)
 	}, "UnprocessableEntityException")
 
@@ -196,7 +196,7 @@ func (r *resourcePackagingGroup) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 			return conn.UpdatePackagingGroup(ctx, &input)
 		}, "UnprocessableEntityException")
 
@@ -228,7 +228,7 @@ func (r *resourcePackagingGroup) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Packaging Group", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Packaging Group", map[string]any{
 		names.AttrName: data.Id.ValueString(),
 	})
 
@@ -250,7 +250,7 @@ func (r *resourcePackagingGroup) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findPackagingGroupByID(ctx, conn, data.Id.ValueString())
 	})
 
