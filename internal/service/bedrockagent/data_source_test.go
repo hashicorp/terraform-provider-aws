@@ -298,7 +298,7 @@ func testAccDataSource_parsingModality(t *testing.T) {
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceConfig_parsing(rName, foundationModel, parsingModel),
+				Config: testAccDataSourceConfig_parsingModality(rName, foundationModel, parsingModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_deletion_policy", "RETAIN"),
@@ -642,9 +642,6 @@ resource "aws_bedrockagent_data_source" "test" {
     }
   }
 }
-
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
 `, rName, parsingModel))
 }
 
@@ -688,9 +685,6 @@ resource "aws_bedrockagent_data_source" "test" {
     }
   }
 }
-
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
 `, rName, parsingModel))
 }
 
