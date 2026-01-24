@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield_test
@@ -70,7 +70,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionHealthCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -181,7 +181,7 @@ resource "aws_eip" "test" {
 }
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 }
 resource "aws_route53_health_check" "test" {
   fqdn              = "example.com"

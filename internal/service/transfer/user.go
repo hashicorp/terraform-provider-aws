@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -80,17 +82,7 @@ func resourceUser() *schema.Resource {
 				Default:          awstypes.HomeDirectoryTypePath,
 				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(),
 			"posix_profile": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -133,12 +125,10 @@ func resourceUser() *schema.Resource {
 				ValidateFunc: validUserName,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -157,7 +147,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]any))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -174,7 +164,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandPOSIXProfile(v.([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(v.([]any))
 	}
 
 	_, err := conn.CreateUser(ctx, input)
@@ -188,7 +178,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -199,7 +189,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	user, err := findUserByTwoPartKey(ctx, conn, serverID, userName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -234,7 +224,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -254,7 +244,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("home_directory_mappings") {
-			input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]interface{}))
+			input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]any))
 		}
 
 		if d.HasChange("home_directory_type") {
@@ -271,7 +261,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("posix_profile") {
-			input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]interface{}))
+			input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]any))
 		}
 
 		if d.HasChange(names.AttrRole) {
@@ -288,7 +278,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -332,7 +322,7 @@ func findUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, 
 	output, err := conn.DescribeUser(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -343,7 +333,7 @@ func findUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, 
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil
@@ -367,7 +357,7 @@ func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName s
 		return fmt.Errorf("deleting Transfer User (%s): %w", id, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findUserByTwoPartKey(ctx, conn, serverID, userName)
 	})
 
@@ -378,7 +368,7 @@ func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName s
 	return nil
 }
 
-func expandHomeDirectoryMapEntries(tfList []interface{}) []awstypes.HomeDirectoryMapEntry {
+func expandHomeDirectoryMapEntries(tfList []any) []awstypes.HomeDirectoryMapEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -386,7 +376,7 @@ func expandHomeDirectoryMapEntries(tfList []interface{}) []awstypes.HomeDirector
 	apiObjects := make([]awstypes.HomeDirectoryMapEntry, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -402,11 +392,11 @@ func expandHomeDirectoryMapEntries(tfList []interface{}) []awstypes.HomeDirector
 	return apiObjects
 }
 
-func flattenHomeDirectoryMapEntries(apiObjects []awstypes.HomeDirectoryMapEntry) []interface{} {
-	tfList := make([]interface{}, len(apiObjects))
+func flattenHomeDirectoryMapEntries(apiObjects []awstypes.HomeDirectoryMapEntry) []any {
+	tfList := make([]any, len(apiObjects))
 
 	for i, apiObject := range apiObjects {
-		tfList[i] = map[string]interface{}{
+		tfList[i] = map[string]any{
 			"entry":          aws.ToString(apiObject.Entry),
 			names.AttrTarget: aws.ToString(apiObject.Target),
 		}
@@ -415,12 +405,12 @@ func flattenHomeDirectoryMapEntries(apiObjects []awstypes.HomeDirectoryMapEntry)
 	return tfList
 }
 
-func expandPOSIXProfile(tfList []interface{}) *awstypes.PosixProfile {
+func expandPOSIXProfile(tfList []any) *awstypes.PosixProfile {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.PosixProfile{
 		Gid: aws.Int64(int64(tfMap["gid"].(int))),
@@ -434,16 +424,16 @@ func expandPOSIXProfile(tfList []interface{}) *awstypes.PosixProfile {
 	return apiObject
 }
 
-func flattenPOSIXProfile(apiObject *awstypes.PosixProfile) []interface{} {
+func flattenPOSIXProfile(apiObject *awstypes.PosixProfile) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"gid":            aws.ToInt64(apiObject.Gid),
 		"secondary_gids": apiObject.SecondaryGids,
 		"uid":            aws.ToInt64(apiObject.Uid),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

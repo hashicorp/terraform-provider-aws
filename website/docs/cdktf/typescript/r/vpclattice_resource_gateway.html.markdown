@@ -103,6 +103,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipAddressType` - (Optional) IP address type used by the resource gateway. Valid values are `IPV4`, `IPV6`, and `DUALSTACK`. The IP address type of a resource gateway must be compatible with the subnets of the resource gateway and the IP address type of the resource.
 * `securityGroupIds` - (Optional) Security group IDs associated with the resource gateway. The security groups must be in the same VPC.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -148,4 +149,4 @@ Using `terraform import`, import VPC Lattice Resource Gateway using the `id`. Fo
 % terraform import aws_vpclattice_resource_gateway.example rgw-0a1b2c3d4e5f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-95d9e1e3c5444df62fb4a3af8acf50b14b50b8a69a747481817cc374424a0a91 -->
+<!-- cache-key: cdktf-0.20.8 input-cb6db91cd24cbbe6e874b159cffeacd84ca3aea19b76e1bb67af2ed859281ae5 -->

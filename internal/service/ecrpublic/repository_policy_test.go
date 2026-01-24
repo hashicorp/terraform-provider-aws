@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecrpublic_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecrpublic "github.com/hashicorp/terraform-provider-aws/internal/service/ecrpublic"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +69,7 @@ func TestAccECRPublicRepositoryPolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecrpublic.ResourceRepositoryPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecrpublic.ResourceRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func TestAccECRPublicRepositoryPolicy_Disappears_repository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecrpublic.ResourceRepository(), repositoryResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecrpublic.ResourceRepository(), repositoryResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -147,7 +147,7 @@ func testAccCheckRepositoryPolicyDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfecrpublic.FindRepositoryPolicyByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

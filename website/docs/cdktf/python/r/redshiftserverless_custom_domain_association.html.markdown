@@ -56,8 +56,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workgroup_name` - (Required) Name of the workgroup.
 * `custom_domain_name` - (Required) Custom domain to associate with the workgroup.
 * `custom_domain_certificate_arn` - (Required) ARN of the certificate for the custom domain association.
@@ -93,4 +94,4 @@ Using `terraform import`, import Redshift Serverless Custom Domain Association u
 % terraform import aws_redshiftserverless_custom_domain_association.example example-workgroup,example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f2ed1f05d9d7950427f9d82ae56ca1e32290bd78ace2387e3f141832feda885f -->
+<!-- cache-key: cdktf-0.20.8 input-27ad05d47eccb883d5fc8d70fbf7a2829718fe20ba96b49d8cd0ba02d484fe21 -->

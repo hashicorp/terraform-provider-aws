@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -14,11 +14,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,7 +52,7 @@ func resourceUserPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -68,7 +69,7 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -77,11 +78,11 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM User Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -94,7 +95,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -105,7 +106,7 @@ func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<policy_arn>", d.Id())
@@ -122,7 +123,7 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 }
 
 func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachUserPolicy(ctx, &iam.AttachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
@@ -137,7 +138,7 @@ func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN s
 }
 
 func detachPolicyFromUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachUserPolicy(ctx, &iam.DetachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
@@ -183,7 +184,7 @@ func findAttachedUserPolicies(ctx context.Context, conn *iam.Client, input *iam.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

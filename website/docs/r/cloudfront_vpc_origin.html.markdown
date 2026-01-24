@@ -38,8 +38,6 @@ resource "aws_cloudfront_vpc_origin" "alb" {
 
 ## Argument Reference
 
-### Top Level Arguments
-
 The following arguments are required:
 
 * `vpc_origin_endpoint_config` (Required) - The VPC origin endpoint configuration.

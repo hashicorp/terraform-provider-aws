@@ -10,7 +10,9 @@ description: |-
 
 Provides an SSM Parameter resource.
 
-~> **Note:** `overwrite` also makes it possible to overwrite an existing SSM Parameter that's not created by Terraform before. This argument has been deprecated and will be removed in v6.0.0 of the provider. For more information on how this affects the behavior of this resource, see [this issue comment](https://github.com/hashicorp/terraform-provider-aws/issues/25636#issuecomment-1623661159).
+~> **Note:** The `overwrite` argument makes it possible to overwrite an existing SSM Parameter created outside of Terraform.
+
+-> **Note:** Write-Only argument `value_wo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -64,12 +66,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowed_pattern` - (Optional) Regular expression used to validate the parameter value.
 * `data_type` - (Optional) Data type of the parameter. Valid values: `text`, `aws:ssm:integration` and `aws:ec2:image` for AMI format, see the [Native parameter support for Amazon Machine Image IDs](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html).
 * `description` - (Optional) Description of the parameter.
 * `insecure_value` - (Optional, exactly one of `value`, `value_wo`  or `insecure_value` is required) Value of the parameter. **Use caution:** This value is _never_ marked as sensitive in the Terraform plan output. This argument is not valid with a `type` of `SecureString`.
 * `key_id` - (Optional) KMS key ID or ARN for encrypting a SecureString.
-* `overwrite` - (Optional, **Deprecated**) Overwrite an existing parameter. If not specified, defaults to `false` if the resource has not been created by Terraform to avoid overwrite of existing resource, and will default to `true` otherwise (Terraform lifecycle rules should then be used to manage the update behavior).
+* `overwrite` - (Optional) Overwrite an existing parameter. If not specified, defaults to `false` during create operations to avoid overwriting existing resources and then `true` for all subsequent operations once the resource is managed by Terraform. [Lifecycle rules](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) should be used to manage non-standard update behavior.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tier` - (Optional) Parameter tier to assign to the parameter. If not specified, will use the default parameter tier for the region. Valid tiers are `Standard`, `Advanced`, and `Intelligent-Tiering`. Downgrading an `Advanced` tier parameter to `Standard` will recreate the resource. For more information on parameter tiers, see the [AWS SSM Parameter tier comparison and guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html).
 * `value` - (Optional, exactly one of `value`, `value_wo` or `insecure_value` is required) Value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
@@ -89,11 +92,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_parameter.example
+  identity = {
+    name = "/my_path/my_paramname"
+  }
+}
+
+resource "aws_ssm_parameter" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the parameter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Parameters using the parameter store `name`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_parameter.my_param
+  to = aws_ssm_parameter.example
   id = "/my_path/my_paramname"
 }
 ```
@@ -101,5 +130,5 @@ import {
 Using `terraform import`, import SSM Parameters using the parameter store `name`. For example:
 
 ```console
-% terraform import aws_ssm_parameter.my_param /my_path/my_paramname
+% terraform import aws_ssm_parameter.example /my_path/my_paramname
 ```

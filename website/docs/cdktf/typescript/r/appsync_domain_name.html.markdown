@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateArn` - (Required) ARN of the certificate. This can be an Certificate Manager (ACM) certificate or an Identity and Access Management (IAM) server certificate. The certifiacte must reside in us-east-1.
 * `description` - (Optional)  A description of the Domain Name.
 * `domainName` - (Required) Domain name.
@@ -79,4 +80,4 @@ Using `terraform import`, import `aws_appsync_domain_name` using the AppSync dom
 % terraform import aws_appsync_domain_name.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c850eb2b8026013d6a49e351a9f3cc357c29b074be725be34e7d5f3683fad68c -->
+<!-- cache-key: cdktf-0.20.8 input-6a902cde83f44cb2b91a032ad8ed70961c9a4485f41d5d3cdc8ecf5b91e240df -->

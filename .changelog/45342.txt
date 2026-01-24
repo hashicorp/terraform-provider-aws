@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_lambda_capacity_provider
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add `capacity_provider_config` and `publish_to` arguments
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `capacity_provider_config` attribute
+```

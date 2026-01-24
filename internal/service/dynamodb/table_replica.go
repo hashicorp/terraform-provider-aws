@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -17,14 +17,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,6 +38,7 @@ const (
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
 // @Tags(identifierAttribute="arn")
 // @Testing(altRegionProvider=true)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -56,10 +56,6 @@ func resourceTableReplica() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(20 * time.Minute),
 		},
-
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-		),
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: { // direct to replica
@@ -103,7 +99,7 @@ func resourceTableReplica() *schema.Resource {
 	}
 }
 
-func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -147,27 +143,23 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		}},
 	}
 
-	err = retry.RetryContext(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateTable(ctx, input, optFn)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "simultaneously") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTable(ctx, input, optFn)
-	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
@@ -199,7 +191,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
 
-func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -230,7 +222,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	table, err := findTableByName(ctx, conn, tableName, optFn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table (%s) not found, removing replica from state", d.Id())
 		d.SetId("")
 		return diags
@@ -272,7 +264,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceTableReplicaReadReplica(ctx, d, meta)...)
 }
 
-func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -283,7 +275,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	table, err := findTableByName(ctx, conn, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Replica (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -318,7 +310,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -363,27 +355,23 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			TableName: aws.String(tableName),
 		}
 
-		err := retry.RetryContext(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func() *retry.RetryError {
+		err := tfresource.Retry(ctx, max(replicaUpdateTimeout, d.Timeout(schema.TimeoutUpdate)), func(ctx context.Context) *tfresource.RetryError {
 			_, err := conn.UpdateTable(ctx, input, optFn)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if errs.IsA[*awstypes.ResourceInUseException](err) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateTable(ctx, input, optFn)
-		}
 
 		if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
@@ -399,7 +387,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// * deletion_protection_enabled
 	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled") {
 		if d.HasChange("point_in_time_recovery") {
-			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), nil, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 			}
 		}
@@ -428,7 +416,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceTableReplicaRead(ctx, d, meta)...)
 }
 
-func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -455,27 +443,23 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	err = retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, updateTableTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.UpdateTable(ctx, input, optFn)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTable(ctx, input, optFn)
-	}
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
 		return diags

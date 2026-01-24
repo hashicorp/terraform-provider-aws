@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager_test
@@ -51,6 +51,12 @@ func testAccRandomPasswordEphemeralResourceConfig_basic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_secretsmanager_random_password.test"),
 		`
-ephemeral "aws_secretsmanager_random_password" "test" {}
+ephemeral "aws_secretsmanager_random_password" "test" {
+  password_length     = 40
+  exclude_characters  = "abc"
+  exclude_numbers     = true
+  exclude_uppercase   = true
+  exclude_punctuation = true
+}
 `)
 }

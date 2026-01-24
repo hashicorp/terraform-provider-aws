@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_instance: Don't mark `network_type` as [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) if the value is not configured. This fixes a problem with `terraform apply -refresh=false` after upgrade from `v5.90.0` and below
+```

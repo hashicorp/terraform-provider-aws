@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: Reset non-API attributes (`source_code_hash`, `s3_bucket`, `s3_key`, `s3_object_version` and `filename`) to their previous values when an update operation fails
+```

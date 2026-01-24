@@ -40,6 +40,7 @@ resource "aws_cleanrooms_membership" "test_membership" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `collaboration_id` - (Required - Forces new resource) - The ID of the collaboration to which the member was invited.
 * `query_log_status` - (Required) - An indicator as to whether query logging has been enabled or disabled for the membership.
 * `default_result_configuration` - (Optional) - The default configuration for a query result.

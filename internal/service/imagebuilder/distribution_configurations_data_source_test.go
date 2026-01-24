@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -50,7 +50,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "test-{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 

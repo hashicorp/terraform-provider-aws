@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -60,22 +60,6 @@ func dataSourceTaskDefinition() *schema.Resource {
 			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"inference_accelerator": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"device_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"ipc_mode": {
 				Type:     schema.TypeString,
@@ -295,7 +279,7 @@ func dataSourceTaskDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -335,9 +319,6 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
-	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting inference_accelerator: %s", err)
-	}
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)

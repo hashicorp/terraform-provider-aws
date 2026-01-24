@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cognitoidp_user_pool: Add `user_pool_add_ons.advanced_security_additional_flows` argument
+```
+
+```release-note:enhancement
+data-source/aws_cognitoidp_user_pool: Add `user_pool_add_ons` attribute
+```

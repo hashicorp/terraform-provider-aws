@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -125,7 +125,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 				Config: testAccCustomKeyStoreConfig_basic(rName, clusterID, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomKeyStoreExists(ctx, resourceName, &customkeystore),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceCustomKeyStore(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceCustomKeyStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func testAccCheckCustomKeyStoreDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfkms.FindCustomKeyStoreByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

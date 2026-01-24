@@ -54,6 +54,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_delegated_administrator.example
+  identity = {
+    service_principal    = "config.amazonaws.com"
+    delegated_account_id = "123456789012"
+  }
+}
+
+resource "aws_organizations_delegated_administrator" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `service_principal` (String) Service principal for the AWS service.
+* `delegated_account_id` (String) Account ID to be designated as a delegated administrator.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_delegated_administrator` using the account ID and its service principal. For example:
 
 ```python
@@ -77,4 +104,4 @@ Using `terraform import`, import `aws_organizations_delegated_administrator` usi
 % terraform import aws_organizations_delegated_administrator.example 123456789012/config.amazonaws.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-745d938c3be3fdd51b8f44d7c0633f240dd4da83077531ec5a373a21b8a1ceb8 -->
+<!-- cache-key: cdktf-0.20.8 input-628f6853ec64270d7f8a5a0e893d096d3a0da8dea938de9a06417377244a4f70 -->

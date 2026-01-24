@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "test" {
+{{- template "region" }}
   alarm_name                = var.rName
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2

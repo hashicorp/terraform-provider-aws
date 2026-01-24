@@ -33,7 +33,7 @@ class MyConvertedCode extends TerraformStack {
     const test = new ShieldDrtAccessRoleArnAssociation(this, "test", {
       roleArn:
         "arn:aws:iam:${" +
-        current.name +
+        current.region +
         "}:${" +
         dataAwsCallerIdentityCurrent.accountId +
         "}:${" +
@@ -102,4 +102,4 @@ Using `terraform import`, import Shield DRT access log bucket associations using
 % terraform import aws_shield_drt_access_log_bucket_association.example example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cb4e208b96c15a8650b0613340094369071abb3b2e7ac8628349179a5337633d -->
+<!-- cache-key: cdktf-0.20.8 input-cbf45f7aa74b1fe64d0b29417ffe972ab19e70dea4dc63717815d98009642002 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -53,7 +54,7 @@ func resourceListenerCertificate() *schema.Resource {
 	}
 }
 
-func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -67,7 +68,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 		ListenerArn: aws.String(listenerARN),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, iamPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AddListenerCertificates(ctx, input)
 	})
 
@@ -80,7 +81,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceListenerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -89,11 +90,11 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findListenerCertificateByTwoPartKey(ctx, conn, listenerARN, certificateARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,7 +110,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -189,7 +190,7 @@ func findListenerCertificates(ctx context.Context, conn *elasticloadbalancingv2.
 	})
 
 	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

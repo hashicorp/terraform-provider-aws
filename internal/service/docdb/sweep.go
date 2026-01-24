@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 
 			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
 
-			if err != nil && !tfresource.NotFound(err) {
+			if err != nil && !retry.NotFound(err) {
 				log.Printf("[WARN] Reading DocumentDB Cluster %s Global Cluster information: %s", id, err)
 				continue
 			}
@@ -112,7 +112,7 @@ func sweepClusterSnapshots(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBClusterSnapshotsInput{}
@@ -153,7 +153,7 @@ func sweepClusterParameterGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBClusterParameterGroupsInput{}
@@ -169,7 +169,7 @@ func sweepClusterParameterGroups(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listing DocumentDB Cluster Parameter Groups (%s): %s", region, err)
+			return err
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
@@ -201,7 +201,7 @@ func sweepClusterInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBInstancesInput{}
@@ -246,7 +246,7 @@ func sweepGlobalClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeGlobalClustersInput{}
@@ -287,7 +287,7 @@ func sweepSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBSubnetGroupsInput{}
@@ -328,7 +328,7 @@ func sweepEventSubscriptions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeEventSubscriptionsInput{}

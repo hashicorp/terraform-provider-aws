@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -49,8 +49,10 @@ func testAccSecretsEphemeralResourceConfig_basic(rName, secretString string) str
 		acctest.ConfigWithEchoProvider("ephemeral.aws_kms_secrets.test"),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  is_enabled  = true
+  description             = %[1]q
+  is_enabled              = true
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_ciphertext" "test" {

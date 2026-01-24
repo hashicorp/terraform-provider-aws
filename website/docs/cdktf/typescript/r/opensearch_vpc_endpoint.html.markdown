@@ -45,8 +45,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainArn` - (Required, Forces new resource) Specifies the Amazon Resource Name (ARN) of the domain to create the endpoint for
 * `vpcOptions` - (Required) Options to specify the subnets and security groups for the endpoint.
 
@@ -102,4 +103,4 @@ Using `terraform import`, import OpenSearch VPC endpoint connections using the `
 % terraform import aws_opensearch_vpc_endpoint_connection.example endpoint-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0cbd9462478b83364b91f1d0bd36ff42057d2b1fcd8ca135100e7948f9224f93 -->
+<!-- cache-key: cdktf-0.20.8 input-5a744203f3493a60bc75c408ac5c67446963991f758c602973d17bdc5aea9324 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +65,7 @@ func TestAccRoute53HostedZoneDNSSEC_disappears(t *testing.T) {
 				Config: testAccHostedZoneDNSSECConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccHostedZoneDNSSECExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceHostedZoneDNSSEC(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceHostedZoneDNSSEC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +126,7 @@ func testAccCheckHostedZoneDNSSECDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfroute53.FindHostedZoneDNSSECByZoneID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -161,7 +161,9 @@ func testAccHostedZoneDNSSECConfig_base(rName, domainName string) string {
 resource "aws_kms_key" "test" {
   customer_master_key_spec = "ECC_NIST_P256"
   deletion_window_in_days  = 7
+  enable_key_rotation      = true
   key_usage                = "SIGN_VERIFY"
+
   policy = jsonencode({
     Statement = [
       {

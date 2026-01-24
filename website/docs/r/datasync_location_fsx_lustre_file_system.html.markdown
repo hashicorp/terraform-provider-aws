@@ -23,6 +23,7 @@ resource "aws_datasync_location_fsx_lustre_file_system" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for Lustre file system.
 * `security_group_arns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for Lustre file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination.

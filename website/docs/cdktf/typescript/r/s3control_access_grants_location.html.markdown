@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Optional) The AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `iamRoleArn` - (Required) The ARN of the IAM role that S3 Access Grants should use when fulfilling runtime access
 requests to the location.
@@ -94,4 +95,4 @@ Using `terraform import`, import S3 Access Grants locations using the `accountId
 % terraform import aws_s3control_access_grants_location.example 123456789012,default
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-00a08b277ec91e24309d1edae7d8df05172848de4d8e44b507d33423f4b4aa85 -->
+<!-- cache-key: cdktf-0.20.8 input-a613d803d0bd7a6dd022c1da7bfcf9f1da88e82462239634b885d4258409a59c -->

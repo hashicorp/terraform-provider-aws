@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudtrail_event_data_store: Support `errorCode`, `eventType`, `sessionCredentialFromConsole`, and `vpcEndpointId` as valid values for `advanced_event_selector.field_selector.field`
+```
+
+```release-note:enhancement
+resource/aws_cloudtrail: Support `errorCode`, `eventType`, `sessionCredentialFromConsole`, and `vpcEndpointId` as valid values for `advanced_event_selector.field_selector.field`
+```

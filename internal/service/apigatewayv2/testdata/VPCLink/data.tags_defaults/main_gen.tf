@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -26,9 +26,12 @@ resource "aws_security_group" "test" {
 }
 
 # acctest.ConfigVPCWithSubnets(rName, 2)
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
+
+# acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
   count = 2
@@ -38,7 +41,8 @@ resource "aws_subnet" "test" {
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 }
 
-# acctest.ConfigAvailableAZsNoOptInDefaultExclude()
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
 data "aws_availability_zones" "available" {
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
@@ -52,6 +56,7 @@ data "aws_availability_zones" "available" {
 locals {
   default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

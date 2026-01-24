@@ -247,7 +247,7 @@ This resource supports the following arguments:
 
 * `zoneId` - (Required) The ID of the hosted zone to contain this record.
 * `name` - (Required) The name of the record.
-* `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
+* `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `HTTPS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV`, `SSHFP`, `SVCB`, `TLSA`, and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
 * `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g., `"first255characters\"\"morecharacters"`).
 * `setIdentifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `cidrRoutingPolicy`, `failoverRoutingPolicy`, `geolocationRoutingPolicy`,`geoproximityRoutingPolicy`, `latencyRoutingPolicy`, `multivalueAnswerRoutingPolicy`, or `weightedRoutingPolicy`.
@@ -322,7 +322,45 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The name of the record.
 * `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route53_record.example
+  identity = {
+    zone_id = "Z4KAPRWWNC7JR"
+    name    = "dev.example.com"
+    type    = "NS"
+  }
+}
+
+resource "aws_route53_record" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `zoneId` (String) Hosted zone ID for the record.
+* `name` (String) Name of the record.
+* `type` (String) Record type.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `setIdentifier` (String) Set identifier for the record.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
 
@@ -342,7 +380,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     Route53Record.generateConfigForImport(
       this,
-      "myrecord",
+      "example",
       "Z4KAPRWWNC7JR_dev.example.com_NS"
     );
   }
@@ -366,7 +404,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     Route53Record.generateConfigForImport(
       this,
-      "myrecord",
+      "example",
       "Z4KAPRWWNC7JR_dev.example.com_NS_dev"
     );
   }
@@ -388,11 +426,7 @@ import { Route53Record } from "./.gen/providers/aws/route53-record";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    Route53Record.generateConfigForImport(
-      this,
-      "myrecord",
-      "Z4KAPRWWNC7JR__NS"
-    );
+    Route53Record.generateConfigForImport(this, "example", "Z4KAPRWWNC7JR__NS");
   }
 }
 
@@ -403,13 +437,13 @@ class MyConvertedCode extends TerraformStack {
 Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
 
 ```console
-% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS
+% terraform import aws_route53_record.example Z4KAPRWWNC7JR_dev_NS
 ```
 
 If the record also contains a set identifier, append it:
 
 ```console
-% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS_dev
+% terraform import aws_route53_record.example Z4KAPRWWNC7JR_dev_NS_dev
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-37915b689e1cd3b1e10df9abf4ab20199477069f6d48f7e6adb34f0bfce9a0f8 -->
+<!-- cache-key: cdktf-0.20.8 input-7a9629e0086fa0c990a2ef3865fd663e111bf253d550a0318f8eaffc4d8f7b04 -->

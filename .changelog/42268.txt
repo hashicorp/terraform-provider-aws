@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_opensearch_domain: `kibana_endpoint` has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_opensearch_domain: `kibana_endpoint` has been removed
+```

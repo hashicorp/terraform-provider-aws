@@ -41,6 +41,7 @@ resource "aws_vpc_endpoint_service" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
 * `gateway_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Gateway Load Balancers for the endpoint service.

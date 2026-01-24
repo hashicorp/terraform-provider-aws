@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package detective
@@ -12,11 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,7 +46,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -63,7 +64,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
@@ -74,14 +75,14 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
 
 	administrator, err := findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Detective Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -96,7 +97,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DetectiveClient(ctx)
@@ -115,7 +116,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return findOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
 	})
 
@@ -153,7 +154,7 @@ func findOrganizationAdminAccounts(ctx context.Context, conn *detective.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not a member of an organization") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

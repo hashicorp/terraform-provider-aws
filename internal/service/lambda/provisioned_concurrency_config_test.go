@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +65,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_disappears(t *testing.T) {
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceProvisionedConcurrencyConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceProvisionedConcurrencyConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), lambdaFunctionResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), lambdaFunctionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -315,7 +315,7 @@ func testAccCheckProvisionedConcurrencyConfigDestroy(ctx context.Context) resour
 
 			_, err := tflambda.FindProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["qualifier"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

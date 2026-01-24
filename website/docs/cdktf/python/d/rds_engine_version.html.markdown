@@ -68,6 +68,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_only` - (Optional) Whether the engine version must be an AWS-defined default version. Some engines have multiple default versions, such as for each major version. Using `default_only` may help avoid `multiple RDS engine versions` errors. See also `latest`.
 * `filter` - (Optional) One or more name/value pairs to use in filtering versions. There are several valid keys; for a full reference, check out [describe-db-engine-versions in the AWS CLI reference](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-engine-versions.html).
 * `has_major_target` - (Optional) Whether the engine version must have one or more major upgrade targets. Not including `has_major_target` or setting it to `false` doesn't imply that there's no corresponding major upgrade target for the engine version.
@@ -106,4 +107,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version_actual` - Complete engine version.
 * `version_description` - Description of the engine version.
 
-<!-- cache-key: cdktf-0.20.8 input-c1c417ee20b29b9a30a8535daa2a033b1c6d977270f8d5c04d0dce74533ece46 -->
+<!-- cache-key: cdktf-0.20.8 input-b058d00a50498da6f75c0d50123bc1a7dcb6dfd555683625d54c3688c9a76d67 -->

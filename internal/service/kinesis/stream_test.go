@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis_test
@@ -14,11 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkinesis "github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +83,7 @@ func TestAccKinesisStream_disappears(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesis.ResourceStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesis.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -184,6 +188,71 @@ func TestAccKinesisStream_encryption(t *testing.T) {
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "encryption_type", "KMS"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccKinesisStream_maxRecordSizeInKiB(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.StreamDescriptionSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig_maxRecordSizeInKiB(rName, 10240),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_record_size_in_kib"), knownvalue.Int64Exact(10240)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           rName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+			{
+				Config: testAccStreamConfig_maxRecordSizeInKiB(rName, 1024),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_record_size_in_kib"), knownvalue.Int64Exact(1024)),
+				},
+			},
+			{
+				Config: testAccStreamConfig_maxRecordSizeInKiB(rName, 10240),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamExists(ctx, resourceName, &stream),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("max_record_size_in_kib"), knownvalue.Int64Exact(10240)),
+				},
 			},
 		},
 	})
@@ -664,7 +733,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfkinesis.FindStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -735,6 +804,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -755,6 +825,16 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 `, rName)
+}
+
+func testAccStreamConfig_maxRecordSizeInKiB(rName string, size int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name                   = %[1]q
+  max_record_size_in_kib = %[2]d
+  shard_count            = 2
+}
+`, rName, size)
 }
 
 func testAccStreamConfig_shardCount(rName string, shardCount int) string {
@@ -862,6 +942,7 @@ resource "aws_kms_key" "key" {
 
   description             = "%[1]s-${count.index}"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kinesis_stream" "test" {

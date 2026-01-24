@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -24,6 +25,7 @@ const (
 	linkingModeAllRegions                = "ALL_REGIONS"
 	linkingModeAllRegionsExceptSpecified = "ALL_REGIONS_EXCEPT_SPECIFIED"
 	linkingModeSpecifiedRegions          = "SPECIFIED_REGIONS"
+	linkingModeNoRegions                 = "NO_REGIONS"
 )
 
 func linkingMode_Values() []string {
@@ -31,6 +33,7 @@ func linkingMode_Values() []string {
 		linkingModeAllRegions,
 		linkingModeAllRegionsExceptSpecified,
 		linkingModeSpecifiedRegions,
+		linkingModeNoRegions,
 	}
 }
 
@@ -64,7 +67,7 @@ func resourceFindingAggregator() *schema.Resource {
 	}
 }
 
-func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -88,13 +91,13 @@ func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	output, err := findFindingAggregatorByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Finding Aggregator (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -112,7 +115,7 @@ func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -135,7 +138,7 @@ func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -167,7 +170,7 @@ func findFindingAggregator(ctx context.Context, conn *securityhub.Client, input 
 	output, err := conn.GetFindingAggregator(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -178,7 +181,7 @@ func findFindingAggregator(ctx context.Context, conn *securityhub.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

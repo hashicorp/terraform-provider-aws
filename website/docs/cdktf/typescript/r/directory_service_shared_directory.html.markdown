@@ -61,6 +61,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `method` - (Optional) Method used when sharing a directory. Valid values are `ORGANIZATIONS` and `HANDSHAKE`. Default is `HANDSHAKE`.
 * `notes` - (Optional, Sensitive) Message sent by the directory owner to the directory consumer to help the directory consumer administrator determine whether to approve or reject the share invitation.
 
@@ -114,4 +115,4 @@ Using `terraform import`, import Directory Service Shared Directories using the 
 % terraform import aws_directory_service_shared_directory.example d-1234567890/d-9267633ece
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-703c00eb7c77b3d6d3290dced0c2f1e34dd8c3a57ded6619cfae213d85fabb65 -->
+<!-- cache-key: cdktf-0.20.8 input-a2b0d372e25a9b63f4425bf113bdfa173bd014763a7051fb8efd93d9bcc6e94f -->

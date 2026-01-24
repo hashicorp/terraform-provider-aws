@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_sesv2_email_identity: Add `verification_status` attribute
+```
+
+```release-note:enhancement
+resource/aws_sesv2_email_identity: Add `verification_status` attribute
+```

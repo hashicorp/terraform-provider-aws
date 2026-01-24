@@ -23,6 +23,7 @@ data "aws_backup_selection" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `plan_id` - (Required) Backup plan ID associated with the selection of resources.
 * `selection_id` - (Required) Backup selection ID.
 

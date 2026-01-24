@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -27,7 +27,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.#", resourceName, "cors_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.0.access_control_allow_credentials", resourceName, "cors_config.0.access_control_allow_credentials"),

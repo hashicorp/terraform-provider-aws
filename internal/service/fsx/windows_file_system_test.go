@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,7 +97,7 @@ func TestAccFSxWindowsFileSystem_disappears(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceWindowsFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -942,7 +942,7 @@ func testAccCheckWindowsFileSystemDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tffsx.FindWindowsFileSystemByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1114,6 +1114,7 @@ func testAccWindowsFileSystemConfig_kmsKeyID1(rName, domain string) string {
 resource "aws_kms_key" "test1" {
   description             = "%[1]s-1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_windows_file_system" "test" {
@@ -1136,6 +1137,7 @@ func testAccWindowsFileSystemConfig_kmsKeyID2(rName, domain string) string {
 resource "aws_kms_key" "test2" {
   description             = "%[1]s-2"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_windows_file_system" "test" {

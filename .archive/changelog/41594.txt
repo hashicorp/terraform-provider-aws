@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_service: Fix removal of all `vpc_lattice_configurations` blocks
+```
+
+```release-note:bug
+resource/aws_vpclattice_target_group: Retry `ConflictException` errors on delete
+```

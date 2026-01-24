@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,6 +34,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDomainNameOutput")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -43,6 +45,11 @@ func resourceDomainName() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,6 +110,11 @@ func resourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoint_access_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.EndpointAccessMode](),
+			},
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -111,6 +123,12 @@ func resourceDomainName() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.IpAddressType](),
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -154,7 +172,7 @@ func resourceDomainName() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -187,18 +205,18 @@ func resourceDomainName() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: endpointConfigurationPlantimeValidate,
 	}
 }
 
-func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
 	input := apigateway.CreateDomainNameInput{
 		DomainName:              aws.String(domainName),
-		MutualTlsAuthentication: expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
+		MutualTlsAuthentication: expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]any)),
 		Tags:                    getTagsIn(ctx),
 	}
 
@@ -222,8 +240,12 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CertificatePrivateKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		input.EndpointConfiguration = expandEndpointConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("endpoint_access_mode"); ok {
+		input.EndpointAccessMode = types.EndpointAccessMode(v.(string))
+	}
+
+	if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EndpointConfiguration = expandEndpointConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("ownership_verification_certificate_arn"); ok {
@@ -252,14 +274,21 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Domain Name (%s): %s", domainName, err)
 	}
 
-	d.SetId(domainNameCreateResourceID(aws.ToString(output.DomainName), aws.ToString(output.DomainNameId)))
+	// Need to wait for the newly created domain name to update when using an enhanced security policy
+	domainNameID := aws.ToString(output.DomainNameId)
+	if err := waitDomainNameUpdated(ctx, conn, domainName, domainNameID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Domain Name (%s) update: %s", d.Id(), err)
+	}
+
+	d.SetId(domainNameCreateResourceID(aws.ToString(output.DomainName), domainNameID))
 
 	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	domainName, domainNameID, err := domainNameParseResourceID(d.Id())
 	if err != nil {
@@ -268,7 +297,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Domain Name (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -281,7 +310,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	if output.DomainNameArn != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set(names.AttrARN, output.DomainNameArn)
 	} else {
-		d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+		d.Set(names.AttrARN, domainNameARN(ctx, c, d.Id()))
 	}
 	d.Set(names.AttrCertificateARN, output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
@@ -291,9 +320,10 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("certificate_upload_date", nil)
 	}
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
-	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set("cloudfront_zone_id", c.CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_name_id", output.DomainNameId)
+	d.Set("endpoint_access_mode", output.EndpointAccessMode)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
@@ -313,7 +343,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -341,23 +371,43 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			})
 		}
 
+		if d.HasChange("endpoint_access_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/endpointAccessMode"),
+				Value: aws.String(d.Get("endpoint_access_mode").(string)),
+			})
+		}
+
 		if d.HasChange("endpoint_configuration.0.types") {
 			// The domain name must have an endpoint type.
 			// If attempting to remove the configuration, do nothing.
-			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpReplace,
 					Path:  aws.String("/endpointConfiguration/types/0"),
-					Value: aws.String(tfMap["types"].([]interface{})[0].(string)),
+					Value: aws.String(tfMap["types"].([]any)[0].(string)),
+				})
+			}
+		}
+
+		if d.HasChange("endpoint_configuration.0.ip_address_type") {
+			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
+
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
+					Path:  aws.String("/endpointConfiguration/ipAddressType"),
+					Value: aws.String(tfMap[names.AttrIPAddressType].(string)),
 				})
 			}
 		}
 
 		if d.HasChange("mutual_tls_authentication") {
-			if v, ok := d.GetOk("mutual_tls_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk("mutual_tls_authentication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 
 				if d.HasChange("mutual_tls_authentication.0.truststore_uri") {
 					operations = append(operations, types.PatchOperation{
@@ -438,7 +488,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Domain Name (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDomainNameUpdated(ctx, conn, domainName, domainNameID); err != nil {
+		if err := waitDomainNameUpdated(ctx, conn, domainName, domainNameID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Domain Name (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -446,7 +496,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -518,8 +568,7 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -528,17 +577,17 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDomainName(conn *apigateway.Client, domainName, domainNameID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -550,14 +599,11 @@ func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, 
 	}
 }
 
-func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) (*types.DomainName, error) {
-	const (
-		timeout = 15 * time.Minute
-	)
+func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.DomainNameStatusUpdating),
 		Target:     enum.Slice(types.DomainNameStatusAvailable),
-		Refresh:    statusDomainName(ctx, conn, domainName, domainNameID),
+		Refresh:    statusDomainName(conn, domainName, domainNameID),
 		Timeout:    timeout,
 		Delay:      1 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -566,20 +612,20 @@ func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainN
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DomainName); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
-func expandMutualTLSAuthentication(tfList []interface{}) *types.MutualTlsAuthenticationInput {
+func expandMutualTLSAuthentication(tfList []any) *types.MutualTlsAuthenticationInput {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &types.MutualTlsAuthenticationInput{} // nosemgrep:ci.semgrep.aws.input-on-heap
 
@@ -594,12 +640,12 @@ func expandMutualTLSAuthentication(tfList []interface{}) *types.MutualTlsAuthent
 	return apiObject
 }
 
-func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []interface{} {
+func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.TruststoreUri; v != nil {
 		tfMap["truststore_uri"] = aws.ToString(v)
@@ -609,7 +655,7 @@ func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []
 		tfMap["truststore_version"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func domainNameARN(ctx context.Context, c *conns.AWSClient, domainName string) string {

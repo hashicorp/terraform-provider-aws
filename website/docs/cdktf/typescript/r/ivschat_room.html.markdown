@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `loggingConfigurationIdentifiers` - (Optional) List of Logging Configuration
   ARNs to attach to the room.
 * `maximumMessageLength` - (Optional) Maximum number of characters in a single
@@ -121,6 +122,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivschat_room.example
+  identity = {
+    "arn" = "arn:aws:ivschat:us-west-2:123456789012:room/g1H2I3j4k5L6"
+  }
+}
+
+resource "aws_ivschat_room" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS Chat room.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Room using the ARN. For example:
 
 ```typescript
@@ -151,4 +173,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Room using the ARN
 % terraform import aws_ivschat_room.example arn:aws:ivschat:us-west-2:326937407773:room/GoXEXyB4VwHb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3fca5b37b7d82ff4310bf108852e9d4ce3f8757446324b2c39d6248a58f1f8e6 -->
+<!-- cache-key: cdktf-0.20.8 input-80f72d368d9a6e4272dc0038cc7aa8b71ce7d3e177e8a4bc17269d368f726d4e -->

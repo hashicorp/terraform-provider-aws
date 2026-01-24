@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,7 +53,7 @@ func resourceListenerPolicy() *schema.Resource {
 	}
 }
 
-func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -82,7 +82,7 @@ func resourceListenerPolicySet(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceListenerPolicyRead(ctx, d, meta)...)
 }
 
-func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 
@@ -93,7 +93,7 @@ func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	policyNames, err := findLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Listener Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -110,7 +110,7 @@ func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBClient(ctx)
 

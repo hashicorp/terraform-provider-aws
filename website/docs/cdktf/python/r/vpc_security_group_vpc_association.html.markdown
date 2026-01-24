@@ -34,8 +34,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_id` - (Required) The ID of the security group.
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
 
@@ -53,6 +54,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_security_group_vpc_association.example
+  identity = {
+    vpc_id            = "vpc-67890"
+    security_group_id = "sg-12345"
+  }
+}
+
+resource "aws_vpc_security_group_vpc_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `vpc_id` (String) VPC ID.
+* `security_group_id` (String) Security Group ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Security Group VPC Association using the `security_group_id` and `vpc_id` arguments, separated by a comma (`,`). For example:
 
@@ -77,4 +106,4 @@ Using `terraform import`, import a Security Group VPC Association using the `sec
 % terraform import aws_vpc_security_group_vpc_association.example sg-12345,vpc-67890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c0ba7de57b663ae435a7d22fd4300d66dc6710daffd67bab6a0b3d766ea40a3 -->
+<!-- cache-key: cdktf-0.20.8 input-04830f1b9a3984d65215e67daca6961a558f4b52a839c1240c688ad537001ef9 -->

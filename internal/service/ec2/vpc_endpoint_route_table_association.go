@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,7 +46,7 @@ func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -76,7 +77,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 	return append(diags, resourceVPCEndpointRouteTableAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -85,11 +86,11 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return nil, findVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Route Table Association (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -102,7 +103,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	return diags
 }
 
-func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -136,7 +137,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/route-table-id'", d.Id())

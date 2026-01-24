@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner
@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,14 +40,10 @@ func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type deploymentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deploymentResourceModel]
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
-}
-
-func (r *deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_deployment"
 }
 
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -133,7 +130,7 @@ func (r *deploymentResource) Read(ctx context.Context, req resource.ReadRequest,
 	serviceARN, operationID := data.ServiceARN.ValueString(), data.OperationID.ValueString()
 	output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 
@@ -179,7 +176,7 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -199,11 +196,11 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 	return output, nil
 }
 
-func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -216,7 +213,7 @@ func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, op
 }
 
 func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string, timeout time.Duration) (*awstypes.OperationSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.OperationStatusPending, awstypes.OperationStatusInProgress),
 		Target:         enum.Slice(awstypes.OperationStatusSucceeded),
 		Refresh:        statusOperation(ctx, conn, serviceARN, operationID),
@@ -235,6 +232,7 @@ func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, servic
 }
 
 type deploymentResourceModel struct {
+	framework.WithRegionModel
 	ID          types.String   `tfsdk:"id"`
 	OperationID types.String   `tfsdk:"operation_id"`
 	ServiceARN  fwtypes.ARN    `tfsdk:"service_arn"`

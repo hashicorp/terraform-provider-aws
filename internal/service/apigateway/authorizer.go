@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,7 +40,7 @@ func resourceAuthorizer() *schema.Resource {
 		CustomizeDiff: resourceAuthorizerCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/AUTHORIZER-ID", d.Id())
@@ -109,7 +109,7 @@ func resourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -176,14 +176,15 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, d.Id(), apiID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Authorizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -193,7 +194,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizer (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, authorizerARN(ctx, meta.(*conns.AWSClient), apiID, d.Id()))
+	d.Set(names.AttrARN, authorizerARN(ctx, c, apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
@@ -210,7 +211,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -303,7 +304,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -327,7 +328,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// switch type between COGNITO_USER_POOLS and TOKEN/REQUEST will create new resource.
 	if diff.HasChange(names.AttrType) {
 		o, n := diff.GetChange(names.AttrType)
@@ -364,8 +365,7 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -374,7 +374,7 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

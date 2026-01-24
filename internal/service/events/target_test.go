@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -228,6 +229,11 @@ func TestAccEventsTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -244,8 +250,15 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config:   testAccTargetConfig_defaultBusName(rName),
-				PlanOnly: true,
+				Config: testAccTargetConfig_defaultBusName(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -267,7 +280,7 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1267,7 +1280,7 @@ func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1951,15 +1964,14 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  cluster_subnet_group_name           = aws_redshift_subnet_group.test.name
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier        = %[1]q
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+  database_name             = "test"
+  master_username           = "tfacctest"
+  master_password           = "Mustbe8characters"
+  node_type                 = "ra3.large"
+  allow_version_upgrade     = false
+  skip_final_snapshot       = true
 
   depends_on = [aws_internet_gateway.test]
 }
@@ -2306,7 +2318,7 @@ resource "aws_subnet" "subnet" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = "%[1]s"
+  name = "%[1]s"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.iam_instance_profile.arn
@@ -2335,10 +2347,14 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 resource "aws_batch_job_queue" "test" {
-  name                 = "%[1]s"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  name     = "%[1]s"
+  state    = "ENABLED"
+  priority = 1
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
 }
 
 resource "aws_batch_job_definition" "test" {

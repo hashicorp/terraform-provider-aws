@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -117,7 +118,7 @@ func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupIngressRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupIngressRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,6 +144,11 @@ func TestAccVPCSecurityGroupIngressRule_tags_defaultAndIgnoreTags(t *testing.T) 
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
 					testAccCheckSecurityGroupIngressRuleUpdateTags(ctx, &v, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 			{
@@ -150,14 +156,28 @@ func TestAccVPCSecurityGroupIngressRule_tags_defaultAndIgnoreTags(t *testing.T) 
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
 					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
 					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -181,6 +201,11 @@ func TestAccVPCSecurityGroupIngressRule_tags_ignoreTags(t *testing.T) {
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
 					testAccCheckSecurityGroupIngressRuleUpdateTags(ctx, &v, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
 			},
 			{
@@ -188,14 +213,28 @@ func TestAccVPCSecurityGroupIngressRule_tags_ignoreTags(t *testing.T) {
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeys("ignorekey1"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
-				PlanOnly: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -604,7 +643,7 @@ func testAccCheckSecurityGroupIngressRuleDestroy(ctx context.Context) resource.T
 
 			_, err := tfec2.FindSecurityGroupIngressRuleByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -774,7 +813,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test1" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -783,7 +822,7 @@ resource "aws_vpc_endpoint" "test1" {
 
 resource "aws_vpc_endpoint" "test2" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.dynamodb"
 
   tags = {
     Name = %[1]q

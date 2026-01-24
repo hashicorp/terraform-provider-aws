@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This resource supports the following arguments.
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `httpEndpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"`, `"disabled"`, or `"no-preference"`. Default: `"no-preference"`.
 * `httpTokens` - (Optional) Whether the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"`, `"required"`, or `"no-preference"`. Default: `"no-preference"`.
 * `httpPutResponseHopLimit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`, or `-1` to indicate no preference. Default: `-1`.
@@ -53,4 +54,4 @@ This data source exports no additional attributes.
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-5d0cf6398963495f13f899bdc53496621dd69d6ddab83cfd583ae4f5df7dba35 -->
+<!-- cache-key: cdktf-0.20.8 input-cc4e173f46191e77ce950f68782a6cd52d39c45eefac23e8839dbcbcbaf965b4 -->

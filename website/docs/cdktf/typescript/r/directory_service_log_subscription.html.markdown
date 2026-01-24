@@ -76,6 +76,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directoryId` - (Required) ID of directory.
 * `logGroupName` - (Required) Name of the cloudwatch log group to which the logs should be published. The log group should be already created and the directory service principal should be provided with required permission to create stream and publish logs. Changing this value would delete the current subscription and create a new one. A directory can only have one log subscription at a time.
 
@@ -115,4 +116,4 @@ Using `terraform import`, import Directory Service Log Subscriptions using the d
 % terraform import aws_directory_service_log_subscription.msad d-1234567890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4c454e09cdbbcc5b15311701235bc1776950d5a3aac1b39f531b202fbb8a7072 -->
+<!-- cache-key: cdktf-0.20.8 input-624bfcb4b6c2f99ca3a0c86220daae3f9a674dd7bf95f9131a753322eebc2e90 -->

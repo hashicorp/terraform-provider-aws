@@ -33,11 +33,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
-This data source exports the following attributes:
+This data source exports the following attributes in addition to the arguments above:
 
 * `profiles` - List of Profiles.
     * `arn` - ARN of the Profile.
@@ -45,4 +47,4 @@ This data source exports the following attributes:
     * `name` - Name of the Profile.
     * `share_status` - Share status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
 
-<!-- cache-key: cdktf-0.20.8 input-4a75fe60b2525291c9a1401f0837662c3c2aa13ba372aa6fd9147aaa53548f2a -->
+<!-- cache-key: cdktf-0.20.8 input-9e807d61a9d7c684181ae9602024eabbb390e32324e6b10be68349005df31368 -->

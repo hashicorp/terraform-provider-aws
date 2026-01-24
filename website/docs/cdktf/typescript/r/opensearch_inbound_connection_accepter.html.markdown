@@ -40,12 +40,12 @@ class MyConvertedCode extends TerraformStack {
       localDomainInfo: {
         domainName: localDomain.domainName,
         ownerId: Token.asString(current.accountId),
-        region: Token.asString(dataAwsRegionCurrent.name),
+        region: Token.asString(dataAwsRegionCurrent.region),
       },
       remoteDomainInfo: {
         domainName: remoteDomain.domainName,
         ownerId: Token.asString(current.accountId),
-        region: Token.asString(dataAwsRegionCurrent.name),
+        region: Token.asString(dataAwsRegionCurrent.region),
       },
     });
     const awsOpensearchInboundConnectionAccepterFoo =
@@ -63,6 +63,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connectionId` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
 ## Attribute Reference
@@ -111,4 +112,4 @@ Using `terraform import`, import AWS Opensearch Inbound Connection Accepters usi
 % terraform import aws_opensearch_inbound_connection_accepter.foo connection-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55e95b97c434786498b87477ae28b40538814eb9c17d405e3c6f2aa8f4d59ff6 -->
+<!-- cache-key: cdktf-0.20.8 input-ea073ccc4e0c13183147632de8f383c5cff4ffca40482b5ba4a681a3f4d8ef31 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru_test
@@ -19,6 +19,7 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 		"EventSourcesConfig": {
 			acctest.CtBasic:      testAccEventSourcesConfig_basic,
 			acctest.CtDisappears: testAccEventSourcesConfig_disappears,
+			"Identity":           testAccDevOpsGuruEventSourcesConfig_IdentitySerial,
 		},
 		// A maxiumum of 2 notification channels can be configured at once, so
 		// serialize tests for safety.
@@ -43,6 +44,7 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 		"ServiceIntegration": {
 			acctest.CtBasic: testAccServiceIntegration_basic,
 			"kms":           testAccServiceIntegration_kms,
+			"Identity":      testAccDevOpsGuruServiceIntegration_IdentitySerial,
 		},
 	}
 

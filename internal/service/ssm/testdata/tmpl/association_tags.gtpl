@@ -1,4 +1,5 @@
 resource "aws_ssm_association" "test" {
+{{- template "region" }}
   name                = aws_ssm_document.test.name
   schedule_expression = "cron(0 16 ? * WED *)"
 
@@ -11,6 +12,7 @@ resource "aws_ssm_association" "test" {
 }
 
 resource "aws_ssm_document" "test" {
+{{- template "region" }}
   name          = var.rName
   document_type = "Command"
 
@@ -33,5 +35,4 @@ resource "aws_ssm_document" "test" {
   }
 }
 DOC
-
 }

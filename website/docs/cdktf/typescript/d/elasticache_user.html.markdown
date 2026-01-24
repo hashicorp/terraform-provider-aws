@@ -38,7 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `userId` – (Required) Identifier for the user.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `userId` - (Required) Identifier for the user.
 
 ## Attribute Reference
 
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `userName` - User name of the user.
 * `accessString` - String for what access a user possesses within the associated ElastiCache replication groups or clusters.
 
-<!-- cache-key: cdktf-0.20.8 input-64eebcc31de3d79926a950f1207062bdd9ae37c2badee3ea0ae9ce16d2cd8d16 -->
+<!-- cache-key: cdktf-0.20.8 input-4623587f562dfc20508fcf3e94d8479a5890fad84723e0f855146ec352e142a3 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -96,7 +96,7 @@ func TestAccPinpointApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceApp(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -429,7 +429,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfpinpoint.FindAppByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -564,8 +564,8 @@ resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromPinpoint"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.function_name
-  principal     = "pinpoint.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
-  source_arn    = "arn:${data.aws_partition.current.partition}:mobiletargeting:${data.aws_region.current.name}:${data.aws_caller_identity.aws.account_id}:/apps/*"
+  principal     = "pinpoint.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+  source_arn    = "arn:${data.aws_partition.current.partition}:mobiletargeting:${data.aws_region.current.region}:${data.aws_caller_identity.aws.account_id}:/apps/*"
 }
 `, rName)
 }

@@ -30,6 +30,7 @@ resource "aws_datasync_location_smb" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `domain` - (Optional) The name of the Windows domain the SMB server belongs to.
 * `mount_options` - (Optional) Configuration block containing mount options used by DataSync to access the SMB Server. Can be `AUTOMATIC`, `SMB2`, or `SMB3`.
@@ -53,6 +54,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_smb.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_smb" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync SMB location.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_smb` using the Amazon Resource Name (ARN). For example:
 

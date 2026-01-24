@@ -1,0 +1,6 @@
+```release-note:bug
+provider: Fix `Missing Resource Identity After Update` errors for non-refreshed and failed updates of Plugin Framework based resources
+```
+```release-note:bug
+provider: Fix `Unexpected Identity Change` errors when fully-null identity values in state are updated to valid values for Plugin Framework based resources
+```

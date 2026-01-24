@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_dsql_cluster
+```
+
+```release-note:new-resource
+aws_dsql_cluster_peering
+```

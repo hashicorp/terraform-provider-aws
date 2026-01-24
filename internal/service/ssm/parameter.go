@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,9 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,6 +34,11 @@ import (
 // @Tags(identifierAttribute="id", resourceType="Parameter")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 // @Testing(importIgnore="has_value_wo")
+// @IdentityAttribute("name")
+// @Testing(idAttrDuplicates="name")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(plannableImportAction="NoOp")
+// @CustomImport
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -42,14 +48,17 @@ func resourceParameter() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
+
 				d.Set("has_value_wo", false)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validation.PreferWriteOnlyAttribute(cty.GetAttrPath(names.AttrValue), cty.GetAttrPath("value_wo")),
-		},
 		Schema: map[string]*schema.Schema{
 			"allowed_pattern": {
 				Type:         schema.TypeString,
@@ -99,9 +108,8 @@ func resourceParameter() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"overwrite": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "this attribute has been deprecated",
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -151,27 +159,29 @@ func resourceParameter() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta any) bool {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
-			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange(names.AttrValue)
+			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue) || diff.HasChange(names.AttrDescription)
 			}),
-			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")
 			}),
-			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange(names.AttrValue)
+			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if diff.NewValueKnown("insecure_value") {
+					return false
+				}
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue)
 			}),
-			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("value_wo_version")
+			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("value_wo_version") || !diff.NewValueKnown("value_wo_version")
 			}),
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -217,7 +227,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// AWS SSM Service only supports PutParameter requests with Tags
-	// iff Overwrite is not provided or is false; in this resource's case,
+	// if Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
 	tags := getTagsIn(ctx)
 	if !aws.ToBool(input.Overwrite) {
@@ -250,7 +260,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -259,11 +269,11 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		timeout = 2 * time.Minute
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {
-			if d.IsNewResource() && tfresource.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
+			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
 				return true, err
 			}
 
@@ -271,7 +281,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		},
 	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -298,6 +308,9 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 		if valueWO != "" {
 			hasWriteOnly = true
+		} else {
+			hasWriteOnly = false
+			d.Set("has_value_wo", nil)
 		}
 	}
 
@@ -318,7 +331,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -337,7 +350,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -402,7 +415,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceParameterRead(ctx, d, meta)...)
 }
 
-func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -432,7 +445,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	output, err := conn.GetParameter(ctx, input)
 
 	if errs.IsA[*awstypes.ParameterNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -443,7 +456,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	}
 
 	if output == nil || output.Parameter == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Parameter, nil

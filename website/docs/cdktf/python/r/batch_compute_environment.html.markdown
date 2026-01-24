@@ -122,7 +122,6 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_iam_instance_profile_ecs_instance_role.override_logical_id("ecs_instance_role")
         aws_batch_compute_environment_sample = BatchComputeEnvironment(self, "sample_11",
-            compute_environment_name="sample",
             compute_resources=BatchComputeEnvironmentComputeResources(
                 instance_role=Token.as_string(aws_iam_instance_profile_ecs_instance_role.arn),
                 instance_type=["c4.large"],
@@ -134,6 +133,7 @@ class MyConvertedCode(TerraformStack):
                 type="EC2"
             ),
             depends_on=[aws_iam_role_policy_attachment_aws_batch_service_role],
+            name="sample",
             service_role=aws_batch_service_role.arn,
             type="MANAGED"
         )
@@ -156,7 +156,6 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         BatchComputeEnvironment(self, "sample",
-            compute_environment_name="sample",
             compute_resources=BatchComputeEnvironmentComputeResources(
                 max_vcpus=16,
                 security_group_ids=[Token.as_string(aws_security_group_sample.id)],
@@ -164,6 +163,7 @@ class MyConvertedCode(TerraformStack):
                 type="FARGATE"
             ),
             depends_on=[aws_batch_service_role],
+            name="sample",
             service_role=Token.as_string(aws_iam_role_aws_batch_service_role.arn),
             type="MANAGED"
         )
@@ -184,7 +184,6 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         BatchComputeEnvironment(self, "sample",
-            compute_environment_name="sample",
             compute_resources=BatchComputeEnvironmentComputeResources(
                 allocation_strategy="BEST_FIT_PROGRESSIVE",
                 instance_role=ecs_instance.arn,
@@ -195,6 +194,7 @@ class MyConvertedCode(TerraformStack):
                 subnets=[Token.as_string(aws_subnet_sample.id)],
                 type="EC2"
             ),
+            name="sample",
             type="MANAGED",
             update_policy=BatchComputeEnvironmentUpdatePolicy(
                 job_execution_timeout_minutes=30,
@@ -205,8 +205,11 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
-* `compute_environment_name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `compute_environment_name`.
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
 * `eks_configuration` - (Optional) Details for the Amazon EKS cluster that supports the compute environment. See details below.
 * `service_role` - (Optional) The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
@@ -240,6 +243,7 @@ class MyConvertedCode(TerraformStack):
 `ec2_configuration` supports the following:
 
 * `image_id_override` - (Optional) The AMI ID used for instances launched in the compute environment that match the image type. This setting overrides the `image_id` argument in the [`compute_resources`](#compute_resources) block.
+* `image_kubernetes_version` - (Optional) The Kubernetes version for the compute environment. If you don't specify a value, the latest version that AWS Batch supports is used. See [Supported Kubernetes versions](https://docs.aws.amazon.com/batch/latest/userguide/supported_kubernetes_version.html) for the list of Kubernetes versions supported by AWS Batch on Amazon EKS.
 * `image_type` - (Optional) The image type to match with the instance type to select an AMI. If the `image_id_override` parameter isn't specified, then a recent [Amazon ECS-optimized Amazon Linux 2 AMI](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#al2ami) (`ECS_AL2`) is used.
 
 ### launch_template
@@ -262,7 +266,7 @@ class MyConvertedCode(TerraformStack):
 `update_policy` supports the following:
 
 * `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
-* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the computer environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the compute environment infrastructure is updated.
 
 ## Attribute Reference
 
@@ -276,7 +280,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `compute_environment_name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_compute_environment.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:compute-environment/sample"
+  }
+}
+
+resource "aws_batch_compute_environment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the compute environment.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `name`. For example:
 
 ```python
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -293,7 +318,7 @@ class MyConvertedCode(TerraformStack):
         BatchComputeEnvironment.generate_config_for_import(self, "sample", "sample")
 ```
 
-Using `terraform import`, import AWS Batch compute using the `compute_environment_name`. For example:
+Using `terraform import`, import AWS Batch compute using the `name`. For example:
 
 ```console
 % terraform import aws_batch_compute_environment.sample sample
@@ -303,4 +328,4 @@ Using `terraform import`, import AWS Batch compute using the `compute_environmen
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
 
-<!-- cache-key: cdktf-0.20.8 input-a4d2fad96b051bf90d8da55fdec7bad58af8e8716e155068f8033f1e7ecde7a0 -->
+<!-- cache-key: cdktf-0.20.8 input-ec7057984e3deb58eea6a2d016e6da5041110cc020ee29ca0acc3cbf03ebeda1 -->

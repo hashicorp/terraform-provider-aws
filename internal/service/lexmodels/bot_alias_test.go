@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels_test
@@ -356,7 +356,7 @@ func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceBotAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -410,7 +410,7 @@ func testAccCheckBotAliasDestroy(ctx context.Context, botName, botAliasName stri
 				return nil
 			}
 
-			return fmt.Errorf("error getting bot alias '%s': %s", botAliasName, err)
+			return fmt.Errorf("error getting bot alias '%s': %w", botAliasName, err)
 		}
 
 		return fmt.Errorf("error bot alias still exists after delete, %s", botAliasName)
@@ -519,7 +519,10 @@ resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
 }
 
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_iam_role" "test" {
   name               = "%[1]s"
@@ -588,7 +591,10 @@ resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
 }
 
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_iam_role" "test" {
   name               = "%[1]s"

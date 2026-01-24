@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codegurureviewer_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodegurureviewer "github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,6 +53,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"repository"},
 			},
 		},
 	})
@@ -193,7 +199,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -212,7 +218,7 @@ func testAccCheckRepositoryAssociationDestroy(ctx context.Context) resource.Test
 
 			_, err := tfcodegurureviewer.FindRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -358,6 +364,7 @@ func testAccRepositoryAssociation_kms_key() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `
 }

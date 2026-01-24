@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connectionId` - (Required) The ID of the hosted connection.
 
 ### Removing `aws_dx_connection_confirmation` from your configuration
@@ -51,4 +52,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the connection.
 
-<!-- cache-key: cdktf-0.20.8 input-e2add46dba26c378ed4b9326ebee9569e0e5c8903ce7dbc8024cc7347469032a -->
+<!-- cache-key: cdktf-0.20.8 input-061143c139dbb9175881c1b76019b9ff5f0dd301bf543a2054b5a44e11c1f582 -->

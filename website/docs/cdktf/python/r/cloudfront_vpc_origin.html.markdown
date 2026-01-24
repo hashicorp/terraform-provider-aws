@@ -38,7 +38,7 @@ class MyConvertedCode(TerraformStack):
                 arn=this_var.arn,
                 http_port=8080,
                 https_port=8443,
-                name="Example VPC Origin",
+                name="example-vpc-origin",
                 origin_protocol_policy="https-only",
                 origin_ssl_protocols=[CloudfrontVpcOriginVpcOriginEndpointConfigOriginSslProtocols(
                     items=["TLSv1.2"],
@@ -51,8 +51,6 @@ class MyConvertedCode(TerraformStack):
 ```
 
 ## Argument Reference
-
-### Top Level Arguments
 
 The following arguments are required:
 
@@ -105,4 +103,4 @@ Using `terraform import`, import Cloudfront VPC origins using the `id`. For exam
 % terraform import aws_cloudfront_vpc_origin vo_JQEa410sssUFoY6wMkx69j
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-187cf38c97ac211aea4b679f94d3c76f36282959a1becf8fe51ae560fd45e2b4 -->
+<!-- cache-key: cdktf-0.20.8 input-b8121373dd1c9ac36c67d8002c268d824cce157f17c6df285e9572fae241b4ec -->

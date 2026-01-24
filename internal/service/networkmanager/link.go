@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -15,21 +15,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_networkmanager_link", name="Link")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
+// @Testing(importStateIdAttribute="arn")
 func resourceLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLinkCreate,
@@ -38,7 +40,7 @@ func resourceLink() *schema.Resource {
 		DeleteWithoutTimeout: resourceLinkDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				parsedARN, err := arn.Parse(d.Id())
 
 				if err != nil {
@@ -58,8 +60,6 @@ func resourceLink() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -120,20 +120,19 @@ func resourceLink() *schema.Resource {
 	}
 }
 
-func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	input := &networkmanager.CreateLinkInput{
+	input := networkmanager.CreateLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteId:          aws.String(d.Get("site_id").(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("bandwidth"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Bandwidth = expandBandwidth(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("bandwidth"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Bandwidth = expandBandwidth(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -148,8 +147,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Type = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Link: %#v", input)
-	output, err := conn.CreateLink(ctx, input)
+	output, err := conn.CreateLink(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Network Manager Link: %s", err)
@@ -164,15 +162,14 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceLinkRead(ctx, d, meta)...)
 }
 
-func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	link, err := findLinkByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Link %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -184,7 +181,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set(names.AttrARN, link.LinkArn)
 	if link.Bandwidth != nil {
-		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
+		if err := d.Set("bandwidth", []any{flattenBandwidth(link.Bandwidth)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting bandwidth: %s", err)
 		}
 	} else {
@@ -201,14 +198,13 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		globalNetworkID := d.Get("global_network_id").(string)
-		input := &networkmanager.UpdateLinkInput{
+		input := networkmanager.UpdateLinkInput{
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			LinkId:          aws.String(d.Id()),
@@ -216,12 +212,11 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Type:            aws.String(d.Get(names.AttrType).(string)),
 		}
 
-		if v, ok := d.GetOk("bandwidth"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Bandwidth = expandBandwidth(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("bandwidth"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Bandwidth = expandBandwidth(v.([]any)[0].(map[string]any))
 		}
 
-		log.Printf("[DEBUG] Updating Network Manager Link: %#v", input)
-		_, err := conn.UpdateLink(ctx, input)
+		_, err := conn.UpdateLink(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager Link (%s): %s", d.Id(), err)
@@ -235,18 +230,17 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceLinkRead(ctx, d, meta)...)
 }
 
-func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	globalNetworkID := d.Get("global_network_id").(string)
-
 	log.Printf("[DEBUG] Deleting Network Manager Link: %s", d.Id())
-	_, err := conn.DeleteLink(ctx, &networkmanager.DeleteLinkInput{
+	globalNetworkID := d.Get("global_network_id").(string)
+	input := networkmanager.DeleteLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		LinkId:          aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLink(ctx, &input)
 
 	if globalNetworkIDNotFoundError(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -270,15 +264,7 @@ func findLink(ctx context.Context, conn *networkmanager.Client, input *networkma
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findLinks(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetLinksInput) ([]awstypes.Link, error) {
@@ -290,8 +276,7 @@ func findLinks(ctx context.Context, conn *networkmanager.Client, input *networkm
 
 		if globalNetworkIDNotFoundError(err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -306,12 +291,12 @@ func findLinks(ctx context.Context, conn *networkmanager.Client, input *networkm
 }
 
 func findLinkByTwoPartKey(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string) (*awstypes.Link, error) {
-	input := &networkmanager.GetLinksInput{
+	input := networkmanager.GetLinksInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		LinkIds:         []string{linkID},
 	}
 
-	output, err := findLink(ctx, conn, input)
+	output, err := findLink(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -319,19 +304,17 @@ func findLinkByTwoPartKey(ctx context.Context, conn *networkmanager.Client, glob
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.LinkId) != linkID {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusLinkState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLink(conn *networkmanager.Client, globalNetworkID, linkID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLinkByTwoPartKey(ctx, conn, globalNetworkID, linkID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -348,28 +331,10 @@ func waitLinkCreated(ctx context.Context, conn *networkmanager.Client, globalNet
 		Pending: enum.Slice(awstypes.LinkStatePending),
 		Target:  enum.Slice(awstypes.LinkStateAvailable),
 		Timeout: timeout,
-		Refresh: statusLinkState(ctx, conn, globalNetworkID, linkID),
+		Refresh: statusLink(conn, globalNetworkID, linkID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Link); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitLinkDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string, timeout time.Duration) (*awstypes.Link, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.LinkStateDeleting),
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusLinkState(ctx, conn, globalNetworkID, linkID),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Link); ok {
 		return output, err
 	}
@@ -382,11 +347,10 @@ func waitLinkUpdated(ctx context.Context, conn *networkmanager.Client, globalNet
 		Pending: enum.Slice(awstypes.LinkStateUpdating),
 		Target:  enum.Slice(awstypes.LinkStateAvailable),
 		Timeout: timeout,
-		Refresh: statusLinkState(ctx, conn, globalNetworkID, linkID),
+		Refresh: statusLink(conn, globalNetworkID, linkID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
 	if output, ok := outputRaw.(*awstypes.Link); ok {
 		return output, err
 	}
@@ -394,7 +358,23 @@ func waitLinkUpdated(ctx context.Context, conn *networkmanager.Client, globalNet
 	return nil, err
 }
 
-func expandBandwidth(tfMap map[string]interface{}) *awstypes.Bandwidth {
+func waitLinkDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID string, timeout time.Duration) (*awstypes.Link, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.LinkStateDeleting),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusLink(conn, globalNetworkID, linkID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.Link); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandBandwidth(tfMap map[string]any) *awstypes.Bandwidth {
 	if tfMap == nil {
 		return nil
 	}
@@ -412,12 +392,12 @@ func expandBandwidth(tfMap map[string]interface{}) *awstypes.Bandwidth {
 	return apiObject
 }
 
-func flattenBandwidth(apiObject *awstypes.Bandwidth) map[string]interface{} {
+func flattenBandwidth(apiObject *awstypes.Bandwidth) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DownloadSpeed; v != nil {
 		tfMap["download_speed"] = aws.ToInt32(v)

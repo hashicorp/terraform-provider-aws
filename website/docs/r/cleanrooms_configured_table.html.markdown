@@ -40,6 +40,7 @@ resource "aws_cleanrooms_configured_table" "test_configured_table" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) - The name of the configured table.
 * `description` - (Optional) - A description for the configured table.
 * `analysis_method` - (Required) - The analysis method for the configured table. The only valid value is currently `DIRECT_QUERY`.
@@ -67,6 +68,32 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `1m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cleanrooms_configured_table.example
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+
+resource "aws_cleanrooms_configured_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the cleanrooms configured table.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_configured_table` using the `id`. For example:
 

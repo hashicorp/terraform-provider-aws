@@ -13,6 +13,8 @@ allows processing and analyzing streaming data using standard SQL.
 
 For more details, see the [Amazon Kinesis Analytics Documentation][1].
 
+!> **WARNING:** _This resource is deprecated and will be removed in a future version._ [Effective January 27, 2026](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-to-amazon-managed-service-for-apache-flink-and-amazon-managed-service-for-apache-flink-studio/), AWS will [no longer support](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/discontinuation.html) Amazon Kinesis Data Analytics for SQL. Use the `aws_kinesisanalyticsv2_application` resource instead to manage Amazon Kinesis Data Analytics for Apache Flink applications. AWS provides guidance for migrating from [Amazon Kinesis Data Analytics for SQL Applications to Amazon Managed Service for Apache Flink Studio](https://aws.amazon.com/blogs/big-data/migrate-from-amazon-kinesis-data-analytics-for-sql-applications-to-amazon-managed-service-for-apache-flink-studio/) including [examples](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/migrating-to-kda-studio-overview.html).
+
 -> **Note:** To manage Amazon Kinesis Data Analytics for Apache Flink applications, use the [`aws_kinesisanalyticsv2_application`](/docs/providers/aws/r/kinesisanalyticsv2_application.html) resource.
 
 ## Example Usage
@@ -146,6 +148,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Analytics Application.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
 * `description` - (Optional) Description of the application.

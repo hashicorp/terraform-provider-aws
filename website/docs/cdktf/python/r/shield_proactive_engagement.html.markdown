@@ -95,6 +95,8 @@ The following arguments are required:
 
 ### emergency_contacts
 
+~> **Note:** The contacts that you provide here replace any contacts that were already configured within AWS. While `phone_number` is marked as optional, to enable proactive engagement, the contact list must include at least one phone number. If a phone number is not already configured within AWS, one must be provided in order to prevent errors.
+
 * `contact_notes` - (Optional) Additional notes regarding the contact.
 * `email_address` - (Required) A valid email address that will be used for this contact.
 * `phone_number` - (Optional) A phone number, starting with `+` and up to 15 digits that will be used for this contact.
@@ -128,4 +130,4 @@ Using `terraform import`, import Shield proactive engagement using the AWS accou
 % terraform import aws_shield_proactive_engagement.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-20fc99cd448022b4ae311eda83ba5e27f0f9eae7fd8f28be2dcf5adb9ce77603 -->
+<!-- cache-key: cdktf-0.20.8 input-3518084d9f1c458dd6d4b119233d0d69663d04dd0d614b197213886387e520a4 -->

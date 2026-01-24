@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoveryreadiness
@@ -13,15 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -61,18 +61,16 @@ func resourceRecoveryGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	name := d.Get("recovery_group_name").(string)
 	input := &route53recoveryreadiness.CreateRecoveryGroupInput{
-		Cells:             flex.ExpandStringValueList(d.Get("cells").([]interface{})),
+		Cells:             flex.ExpandStringValueList(d.Get("cells").([]any)),
 		RecoveryGroupName: aws.String(name),
 	}
 
@@ -91,13 +89,13 @@ func resourceRecoveryGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRecoveryGroupRead(ctx, d, meta)...)
 }
 
-func resourceRecoveryGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecoveryGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	output, err := findRecoveryGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Readiness Recovery Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -114,14 +112,14 @@ func resourceRecoveryGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceRecoveryGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecoveryGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateRecoveryGroupInput{
 			RecoveryGroupName: aws.String(d.Id()),
-			Cells:             flex.ExpandStringValueList(d.Get("cells").([]interface{})),
+			Cells:             flex.ExpandStringValueList(d.Get("cells").([]any)),
 		}
 
 		_, err := conn.UpdateRecoveryGroup(ctx, input)
@@ -134,7 +132,7 @@ func resourceRecoveryGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRecoveryGroupRead(ctx, d, meta)...)
 }
 
-func resourceRecoveryGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecoveryGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -151,20 +149,16 @@ func resourceRecoveryGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Recovery Group (%s): %s", d.Id(), err)
 	}
 
-	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
+	err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) *tfresource.RetryError {
 		_, err := findRecoveryGroupByName(ctx, conn, d.Id())
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
-		return retry.RetryableError(fmt.Errorf("Route53 Recovery Readiness Recovery Group (%s) still exists", d.Id()))
+		return tfresource.RetryableError(fmt.Errorf("Route53 Recovery Readiness Recovery Group (%s) still exists", d.Id()))
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = findRecoveryGroupByName(ctx, conn, d.Id())
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Readiness Recovery Group (%s) deletion: %s", d.Id(), err)
@@ -180,7 +174,7 @@ func findRecoveryGroupByName(ctx context.Context, conn *route53recoveryreadiness
 
 	output, err := conn.GetRecoveryGroup(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -190,7 +184,7 @@ func findRecoveryGroupByName(ctx context.Context, conn *route53recoveryreadiness
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

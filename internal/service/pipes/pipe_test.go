@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pipes_test
@@ -19,10 +19,72 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpipes "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestSecretsManagerARNPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfpipes.SecretsManagerARNPattern)
+
+	valid := []string{
+		"arn:aws-eusc:secretsmanager:eusc-de-east-1:123456789012:secret:my-secret-AbCdEf",  //lintignore:AWSAT003,AWSAT005
+		"arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf",            //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret-AbCdEf", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range valid {
+		if !regex.MatchString(arn) {
+			t.Errorf("Expected Secrets Manager ARN %q to match SecretsManagerARNPattern (%s)", arn, tfpipes.SecretsManagerARNPattern)
+		}
+	}
+
+	notValid := []string{
+		"arn:aws:secretsmanager:invalid-region:123456789012:secret:my-secret-AbCdEf", //lintignore:AWSAT005
+		"not-an-arn-at-all",
+	}
+
+	for _, input := range notValid {
+		if regex.MatchString(input) {
+			t.Errorf("Expected %q to NOT match SecretsManagerARNPattern (%s)", input, tfpipes.SecretsManagerARNPattern)
+		}
+	}
+}
+
+func TestSMKOrARNPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfpipes.SMKOrARNPattern)
+
+	valid := []string{
+		"arn:aws-eusc:pipes:eusc-de-east-1:123456789012:pipe/my-pipe", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:sqs:eusc-de-east-1:123456789012:my-queue",       //lintignore:AWSAT003,AWSAT005
+		"smk://broker.example.com:9092",
+		"smk://broker-123.example.com:9094",
+		"arn:aws:pipes:us-east-1:123456789012:pipe/my-pipe",      //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:sqs:us-gov-west-1:123456789012:my-queue", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range valid {
+		if !regex.MatchString(arn) {
+			t.Errorf("Expected ESC ARN %q to match SMKOrARNPattern (%s)", arn, tfpipes.SMKOrARNPattern)
+		}
+	}
+
+	// Test invalid patterns - focus on cases that should definitely fail
+	notValid := []string{
+		"smk://broker.:9092", // invalid hostname ending with dot
+		"random-string-not-matching-anything",
+	}
+
+	for _, input := range notValid {
+		if regex.MatchString(input) {
+			t.Errorf("Expected %q to NOT match SMKOrARNPattern (%s)", input, tfpipes.SMKOrARNPattern)
+		}
+	}
+}
 
 func TestAccPipesPipe_basicSQS(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -98,7 +160,7 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 				Config: testAccPipeConfig_basicSQS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpipes.ResourcePipe(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpipes.ResourcePipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1703,7 +1765,7 @@ func testAccCheckPipeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfpipes.FindPipeByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2114,8 +2176,15 @@ func testAccPipeConfig_kmsKeyIdentifier(rName, kmsKeyID string) string {
 		testAccPipeConfig_baseSQSSource(rName),
 		testAccPipeConfig_baseSQSTarget(rName),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test_1" {}
-resource "aws_kms_key" "test_2" {}
+resource "aws_kms_key" "test_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test_2" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_pipes_pipe" "test" {
   depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
@@ -2730,13 +2799,14 @@ resource "aws_security_group" "source" {
 }
 
 resource "aws_mq_broker" "source" {
-  broker_name             = "%[1]s-source"
-  engine_type             = "ActiveMQ"
-  engine_version          = "5.17.6"
-  host_instance_type      = "mq.t2.micro"
-  security_groups         = [aws_security_group.source.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  broker_name                = "%[1]s-source"
+  engine_type                = "ActiveMQ"
+  engine_version             = "5.18"
+  auto_minor_version_upgrade = true
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.source.id]
+  authentication_strategy    = "simple"
+  storage_type               = "efs"
 
   logs {
     general = true
@@ -2861,11 +2931,12 @@ resource "aws_iam_role_policy" "source" {
 }
 
 resource "aws_mq_broker" "source" {
-  broker_name             = "%[1]s-source"
-  engine_type             = "RabbitMQ"
-  engine_version          = "3.12.13"
-  host_instance_type      = "mq.t3.micro"
-  authentication_strategy = "simple"
+  broker_name                = "%[1]s-source"
+  engine_type                = "RabbitMQ"
+  engine_version             = "3.13"
+  auto_minor_version_upgrade = true
+  host_instance_type         = "mq.t3.micro"
+  authentication_strategy    = "simple"
 
   logs {
     general = true
@@ -3174,18 +3245,15 @@ func testAccPipeConfig_basicSQSSourceRedshiftTarget(rName string) string {
 	return acctest.ConfigCompose(
 		testAccPipeConfig_base(rName),
 		testAccPipeConfig_baseSQSSource(rName),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
 		fmt.Sprintf(`
 resource "aws_redshift_cluster" "target" {
-  cluster_identifier                  = "%[1]s-target"
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = "%[1]s-target"
+  database_name         = "test"
+  master_username       = "tfacctest"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 
 resource "aws_pipes_pipe" "test" {
@@ -3315,9 +3383,9 @@ resource "aws_security_group" "target" {
 }
 
 resource "aws_batch_compute_environment" "target" {
-  compute_environment_name = "%[1]s-target"
-  service_role             = aws_iam_role.target.arn
-  type                     = "MANAGED"
+  name         = "%[1]s-target"
+  service_role = aws_iam_role.target.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -3333,10 +3401,14 @@ resource "aws_batch_compute_environment" "target" {
 }
 
 resource "aws_batch_job_queue" "target" {
-  compute_environments = [aws_batch_compute_environment.target.arn]
-  name                 = "%[1]s-target"
-  priority             = 1
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.target.arn
+    order               = 1
+  }
+
+  name     = "%[1]s-target"
+  priority = 1
+  state    = "ENABLED"
 }
 
 resource "aws_batch_job_definition" "target" {

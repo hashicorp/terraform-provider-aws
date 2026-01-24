@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,6 +27,7 @@ import (
 )
 
 // @SDKResource("aws_dx_hosted_connection", name="Hosted Connection")
+// @Region(overrideEnabled=false)
 func resourceHostedConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedConnectionCreate,
@@ -47,6 +49,10 @@ func resourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"connection_region": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
@@ -88,8 +94,9 @@ func resourceHostedConnection() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "region is deprecated. Use connection_region instead.",
 			},
 			names.AttrState: {
 				Type:     schema.TypeString,
@@ -105,7 +112,7 @@ func resourceHostedConnection() *schema.Resource {
 	}
 }
 
-func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -129,26 +136,30 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceHostedConnectionRead(ctx, d, meta)...)
 }
 
-func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	connection, err := findHostedConnectionByID(ctx, conn, d.Id())
+	// Get both the hosted connection ID and the parent connection ID
+	hostedConnectionID := d.Id()
+	parentConnectionID := d.Get(names.AttrConnectionID).(string)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Direct Connect Hosted Connection (%s) not found, removing from state", d.Id())
+	connection, err := findHostedConnectionByID(ctx, conn, hostedConnectionID, parentConnectionID)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Hosted Connection (%s) not found, removing from state", hostedConnectionID)
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Connection (%s): %s", hostedConnectionID, err)
 	}
 
-	// Cannot set the following attributes from the response:
-	// - connection_id: conn.ConnectionId is this resource's ID, not the ID of the interconnect or LAG
-	// - tags: conn.Tags seems to always come back empty and DescribeTags needs to be called from the owner account
+	// Set the connection_id (parent/interconnect ID) and other attributes
+	d.Set(names.AttrConnectionID, parentConnectionID)
 	d.Set("aws_device", connection.AwsDeviceV2)
+	d.Set("connection_region", connection.Region)
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("lag_id", connection.LagId)
@@ -165,29 +176,44 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	if err := deleteConnection(ctx, conn, d.Id(), waitHostedConnectionDeleted); err != nil {
+	// Get the parent connection ID
+	parentConnectionID := d.Get(names.AttrConnectionID).(string)
+
+	// Create a wrapper function that adapts waitHostedConnectionDeleted to match the expected signature
+	waiterWrapper := func(ctx context.Context, conn *directconnect.Client, connectionID string) (*awstypes.Connection, error) {
+		return waitHostedConnectionDeleted(ctx, conn, connectionID, parentConnectionID)
+	}
+
+	if err := deleteConnection(ctx, conn, d.Id(), waiterWrapper); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-func findHostedConnectionByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
+func findHostedConnectionByID(ctx context.Context, conn *directconnect.Client, hostedConnectionID, parentConnectionID string) (*awstypes.Connection, error) {
+	// Use the parent connection ID for the API call
 	input := &directconnect.DescribeHostedConnectionsInput{
-		ConnectionId: aws.String(id),
+		ConnectionId: aws.String(parentConnectionID),
 	}
-	output, err := findHostedConnection(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Connection]())
+
+	// Create a predicate to filter by the hosted connection ID
+	predicate := func(c *awstypes.Connection) bool {
+		return aws.ToString(c.ConnectionId) == hostedConnectionID
+	}
+
+	output, err := findHostedConnection(ctx, conn, input, predicate)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if state := output.ConnectionState; state == awstypes.ConnectionStateDeleted || state == awstypes.ConnectionStateRejected {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -210,7 +236,7 @@ func findHostedConnections(ctx context.Context, conn *directconnect.Client, inpu
 	output, err := conn.DescribeHostedConnections(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -221,17 +247,17 @@ func findHostedConnections(ctx context.Context, conn *directconnect.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
 }
 
-func statusHostedConnection(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findHostedConnectionByID(ctx, conn, id)
+func statusHostedConnection(ctx context.Context, conn *directconnect.Client, hostedConnectionID string, parentConnectionID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findHostedConnectionByID(ctx, conn, hostedConnectionID, parentConnectionID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -243,14 +269,14 @@ func statusHostedConnection(ctx context.Context, conn *directconnect.Client, id 
 	}
 }
 
-func waitHostedConnectionDeleted(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.Connection, error) {
+func waitHostedConnectionDeleted(ctx context.Context, conn *directconnect.Client, hostedConnectionID string, parentConnectionID string) (*awstypes.Connection, error) {
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusHostedConnection(ctx, conn, id),
+		Refresh: statusHostedConnection(ctx, conn, hostedConnectionID, parentConnectionID),
 		Timeout: timeout,
 	}
 

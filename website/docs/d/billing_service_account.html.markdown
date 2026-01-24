@@ -60,6 +60,10 @@ resource "aws_s3_bucket_policy" "allow_billing_logging" {
 }
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:

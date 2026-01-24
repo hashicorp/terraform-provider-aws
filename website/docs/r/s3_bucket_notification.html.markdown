@@ -330,6 +330,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.

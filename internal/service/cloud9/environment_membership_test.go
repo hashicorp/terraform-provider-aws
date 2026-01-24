@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloud9_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloud9 "github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,7 +76,7 @@ func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloud9.ResourceEnvironmentMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccCloud9EnvironmentMembership_Disappears_env(t *testing.T) {
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +141,7 @@ func testAccCheckEnvironmentMemberDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfcloud9.FindEnvironmentMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["environment_id"], rs.Primary.Attributes["user_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

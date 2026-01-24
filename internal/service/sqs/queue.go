@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs
@@ -20,8 +20,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,9 +31,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -79,6 +80,10 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Only valid for encrypted queues, not returned by SQS
+				return !d.Get("sqs_managed_sse_enabled").(bool) && d.Get("kms_master_key_id").(string) == ""
+			},
 		},
 		"kms_master_key_id": {
 			Type:          schema.TypeString,
@@ -89,7 +94,7 @@ var (
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      defaultQueueMaximumMessageSize,
-			ValidateFunc: validation.IntBetween(1024, 262_144),
+			ValidateFunc: validation.IntBetween(1024, 1_048_576),
 		},
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
@@ -118,7 +123,7 @@ var (
 			ValidateFunc:          validation.StringIsJSON,
 			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 			DiffSuppressOnRefresh: true,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -133,7 +138,7 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -143,7 +148,7 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
-			StateFunc: func(v interface{}) string {
+			StateFunc: func(v any) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
 			},
@@ -190,7 +195,12 @@ var (
 
 // @SDKResource("aws_sqs_queue", name="Queue")
 // @Tags(identifierAttribute="id")
+// @IdentityVersion(1)
+// @CustomInherentRegionIdentity("url", "parseQueueURL")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -198,14 +208,7 @@ func resourceQueue() *schema.Resource {
 		UpdateWithoutTimeout: resourceQueueUpdate,
 		DeleteWithoutTimeout: resourceQueueDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: customdiff.Sequence(
-			resourceQueueCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: resourceQueueCustomizeDiff,
 
 		Schema: queueSchema,
 
@@ -217,7 +220,7 @@ func resourceQueue() *schema.Resource {
 	}
 }
 
-func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
@@ -235,9 +238,9 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
 	// create is 2 phase: 1. create, 2. wait for propagation
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 		return conn.CreateQueue(ctx, input)
 	}, errCodeQueueDeletedRecently)
 
@@ -245,7 +248,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (interface{}, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 			return conn.CreateQueue(ctx, input)
 		}, errCodeQueueDeletedRecently)
 	}
@@ -265,7 +268,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceQueueRead(ctx, d, meta)...)
 		}
 
@@ -277,15 +280,15 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func(ctx context.Context) (map[types.QueueAttributeName]string, error) {
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -300,7 +303,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
+	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -321,7 +324,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
@@ -350,7 +353,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
-func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
@@ -374,7 +377,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 	sqsManagedSSEEnabled := diff.Get("sqs_managed_sse_enabled").(bool)
@@ -473,14 +476,14 @@ func findQueueAttributeByTwoPartKey(ctx context.Context, conn *sqs.Client, url s
 		return &v, nil
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQueueAttributesInput) (map[types.QueueAttributeName]string, error) {
 	output, err := conn.GetQueueAttributes(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -491,7 +494,7 @@ func findQueueAttributes(ctx context.Context, conn *sqs.Client, input *sqs.GetQu
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfmaps.ApplyToAllKeys(output.Attributes, func(v string) types.QueueAttributeName {
@@ -515,11 +518,11 @@ const (
 	queueAttributeStateEqual    = "equal"
 )
 
-func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusQueueState(ctx context.Context, conn *sqs.Client, url string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findQueueAttributesByURL(ctx, conn, url)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -531,8 +534,8 @@ func statusQueueState(ctx context.Context, conn *sqs.Client, url string) retry.S
 	}
 }
 
-func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		attributesMatch := func(got map[types.QueueAttributeName]string) string {
 			for k, e := range expected {
 				g, ok := got[k]
@@ -545,6 +548,14 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 					// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(defaultQueueKMSDataKeyReusePeriodSeconds) {
+						continue
+					}
+
+					sse, sseOK := got[types.QueueAttributeNameSqsManagedSseEnabled]
+					kmsMaster, kmsOK := got[types.QueueAttributeNameKmsMasterKeyId]
+					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds &&
+						((!sseOK || (sseOK && sse == "false")) && (!kmsOK || (kmsOK && kmsMaster == ""))) {
+						// API won't set if not encrypted
 						continue
 					}
 
@@ -578,7 +589,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 		got, err := findQueueAttributesByURL(ctx, conn, url)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -593,7 +604,7 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 }
 
 func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(ctx, conn, url, expected),
@@ -609,7 +620,7 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 }
 
 func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(ctx, conn, url),
@@ -622,4 +633,16 @@ func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func parseQueueURL(u string) (result inttypes.BaseIdentity, err error) {
+	re := regexache.MustCompile(`^https://sqs\.([a-z0-9-]+)\.[^/]+/([0-9]{12})/.+`)
+	match := re.FindStringSubmatch(u)
+	if match == nil {
+		return inttypes.BaseIdentity{}, fmt.Errorf("could not parse %q as SQS URL", u)
+	}
+	return inttypes.BaseIdentity{
+		AccountID: match[2],
+		Region:    match[1],
+	}, nil
 }

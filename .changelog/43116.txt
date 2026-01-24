@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_verifiedpermissions_schema: Fix `Value Conversion Error` errors when upgrading existing resources to Terraform AWS Provider v6.0.0
+```

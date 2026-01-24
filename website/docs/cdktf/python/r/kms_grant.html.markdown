@@ -71,6 +71,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resources) A friendly name for identifying the grant.
 * `key_id` - (Required, Forces new resources) The unique identifier for the customer master key (CMK) that the grant applies to. Specify the key ID or the Amazon Resource Name (ARN) of the CMK. To specify a CMK in a different AWS account, you must use the key ARN.
 * `grantee_principal` - (Required, Forces new resources) The principal that is given permission to perform the operations that the grant permits in ARN format. Note that due to eventual consistency issues around IAM principals, terraform's state may not always be refreshed to reflect what is true in AWS.
@@ -118,4 +119,4 @@ Using `terraform import`, import KMS Grants using the Key ID and Grant ID separa
 % terraform import aws_kms_grant.test 1234abcd-12ab-34cd-56ef-1234567890ab:abcde1237f76e4ba7987489ac329fbfba6ad343d6f7075dbd1ef191f0120514
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-36c7f3f97bbb167521114fdebc896b3fdaab1eead128fe4f8d93a9309408c388 -->
+<!-- cache-key: cdktf-0.20.8 input-a67ccce63e3c721bf661778202f7f9b3db6d646ce00ca2b84080427734e1543e -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,6 +33,7 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "cache-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -77,7 +78,7 @@ func TestAccCloudFrontCachePolicy_disappears(t *testing.T) {
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceCachePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceCachePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -222,7 +223,7 @@ func testAccCheckCachePolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfcloudfront.FindCachePolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

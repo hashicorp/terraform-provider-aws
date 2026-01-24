@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func testAccIngestionDestination_disappears(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceIngestionDestination, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceIngestionDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -258,7 +258,7 @@ func testAccCheckIngestionDestinationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes["app_bundle_arn"], rs.Primary.Attributes["ingestion_arn"], rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

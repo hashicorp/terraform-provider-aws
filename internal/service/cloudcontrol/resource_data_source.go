@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudcontrol
@@ -47,14 +47,14 @@ func dataSourceResource() *schema.Resource {
 	}
 }
 
-func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
 	identifier := d.Get(names.AttrIdentifier).(string)
 	typeName := d.Get("type_name").(string)
-	resourceDescription, err := findResource(ctx, conn,
+	resourceDescription, err := findResourceByFourPartKey(ctx, conn,
 		identifier,
 		typeName,
 		d.Get("type_version_id").(string),
@@ -66,7 +66,6 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.ToString(resourceDescription.Identifier))
-
 	d.Set(names.AttrProperties, resourceDescription.Properties)
 
 	return diags

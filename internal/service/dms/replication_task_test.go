@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -508,11 +508,11 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
-			},
-			{
-				Config:             testAccReplicationTaskConfig_s3ToRDS(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -534,7 +534,7 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 				Config: testAccReplicationTaskConfig_basic(rName, "full-load"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -678,7 +678,7 @@ func testAccCheckReplicationTaskDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfdms.FindReplicationTaskByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

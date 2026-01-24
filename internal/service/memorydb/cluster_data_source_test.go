@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb_test
@@ -81,7 +81,10 @@ resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
 }
 
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_memorydb_cluster" "test" {
   acl_name                   = aws_memorydb_acl.test.id

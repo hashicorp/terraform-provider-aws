@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -180,7 +180,7 @@ func testAccWorkspace_disappears(t *testing.T) {
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspace(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgrafana.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -550,7 +550,7 @@ func testAccCheckWorkspaceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfgrafana.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -720,7 +720,7 @@ resource "aws_vpc_endpoint" "test" {
 
   private_dns_enabled = false
   security_group_ids  = [aws_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.grafana-workspace"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
   subnet_ids          = [aws_subnet.test[count.index].id]
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id
@@ -760,7 +760,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "test" {
   private_dns_enabled = false
   security_group_ids  = [aws_security_group.test.id]
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.grafana-workspace"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.grafana-workspace"
   subnet_ids          = aws_subnet.test[*].id
   vpc_endpoint_type   = "Interface"
   vpc_id              = aws_vpc.test.id

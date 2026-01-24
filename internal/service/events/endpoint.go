@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events
@@ -14,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -144,30 +145,30 @@ func resourceEndpoint() *schema.Resource {
 	}
 }
 
-func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateEndpointInput{
-		EventBuses:    expandEndpointEventBuses(d.Get("event_bus").([]interface{})),
+		EventBuses:    expandEndpointEventBuses(d.Get("event_bus").([]any)),
 		Name:          aws.String(name),
-		RoutingConfig: expandRoutingConfig(d.Get("routing_config").([]interface{})[0].(map[string]interface{})),
+		RoutingConfig: expandRoutingConfig(d.Get("routing_config").([]any)[0].(map[string]any)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("replication_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ReplicationConfig = expandReplicationConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("replication_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ReplicationConfig = expandReplicationConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEndpoint(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
@@ -187,13 +188,13 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	output, err := findEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Global Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -211,7 +212,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set(names.AttrName, output.Name)
 	if output.ReplicationConfig != nil {
-		if err := d.Set("replication_config", []interface{}{flattenReplicationConfig(output.ReplicationConfig)}); err != nil {
+		if err := d.Set("replication_config", []any{flattenReplicationConfig(output.ReplicationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting replication_config: %s", err)
 		}
 	} else {
@@ -219,7 +220,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	if output.RoutingConfig != nil {
-		if err := d.Set("routing_config", []interface{}{flattenRoutingConfig(output.RoutingConfig)}); err != nil {
+		if err := d.Set("routing_config", []any{flattenRoutingConfig(output.RoutingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
 		}
 	} else {
@@ -229,7 +230,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -242,12 +243,12 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("event_bus") {
-		input.EventBuses = expandEndpointEventBuses(d.Get("event_bus").([]interface{}))
+		input.EventBuses = expandEndpointEventBuses(d.Get("event_bus").([]any))
 	}
 
 	if d.HasChange("replication_config") {
-		if v, ok := d.GetOk("replication_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ReplicationConfig = expandReplicationConfig(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("replication_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ReplicationConfig = expandReplicationConfig(v.([]any)[0].(map[string]any))
 		}
 	}
 
@@ -256,7 +257,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("routing_config") {
-		input.RoutingConfig = expandRoutingConfig(d.Get("routing_config").([]interface{})[0].(map[string]interface{}))
+		input.RoutingConfig = expandRoutingConfig(d.Get("routing_config").([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.UpdateEndpoint(ctx, input)
@@ -275,7 +276,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -310,7 +311,7 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -321,17 +322,17 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -344,7 +345,7 @@ func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateCreating),
 		Target:  enum.Slice(types.EndpointStateActive),
 		Refresh: statusEndpointState(ctx, conn, name),
@@ -354,7 +355,7 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -363,7 +364,7 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateUpdating),
 		Target:  enum.Slice(types.EndpointStateActive),
 		Refresh: statusEndpointState(ctx, conn, name),
@@ -373,7 +374,7 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -382,7 +383,7 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateDeleting),
 		Target:  []string{},
 		Refresh: statusEndpointState(ctx, conn, name),
@@ -392,7 +393,7 @@ func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -400,7 +401,7 @@ func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name str
 	return nil, err
 }
 
-func expandEndpointEventBus(tfMap map[string]interface{}) *types.EndpointEventBus {
+func expandEndpointEventBus(tfMap map[string]any) *types.EndpointEventBus {
 	if tfMap == nil {
 		return nil
 	}
@@ -414,7 +415,7 @@ func expandEndpointEventBus(tfMap map[string]interface{}) *types.EndpointEventBu
 	return apiObject
 }
 
-func expandEndpointEventBuses(tfList []interface{}) []types.EndpointEventBus {
+func expandEndpointEventBuses(tfList []any) []types.EndpointEventBus {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -422,7 +423,7 @@ func expandEndpointEventBuses(tfList []interface{}) []types.EndpointEventBus {
 	var apiObjects []types.EndpointEventBus
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -440,7 +441,7 @@ func expandEndpointEventBuses(tfList []interface{}) []types.EndpointEventBus {
 	return apiObjects
 }
 
-func expandReplicationConfig(tfMap map[string]interface{}) *types.ReplicationConfig {
+func expandReplicationConfig(tfMap map[string]any) *types.ReplicationConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -454,39 +455,39 @@ func expandReplicationConfig(tfMap map[string]interface{}) *types.ReplicationCon
 	return apiObject
 }
 
-func expandRoutingConfig(tfMap map[string]interface{}) *types.RoutingConfig {
+func expandRoutingConfig(tfMap map[string]any) *types.RoutingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.RoutingConfig{}
 
-	if v, ok := tfMap["failover_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.FailoverConfig = expandFailoverConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["failover_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.FailoverConfig = expandFailoverConfig(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandFailoverConfig(tfMap map[string]interface{}) *types.FailoverConfig {
+func expandFailoverConfig(tfMap map[string]any) *types.FailoverConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.FailoverConfig{}
 
-	if v, ok := tfMap["primary"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Primary = expandPrimary(v[0].(map[string]interface{}))
+	if v, ok := tfMap["primary"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Primary = expandPrimary(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["secondary"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Secondary = expandSecondary(v[0].(map[string]interface{}))
+	if v, ok := tfMap["secondary"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Secondary = expandSecondary(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandPrimary(tfMap map[string]interface{}) *types.Primary {
+func expandPrimary(tfMap map[string]any) *types.Primary {
 	if tfMap == nil {
 		return nil
 	}
@@ -500,7 +501,7 @@ func expandPrimary(tfMap map[string]interface{}) *types.Primary {
 	return apiObject
 }
 
-func expandSecondary(tfMap map[string]interface{}) *types.Secondary {
+func expandSecondary(tfMap map[string]any) *types.Secondary {
 	if tfMap == nil {
 		return nil
 	}
@@ -514,12 +515,12 @@ func expandSecondary(tfMap map[string]interface{}) *types.Secondary {
 	return apiObject
 }
 
-func flattenEndpointEventBus(apiObject *types.EndpointEventBus) map[string]interface{} {
+func flattenEndpointEventBus(apiObject *types.EndpointEventBus) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EventBusArn; v != nil {
 		tfMap["event_bus_arn"] = aws.ToString(v)
@@ -528,12 +529,12 @@ func flattenEndpointEventBus(apiObject *types.EndpointEventBus) map[string]inter
 	return tfMap
 }
 
-func flattenEndpointEventBuses(apiObjects []types.EndpointEventBus) []interface{} {
+func flattenEndpointEventBuses(apiObjects []types.EndpointEventBus) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenEndpointEventBus(&apiObject))
@@ -542,56 +543,56 @@ func flattenEndpointEventBuses(apiObjects []types.EndpointEventBus) []interface{
 	return tfList
 }
 
-func flattenReplicationConfig(apiObject *types.ReplicationConfig) map[string]interface{} {
+func flattenReplicationConfig(apiObject *types.ReplicationConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrState: apiObject.State,
 	}
 
 	return tfMap
 }
 
-func flattenRoutingConfig(apiObject *types.RoutingConfig) map[string]interface{} {
+func flattenRoutingConfig(apiObject *types.RoutingConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FailoverConfig; v != nil {
-		tfMap["failover_config"] = []interface{}{flattenFailoverConfig(v)}
+		tfMap["failover_config"] = []any{flattenFailoverConfig(v)}
 	}
 
 	return tfMap
 }
 
-func flattenFailoverConfig(apiObject *types.FailoverConfig) map[string]interface{} {
+func flattenFailoverConfig(apiObject *types.FailoverConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Primary; v != nil {
-		tfMap["primary"] = []interface{}{flattenPrimary(v)}
+		tfMap["primary"] = []any{flattenPrimary(v)}
 	}
 
 	if v := apiObject.Secondary; v != nil {
-		tfMap["secondary"] = []interface{}{flattenSecondary(v)}
+		tfMap["secondary"] = []any{flattenSecondary(v)}
 	}
 
 	return tfMap
 }
 
-func flattenPrimary(apiObject *types.Primary) map[string]interface{} {
+func flattenPrimary(apiObject *types.Primary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.HealthCheck; v != nil {
 		tfMap[names.AttrHealthCheck] = aws.ToString(v)
@@ -600,12 +601,12 @@ func flattenPrimary(apiObject *types.Primary) map[string]interface{} {
 	return tfMap
 }
 
-func flattenSecondary(apiObject *types.Secondary) map[string]interface{} {
+func flattenSecondary(apiObject *types.Secondary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Route; v != nil {
 		tfMap["route"] = aws.ToString(v)

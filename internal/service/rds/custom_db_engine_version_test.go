@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -279,7 +279,7 @@ func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCustomDBEngineVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCustomDBEngineVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -298,7 +298,7 @@ func testAccCheckCustomDBEngineVersionDestroy(ctx context.Context) resource.Test
 
 			_, err := tfrds.FindCustomDBEngineVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrEngine], rs.Primary.Attributes[names.AttrEngineVersion])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -356,7 +356,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -375,7 +375,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -390,7 +390,9 @@ resource "aws_rds_custom_db_engine_version" "test" {
 func testAccCustomDBEngineVersionConfig_oracle(rName, bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+  description             = "KMS symmetric key for RDS Custom for Oracle"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -410,7 +412,9 @@ resource "aws_rds_custom_db_engine_version" "test" {
 func testAccCustomDBEngineVersionConfig_manifestFile(rName, bucket, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+  description             = "KMS symmetric key for RDS Custom for Oracle"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
@@ -432,7 +436,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = %[2]q
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {

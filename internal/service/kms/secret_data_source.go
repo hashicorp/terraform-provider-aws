@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -16,7 +16,7 @@ const secretRemovedMessage = "This data source has been replaced with the `aws_k
 // @SDKDataSource("aws_kms_secret", name="Secret")
 func dataSourceSecret() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: func(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		ReadWithoutTimeout: func(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 			return diag.Errorf(secretRemovedMessage) // nosemgrep:ci.semgrep.pluginsdk.avoid-diag_Errorf
 		},
 

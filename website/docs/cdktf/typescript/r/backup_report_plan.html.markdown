@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the report plan with a maximum of 1,024 characters
 * `name` - (Required) The unique name of the report plan. The name must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.
 * `reportDeliveryChannel` - (Required) An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
@@ -112,4 +113,4 @@ Using `terraform import`, import Backup Report Plan using the `id` which corresp
 % terraform import aws_backup_report_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd959edfce1b301196f86382fc18f07f59bfcba90604113c6790f12cd75715da -->
+<!-- cache-key: cdktf-0.20.8 input-63add5e001811de86997670a2b7239ff306e560d2615f65c3692ce50d42bdbe1 -->

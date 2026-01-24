@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -123,8 +123,8 @@ func TestAccDataExchangeDataSet_disappears(t *testing.T) {
 				Config: testAccDataSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +144,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
-		resp, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
+		resp, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -168,8 +168,8 @@ func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Try to find the resource
-			_, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			_, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
+			if retry.NotFound(err) {
 				continue
 			}
 

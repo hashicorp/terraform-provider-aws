@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -64,7 +64,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffms.ResourceAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +83,7 @@ func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tffms.FindAdminAccount(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

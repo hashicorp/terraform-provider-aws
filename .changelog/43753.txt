@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission
+```
+
+```release-note:bug
+data-source/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission
+```

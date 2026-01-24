@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -102,7 +103,7 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 	}
 }
 
-func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -113,7 +114,7 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 		id = fmt.Sprintf("%s:%s", functionName, qualifier)
 	}
 	input := &lambda.PutFunctionEventInvokeConfigInput{
-		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
+		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]any)),
 		FunctionName:         aws.String(functionName),
 		MaximumRetryAttempts: aws.Int32(int32(d.Get("maximum_retry_attempts").(int))),
 	}
@@ -128,7 +129,7 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 
 	// Retry for destination validation eventual consistency errors.
 	_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutFunctionEventInvokeConfig(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -155,7 +156,7 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceFunctionEventInvokeConfigRead(ctx, d, meta)...)
 }
 
-func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -166,7 +167,7 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 
 	output, err := findFunctionEventInvokeConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,7 +188,7 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -197,7 +198,7 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	input := &lambda.PutFunctionEventInvokeConfigInput{
-		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
+		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]any)),
 		FunctionName:         aws.String(functionName),
 		MaximumRetryAttempts: aws.Int32(int32(d.Get("maximum_retry_attempts").(int))),
 	}
@@ -212,7 +213,7 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 
 	// Retry for destination validation eventual consistency errors.
 	_, err = tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutFunctionEventInvokeConfig(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -237,7 +238,7 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceFunctionEventInvokeConfigRead(ctx, d, meta)...)
 }
 
-func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -273,7 +274,7 @@ func functionEventInvokeConfigParseResourceID(id string) (string, string, error)
 		parsedARN, err := arn.Parse(id)
 
 		if err != nil {
-			return "", "", fmt.Errorf("parsing ARN (%s): %s", id, err)
+			return "", "", fmt.Errorf("parsing ARN (%s): %w", id, err)
 		}
 
 		function := strings.TrimPrefix(parsedARN.Resource, "function:")
@@ -313,7 +314,7 @@ func findFunctionEventInvokeConfig(ctx context.Context, conn *lambda.Client, inp
 	output, err := conn.GetFunctionEventInvokeConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -324,7 +325,7 @@ func findFunctionEventInvokeConfig(ctx context.Context, conn *lambda.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -341,32 +342,32 @@ func findFunctionEventInvokeConfigByTwoPartKey(ctx context.Context, conn *lambda
 	return findFunctionEventInvokeConfig(ctx, conn, input)
 }
 
-func expandFunctionEventInvokeConfigDestinationConfig(tfList []interface{}) *awstypes.DestinationConfig {
+func expandFunctionEventInvokeConfigDestinationConfig(tfList []any) *awstypes.DestinationConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	destinationConfig := &awstypes.DestinationConfig{}
 
-	if v, ok := tfMap["on_failure"].([]interface{}); ok {
+	if v, ok := tfMap["on_failure"].([]any); ok {
 		destinationConfig.OnFailure = expandFunctionEventInvokeConfigDestinationConfigOnFailure(v)
 	}
 
-	if v, ok := tfMap["on_success"].([]interface{}); ok {
+	if v, ok := tfMap["on_success"].([]any); ok {
 		destinationConfig.OnSuccess = expandFunctionEventInvokeConfigDestinationConfigOnSuccess(v)
 	}
 
 	return destinationConfig
 }
 
-func expandFunctionEventInvokeConfigDestinationConfigOnFailure(tfList []interface{}) *awstypes.OnFailure {
+func expandFunctionEventInvokeConfigDestinationConfigOnFailure(tfList []any) *awstypes.OnFailure {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	onFailure := &awstypes.OnFailure{}
 
@@ -377,12 +378,12 @@ func expandFunctionEventInvokeConfigDestinationConfigOnFailure(tfList []interfac
 	return onFailure
 }
 
-func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(tfList []interface{}) *awstypes.OnSuccess {
+func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(tfList []any) *awstypes.OnSuccess {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	onSuccess := &awstypes.OnSuccess{}
 
@@ -393,59 +394,59 @@ func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(tfList []interfac
 	return onSuccess
 }
 
-func flattenFunctionEventInvokeConfigDestinationConfig(apiObject *awstypes.DestinationConfig) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfig(apiObject *awstypes.DestinationConfig) []any {
 	// The API will respond with empty OnFailure and OnSuccess destinations when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no destination configuration to prevent Terraform state difference
 
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	if apiObject.OnFailure == nil && apiObject.OnSuccess == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
 	if (apiObject.OnFailure != nil && apiObject.OnFailure.Destination == nil) && (apiObject.OnSuccess != nil && apiObject.OnSuccess.Destination == nil) {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"on_failure": flattenFunctionEventInvokeConfigDestinationConfigOnFailure(apiObject.OnFailure),
 		"on_success": flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(apiObject.OnSuccess),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFunctionEventInvokeConfigDestinationConfigOnFailure(apiObject *awstypes.OnFailure) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfigOnFailure(apiObject *awstypes.OnFailure) []any {
 	// The API will respond with empty OnFailure destination when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no on failure configuration to prevent Terraform state difference
 
 	if apiObject == nil || apiObject.Destination == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrDestination: aws.ToString(apiObject.Destination),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(apiObject *awstypes.OnSuccess) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(apiObject *awstypes.OnSuccess) []any {
 	// The API will respond with empty OnSuccess destination when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no on success configuration to prevent Terraform state difference
 
 	if apiObject == nil || apiObject.Destination == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrDestination: aws.ToString(apiObject.Destination),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

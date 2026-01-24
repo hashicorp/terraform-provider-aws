@@ -1,4 +1,5 @@
 resource "aws_bedrock_custom_model" "test" {
+{{- template "region" }}
   custom_model_name     = var.rName
   job_name              = var.rName
   base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
@@ -25,29 +26,36 @@ resource "aws_bedrock_custom_model" "test" {
 # testAccCustomModelConfig_base
 
 data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
+data "aws_region" "current" {
+{{- template "region" -}}
+}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "training" {
+{{- template "region" }}
   bucket = "${var.rName}-training"
 }
 
 resource "aws_s3_bucket" "validation" {
+{{- template "region" }}
   bucket = "${var.rName}-validation"
 }
 
 resource "aws_s3_bucket" "output" {
+{{- template "region" }}
   bucket        = "${var.rName}-output"
   force_destroy = true
 }
 
 resource "aws_s3_object" "training" {
+{{- template "region" }}
   bucket = aws_s3_bucket.training.id
   key    = "data/train.jsonl"
   source = "test-fixtures/train.jsonl"
 }
 
 resource "aws_s3_object" "validation" {
+{{- template "region" }}
   bucket = aws_s3_bucket.validation.id
   key    = "data/validate.jsonl"
   source = "test-fixtures/validate.jsonl"
@@ -71,7 +79,7 @@ resource "aws_iam_role" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnEquals": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
       }
     }
   }]
@@ -132,5 +140,6 @@ resource "aws_iam_role_policy_attachment" "output" {
 }
 
 data "aws_bedrock_foundation_model" "test" {
+{{- template "region" }}
   model_id = "amazon.titan-text-express-v1"
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -6,7 +6,7 @@ package s3_test
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Test code generating random account IDs
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -648,7 +648,7 @@ func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err = tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -904,7 +904,7 @@ resource "aws_s3_bucket_metric" "test" {
 }
 
 func testAccBucketMetricConfig_directoryBucket(bucketName, metricName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

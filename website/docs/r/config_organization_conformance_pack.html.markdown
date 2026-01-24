@@ -16,7 +16,7 @@ Manages a Config Organization Conformance Pack. More information can be found in
 
 ### Using Template Body
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name = "example"
 
@@ -50,7 +50,7 @@ resource "aws_organizations_organization" "example" {
 
 ### Using Template S3 URI
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name            = "example"
   template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"
@@ -87,6 +87,7 @@ EOT
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the organization conformance pack. Must begin with a letter and contain from 1 to 128 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
 * `delivery_s3_key_prefix` - (Optional) The prefix for the Amazon S3 bucket. Maximum length of 1024.

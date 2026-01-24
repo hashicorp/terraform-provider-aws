@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,7 +89,7 @@ func TestAccIAMGroupPolicyAttachment_disappears(t *testing.T) {
 				Config: testAccGroupPolicyAttachmentConfig_attach(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroupPolicyAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +108,7 @@ func testAccCheckGroupPolicyAttachmentDestroy(ctx context.Context) resource.Test
 
 			_, err := tfiam.FindAttachedGroupPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["group"], rs.Primary.Attributes["policy_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -145,7 +145,7 @@ func testAccCheckGroupPolicyAttachmentCount(ctx context.Context, groupName strin
 		input := &iam.ListAttachedGroupPoliciesInput{
 			GroupName: aws.String(groupName),
 		}
-		output, err := tfiam.FindAttachedGroupPolicies(ctx, conn, input, tfslices.PredicateTrue[awstypes.AttachedPolicy]())
+		output, err := tfiam.FindAttachedGroupPolicies(ctx, conn, input, tfslices.PredicateTrue[*awstypes.AttachedPolicy]())
 
 		if err != nil {
 			return err

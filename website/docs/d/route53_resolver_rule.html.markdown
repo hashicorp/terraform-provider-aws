@@ -23,9 +23,9 @@ data "aws_route53_resolver_rule" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available resolver rules in the current region.
-The given filters must match exactly one resolver rule whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolver_rule_id`.
 * `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolver_rule_id`.
 * `resolver_endpoint_id` (Optional) ID of the outbound resolver endpoint of the desired resolver rule. Conflicts with `resolver_rule_id`.
@@ -42,3 +42,11 @@ This data source exports the following attributes in addition to the arguments a
 * `share_status` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags` - Map of tags assigned to the resolver rule.
+* `target_ips` - List of configurations for target IP addresses. Only applicable for `FORWARD` rules. See [`target_ips`](#target_ips) below for details.
+
+### target_ips
+
+* `ip` - IPv4 address that you want to forward DNS queries to.
+* `ipv6` - IPv6 address that you want to forward DNS queries to.
+* `port` - Port at the IP address that you want to forward DNS queries to.
+* `protocol` - Protocol for the target IP address. Valid values are `Do53` (DNS over port 53), `DoH` (DNS over HTTPS), and `DoH-FIPS` (DNS over HTTPS with FIPS).

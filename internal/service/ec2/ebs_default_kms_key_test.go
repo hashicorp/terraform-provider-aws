@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -18,6 +18,21 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestAccEC2EBSDefaultKMSKey_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEBSDefaultKMSKey_basic,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEBSDefaultKMSKeyDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
 
 func testAccEBSDefaultKMSKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -129,7 +144,10 @@ func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
 }
 
 const testAccEBSDefaultKMSKeyConfig_basic = `
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_ebs_default_kms_key" "test" {
   key_arn = aws_kms_key.test.arn

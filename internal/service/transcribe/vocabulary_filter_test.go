@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -209,7 +209,7 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceVocabularyFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftranscribe.ResourceVocabularyFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,7 +228,7 @@ func testAccCheckVocabularyFilterDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tftranscribe.FindVocabularyFilterByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

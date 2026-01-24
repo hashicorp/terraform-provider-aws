@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -217,7 +217,7 @@ func TestAccRedshiftServerlessNamespace_disappears(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceNamespace(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -241,10 +241,6 @@ func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
 				),
-			},
-			{
-				Config:   testAccNamespaceConfig_withWorkgroup(rName),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -285,7 +281,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfredshiftserverless.FindNamespaceByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

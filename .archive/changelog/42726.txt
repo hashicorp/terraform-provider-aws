@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix crash during read operations where configuration endpoint and node groups are nil and empty, respectively
+```

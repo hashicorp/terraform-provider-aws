@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -195,7 +195,7 @@ func TestAccStorageGatewayStorediSCSIVolume_disappears(t *testing.T) {
 				Config: testAccStorediSCSIVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceStorediSCSIVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceStorediSCSIVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -235,7 +235,7 @@ func testAccCheckStorediSCSIVolumeDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfstoragegateway.FindStorediSCSIVolumeByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -320,8 +320,11 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccStorediSCSIVolumeConfig_kmsEncrypted(rName string) string {
 	return acctest.ConfigCompose(testAccStorediSCSIVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
-  policy      = <<POLICY
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

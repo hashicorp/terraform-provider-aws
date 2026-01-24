@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package location_test
@@ -70,7 +70,7 @@ func TestAccLocationTracker_disappears(t *testing.T) {
 				Config: testAccTrackerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceTracker(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflocation.ResourceTracker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -295,6 +295,7 @@ func testAccTrackerConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_location_tracker" "test" {

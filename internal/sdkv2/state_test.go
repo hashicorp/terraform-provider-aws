@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -12,7 +12,7 @@ import (
 func TestNormalizeJsonStringSchemaStateFunc(t *testing.T) { // nosemgrep:ci.caps2-in-func-name
 	t.Parallel()
 
-	var input interface{} = `{ "key1": "value1", "key2": 42}`
+	var input any = `{ "key1": "value1", "key2": 42}`
 	want := `{"key1":"value1","key2":42}`
 
 	got := NormalizeJsonStringSchemaStateFunc(input)
@@ -25,7 +25,7 @@ func TestNormalizeJsonStringSchemaStateFunc(t *testing.T) { // nosemgrep:ci.caps
 func TestToLowerSchemaStateFunc(t *testing.T) {
 	t.Parallel()
 
-	var input interface{} = "In-State"
+	var input any = "In-State"
 	want := "in-state"
 
 	got := ToLowerSchemaStateFunc(input)
@@ -38,10 +38,23 @@ func TestToLowerSchemaStateFunc(t *testing.T) {
 func TestToUpperSchemaStateFunc(t *testing.T) {
 	t.Parallel()
 
-	var input interface{} = "in-state"
+	var input any = "in-state"
 	want := "IN-STATE"
 
 	got := ToUpperSchemaStateFunc(input)
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}
+
+func TestTrimSpaceSchemaStateFunc(t *testing.T) {
+	t.Parallel()
+
+	var input any = " in-state  "
+	want := "in-state"
+
+	got := TrimSpaceSchemaStateFunc(input)
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("unexpected diff (+want, -got): %s", diff)

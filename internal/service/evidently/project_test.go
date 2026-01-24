@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package evidently_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -352,7 +352,7 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchevidently.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -370,7 +370,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudwatchevidently.FindProjectByNameOrARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

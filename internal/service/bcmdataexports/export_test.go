@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bcmdataexports_test
@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfbcmdataexports "github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,6 +50,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, "export.0.export_arn", "bcm-data-exports", endpoints.UsEast1RegionID, regexache.MustCompile("export/"+rName+"-"+verify.UUIDRegexPattern)),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
@@ -70,6 +73,40 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBCMDataExportsExport_carbonEmissions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var export bcmdataexports.GetExportOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bcmdataexports_export.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExportDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExportConfig_carbonEmissions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, resourceName, &export),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT usage_account_id FROM CARBON_EMISSIONS"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "0"),
+				),
 			},
 		},
 	})
@@ -325,7 +362,7 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 				Config: testAccExportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbcmdataexports.ResourceExport, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbcmdataexports.ResourceExport, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -382,7 +419,7 @@ func testAccCheckExportDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbcmdataexports.FindExportByARN(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -409,7 +446,7 @@ func testAccCheckExportExists(ctx context.Context, name string, export *bcmdatae
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
-		resp, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfbcmdataexports.FindExportByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.BCMDataExports, create.ErrActionCheckingExistence, tfbcmdataexports.ResNameExport, rs.Primary.ID, err)
@@ -460,6 +497,9 @@ func testAccExportConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -471,6 +511,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -500,6 +541,9 @@ func testAccExportConfig_update(rName, overwrite string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -511,6 +555,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -540,6 +585,9 @@ func testAccExportConfig_updateTableConfigs(rName, queryStatement string) string
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -551,6 +599,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -580,6 +629,9 @@ func testAccExportConfig_curSubset(rName, query string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -591,6 +643,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "TRUE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -615,4 +668,36 @@ resource "aws_bcmdataexports_export" "test" {
   }
 }
 `, rName, query))
+}
+
+func testAccExportConfig_carbonEmissions(rName string) string {
+	return acctest.ConfigCompose(
+		testAccExportConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_bcmdataexports_export" "test" {
+  export {
+    name = %[1]q
+    data_query {
+      query_statement = "SELECT usage_account_id FROM CARBON_EMISSIONS"
+    }
+    destination_configurations {
+      s3_destination {
+        s3_bucket = aws_s3_bucket.test.bucket
+        s3_prefix = aws_s3_bucket.test.bucket_prefix
+        s3_region = aws_s3_bucket.test.region
+        s3_output_configurations {
+          overwrite   = "OVERWRITE_REPORT"
+          format      = "PARQUET"
+          compression = "GZIP"
+          output_type = "CUSTOM"
+        }
+      }
+    }
+
+    refresh_cadence {
+      frequency = "SYNCHRONOUS"
+    }
+  }
+}
+`, rName))
 }

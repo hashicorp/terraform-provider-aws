@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstanceTypeOfferings.html) for supported filters. Detailed below.
 * `location_type` - (Optional) Location type. Defaults to `region`. Valid values: `availability-zone`, `availability-zone-id`, and `region`.
 * `preferred_instance_types` - (Optional) Ordered list of preferred EC2 Instance Types. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
@@ -55,6 +56,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - EC2 Instance Type.
 * `instance_type` - EC2 Instance Type.
+* `location` - Identifier for the location.
 
 ## Timeouts
 
@@ -62,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-ee92204428b1ac2c8a41c289f70dd6ba1bc0d940110fee2c372c0684d819b847 -->
+<!-- cache-key: cdktf-0.20.8 input-54954ccf1496d4080728535126f8b2ceaf72dff5f9092223992efd7a36d6a8c9 -->

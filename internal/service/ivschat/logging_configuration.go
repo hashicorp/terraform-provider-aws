@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivschat
@@ -18,24 +18,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ivschat_logging_configuration", name="Logging Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetLoggingConfigurationOutput")
+// @Testing(preIdentityVersion="v6.5.0")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceLoggingConfigurationRead,
 		UpdateWithoutTimeout: resourceLoggingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceLoggingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -138,8 +136,6 @@ func ResourceLoggingConfiguration() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -147,13 +143,13 @@ const (
 	ResNameLoggingConfiguration = "Logging Configuration"
 )
 
-func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateLoggingConfigurationInput{
-		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
+		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]any)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -179,14 +175,14 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IVSChat LoggingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,7 +204,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
@@ -225,7 +221,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChanges("destination_configuration") {
-		in.DestinationConfiguration = expandDestinationConfiguration(d.Get("destination_configuration").([]interface{}))
+		in.DestinationConfiguration = expandDestinationConfiguration(d.Get("destination_configuration").([]any))
 		update = true
 	}
 
@@ -246,7 +242,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
@@ -273,12 +269,12 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) []interface{} {
+func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	switch v := apiObject.(type) {
 	case *types.DestinationConfigurationMemberCloudWatchLogs:
@@ -297,55 +293,55 @@ func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) [
 		log.Println("union is nil or unknown type")
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCloudWatchDestinationConfiguration(apiObject types.CloudWatchLogsDestinationConfiguration) []interface{} {
-	m := map[string]interface{}{}
+func flattenCloudWatchDestinationConfiguration(apiObject types.CloudWatchLogsDestinationConfiguration) []any {
+	m := map[string]any{}
 
 	if v := apiObject.LogGroupName; v != nil {
 		m[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenFirehoseDestinationConfiguration(apiObject types.FirehoseDestinationConfiguration) []interface{} {
-	m := map[string]interface{}{}
+func flattenFirehoseDestinationConfiguration(apiObject types.FirehoseDestinationConfiguration) []any {
+	m := map[string]any{}
 
 	if v := apiObject.DeliveryStreamName; v != nil {
 		m["delivery_stream_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenS3DestinationConfiguration(apiObject types.S3DestinationConfiguration) []interface{} {
-	m := map[string]interface{}{}
+func flattenS3DestinationConfiguration(apiObject types.S3DestinationConfiguration) []any {
+	m := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
 		m[names.AttrBucketName] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandDestinationConfiguration(vSettings []interface{}) types.DestinationConfiguration {
+func expandDestinationConfiguration(vSettings []any) types.DestinationConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
 
-	tfMap := vSettings[0].(map[string]interface{})
+	tfMap := vSettings[0].(map[string]any)
 
-	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]any); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberCloudWatchLogs{
 			Value: *expandCloudWatchLogsDestinationConfiguration(v),
 		}
-	} else if v, ok := tfMap["firehose"].([]interface{}); ok && len(v) > 0 {
+	} else if v, ok := tfMap["firehose"].([]any); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberFirehose{
 			Value: *expandFirehouseDestinationConfiguration(v),
 		}
-	} else if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	} else if v, ok := tfMap["s3"].([]any); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberS3{
 			Value: *expandS3DestinationConfiguration(v),
 		}
@@ -354,14 +350,14 @@ func expandDestinationConfiguration(vSettings []interface{}) types.DestinationCo
 	}
 }
 
-func expandCloudWatchLogsDestinationConfiguration(vSettings []interface{}) *types.CloudWatchLogsDestinationConfiguration {
+func expandCloudWatchLogsDestinationConfiguration(vSettings []any) *types.CloudWatchLogsDestinationConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
 
 	a := &types.CloudWatchLogsDestinationConfiguration{}
 
-	tfMap := vSettings[0].(map[string]interface{})
+	tfMap := vSettings[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		a.LogGroupName = aws.String(v)
@@ -370,14 +366,14 @@ func expandCloudWatchLogsDestinationConfiguration(vSettings []interface{}) *type
 	return a
 }
 
-func expandFirehouseDestinationConfiguration(vSettings []interface{}) *types.FirehoseDestinationConfiguration {
+func expandFirehouseDestinationConfiguration(vSettings []any) *types.FirehoseDestinationConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
 
 	a := &types.FirehoseDestinationConfiguration{}
 
-	tfMap := vSettings[0].(map[string]interface{})
+	tfMap := vSettings[0].(map[string]any)
 
 	if v, ok := tfMap["delivery_stream_name"].(string); ok && v != "" {
 		a.DeliveryStreamName = aws.String(v)
@@ -386,14 +382,14 @@ func expandFirehouseDestinationConfiguration(vSettings []interface{}) *types.Fir
 	return a
 }
 
-func expandS3DestinationConfiguration(vSettings []interface{}) *types.S3DestinationConfiguration {
+func expandS3DestinationConfiguration(vSettings []any) *types.S3DestinationConfiguration {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
 
 	a := &types.S3DestinationConfiguration{}
 
-	tfMap := vSettings[0].(map[string]interface{})
+	tfMap := vSettings[0].(map[string]any)
 
 	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)

@@ -124,6 +124,7 @@ resource "aws_subnet" "bar" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
 * `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.

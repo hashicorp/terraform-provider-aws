@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `status` - (Optional) The user profile status.
 * `userType` - (Optional) The user type.
 
@@ -97,4 +98,4 @@ Using `terraform import`, import DataZone User Profile using the `user_identifie
 % terraform import aws_datazone_user_profile.example arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6suo,IAM
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e72d7d0cc8d30dcddbba68e2a00a2793052fb1928a083fc96d222a2c604c9948 -->
+<!-- cache-key: cdktf-0.20.8 input-25f607d2532271e185be6d290a28dd805a41bae45c0535465452dff3c3c35f3c -->

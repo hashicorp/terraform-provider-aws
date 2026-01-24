@@ -69,6 +69,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arguments` - (Optional) A map of arguments used to configure the endpoint.
 * `extraJarsS3Path` - (Optional) Path to one or more Java Jars in an S3 bucket that should be loaded in this endpoint.
 * `extraPythonLibsS3Path` - (Optional) Path(s) to one or more Python libraries in an S3 bucket that should be loaded in this endpoint. Multiple values must be complete paths separated by a comma.
@@ -129,4 +130,4 @@ Using `terraform import`, import a Glue Development Endpoint using the `name`. F
 % terraform import aws_glue_dev_endpoint.example foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-59223466494b9a1666a02d2c293b3450a6518da65a3ffe2d8e998ffd375782a6 -->
+<!-- cache-key: cdktf-0.20.8 input-da1f7ad9dbb1ba92b29fa55df5491ff0c8c2b771a54509f72fc95267dbbbde51 -->

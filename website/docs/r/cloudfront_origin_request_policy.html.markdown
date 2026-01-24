@@ -71,6 +71,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The origin request policy ARN.
 * `etag` - The current version of the origin request policy.
 * `id` - The identifier for the origin request policy.
 

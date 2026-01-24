@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_db_instance_role_association: Retry `InvalidDBInstanceState` errors on delete
+```
+
+```release-note:bug
+resource/aws_rds_cluster_role_association: Retry `InvalidDBClusterStateFault` errors on delete
+```

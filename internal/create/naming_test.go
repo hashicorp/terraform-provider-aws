@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package create
@@ -300,7 +300,7 @@ func TestNamePrefixFromName(t *testing.T) {
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
 		t.Parallel()
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			prefix := "test-"
 			input := Name("", prefix)
 			got := NamePrefixFromName(input)
@@ -401,7 +401,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
 		t.Parallel()
 
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			prefix := "test-"
 			input := nameWithSuffix("", prefix, "suffix")
 			got := NamePrefixFromNameWithSuffix(input, "suffix")

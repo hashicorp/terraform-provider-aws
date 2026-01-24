@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +32,7 @@ func TestAccSiteVPNGatewayAttachment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
 				),
@@ -54,10 +54,10 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
+				Config: testAccVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfec2.FindVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -116,7 +116,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccSiteVPNGatewayAttachmentConfig_basic(rName string) string {
+func testAccVPNGatewayAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

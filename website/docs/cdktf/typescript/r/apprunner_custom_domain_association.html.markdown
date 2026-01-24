@@ -12,7 +12,7 @@ description: |-
 
 Manages an App Runner Custom Domain association.
 
-~> **NOTE:** After creation, you must use the information in the `certification_validation_records` attribute to add CNAME records to your Domain Name System (DNS). For each mapped domain name, add a mapping to the target App Runner subdomain (found in the `dnsTarget` attribute) and one or more certificate validation records. App Runner then performs DNS validation to verify that you own or control the domain name you associated. App Runner tracks domain validity in a certificate stored in AWS Certificate Manager (ACM).
+~> **NOTE:** After creation, you must use the information in the `certificateValidationRecords` attribute to add CNAME records to your Domain Name System (DNS). For each mapped domain name, add a mapping to the target App Runner subdomain (found in the `dnsTarget` attribute) and one or more certificate validation records. App Runner then performs DNS validation to verify that you own or control the domain name you associated. App Runner tracks domain validity in a certificate stored in AWS Certificate Manager (ACM).
 
 ## Example Usage
 
@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enableWwwSubdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
 * `serviceArn` - (Required) ARN of the App Runner service.
@@ -94,4 +95,4 @@ Using `terraform import`, import App Runner Custom Domain Associations using the
 % terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7cc3a375febd6cf6963cf65a24caeee55d47321c71cc824d65ac258b80d66ca7 -->
+<!-- cache-key: cdktf-0.20.8 input-ea0bc21d0afc62862a8dc44100a00169d5b82511a70a342ea544fcf342df39b7 -->

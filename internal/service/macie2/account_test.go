@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -191,7 +191,7 @@ func testAccAccount_disappears(t *testing.T) {
 				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

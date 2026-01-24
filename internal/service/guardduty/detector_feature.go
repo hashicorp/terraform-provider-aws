@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
-func ResourceDetectorFeature() *schema.Resource {
+func resourceDetectorFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorFeaturePut,
 		ReadWithoutTimeout:   resourceDetectorFeatureRead,
@@ -33,14 +34,12 @@ func ResourceDetectorFeature() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"additional_configuration": {
 				Optional: true,
-				ForceNew: true,
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
-							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
 						},
 						names.AttrStatus: {
@@ -71,7 +70,7 @@ func ResourceDetectorFeature() *schema.Resource {
 	}
 }
 
-func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -81,8 +80,8 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]interface{})) > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("additional_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.(*schema.Set).List())
 	}
 
 	input := &guardduty.UpdateDetectorInput{
@@ -103,7 +102,7 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDetectorFeatureRead(ctx, d, meta)...)
 }
 
-func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -112,9 +111,9 @@ func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	feature, err := FindDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
+	feature, err := findDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -153,8 +152,8 @@ func detectorFeatureParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DETECTORID%[2]sFEATURENAME", id, detectorFeatureResourceIDSeparator)
 }
 
-func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
-	output, err := FindDetectorByID(ctx, conn, detectorID)
+func findDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client, detectorID, name string) (*awstypes.DetectorFeatureConfigurationResult, error) {
+	output, err := findDetectorByID(ctx, conn, detectorID)
 
 	if err != nil {
 		return nil, err
@@ -165,7 +164,7 @@ func FindDetectorFeatureByTwoPartKey(ctx context.Context, conn *guardduty.Client
 	}))
 }
 
-func expandDetectorAdditionalConfiguration(tfMap map[string]interface{}) awstypes.DetectorAdditionalConfiguration {
+func expandDetectorAdditionalConfiguration(tfMap map[string]any) awstypes.DetectorAdditionalConfiguration {
 	apiObject := awstypes.DetectorAdditionalConfiguration{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -179,7 +178,7 @@ func expandDetectorAdditionalConfiguration(tfMap map[string]interface{}) awstype
 	return apiObject
 }
 
-func expandDetectorAdditionalConfigurations(tfList []interface{}) []awstypes.DetectorAdditionalConfiguration {
+func expandDetectorAdditionalConfigurations(tfList []any) []awstypes.DetectorAdditionalConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -187,7 +186,7 @@ func expandDetectorAdditionalConfigurations(tfList []interface{}) []awstypes.Det
 	var apiObjects []awstypes.DetectorAdditionalConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -201,8 +200,8 @@ func expandDetectorAdditionalConfigurations(tfList []interface{}) []awstypes.Det
 	return apiObjects
 }
 
-func flattenDetectorFeatureConfigurationResult(apiObject awstypes.DetectorFeatureConfigurationResult) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenDetectorFeatureConfigurationResult(apiObject awstypes.DetectorFeatureConfigurationResult) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AdditionalConfiguration; v != nil {
 		tfMap["additional_configuration"] = flattenDetectorAdditionalConfigurationResults(v)
@@ -214,12 +213,12 @@ func flattenDetectorFeatureConfigurationResult(apiObject awstypes.DetectorFeatur
 	return tfMap
 }
 
-func flattenDetectorFeatureConfigurationResults(apiObjects []awstypes.DetectorFeatureConfigurationResult) []interface{} {
+func flattenDetectorFeatureConfigurationResults(apiObjects []awstypes.DetectorFeatureConfigurationResult) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDetectorFeatureConfigurationResult(apiObject))
@@ -228,8 +227,8 @@ func flattenDetectorFeatureConfigurationResults(apiObjects []awstypes.DetectorFe
 	return tfList
 }
 
-func flattenDetectorAdditionalConfigurationResult(apiObject awstypes.DetectorAdditionalConfigurationResult) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenDetectorAdditionalConfigurationResult(apiObject awstypes.DetectorAdditionalConfigurationResult) map[string]any {
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrName] = string(apiObject.Name)
 	tfMap[names.AttrStatus] = string(apiObject.Status)
@@ -237,12 +236,12 @@ func flattenDetectorAdditionalConfigurationResult(apiObject awstypes.DetectorAdd
 	return tfMap
 }
 
-func flattenDetectorAdditionalConfigurationResults(apiObjects []awstypes.DetectorAdditionalConfigurationResult) []interface{} {
+func flattenDetectorAdditionalConfigurationResults(apiObjects []awstypes.DetectorAdditionalConfigurationResult) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDetectorAdditionalConfigurationResult(apiObject))

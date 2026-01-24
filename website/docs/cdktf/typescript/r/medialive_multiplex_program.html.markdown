@@ -86,6 +86,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### Multiple Program Settings
 
 * `programNumber` - (Required) Unique program number.
@@ -154,4 +156,4 @@ Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a
 % terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-50463f6750f983f26a2c5878b8216e3c6810685cf668ae90ea59643f826b228d -->
+<!-- cache-key: cdktf-0.20.8 input-cc5cf2659fd9fd6c0983962c7478647dadbec1206da40238188de88c7081b7ba -->

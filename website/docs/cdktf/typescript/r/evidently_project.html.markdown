@@ -12,6 +12,8 @@ description: |-
 
 Provides a CloudWatch Evidently Project resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -107,6 +109,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dataDelivery` - (Optional) A block that contains information about where Evidently is to store evaluation events for longer term storage, if you choose to do so. If you choose not to store these events, Evidently deletes them after using them to produce metrics and other experiment results that you can view. See below.
 * `description` - (Optional) Specifies the description of the project.
 * `name` - (Required) A name for the project.
@@ -184,4 +187,4 @@ Using `terraform import`, import CloudWatch Evidently Project using the `arn`. F
 % terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-98108c26628ca8c5832f4e1d0f90d72906605975ec0417106000b17f811ac230 -->
+<!-- cache-key: cdktf-0.20.8 input-c637155eb09696a6c5b0c137ed8068483a6bc21bfeebcefec9d345a8c20dc634 -->

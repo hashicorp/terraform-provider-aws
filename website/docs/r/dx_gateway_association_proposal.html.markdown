@@ -26,6 +26,7 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `associated_gateway_id` - (Required) The ID of the VGW or transit gateway with which to associate the Direct Connect gateway.
 * `dx_gateway_id` - (Required) Direct Connect Gateway identifier.
 * `dx_gateway_owner_account_id` - (Required) AWS Account identifier of the Direct Connect Gateway's owner.

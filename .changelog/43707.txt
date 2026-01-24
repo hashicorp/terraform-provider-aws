@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3tables_table_bucket: Fix crash on `maintenance_configuration` read failure
+```

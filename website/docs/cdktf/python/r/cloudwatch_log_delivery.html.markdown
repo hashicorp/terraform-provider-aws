@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delivery_destination_arn` - (Required) The ARN of the delivery destination to use for this delivery.
 * `delivery_source_name` - (Required) The name of the delivery source to use for this delivery.
 * `field_delimiter` - (Optional) The field delimiter to use between record fields when the final output format of a delivery is in `plain`, `w3c`, or `raw` format.
@@ -82,4 +83,4 @@ Using `terraform import`, import CloudWatch Logs Delivery using the `id`. For ex
 % terraform import aws_cloudwatch_log_delivery.example jsoGVi4Zq8VlYp9n
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-365368a7a98b60eeea93df8bd03f71f0a61c1ba3d9f4af19d3e1e4ec683e197e -->
+<!-- cache-key: cdktf-0.20.8 input-bed66f9a33e0da0bb240846a2b6fa5b95d62db8f1877015c2b1c1ee4e95ebc36 -->

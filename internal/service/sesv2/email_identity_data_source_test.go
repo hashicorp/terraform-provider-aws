@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -39,6 +39,7 @@ func TestAccSESV2EmailIdentityDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.status", dataSourceName, "dkim_signing_attributes.0.status"),
 					resource.TestCheckResourceAttrPair(resourceName, "dkim_signing_attributes.0.tokens.#", dataSourceName, "dkim_signing_attributes.0.tokens.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_type", dataSourceName, "identity_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "verification_status", dataSourceName, "verification_status"),
 					resource.TestCheckResourceAttrPair(resourceName, "verified_for_sending_status", dataSourceName, "verified_for_sending_status"),
 				),
 			},

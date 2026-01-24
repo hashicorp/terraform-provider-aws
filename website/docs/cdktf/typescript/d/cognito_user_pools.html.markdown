@@ -53,6 +53,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cognito user pools. Name is not a unique attribute for cognito user pool, so multiple pools might be returned with given name. If the pool name is expected to be unique, you can reference the pool id via ```tolist(data.aws_cognito_user_pools.selected.ids)[0]```
 
 ## Attribute Reference
@@ -62,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ids` - Set of cognito user pool ids.
 * `arns` - Set of cognito user pool Amazon Resource Names (ARNs).
 
-<!-- cache-key: cdktf-0.20.8 input-75e710379276dd4b4879fdf870f90225a6aad57dec06cd592a215bcaab891f06 -->
+<!-- cache-key: cdktf-0.20.8 input-51cbbb04ab755e4512bb48fb7ea89dd27b3bd463687cbd96df4c1cb613a8208d -->

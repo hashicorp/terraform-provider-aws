@@ -311,9 +311,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
-
 The following arguments are required:
 
 * `budgetType` - (Required) Whether this budget tracks monetary cost or usage.
@@ -323,6 +320,7 @@ The following arguments are optional:
 
 * `accountId` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `autoAdjustData` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
+* `billingViewArn` - (Optional) ARN of the billing view.
 * `costFilter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
 * `costTypes` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limitAmount` - (Optional) The amount of cost or usage being measured for a budget.
@@ -334,6 +332,9 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timePeriodEnd` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `timePeriodStart` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+
+For more detailed documentation about each argument, refer to the [AWS official
+documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
 ## Attribute Reference
 
@@ -434,4 +435,4 @@ Using `terraform import`, import budgets using `AccountID:BudgetName`. For examp
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c38d7a9b8429f82c930c22d097e1873519e670d8a58dcc39daaab4ae36b008ed -->
+<!-- cache-key: cdktf-0.20.8 input-e52e9aa4f1efa0cafccc57242cec6f46233754b650bdda48081f534770d1bfe4 -->

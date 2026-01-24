@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -71,7 +72,7 @@ func resourceStudioSessionMapping() *schema.Resource {
 	}
 }
 
-func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -105,13 +106,13 @@ func resourceStudioSessionMappingCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
 
-func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	mapping, err := findStudioSessionMappingByIDOrName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Studio Session Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -130,7 +131,7 @@ func resourceStudioSessionMappingRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -160,7 +161,7 @@ func resourceStudioSessionMappingUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceStudioSessionMappingRead(ctx, d, meta)...)
 }
 
-func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -242,7 +243,7 @@ func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.Client, i
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio session mapping does not exist") ||
 		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio does not exist") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -253,7 +254,7 @@ func findStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.Client, i
 	}
 
 	if output == nil || output.SessionMapping == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SessionMapping, nil

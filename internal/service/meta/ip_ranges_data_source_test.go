@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta_test
@@ -186,7 +186,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 
 			_, _, err := net.ParseCIDR(cidrBlock)
 			if err != nil {
-				return fmt.Errorf("malformed CIDR block %s in %s: %s", cidrBlock, attribute, err)
+				return fmt.Errorf("malformed CIDR block %s in %s: %w", cidrBlock, attribute, err)
 			}
 
 			cidrBlocks[i] = cidrBlock

@@ -25,6 +25,7 @@ resource "aws_redshift_partner" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) The Amazon Web Services account ID that owns the cluster.
 * `cluster_identifier` - (Required) The cluster identifier of the cluster that receives data from the partner.
 * `database_name` - (Required) The name of the database that receives data from the partner.

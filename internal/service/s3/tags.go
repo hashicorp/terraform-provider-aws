@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build !generate
-// +build !generate
 
 package s3
 
@@ -18,11 +17,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-// Custom S3 tag service update functions using the same format as generated code.
+// Custom S3 tag functions using the same format as generated code.
 
 func bucketCreateTags(ctx context.Context, conn *s3.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
@@ -35,13 +36,13 @@ func bucketCreateTags(ctx context.Context, conn *s3.Client, identifier string, t
 // bucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
 func bucketListTags(ctx context.Context, conn *s3.Client, identifier string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
-	input := &s3.GetBucketTaggingInput{
+	input := s3.GetBucketTaggingInput{
 		Bucket: aws.String(identifier),
 	}
 
-	output, err := conn.GetBucketTagging(ctx, input, optFns...)
+	output, err := conn.GetBucketTagging(ctx, &input, optFns...)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation) {
 		return tftags.New(ctx, nil), nil
 	}
 	if err != nil {
@@ -67,24 +68,24 @@ func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, o
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
 	if len(newTags)+len(ignoredTags) > 0 {
-		input := &s3.PutBucketTaggingInput{
+		input := s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
 			Tagging: &awstypes.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: svcTags(newTags.Merge(ignoredTags)),
 			},
 		}
 
-		_, err := conn.PutBucketTagging(ctx, input, optFns...)
+		_, err := conn.PutBucketTagging(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("setting resource tags (%s): %w", identifier, err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
-		input := &s3.DeleteBucketTaggingInput{
+		input := s3.DeleteBucketTaggingInput{
 			Bucket: aws.String(identifier),
 		}
 
-		_, err := conn.DeleteBucketTagging(ctx, input, optFns...)
+		_, err := conn.DeleteBucketTagging(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("deleting resource tags (%s): %w", identifier, err)
@@ -96,14 +97,14 @@ func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, o
 
 // objectListTags lists S3 object tags.
 func objectListTags(ctx context.Context, conn *s3.Client, bucket, key string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
-	input := &s3.GetObjectTaggingInput{
+	input := s3.GetObjectTaggingInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
 
-	output, err := conn.GetObjectTagging(ctx, input, optFns...)
+	output, err := conn.GetObjectTagging(ctx, &input, optFns...)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
 		return tftags.New(ctx, nil), nil
 	}
 
@@ -133,26 +134,26 @@ func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, 
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
 	if len(newTags)+len(ignoredTags) > 0 {
-		input := &s3.PutObjectTaggingInput{
+		input := s3.PutObjectTaggingInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			Tagging: &awstypes.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: svcTags(newTags.Merge(ignoredTags)),
 			},
 		}
 
-		_, err := conn.PutObjectTagging(ctx, input, optFns...)
+		_, err := conn.PutObjectTagging(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("setting resource tags (%s/%s): %w", bucket, key, err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
-		input := &s3.DeleteObjectTaggingInput{
+		input := s3.DeleteObjectTaggingInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 		}
 
-		_, err := conn.DeleteObjectTagging(ctx, input, optFns...)
+		_, err := conn.DeleteObjectTagging(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("deleting resource tags (%s/%s): %w", bucket, key, err)
@@ -169,14 +170,23 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		tags tftags.KeyValueTags
 		err  error
 	)
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	switch resourceType {
 	case "Bucket":
-		if isDirectoryBucket(identifier) {
-			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		if accountID := c.AccountID(ctx); accountID != "" {
+			// Attempt ListTagsForResource first, fall back to GetBucketTagging.
+			tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountID)
+			if errs.Contains(err, "is not authorized to perform: s3:ListTagsForResource") {
+				tags, err = bucketListTags(ctx, conn, identifier)
+			}
+		} else {
+			tags, err = bucketListTags(ctx, conn, identifier)
 		}
-		tags, err = bucketListTags(ctx, conn, identifier)
+
+	case "DirectoryBucket":
+		tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx))
 
 	case "Object", "ObjectCopy", "BucketObject":
 		var objectARN objectARN
@@ -215,14 +225,25 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 // UpdateTags updates s3 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.S3Client(ctx)
 
 	switch resourceType {
 	case "Bucket":
-		if isDirectoryBucket(identifier) {
-			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		var err error
+		if accountID := c.AccountID(ctx); accountID != "" {
+			// Attempt Tag/UntagResource first, fall back to Put/DeleteBucketTagging.
+			err = tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountID, oldTags, newTags)
+			if errs.Contains(err, "is not authorized to perform: s3:TagResource") || errs.Contains(err, "is not authorized to perform: s3:UntagResource") {
+				return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+			}
+		} else {
+			err = bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
 		}
-		return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
+		return err
+
+	case "DirectoryBucket":
+		return tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 
 	case "Object", "ObjectCopy", "BucketObject":
 		objectARN, err := parseObjectARN(identifier)

@@ -39,6 +39,7 @@ resource "aws_dynamodb_kinesis_streaming_destination" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `approximate_creation_date_time_precision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. Valid values: `MILLISECOND` and `MICROSECOND`.
 * `stream_arn` - (Required) The ARN for a Kinesis data stream. This must exist in the same account and region as the DynamoDB table.
 * `table_name` - (Required) The name of the DynamoDB table. There can only be one Kinesis streaming destination for a given DynamoDB table.
