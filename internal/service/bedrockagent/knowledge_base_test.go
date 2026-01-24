@@ -1147,8 +1147,7 @@ data "aws_iam_policy_document" "test_s3" {
       "s3:PutObject",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}",
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}/*",
+      "*",
     ]
     condition {
       test     = "StringEquals"
@@ -1189,8 +1188,6 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     }
 
     type = "VECTOR"
-
-
   }
 
   storage_configuration {
