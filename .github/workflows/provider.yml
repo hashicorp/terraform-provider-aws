@@ -161,7 +161,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: go install golang.org/x/tools/cmd/goimports@latest
       - run: go install golang.org/x/tools/cmd/stringer@latest
-      - run: make gen
+      - run: GO_VER=go make gen-raw
       - name: Check for Git Differences
         run: |
           git diff --compact-summary --exit-code || \
