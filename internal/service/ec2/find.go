@@ -4851,7 +4851,27 @@ func findTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, input *
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	if len(output) == 0 {
+        return nil, tfresource.NewEmptyResultError(nil)
+    }
+
+    var validAttachments []awstypes.TransitGatewayAttachment
+    for _, attachment := range output {
+        switch attachment.State {
+        case awstypes.TransitGatewayAttachmentStateAvailable,
+            awstypes.TransitGatewayAttachmentStateModifying,
+            awstypes.TransitGatewayAttachmentStateInitiatingRequest,
+            awstypes.TransitGatewayAttachmentStateRollingBack:
+            validAttachments = append(validAttachments, attachment)
+        }
+    }
+
+    output, err = tfresource.AssertMaybeSingleValueResult(validAttachments)
+    if err != nil {
+        return nil, err
+    }
+
+    return &output[0], nil
 }
 
 func findTransitGatewayAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypes.TransitGatewayAttachment, error) {
