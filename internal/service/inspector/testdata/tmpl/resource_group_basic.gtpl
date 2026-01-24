@@ -3,5 +3,5 @@ resource "aws_inspector_resource_group" "test" {
   tags = {
     Name = var.rName
   }
-{{- template "tags" }}
+{{- template "tags" . }}
 }

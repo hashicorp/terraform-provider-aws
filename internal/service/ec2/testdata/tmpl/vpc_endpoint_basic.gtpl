@@ -2,7 +2,7 @@ resource "aws_vpc_endpoint" "test" {
 {{- template "region" }}
   vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_vpc" "test" {

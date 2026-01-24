@@ -16,6 +16,10 @@ func TestAccNotifications_serial(t *testing.T) {
 		"OrganizationsAccess": {
 			acctest.CtBasic: testAccOrganizationsAccess_basic,
 		},
+		"OrganizationalUnitAssociation": {
+			acctest.CtBasic:      testAccOrganizationalUnitAssociation_basic,
+			acctest.CtDisappears: testAccOrganizationalUnitAssociation_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

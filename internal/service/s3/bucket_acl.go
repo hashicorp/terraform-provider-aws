@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -33,7 +35,7 @@ import (
 // @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
 // @IdentityAttribute("bucket")
 // @IdentityAttribute("expected_bucket_owner", optional="true")
-// @IdentityAttribute("acl", optional="true", testNotNull="true")
+// @IdentityAttribute("acl", optional="true")
 // @MutableIdentity
 // @ImportIDHandler("bucketACLImportID")
 // @Testing(preIdentityVersion="v6.10.0")

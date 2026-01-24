@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|\d{12}|cw.{10})$`)
+var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|partner-managed|\d{12}|cw.{10})$`)
 var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ram
 
 import (
@@ -33,7 +35,7 @@ const (
 )
 
 // @SDKResource("aws_ram_resource_share", name="Resource Share")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn", resourceType="ResourceShare")
 func resourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareCreate,

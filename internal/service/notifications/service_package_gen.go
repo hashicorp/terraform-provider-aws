@@ -67,6 +67,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newOrganizationalUnitAssociationResource,
+			TypeName: "aws_notifications_organizational_unit_association",
+			Name:     "Organizational Unit Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newOrganizationsAccessResource,
 			TypeName: "aws_notifications_organizations_access",
 			Name:     "Organizations Access",

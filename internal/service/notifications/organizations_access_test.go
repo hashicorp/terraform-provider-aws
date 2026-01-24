@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -20,7 +19,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_notifications_organizations_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -33,21 +32,21 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationsAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsAccessExists(ctx, resourceName),
+					testAccCheckOrganizationsAccessExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccOrganizationsAccessConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsAccessExists(ctx, resourceName),
+					testAccCheckOrganizationsAccessExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccOrganizationsAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsAccessExists(ctx, resourceName),
+					testAccCheckOrganizationsAccessExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
@@ -55,14 +54,14 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationsAccessExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationsAccessExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		_, err := tfnotifications.FindAccessForOrganization(ctx, conn)
 

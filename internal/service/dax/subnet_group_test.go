@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdax "github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 
 func TestAccDAXSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dax_subnet_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
+					testAccCheckSubnetGroupExists(ctx, t, "aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
@@ -42,7 +40,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 			{
 				Config: testAccSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
+					testAccCheckSubnetGroupExists(ctx, t, "aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", names.AttrDescription, "update"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
@@ -59,19 +57,19 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 
 func TestAccDAXSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dax_subnet_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists(ctx, resourceName),
+					testAccCheckSubnetGroupExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,9 +78,9 @@ func TestAccDAXSubnetGroup_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSubnetGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_subnet_group" {
@@ -104,14 +102,14 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckSubnetGroupExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DAXClient(ctx)
 
 		input := dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []string{rs.Primary.ID},

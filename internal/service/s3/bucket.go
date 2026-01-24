@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -784,7 +786,8 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return conn.CreateBucket(ctx, input)
 	}, errCodeOperationAborted)
 
-	if errs.Contains(err, "is not authorized to perform: s3:TagResource") {
+	if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
+		tfawserr.ErrCodeEquals(err, errCodeUnsupportedArgument) {
 		// Remove tags and try again
 		input.CreateBucketConfiguration.Tags = nil
 		tagOnCreate = false

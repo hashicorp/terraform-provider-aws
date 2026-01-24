@@ -99,7 +99,13 @@ Remove the following annotation flags from the resource definition:
 
 #### Compilation Checks
 
-Once code changes are made, do some basic verification to ensure the provider and tests still compile.
+Once code changes are made, do some basic verification to ensure code generation is correct and the provider compiles.
+
+To verify code generation is correct (no diff should be present in generated files):
+
+```sh
+go generate ./internal/service/<service-name>
+```
 
 To verify the provider compiles:
 
