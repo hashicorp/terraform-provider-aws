@@ -10,14 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,22 +24,22 @@ import (
 func TestAccPinpointSMSVoiceV2OptOutList_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var optOutList awstypes.OptOutListInformation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_opt_out_list.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckOptOutList(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptOutListDestroy(ctx),
+		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptOutListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+					testAccCheckOptOutListExists(ctx, t, resourceName, &optOutList),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
@@ -62,22 +60,22 @@ func TestAccPinpointSMSVoiceV2OptOutList_basic(t *testing.T) {
 func TestAccPinpointSMSVoiceV2OptOutList_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var optOutList awstypes.OptOutListInformation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_opt_out_list.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckOptOutList(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptOutListDestroy(ctx),
+		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptOutListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+					testAccCheckOptOutListExists(ctx, t, resourceName, &optOutList),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceOptOutList, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -89,22 +87,22 @@ func TestAccPinpointSMSVoiceV2OptOutList_disappears(t *testing.T) {
 func TestAccPinpointSMSVoiceV2OptOutList_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var optOutList awstypes.OptOutListInformation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_opt_out_list.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckOptOutList(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptOutListDestroy(ctx),
+		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptOutListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+					testAccCheckOptOutListExists(ctx, t, resourceName, &optOutList),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -120,7 +118,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_tags(t *testing.T) {
 			{
 				Config: testAccOptOutListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+					testAccCheckOptOutListExists(ctx, t, resourceName, &optOutList),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -132,7 +130,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_tags(t *testing.T) {
 			{
 				Config: testAccOptOutListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
+					testAccCheckOptOutListExists(ctx, t, resourceName, &optOutList),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -144,9 +142,9 @@ func TestAccPinpointSMSVoiceV2OptOutList_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckOptOutListDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOptOutListDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpointsmsvoicev2_opt_out_list" {
@@ -170,14 +168,14 @@ func testAccCheckOptOutListDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckOptOutListExists(ctx context.Context, n string, v *awstypes.OptOutListInformation) resource.TestCheckFunc {
+func testAccCheckOptOutListExists(ctx context.Context, t *testing.T, n string, v *awstypes.OptOutListInformation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		output, err := tfpinpointsmsvoicev2.FindOptOutListByID(ctx, conn, rs.Primary.ID)
 
@@ -192,7 +190,7 @@ func testAccCheckOptOutListExists(ctx context.Context, n string, v *awstypes.Opt
 }
 
 func testAccPreCheckOptOutList(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 	input := &pinpointsmsvoicev2.DescribeOptOutListsInput{}
 

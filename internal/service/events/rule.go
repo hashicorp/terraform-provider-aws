@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package events
 
 import (
@@ -38,6 +40,7 @@ import (
 // @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeRuleOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3tables
 
 import (
@@ -35,6 +37,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="version_token")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableReplicationResource{}, nil
 }

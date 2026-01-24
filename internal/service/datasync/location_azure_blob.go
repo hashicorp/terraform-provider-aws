@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datasync
 
 import (
@@ -35,6 +37,7 @@ import (
 // @Testing(importIgnore="sas_configuration")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(name="LocationAzureBlob")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,

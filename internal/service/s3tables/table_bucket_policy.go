@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3tables
 
 import (
@@ -30,6 +32,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="6.19.0")
 // @Testing(importIgnore="resource_policy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketPolicyResource{}, nil
 }

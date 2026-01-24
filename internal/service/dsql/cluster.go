@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dsql
 
 import (
@@ -46,6 +48,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 

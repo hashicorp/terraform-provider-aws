@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -53,7 +55,7 @@ func resourcePlacementGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#placement-groups-limitations-partition.
-				ValidateFunc: validation.IntBetween(0, 7),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"placement_group_id": {
 				Type:     schema.TypeString,

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package codeartifact
 
 import (
@@ -27,6 +29,7 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_repository", name="Repository")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
