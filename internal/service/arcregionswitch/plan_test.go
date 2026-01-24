@@ -250,7 +250,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 	var plan sdktypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
-	dataSourceName := "data.aws_arcregionswitch_plan.test"
+	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	zoneName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -272,9 +272,9 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
 
 					// Verify Route53 health checks are populated via data source
-					resource.TestCheckResourceAttr(dataSourceName, "route53_health_checks.#", "4"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "route53_health_checks.0.health_check_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "route53_health_checks.1.health_check_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_checks.#", "4"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.health_check_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.health_check_id"),
 
 					// Verify Route53 records reference health check IDs
 					resource.TestCheckResourceAttrSet("aws_route53_record.primary", "health_check_id"),
@@ -1128,19 +1128,19 @@ resource "aws_arcregionswitch_plan" "test" {
 }
 
 # Data source to get health check IDs
-data "aws_arcregionswitch_plan" "test" {
-  arn = aws_arcregionswitch_plan.test.arn
+data "aws_arcregionswitch_route53_health_checks" "test" {
+  plan_arn = aws_arcregionswitch_plan.test.arn
 }
 
 # Filter health checks by region
 locals {
   primary_health_check = [
-    for hc in data.aws_arcregionswitch_plan.test.route53_health_checks :
+    for hc in data.aws_arcregionswitch_route53_health_checks.test.health_checks :
     hc if hc.region == %[3]q
   ][0]
 
   secondary_health_check = [
-    for hc in data.aws_arcregionswitch_plan.test.route53_health_checks :
+    for hc in data.aws_arcregionswitch_route53_health_checks.test.health_checks :
     hc if hc.region == %[4]q
   ][0]
 }
