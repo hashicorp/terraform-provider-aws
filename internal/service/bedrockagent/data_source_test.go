@@ -800,10 +800,10 @@ resource "aws_bedrockagent_data_source" "test" {
     }
   }
 }
+
 resource "aws_s3_bucket" "test_im" {
   bucket = "%[1]s-im"
 }
-
 `, rName))
 }
 
