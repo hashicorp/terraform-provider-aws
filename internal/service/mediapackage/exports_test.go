@@ -5,5 +5,6 @@ package mediapackage
 
 // Exports for use in tests only.
 var (
-	FindChannelByID = findChannelByID
+	FindChannelByID        = findChannelByID
+	FindOriginEndpointByID = findOriginEndpoint
 )
