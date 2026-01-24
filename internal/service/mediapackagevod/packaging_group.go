@@ -113,7 +113,7 @@ func (r *resourcePackagingGroup) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (interface{}, error) {
 		return conn.CreatePackagingGroup(ctx, &input)
 	}, "UnprocessableEntityException")
 
@@ -196,7 +196,7 @@ func (r *resourcePackagingGroup) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (interface{}, error) {
 			return conn.UpdatePackagingGroup(ctx, &input)
 		}, "UnprocessableEntityException")
 
@@ -250,7 +250,7 @@ func (r *resourcePackagingGroup) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (interface{}, error) {
 		return findPackagingGroupByID(ctx, conn, data.Id.ValueString())
 	})
 
@@ -264,10 +264,6 @@ func (r *resourcePackagingGroup) Delete(ctx context.Context, request resource.De
 
 func (r *resourcePackagingGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
-}
-
-func (r *resourcePackagingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 type resourcePackagingGroupData struct {
@@ -308,7 +304,7 @@ func findPackagingGroupByID(ctx context.Context, conn *mediapackagevod.Client, n
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
