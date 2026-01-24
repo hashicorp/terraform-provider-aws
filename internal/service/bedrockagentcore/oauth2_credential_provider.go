@@ -8,6 +8,7 @@ package bedrockagentcore
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
@@ -41,7 +42,37 @@ import (
 
 var (
 	oauth2ClientCredentialsCtxKey = inttypes.NewContextKey[oauth2ClientCredentialsModel]()
+	microsoftTenantIDCtxKey       = inttypes.NewContextKey[microsoftTenantIDModel]()
 )
+
+type microsoftTenantIDModel struct {
+	TenantID          types.String
+	TenantIDWO        types.String
+	TenantIDWOVersion types.Int64
+}
+
+// extractMicrosoftTenantID extracts tenant_id fields from config (including write-only attributes)
+func extractMicrosoftTenantID(ctx context.Context, config oauth2CredentialProviderResourceModel, diags *diag.Diagnostics) microsoftTenantIDModel {
+	var result microsoftTenantIDModel
+	if !config.OAuth2ProviderConfig.IsNull() {
+		configOAuth2, d := config.OAuth2ProviderConfig.ToPtr(ctx)
+		smerr.AddEnrich(ctx, diags, d)
+		if diags.HasError() {
+			return result
+		}
+		if !configOAuth2.MicrosoftOAuth2ProviderConfig.IsNull() {
+			msConfig, d := configOAuth2.MicrosoftOAuth2ProviderConfig.ToPtr(ctx)
+			smerr.AddEnrich(ctx, diags, d)
+			if diags.HasError() {
+				return result
+			}
+			result.TenantID = msConfig.TenantID
+			result.TenantIDWO = msConfig.TenantIDWO
+			result.TenantIDWOVersion = msConfig.TenantIDWOVersion
+		}
+	}
+	return result
+}
 
 // @FrameworkResource("aws_bedrockagentcore_oauth2_credential_provider", name="OAuth2 Credential Provider")
 func newOAuth2CredentialProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -124,9 +155,12 @@ func oauth2ClientCredentialsAttributes(context.Context) map[string]schema.Attrib
 	}
 }
 
-func basicOAuth2ProviderConfigBlock[T any](ctx context.Context) schema.ListNestedBlock {
+func basicOAuth2ProviderConfigBlock[T any](ctx context.Context, extraAttrs map[string]schema.Attribute) schema.ListNestedBlock {
 	attrs := oauth2ClientCredentialsAttributes(ctx)
 	attrs["oauth_discovery"] = framework.ResourceComputedListOfObjectsAttribute[oauth2DiscoveryModel](ctx)
+
+	// Merge extra attributes
+	maps.Copy(attrs, extraAttrs)
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[T](ctx),
@@ -221,11 +255,44 @@ func (r *oauth2CredentialProviderResource) Schema(ctx context.Context, request r
 								},
 							},
 						},
-						"github_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[githubOAuth2ProviderConfigModel](ctx),
-						"google_oauth2_provider_config":     basicOAuth2ProviderConfigBlock[googleOAuth2ProviderConfigModel](ctx),
-						"microsoft_oauth2_provider_config":  basicOAuth2ProviderConfigBlock[microsoftOAuth2ProviderConfigModel](ctx),
-						"salesforce_oauth2_provider_config": basicOAuth2ProviderConfigBlock[salesforceOAuth2ProviderConfigModel](ctx),
-						"slack_oauth2_provider_config":      basicOAuth2ProviderConfigBlock[slackOAuth2ProviderConfigModel](ctx),
+						"github_oauth2_provider_config": basicOAuth2ProviderConfigBlock[githubOAuth2ProviderConfigModel](ctx, nil),
+						"google_oauth2_provider_config": basicOAuth2ProviderConfigBlock[googleOAuth2ProviderConfigModel](ctx, nil),
+						"microsoft_oauth2_provider_config": basicOAuth2ProviderConfigBlock[microsoftOAuth2ProviderConfigModel](ctx, map[string]schema.Attribute{
+							"tenant_id": schema.StringAttribute{
+								Optional:  true,
+								Sensitive: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 256),
+									stringvalidator.ConflictsWith(path.Expressions{
+										path.MatchRelative().AtParent().AtName("tenant_id_wo"),
+									}...),
+								},
+							},
+							"tenant_id_wo": schema.StringAttribute{
+								Optional:  true,
+								WriteOnly: true,
+								Sensitive: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 256),
+									stringvalidator.ConflictsWith(path.Expressions{
+										path.MatchRelative().AtParent().AtName("tenant_id"),
+									}...),
+									stringvalidator.AlsoRequires(path.Expressions{
+										path.MatchRelative().AtParent().AtName("tenant_id_wo_version"),
+									}...),
+								},
+							},
+							"tenant_id_wo_version": schema.Int64Attribute{
+								Optional: true,
+								Validators: []validator.Int64{
+									int64validator.AlsoRequires(path.Expressions{
+										path.MatchRelative().AtParent().AtName("tenant_id_wo"),
+									}...),
+								},
+							},
+						}),
+						"salesforce_oauth2_provider_config": basicOAuth2ProviderConfigBlock[salesforceOAuth2ProviderConfigModel](ctx, nil),
+						"slack_oauth2_provider_config":      basicOAuth2ProviderConfigBlock[slackOAuth2ProviderConfigModel](ctx, nil),
 					},
 				},
 			},
@@ -259,8 +326,15 @@ func (r *oauth2CredentialProviderResource) Create(ctx context.Context, request r
 	clientCredentials.ClientIDWO = fromConfig.ClientIDWO
 	clientCredentials.ClientSecretWO = fromConfig.ClientSecretWO
 
-	// Stuff the client credentials into Context for AutoFlEx.
+	// Extract tenant_id from config (write-only for Microsoft OAuth2)
+	tenantIDModel := extractMicrosoftTenantID(ctx, config, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Stuff the client credentials and tenant_id into Context for AutoFlEx.
 	ctx = oauth2ClientCredentialsCtxKey.NewContext(ctx, clientCredentials)
+	ctx = microsoftTenantIDCtxKey.NewContext(ctx, tenantIDModel)
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input bedrockagentcorecontrol.CreateOauth2CredentialProviderInput
@@ -310,6 +384,12 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 		return
 	}
 
+	// Extract tenant_id from state (preserve for Microsoft OAuth2)
+	tenantIDModel := extractMicrosoftTenantID(ctx, data, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
@@ -324,8 +404,9 @@ func (r *oauth2CredentialProviderResource) Read(ctx context.Context, request res
 		return
 	}
 
-	// Stuff the client credentials into Context for AutoFlEx.
+	// Stuff the client credentials and tenant_id into Context for AutoFlEx.
 	ctx = oauth2ClientCredentialsCtxKey.NewContext(ctx, clientCredentials)
+	ctx = microsoftTenantIDCtxKey.NewContext(ctx, tenantIDModel)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics,
 		fwflex.Flatten(ctx, out, &data,
@@ -371,8 +452,15 @@ func (r *oauth2CredentialProviderResource) Update(ctx context.Context, request r
 		clientCredentials.ClientIDWO = fromConfig.ClientIDWO
 		clientCredentials.ClientSecretWO = fromConfig.ClientSecretWO
 
-		// Stuff the client credentials into Context for AutoFlEx.
+		// Extract tenant_id from config (write-only for Microsoft OAuth2)
+		tenantIDModel := extractMicrosoftTenantID(ctx, config, &response.Diagnostics)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Stuff the client credentials and tenant_id into Context for AutoFlEx.
 		ctx = oauth2ClientCredentialsCtxKey.NewContext(ctx, clientCredentials)
+		ctx = microsoftTenantIDCtxKey.NewContext(ctx, tenantIDModel)
 
 		name := fwflex.StringValueFromFramework(ctx, plan.Name)
 		var input bedrockagentcorecontrol.UpdateOauth2CredentialProviderInput
@@ -543,6 +631,11 @@ func (m *oauth2ProviderConfigModel) Flatten(ctx context.Context, v any) diag.Dia
 			return diags
 		}
 		model.oauth2ClientCredentialsModel = clientCredentials
+		// Preserve tenant_id fields from state (similar to client credentials pattern)
+		tenantIDModel := microsoftTenantIDCtxKey.FromContext(ctx)
+		model.TenantID = tenantIDModel.TenantID
+		model.TenantIDWO = tenantIDModel.TenantIDWO
+		model.TenantIDWOVersion = tenantIDModel.TenantIDWOVersion
 		m.MicrosoftOAuth2ProviderConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.Oauth2ProviderConfigOutputMemberSalesforceOauth2ProviderConfig:
@@ -629,6 +722,15 @@ func (m oauth2ProviderConfigModel) Expand(ctx context.Context) (any, diag.Diagno
 			return nil, diags
 		}
 		data.oauth2ClientCredentialsModel = clientCredentials
+		// Set API field for tenant_id (similar to client credentials pattern)
+		tenantIDModel := microsoftTenantIDCtxKey.FromContext(ctx)
+		if !tenantIDModel.TenantIDWO.IsNull() {
+			// Use write-only version if set
+			data.TenantID = tenantIDModel.TenantIDWO
+		} else if !tenantIDModel.TenantID.IsNull() && data.TenantID.IsNull() {
+			// Otherwise use regular version from context if not already set
+			data.TenantID = tenantIDModel.TenantID
+		}
 		var r awstypes.Oauth2ProviderConfigInputMemberMicrosoftOauth2ProviderConfig
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
@@ -753,7 +855,10 @@ type googleOAuth2ProviderConfigModel struct {
 
 type microsoftOAuth2ProviderConfigModel struct {
 	oauth2ClientCredentialsModel
-	OAuthDiscovery fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
+	TenantID          types.String                                          `tfsdk:"tenant_id"`
+	TenantIDWO        types.String                                          `tfsdk:"tenant_id_wo"`
+	TenantIDWOVersion types.Int64                                           `tfsdk:"tenant_id_wo_version"`
+	OAuthDiscovery    fwtypes.ListNestedObjectValueOf[oauth2DiscoveryModel] `tfsdk:"oauth_discovery"`
 }
 
 type salesforceOAuth2ProviderConfigModel struct {
