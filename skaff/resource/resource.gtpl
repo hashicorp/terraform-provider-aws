@@ -99,7 +99,7 @@ import (
 // For more information about resource identity, see
 // https://hashicorp.github.io/terraform-provider-aws/resource-identity/
 //
-// Uncomment one of the following sets of annotations as appropriate:
+// Keep one of the following sets of annotations as appropriate:
 //
 // * ARN Identity
 // @ArnIdentity
@@ -112,6 +112,16 @@ import (
 // * Parameterized Identity
 // @IdentityAttribute("id_attribute")
 // // @IdentityAttribute("another_id_attribute")
+//
+// TIP: ==== GENERATED ACCEPTANCE TESTS ====
+// Resource Identity and tagging make use of automatically generated acceptance tests.
+// For more information about automatically generated acceptance tests, see
+// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
+//
+// Some common annotations are included below:
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }};{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importIgnore="...;...")
 {{- end }}
 func new{{ .Resource }}Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &{{ .ResourceLowerCamel }}Resource{}
