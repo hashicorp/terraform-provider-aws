@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediapackagevod
@@ -183,7 +183,7 @@ func (r *resourcePackagingGroup) Update(ctx context.Context, request resource.Up
 		return
 	}
 
-	diff, d := fwflex.Calculate(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state)
 	response.Diagnostics.Append(d...)
 	if response.Diagnostics.HasError() {
 		return
