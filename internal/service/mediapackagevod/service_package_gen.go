@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourcePackagingGroup,
+			Factory:  newPackagingGroupResource,
 			TypeName: "aws_mediapackagevod_packaging_group",
 			Name:     "Packaging Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

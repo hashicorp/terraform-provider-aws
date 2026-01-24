@@ -6,5 +6,5 @@ package mediapackagevod
 // Exports for use in tests only.
 var (
 	FindPackagingGroupByID = findPackagingGroupByID
-	ResourcePackagingGroup = newResourcePackagingGroup
+	ResourcePackagingGroup = newPackagingGroupResource
 )

@@ -42,17 +42,17 @@ const (
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccPackagingGroupImportStateIdFunc)
 // @Testing(importStateIdAttribute=name)
-func newResourcePackagingGroup(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePackagingGroup{}
+func newPackagingGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &packagingGroupResource{}
 
 	return r, nil
 }
 
-type resourcePackagingGroup struct {
-	framework.ResourceWithConfigure
+type packagingGroupResource struct {
+	framework.ResourceWithModel[packagingGroupResourceModel]
 }
 
-func (r *resourcePackagingGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *packagingGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -93,9 +93,9 @@ func (r *resourcePackagingGroup) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourcePackagingGroup) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *packagingGroupResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().MediaPackageVODClient(ctx)
-	var data resourcePackagingGroupData
+	var data packagingGroupResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -131,9 +131,9 @@ func (r *resourcePackagingGroup) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePackagingGroup) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *packagingGroupResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().MediaPackageVODClient(ctx)
-	var data resourcePackagingGroupData
+	var data packagingGroupResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -166,9 +166,9 @@ func (r *resourcePackagingGroup) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePackagingGroup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *packagingGroupResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().MediaPackageVODClient(ctx)
-	var state, plan resourcePackagingGroupData
+	var state, plan packagingGroupResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -215,9 +215,9 @@ func (r *resourcePackagingGroup) Update(ctx context.Context, request resource.Up
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourcePackagingGroup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *packagingGroupResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().MediaPackageVODClient(ctx)
-	var data resourcePackagingGroupData
+	var data packagingGroupResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -259,11 +259,12 @@ func (r *resourcePackagingGroup) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *resourcePackagingGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *packagingGroupResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
-type resourcePackagingGroupData struct {
+type packagingGroupResourceModel struct {
+	framework.WithRegionModel
 	ARN              types.String                                 `tfsdk:"arn"`
 	Id               types.String                                 `tfsdk:"name"`
 	Authorization    fwtypes.ObjectValueOf[authorizationModel]    `tfsdk:"authorization"`
