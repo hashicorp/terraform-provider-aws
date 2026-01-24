@@ -87,6 +87,32 @@ import (
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
+{{ if .IncludeComments }}
+// TIP: ==== RESOURCE IDENTITY ====
+// Identify which attributes can be used to uniquely identify the resource.
+// 
+// * If the AWS APIs for the resource take the ARN as an identifier, use
+// ARN Identity.
+// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
+// * Otherwise, use Parameterized Identity with one or more identity attributes.
+//
+// For more information about resource identity, see
+// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
+//
+// Uncomment one of the following sets of annotations as appropriate:
+//
+// * ARN Identity
+// @ArnIdentity
+// or
+// @ArnIdentity("arn_attribute")
+//
+// * Singleton Identity
+// @SingletonIdentity
+//
+// * Parameterized Identity
+// @IdentityAttribute("id_attribute")
+// // @IdentityAttribute("another_id_attribute")
+{{- end }}
 func new{{ .Resource }}Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &{{ .ResourceLowerCamel }}Resource{}
 
