@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -63,7 +63,7 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 				Config: testAccLambdaFunctionAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceLambdaFunctionAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

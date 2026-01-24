@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ram
 
@@ -33,7 +35,7 @@ const (
 )
 
 // @SDKResource("aws_ram_resource_share", name="Resource Share")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn", resourceType="ResourceShare")
 func resourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareCreate,
@@ -85,7 +87,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &ram.CreateResourceShareInput{
+	input := ram.CreateResourceShareInput{
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 		Name:                    aws.String(name),
 		Tags:                    getTagsIn(ctx),
@@ -95,7 +97,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 		input.PermissionArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateResourceShare(ctx, input)
+	output, err := conn.CreateResourceShare(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RAM Resource Share (%s): %s", name, err)
@@ -140,12 +142,12 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 
 	setTagsOut(ctx, resourceShare.Tags)
 
-	input := &ram.ListResourceSharePermissionsInput{
+	input := ram.ListResourceSharePermissionsInput{
 		ResourceShareArn: aws.String(d.Id()),
 	}
 	var permissions []awstypes.ResourceSharePermissionSummary
 
-	pages := ram.NewListResourceSharePermissionsPaginator(conn, input)
+	pages := ram.NewListResourceSharePermissionsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -169,13 +171,13 @@ func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	if d.HasChanges("allow_external_principals", names.AttrName) {
-		input := &ram.UpdateResourceShareInput{
+		input := ram.UpdateResourceShareInput{
 			AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 			Name:                    aws.String(d.Get(names.AttrName).(string)),
 			ResourceShareArn:        aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateResourceShare(ctx, input)
+		_, err := conn.UpdateResourceShare(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RAM Resource Share (%s): %s", d.Id(), err)
@@ -190,9 +192,10 @@ func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RAM Resource Share: %s", d.Id())
-	_, err := conn.DeleteResourceShare(ctx, &ram.DeleteResourceShareInput{
+	input := ram.DeleteResourceShareInput{
 		ResourceShareArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteResourceShare(ctx, &input)
 
 	if errs.IsA[*awstypes.UnknownResourceException](err) {
 		return diags
@@ -210,11 +213,11 @@ func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.Client, arn string) (*awstypes.ResourceShare, error) {
-	input := &ram.GetResourceSharesInput{
+	input := ram.GetResourceSharesInput{
 		ResourceOwner:     awstypes.ResourceOwnerSelf,
 		ResourceShareArns: []string{arn},
 	}
-	output, err := findResourceShare(ctx, conn, input)
+	output, err := findResourceShare(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -291,7 +294,7 @@ func waitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.Client, a
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShare); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -310,7 +313,7 @@ func waitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShare); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

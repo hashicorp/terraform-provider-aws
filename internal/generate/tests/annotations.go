@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tests
@@ -6,8 +6,10 @@ package tests
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -24,12 +26,12 @@ type CommonArgs struct {
 
 	// CheckDestroy
 	CheckDestroyNoop bool
-	DestroyTakesT    bool
+	destroyTakesNoT  bool
 
 	// CheckExists
 	HasExistsFunc  bool
 	ExistsTypeName string
-	ExistsTakesT   bool
+	existsTakesNoT bool
 
 	// Import
 	NoImport               bool
@@ -55,17 +57,24 @@ type CommonArgs struct {
 	Generator     string
 	generatorSeen bool
 
-	RequiredEnvVars []string
+	RequiredEnvVars      []string
+	RequiredEnvVarValues []string
 
 	GoImports         []common.GoImport
 	InitCodeBlocks    []CodeBlock
 	AdditionalTfVars_ map[string]TFVar
+
+	// Resource Identity Versions
+	HasNoPreExistingResource bool
+	PreIdentityVersion       *version.Version
+	IdentityVersions         map[int64]*version.Version
 }
 
 func InitCommonArgs() CommonArgs {
 	return CommonArgs{
-		AdditionalTfVars_: make(map[string]TFVar),
+		AdditionalTfVars_: make(map[string]TFVar, 0),
 		HasExistsFunc:     true,
+		IdentityVersions:  make(map[int64]*version.Version, 0),
 	}
 }
 
@@ -96,6 +105,14 @@ func (c CommonArgs) AdditionalTfVars() map[string]TFVar {
 	return tfmaps.ApplyToAllKeys(c.AdditionalTfVars_, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (c CommonArgs) DestroyTakesT() bool {
+	return !c.destroyTakesNoT
+}
+
+func (c CommonArgs) ExistsTakesT() bool {
+	return !c.existsTakesNoT
 }
 
 type importAction int
@@ -162,7 +179,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		if b, err := common.ParseBoolAttr("destroyTakesT", attr); err != nil {
 			return err
 		} else {
-			stuff.DestroyTakesT = b
+			stuff.destroyTakesNoT = !b
 		}
 	}
 
@@ -190,7 +207,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		if b, err := common.ParseBoolAttr("existsTakesT", attr); err != nil {
 			return err
 		} else {
-			stuff.ExistsTakesT = b
+			stuff.existsTakesNoT = !b
 		}
 	}
 
@@ -215,14 +232,6 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	if attr, ok := args.Keyword["importStateIdFunc"]; ok {
 		stuff.ImportStateIDFunc = attr
-	}
-
-	if attr, ok := args.Keyword["noImport"]; ok {
-		if b, err := common.ParseBoolAttr("noImport", attr); err != nil {
-			return err
-		} else {
-			stuff.NoImport = b
-		}
 	}
 
 	if attr, ok := args.Keyword["plannableImportAction"]; ok {
@@ -309,6 +318,10 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		stuff.RequiredEnvVars = append(stuff.RequiredEnvVars, attr)
 	}
 
+	if attr, ok := args.Keyword["requireEnvVarValue"]; ok {
+		stuff.RequiredEnvVarValues = append(stuff.RequiredEnvVarValues, attr)
+	}
+
 	if attr, ok := args.Keyword["useAlternateAccount"]; ok {
 		if b, err := common.ParseBoolAttr("useAlternateAccount", attr); err != nil {
 			return err
@@ -318,8 +331,12 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 				Code: "acctest.PreCheckAlternateAccount(t)",
 			})
 			stuff.GoImports = append(stuff.GoImports,
+				// Required to initialize `schema.Provider` map.
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+				},
+				common.GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
 		}
@@ -330,6 +347,14 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			return err
 		} else {
 			stuff.AlternateRegionProvider = b
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: "acctest.PreCheckMultipleRegion(t, 2)",
+			})
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				},
+			)
 		}
 	}
 
@@ -426,12 +451,11 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		varName := "rBgpAsn"
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-				Alias: "sdkacctest",
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
+			Code: fmt.Sprintf("%s := acctest.RandIntRange(t, %s,%s)", varName, parts[0], parts[1]),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
 			GoVarName: varName,
@@ -474,6 +498,41 @@ if err != nil {
 				Type:      TFVarTypeString,
 			}
 		}
+	}
+
+	// Resource Identity Versions
+	if attr, ok := args.Keyword["preIdentityVersion"]; ok {
+		version, err := version.NewVersion(attr)
+		if err != nil {
+			return fmt.Errorf("invalid preIdentityVersion value: %q. Should be version value.", attr)
+		}
+		stuff.PreIdentityVersion = version
+	}
+
+	if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
+		if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+			return err
+		} else {
+			stuff.HasNoPreExistingResource = b
+		}
+	}
+
+	if attr, ok := args.Keyword["identityVersion"]; ok {
+		parts := strings.Split(attr, ";")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid identityVersion value: %q. Should be in format <identity version>;<provider version>.", attr)
+		}
+		var identityVersion int64
+		if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
+			return fmt.Errorf("invalid identity version value: %q. Should be integer value.", parts[0])
+		} else {
+			identityVersion = i
+		}
+		providerVersion, err := version.NewVersion(parts[1])
+		if err != nil {
+			return fmt.Errorf("invalid provider version value: %q. Should be version value.", parts[1])
+		}
+		stuff.IdentityVersions[identityVersion] = providerVersion
 	}
 
 	return nil

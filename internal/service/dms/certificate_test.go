@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -60,7 +60,7 @@ func TestAccDMSCertificate_disappears(t *testing.T) {
 				Config: testAccCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

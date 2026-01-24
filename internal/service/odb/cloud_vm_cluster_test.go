@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -262,7 +262,7 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 				Config: vmcBasicConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestEntity.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudVmCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudVmCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

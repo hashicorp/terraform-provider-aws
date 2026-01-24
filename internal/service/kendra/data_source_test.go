@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -84,7 +84,7 @@ func TestAccKendraDataSource_disappears(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceDataSource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

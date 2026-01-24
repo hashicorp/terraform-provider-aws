@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -209,6 +209,16 @@ provider "aws" {
 `, severity, key1, value1)
 }
 
+func ConfigSkipCredentialsValidationAndRequestingAccountID() string {
+	//lintignore:AT004
+	return `
+provider "aws" {
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+}
+`
+}
+
 func ConfigWithEchoProvider(ephemeralResourceData string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -325,6 +335,7 @@ terraform {
   provider_meta "aws" {
     user_agent = [
       "test-module/0.0.1 (test comment)",
+      "github.com/hashicorp/terraform-provider-aws/v0.0.0-acctest",
     ]
   }
 }

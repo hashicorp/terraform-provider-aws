@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -91,7 +91,7 @@ func testAccQueue_disappears(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceQueue(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

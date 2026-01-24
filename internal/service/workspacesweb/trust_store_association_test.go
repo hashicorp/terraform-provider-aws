@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -87,7 +87,7 @@ func TestAccWorkSpacesWebTrustStoreAssociation_disappears(t *testing.T) {
 				Config: testAccTrustStoreAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceTrustStoreAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceTrustStoreAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

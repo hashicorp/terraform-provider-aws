@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics_test
@@ -67,7 +67,7 @@ func TestAccSyntheticsGroupAssociation_disappears(t *testing.T) {
 				Config: testAccGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupAssociationExists(ctx, resourceName, &groupSummary),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceGroupAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

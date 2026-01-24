@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -28,15 +28,16 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"RDSSupplementalDataStorage":             testAccKnowledgeBase_RDS_supplementalDataStorage,
 		},
 		"DataSource": {
-			acctest.CtBasic:        testAccDataSource_basic,
-			acctest.CtDisappears:   testAccDataSource_disappears,
-			"full":                 testAccDataSource_full,
-			"update":               testAccDataSource_update,
-			"semantic":             testAccDataSource_fullSemantic,
-			"hierarchical":         testAccDataSource_fullHierarchical,
-			"parsing":              testAccDataSource_parsing,
-			"customtransformation": testAccDataSource_fullCustomTranformation,
-			"webconfiguration":     testAccDataSource_webConfiguration,
+			acctest.CtBasic:         testAccDataSource_basic,
+			acctest.CtDisappears:    testAccDataSource_disappears,
+			"full":                  testAccDataSource_full,
+			"update":                testAccDataSource_update,
+			"semantic":              testAccDataSource_fullSemantic,
+			"hierarchical":          testAccDataSource_fullHierarchical,
+			"parsing":               testAccDataSource_parsing,
+			"bedrockDataAutomation": testAccDataSource_bedrockDataAutomation,
+			"customTransformation":  testAccDataSource_fullCustomTranformation,
+			"webConfiguration":      testAccDataSource_webConfiguration,
 		},
 	}
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -75,7 +75,7 @@ func TestAccGlobalAcceleratorCustomRoutingListener_disappears(t *testing.T) {
 				Config: testAccCustomRoutingListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceCustomRoutingListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCustomRoutingListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

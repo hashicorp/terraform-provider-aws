@@ -54,8 +54,10 @@ to your network (for outbound endpoints) or on the way from your network to your
 Valid values are `DoH`, `Do53`, or `DoH-FIPS`.
 * `resolver_endpoint_type` - (Optional) Endpoint IP type. This endpoint type is applied to all IP addresses.
 Valid values are `IPV6`,`IPV4` or `DUALSTACK` (both IPv4 and IPv6).
+* `rni_enhanced_metrics_enabled` - (Optional) Boolean indicating whether RNI enhanced metrics are enabled for the Resolver endpoint. Defaults to `false`. Once set, changing the value back to `false` requires explicitly specifying `false` rather than removing the argument.
 * `security_group_ids` - (Required) ID of one or more security groups that you want to use to control access to this VPC.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target_name_server_metrics_enabled` - (Optional) Boolean indicating whether target name server metrics are enabled for the outbound Resolver endpoints. Defaults to `false`. This argument is supported only for outbound endpoints. Once set, changing the value back to `false` requires explicitly specifying `false` rather than removing the argument.
 
 The `ip_address` object supports the following:
 

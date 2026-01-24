@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -76,7 +76,7 @@ func testAccRoleMembership_disappears(t *testing.T) {
 				Config: testAccRoleMembershipConfig_basic(role, memberName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleMembershipExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceRoleMembership, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceRoleMembership, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

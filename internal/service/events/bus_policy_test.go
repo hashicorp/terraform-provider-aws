@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -109,7 +109,7 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 				Config: testAccBusPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceBusPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,7 +133,7 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 				Config: testAccBusPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceBus(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

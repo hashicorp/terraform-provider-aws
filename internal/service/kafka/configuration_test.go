@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -69,7 +69,7 @@ func TestAccKafkaConfiguration_disappears(t *testing.T) {
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

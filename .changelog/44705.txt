@@ -1,0 +1,18 @@
+```release-note:enhancement
+resource/aws_vpc_ipam_pool: Add `source_resource` argument in support of provisioning of VPC Resource Planning Pools
+```
+
+```release-note:enhancement
+data-source/aws_vpc_ipam_pool: Add `source_resource` attribute
+```
+
+```release-note:enhancement
+resource/aws_vpc_subnet: Add `ipv4_ipam_pool_id`, `ipv4_netmask_length`, `ipv6_ipam_pool_id`, and `ipv6_netmask_length` arguments in support of provisioning of subnets using IPAM
+```
+
+```release-note:enhancement
+resource/aws_vpc_subnet: Change `ipv6_cidr_block` to Optional and Computed
+
+```release-note:enhancement
+resource/aws_vpc_ipam_pool_cidr: Support deprovisioning when allocations take a long time to be released by IPAM
+```

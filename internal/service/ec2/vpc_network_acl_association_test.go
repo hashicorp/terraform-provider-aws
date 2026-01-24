@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -66,7 +66,7 @@ func TestAccVPCNetworkACLAssociation_disappears(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACLAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +91,7 @@ func TestAccVPCNetworkACLAssociation_disappears_NACL(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACL(), naclResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkACL(), naclResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,7 +116,7 @@ func TestAccVPCNetworkACLAssociation_disappears_Subnet(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnet(), subnetResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnet(), subnetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

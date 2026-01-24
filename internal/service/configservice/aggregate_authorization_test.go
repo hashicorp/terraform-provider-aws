@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -92,7 +92,7 @@ func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 				Config: testAccAggregateAuthorizationConfig_basic(accountID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceAggregateAuthorization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceAggregateAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

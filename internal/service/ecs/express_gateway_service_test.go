@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -102,7 +102,7 @@ func TestAccECSExpressGatewayService_disappears(t *testing.T) {
 				Config: testAccExpressGatewayServiceConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExpressGatewayServiceExists(ctx, resourceName, &service),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfecs.ResourceExpressGatewayService, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecs.ResourceExpressGatewayService, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

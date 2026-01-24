@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -102,7 +102,7 @@ func TestAccLambdaAlias_disappears(t *testing.T) {
 				Config: testAccAliasConfig_basic(roleName, policyName, attachmentName, funcName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

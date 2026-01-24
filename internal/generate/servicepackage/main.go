@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build ignore
@@ -22,6 +22,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -220,10 +221,9 @@ type ResourceDatum struct {
 	wrappedImport                     common.TriBoolean
 	CustomImport                      bool
 	goImports                         []common.GoImport
-	ImportIDHandler                   string
-	SetIDAttribute                    bool
 	HasIdentityFix                    bool
 	common.ResourceIdentity
+	tests.CommonArgs
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -333,6 +333,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		IsGlobal:                          false,
 		regionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
+		CommonArgs:                        tests.InitCommonArgs(),
 	}
 
 	annotations := make(map[string]bool)
@@ -438,29 +439,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "NoImport":
 				d.wrappedImport = common.TriBooleanFalse
 
-			case "ImportIDHandler":
-				attr := args.Positional[0]
-				if typeName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					continue
-				} else {
-					d.ImportIDHandler = typeName
-					if importSpec != nil {
-						d.goImports = append(d.goImports, *importSpec)
-					}
-				}
-
-				if attr, ok := args.Keyword["setIDAttribute"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.SetIDAttribute = b
-					}
-				}
-
 			case "IdentityFix":
 				d.HasIdentityFix = true
+
+			// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
+			// TODO: These fields should be moved out of `@Testing`
+			case "Testing":
+				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				}
 
 			default:
 				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
@@ -475,6 +463,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if d.wrappedImport == common.TriBooleanUnset {
 			d.wrappedImport = common.TriBooleanTrue
 		}
+	} else {
+		if d.HasNoPreExistingResource {
+			v.errs = append(v.errs, fmt.Errorf("hasNoPreExistingResource specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+		if d.PreIdentityVersion != nil {
+			v.errs = append(v.errs, fmt.Errorf("preIdentityVersion specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+		if len(d.IdentityVersions) > 0 {
+			v.errs = append(v.errs, fmt.Errorf("IdentityVersions specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+	}
+
+	if err := d.Validate(); err != nil {
+		v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
 	}
 
 	// Then build the resource maps, looking for duplicates.
@@ -567,6 +569,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.frameworkDataSources[typeName] = d
 				}
 
+				if d.HasResourceIdentity() {
+					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
@@ -625,6 +631,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkDataSources[typeName] = d
+				}
+
+				if d.HasResourceIdentity() {
+					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				if d.HasV6_0NullValuesError {
@@ -697,9 +707,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.sdkListResources[typeName] = d
 				}
 
-			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
+			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "NoImport", "CustomImport", "IdentityVersion", "CustomInherentRegionIdentity":
 				// Handled above.
-			case "ArnFormat", "IdAttrFormat", "NoImport", "Testing":
+			case "ArnFormat", "IdAttrFormat", "Testing":
 				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)

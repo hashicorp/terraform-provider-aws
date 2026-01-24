@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -7,6 +7,7 @@ package networkmanager
 var (
 	ResourceAttachmentAccepter                   = resourceAttachmentAccepter
 	ResourceConnectAttachment                    = resourceConnectAttachment
+	ResourceConnectPeer                          = resourceConnectPeer
 	ResourceConnection                           = resourceConnection
 	ResourceCoreNetwork                          = resourceCoreNetwork
 	ResourceCustomerGatewayAssociation           = resourceCustomerGatewayAssociation

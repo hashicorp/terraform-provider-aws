@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -35,10 +35,12 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "debug_logging", resourceName, "debug_logging"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_auth_scheme", resourceName, "default_auth_scheme"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint_network_type", resourceName, "endpoint_network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_family", resourceName, "engine_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_client_timeout", resourceName, "idle_client_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "require_tls", resourceName, "require_tls"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "target_connection_network_type", resourceName, "target_connection_network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_security_group_ids.#", resourceName, "vpc_security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_subnet_ids.#", resourceName, "vpc_subnet_ids.#"),

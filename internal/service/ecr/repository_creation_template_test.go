@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -36,7 +36,8 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "applied_for.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "applied_for.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForCreateOnPush)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForReplication)),
 					resource.TestCheckResourceAttr(resourceName, "custom_role_arn", ""),
@@ -77,7 +78,7 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRepositoryCreationTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceRepositoryCreationTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -288,6 +289,7 @@ resource "aws_ecr_repository_creation_template" "test" {
   prefix = %[1]q
 
   applied_for = [
+    "CREATE_ON_PUSH",
     "PULL_THROUGH_CACHE",
     "REPLICATION",
   ]

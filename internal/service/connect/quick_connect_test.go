@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -167,7 +167,7 @@ func testAccQuickConnect_disappears(t *testing.T) {
 				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Disappear", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceQuickConnect(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

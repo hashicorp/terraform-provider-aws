@@ -18,6 +18,7 @@ Route 53 Domains
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 STS (Security Token)
+Savings Plans
 Shield
 User Notifications
 User Notifications Contacts

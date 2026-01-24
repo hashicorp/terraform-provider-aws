@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -1374,7 +1374,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

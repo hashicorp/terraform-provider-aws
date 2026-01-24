@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}
@@ -87,8 +87,8 @@ import (
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
-func newResource{{ .Resource }}(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resource{{ .Resource }}{}
+func new{{ .Resource }}Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &{{ .ResourceLowerCamel }}Resource{}
 
 	{{ if .IncludeComments -}}
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
@@ -108,8 +108,8 @@ const (
 	ResName{{ .Resource }} = "{{ .HumanResourceName }}"
 )
 
-type resource{{ .Resource }} struct {
-	framework.ResourceWithModel[resource{{ .Resource }}Model]
+type {{ .ResourceLowerCamel }}Resource struct {
+	framework.ResourceWithModel[{{ .ResourceLowerCamel }}ResourceModel]
 	framework.WithTimeouts
 }
 
@@ -156,7 +156,7 @@ type resource{{ .Resource }} struct {
 // For more about schema options, visit
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 {{- end }}
-func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -240,7 +240,7 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE CREATE ====
 	// Generally, the Create function should do the following things. Make
@@ -264,7 +264,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	var plan resource{{ .Resource }}Model
+	var plan {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -325,7 +325,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
 	// Generally, the Read function should do the following things. Make
@@ -346,7 +346,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
-	var state resource{{ .Resource }}Model
+	var state {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -381,7 +381,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE UPDATE ====
 	// Not all resources have Update functions. There are a few reasons:
@@ -412,7 +412,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	var plan, state resource{{ .Resource }}Model
+	var plan, state {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -470,7 +470,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE DELETE ====
 	// Most resources have Delete functions. There are rare situations
@@ -496,7 +496,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
-	var state resource{{ .Resource }}Model
+	var state {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -542,7 +542,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 {{- end }}
-func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
@@ -679,7 +679,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 	}
 
 	if out == nil || out.{{ .ResourceAWS }} == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.{{ .ResourceAWS }}, nil
@@ -698,7 +698,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-type resource{{ .Resource }}Model struct {
+type {{ .ResourceLowerCamel }}ResourceModel struct {
 	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
@@ -750,7 +750,7 @@ func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, v := range page.{{ .ResourceAWS }}s {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResource{{ .Resource }}, client,
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(new{{ .Resource }}Resource, client,
 				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .ResourceAWS }}Id))),
 			)
 		}

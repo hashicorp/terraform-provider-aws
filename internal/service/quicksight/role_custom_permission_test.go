@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -84,7 +84,7 @@ func testAccRoleCustomPermission_disappears(t *testing.T) {
 				Config: testAccRoleCustomPermissionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleCustomPermissionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceRoleCustomPermission, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceRoleCustomPermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

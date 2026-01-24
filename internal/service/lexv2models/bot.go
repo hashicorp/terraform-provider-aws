@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexv2models
 
@@ -312,7 +314,7 @@ func findBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	}
 
 	if output == nil || output.BotId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -350,7 +352,7 @@ func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -370,7 +372,7 @@ func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -389,7 +391,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}

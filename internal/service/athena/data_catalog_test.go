@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena_test
@@ -67,7 +67,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourceDataCatalog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

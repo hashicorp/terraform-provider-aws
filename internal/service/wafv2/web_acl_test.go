@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -560,7 +560,7 @@ func TestAccWAFV2WebACL_disappears(t *testing.T) {
 				Config: testAccWebACLConfig_minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACL(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -7604,11 +7604,6 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 func testAccWebACLConfig_dataProtectionConfig(rName, action, fieldType string, excludeRateBasedDetails, excludeRuleMatchDetails bool, keys []string) string {
-	keysString := ""
-	for _, key := range keys {
-		keysString += fmt.Sprintf("%q, ", key)
-	}
-
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -7636,7 +7631,7 @@ resource "aws_wafv2_web_acl" "test" {
     }
   }
 }
-`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, keysString)
+`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, acctest.ListOfStrings(keys...))
 }
 
 func testAccWebACLConfig_dataProtectionConfigMultiple(rName string) string {

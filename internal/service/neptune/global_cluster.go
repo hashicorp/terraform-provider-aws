@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package neptune
 
@@ -295,7 +297,7 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *neptune.Client
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of Neptune Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -321,7 +323,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *neptune.C
 			if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
 				return false, err
 			}
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 				return false, err // NOT retryable, indicates minor upgrade or wrong order
 			}
 			return err != nil, err

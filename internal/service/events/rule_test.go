@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -87,6 +87,14 @@ func TestRuleParseResourceID(t *testing.T) {
 			InputID: tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
 			//lintignore:AWSAT003,AWSAT005
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName: "ARN event bus for EU cloud",
+			//lintignore:AWSAT003,AWSAT005
+			InputID: tfevents.RuleCreateResourceID("arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/default", "TestRule"),
+			//lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 		},
 		{

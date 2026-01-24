@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -305,7 +307,7 @@ func findOrganizationManagedRuleByName(ctx context.Context, conn *configservice.
 	}
 
 	if output.OrganizationManagedRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -484,7 +486,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -504,7 +506,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -525,7 +527,7 @@ func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConfigRuleStatus); ok {
-		tfresource.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConfigRuleStatusError(ctx, conn, output))
 
 		return output, err
 	}

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticsearch
 
@@ -1036,7 +1038,7 @@ func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elastics
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil
@@ -1065,7 +1067,7 @@ func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *el
 	}
 
 	if output == nil || output.DomainConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainConfig, nil
@@ -1094,7 +1096,7 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1175,7 +1177,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -1196,7 +1198,7 @@ func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, do
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -1217,7 +1219,7 @@ func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err

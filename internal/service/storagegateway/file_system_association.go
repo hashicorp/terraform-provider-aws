@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package storagegateway
 
@@ -265,7 +267,7 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FileSystemAssociationInfoList, nil
@@ -299,7 +301,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
 
 		return output, err
 	}
@@ -320,7 +322,7 @@ func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
 
 		return output, err
 	}

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -32,6 +34,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInfrastructureConfigurationCreate,
@@ -451,7 +454,7 @@ func findInfrastructureConfigurationByARN(ctx context.Context, conn *imagebuilde
 	}
 
 	if output == nil || output.InfrastructureConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InfrastructureConfiguration, nil

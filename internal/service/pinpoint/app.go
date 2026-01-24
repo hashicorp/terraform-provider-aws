@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pinpoint
 
@@ -282,7 +284,7 @@ func findAppByID(ctx context.Context, conn *pinpoint.Client, id string) (*awstyp
 	}
 
 	if output == nil || output.ApplicationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationResponse, nil
@@ -307,7 +309,7 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Client, id string) 
 	}
 
 	if output == nil || output.ApplicationSettingsResource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationSettingsResource, nil

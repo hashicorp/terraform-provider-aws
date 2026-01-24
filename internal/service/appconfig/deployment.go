@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appconfig
 
@@ -33,6 +35,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="state")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
@@ -235,7 +238,7 @@ func findDeployment(ctx context.Context, conn *appconfig.Client, input *appconfi
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
