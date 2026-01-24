@@ -50,6 +50,7 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_configuration.storage_class", "STANDARD"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -330,6 +331,55 @@ func TestAccS3TablesTableBucket_forceDestroyMultipleNamespacesAndTables(t *testi
 	})
 }
 
+func TestAccS3TablesTableBucket_storageClassConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v s3tables.GetTableBucketOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3tables_table_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableBucketConfig_storageClassConfiguration(rName, "INTELLIGENT_TIERING"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_configuration.storage_class", "INTELLIGENT_TIERING"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccTableBucketConfig_storageClassConfiguration(rName, "STANDARD"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_configuration.storage_class", "STANDARD"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableBucketImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
 func testAccCheckTableBucketAddTables(ctx context.Context, n string, namespace string, tableNames ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -485,4 +535,16 @@ resource "aws_s3tables_table_bucket" "test" {
   force_destroy = true
 }
 `, rName)
+}
+
+func testAccTableBucketConfig_storageClassConfiguration(rName, storageClass string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[1]q
+
+  storage_class_configuration = {
+    storage_class = %[2]q
+  }
+}
+`, rName, storageClass)
 }

@@ -89,6 +89,9 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_class_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrStorageClass: knownvalue.StringExact("STANDARD"),
+					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
@@ -590,6 +593,78 @@ func TestAccS3TablesTable_metadata(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTable_storageClassConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table s3tables.GetTableOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_storageClassConfiguration(tableName, nsName, bucketName, "INTELLIGENT_TIERING"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_configuration.storage_class", "INTELLIGENT_TIERING"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccS3TablesTable_storageClassConfiguration_inheritFromBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table s3tables.GetTableOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_storageClassConfiguration_inheritFromBucket(tableName, nsName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_configuration.storage_class", "INTELLIGENT_TIERING"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
@@ -677,6 +752,27 @@ resource "aws_s3tables_table_bucket" "test" {
   name = %[2]q
 }
 `, nsName, bucketName)
+}
+
+func testAccTableConfig_baseWithStorageClass(nsName, bucketName, storageClass string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_namespace" "test" {
+  namespace        = %[1]q
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[2]q
+
+  storage_class_configuration = {
+    storage_class = %[3]q
+  }
+}
+`, nsName, bucketName, storageClass)
 }
 
 func testAccTableConfig_basic(tableName, nsName, bucketName string) string {
@@ -820,6 +916,32 @@ resource "aws_s3tables_table" "test" {
       }
     }
   }
+}
+`, tableName))
+}
+
+func testAccTableConfig_storageClassConfiguration(tableName, nsName, bucketName, storageClass string) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  storage_class_configuration = {
+    storage_class = %[2]q
+  }
+}
+`, tableName, storageClass))
+}
+
+func testAccTableConfig_storageClassConfiguration_inheritFromBucket(tableName, nsName, bucketName string) string {
+	return acctest.ConfigCompose(testAccTableConfig_baseWithStorageClass(nsName, bucketName, "INTELLIGENT_TIERING"), fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
 }
 `, tableName))
 }
