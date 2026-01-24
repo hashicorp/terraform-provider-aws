@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +21,7 @@ func testAccLandingZone_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_controltower_landing_zone.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -30,13 +29,13 @@ func testAccLandingZone_basic(t *testing.T) {
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
-		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLandingZoneExists(ctx, resourceName),
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
 					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
@@ -56,7 +55,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_controltower_landing_zone.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -65,12 +64,12 @@ func testAccLandingZone_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLandingZoneExists(ctx, resourceName),
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcontroltower.ResourceLandingZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,7 +82,7 @@ func testAccLandingZone_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_controltower_landing_zone.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -91,13 +90,13 @@ func testAccLandingZone_tags(t *testing.T) {
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
-		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLandingZoneConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLandingZoneExists(ctx, resourceName),
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -110,7 +109,7 @@ func testAccLandingZone_tags(t *testing.T) {
 			{
 				Config: testAccLandingZoneConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLandingZoneExists(ctx, resourceName),
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -119,7 +118,7 @@ func testAccLandingZone_tags(t *testing.T) {
 			{
 				Config: testAccLandingZoneConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLandingZoneExists(ctx, resourceName),
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -129,7 +128,7 @@ func testAccLandingZone_tags(t *testing.T) {
 }
 
 func testAccPreCheckNoLandingZone(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 	input := &controltower.ListLandingZonesInput{}
 	var n int
@@ -149,14 +148,14 @@ func testAccPreCheckNoLandingZone(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckLandingZoneExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckLandingZoneExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 		_, err := tfcontroltower.FindLandingZoneByID(ctx, conn, rs.Primary.ID)
 
@@ -164,9 +163,9 @@ func testAccCheckLandingZoneExists(ctx context.Context, n string) resource.TestC
 	}
 }
 
-func testAccCheckLandingZoneDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLandingZoneDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_controltower_landing_zone" {

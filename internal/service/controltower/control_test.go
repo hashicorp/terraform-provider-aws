@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,19 +25,19 @@ func testAccControl_basic(t *testing.T) {
 	ouDataSourceName := "data.aws_organizations_organizational_unit.test"
 	ouName := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_CONTROL_OU_NAME")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
-		CheckDestroy:             testAccCheckControlDestroy(ctx),
+		CheckDestroy:             testAccCheckControlDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlConfig_basic(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(ctx, resourceName, &control),
+					testAccCheckControlExists(ctx, t, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_identifier", ouDataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
@@ -54,19 +53,19 @@ func testAccControl_disappears(t *testing.T) {
 	resourceName := "aws_controltower_control.test"
 	ouName := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_CONTROL_OU_NAME")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckControlDestroy(ctx),
+		CheckDestroy:             testAccCheckControlDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlConfig_basic(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(ctx, resourceName, &control),
+					testAccCheckControlExists(ctx, t, resourceName, &control),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcontroltower.ResourceControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,19 +85,19 @@ func testAccControl_parameters(t *testing.T) {
 	resourceName := "aws_controltower_control.test"
 	ouName := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_CONTROL_OU_NAME")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
-		CheckDestroy:             testAccCheckControlDestroy(ctx),
+		CheckDestroy:             testAccCheckControlDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlConfig_parameters(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(ctx, resourceName, &control),
+					testAccCheckControlExists(ctx, t, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.key", "ExemptedPrincipalArns"),
@@ -107,7 +106,7 @@ func testAccControl_parameters(t *testing.T) {
 			{
 				Config: testAccControlConfig_basic(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(ctx, resourceName, &control),
+					testAccCheckControlExists(ctx, t, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 				),
@@ -120,7 +119,7 @@ func testAccControl_parameters(t *testing.T) {
 			{
 				Config: testAccControlConfig_parameters(ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(ctx, resourceName, &control),
+					testAccCheckControlExists(ctx, t, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.key", "ExemptedPrincipalArns"),
@@ -135,14 +134,14 @@ func testAccControl_parameters(t *testing.T) {
 	})
 }
 
-func testAccCheckControlExists(ctx context.Context, n string, v *types.EnabledControlSummary) resource.TestCheckFunc {
+func testAccCheckControlExists(ctx context.Context, t *testing.T, n string, v *types.EnabledControlSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, rs.Primary.Attributes["target_identifier"], rs.Primary.Attributes["control_identifier"])
 
@@ -156,9 +155,9 @@ func testAccCheckControlExists(ctx context.Context, n string, v *types.EnabledCo
 	}
 }
 
-func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckControlDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_controltower_control" {

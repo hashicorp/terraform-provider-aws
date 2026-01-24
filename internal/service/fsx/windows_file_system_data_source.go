@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_windows_file_system", name="Windows File System")
+// @Tags
 func dataSourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWindowsFileSystemRead,
@@ -180,10 +181,9 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	windowsConfig := filesystem.WindowsConfiguration
-
 	d.SetId(aws.ToString(filesystem.FileSystemId))
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
-	d.Set("aliases", expandAliasValues(windowsConfig.Aliases))
+	d.Set("aliases", expandAliases(windowsConfig.Aliases))
 	d.Set(names.AttrARN, filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
@@ -192,7 +192,7 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	d.Set("copy_tags_to_backups", windowsConfig.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", windowsConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", windowsConfig.DeploymentType)
-	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
+	if err := d.Set("disk_iops_configuration", flattenWindowsFileSystemDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set(names.AttrDNSName, filesystem.DNSName)

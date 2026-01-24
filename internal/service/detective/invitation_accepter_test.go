@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +21,19 @@ func testAccInvitationAccepter_basic(t *testing.T) {
 	resourceName := "aws_detective_invitation_accepter.test"
 	email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvitationAccepterConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvitationAccepterExists(ctx, resourceName),
+					testAccCheckInvitationAccepterExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -46,14 +45,14 @@ func testAccInvitationAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckInvitationAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckInvitationAccepterExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
 		_, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
 
@@ -61,9 +60,9 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, n string) resourc
 	}
 }
 
-func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInvitationAccepterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_invitation_accepter" {
