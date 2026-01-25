@@ -5,16 +5,15 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,11 +21,6 @@ import (
 
 func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var assoc awstypes.TenantResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
@@ -43,14 +37,19 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 				Config: testAccTenantResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTenantResourceAssociationExists(ctx, t, resourceName, &assoc),
-					resource.TestCheckResourceAttr(resourceName, "tenant_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, "|", "tenant_name", "resource_arn"),
+				ImportStateVerifyIdentifierAttribute: "tenant_name",
 			},
 		},
 	})
@@ -58,11 +57,6 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 
 func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var assoc awstypes.TenantResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_tenant_resource_association.test"
@@ -79,14 +73,17 @@ func TestAccSESV2TenantResourceAssociation_disappears(t *testing.T) {
 				Config: testAccTenantResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTenantResourceAssociationExists(ctx, t, resourceName, &assoc),
-					acctest.CheckFrameworkResourceDisappears(
-						ctx,
-						t,
-						tfsesv2.ResourceTenantResource,
-						resourceName,
-					),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceTenantResource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -101,57 +98,40 @@ func testAccCheckTenantResourceAssociationDestroy(ctx context.Context, t *testin
 				continue
 			}
 
-			_, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.Attributes["tenant_name"], rs.Primary.Attributes["resource_arn"])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(
-					names.SESV2,
-					create.ErrActionCheckingDestroyed,
-					tfsesv2.ResNameTenantResourceAssociation,
-					rs.Primary.ID,
-					err,
-				)
+				continue
 			}
 
-			return create.Error(
-				names.SESV2,
-				create.ErrActionCheckingDestroyed,
-				tfsesv2.ResNameTenantResourceAssociation,
-				rs.Primary.ID,
-				errors.New("still exists"),
-			)
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SESv2 Tenant Resource Association %s still exists", rs.Primary.Attributes["tenant_name"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTenantResourceAssociationExists(
-	ctx context.Context,
-	t *testing.T,
-	name string,
-	out *awstypes.TenantResource,
-) resource.TestCheckFunc {
+func testAccCheckTenantResourceAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.TenantResource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return errors.New("resource not found in state")
-		}
-
-		if rs.Primary.ID == "" {
-			return errors.New("resource ID not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
-		resp, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.Attributes["tenant_name"], rs.Primary.Attributes["resource_arn"])
+
 		if err != nil {
 			return err
 		}
 
-		*out = *resp
+		*v = *output
+
 		return nil
 	}
 }

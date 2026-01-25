@@ -42,7 +42,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  newResourceTenantResourceAssociation,
+			Factory:  newTenantResourceAssociationResource,
 			TypeName: "aws_sesv2_tenant_resource_association",
 			Name:     "Tenant Resource Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

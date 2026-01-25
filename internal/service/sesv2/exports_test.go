@@ -16,7 +16,7 @@ var (
 	ResourceEmailIdentityMailFromAttributes  = resourceEmailIdentityMailFromAttributes
 	ResourceEmailIdentityPolicy              = resourceEmailIdentityPolicy
 	ResourceTenant                           = newTenantResource
-	ResourceTenantResource                   = newResourceTenantResourceAssociation
+	ResourceTenantResource                   = newTenantResourceAssociationResource
 
 	FindAccountSuppressionAttributes                 = findAccountSuppressionAttributes
 	FindAccountVDMAttributes                         = findAccountVDMAttributes
@@ -28,5 +28,5 @@ var (
 	FindEmailIdentityByID                            = findEmailIdentityByID
 	FindEmailIdentityPolicyByTwoPartKey              = findEmailIdentityPolicyByTwoPartKey
 	FindTenantByName                                 = findTenantByName
-	FindTenantResourceAssociationByID                = findTenantResourceAssociationByID
+	FindTenantResourceAssociationByID                = findTenantResourceAssociationByTwoPartKey
 )

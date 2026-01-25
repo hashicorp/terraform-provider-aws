@@ -5,12 +5,9 @@ package sesv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
@@ -23,42 +20,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_sesv2_tenant_resource_association", name="Tenant Resource Association", tags=false)
+// @FrameworkResource("aws_sesv2_tenant_resource_association", name="Tenant Resource Association")
 // @Testing(importStateIdAttribute="tenant_name")
-func newResourceTenantResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceTenantResourceAssociation{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
+func newTenantResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &tenantResourceAssociationResource{}
 	return r, nil
 }
 
-const (
-	ResNameTenantResourceAssociation = "Tenant Resource Association"
-)
-
-type resourceTenantResourceAssociation struct {
-	framework.ResourceWithModel[resourceTenantResourceAssociationModel]
-	framework.WithTimeouts
+type tenantResourceAssociationResource struct {
+	framework.ResourceWithModel[tenantResourceAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
-func (r *resourceTenantResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *tenantResourceAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
 			names.AttrResourceARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -73,51 +61,40 @@ func (r *resourceTenantResourceAssociation) Schema(ctx context.Context, req reso
 	}
 }
 
-func (r *resourceTenantResourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().SESV2Client(ctx)
-
-	var plan resourceTenantResourceAssociationModel
+func (r *tenantResourceAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan tenantResourceAssociationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var input sesv2.CreateTenantResourceAssociationInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	conn := r.Meta().SESV2Client(ctx)
 
-	out, err := conn.CreateTenantResourceAssociation(ctx, &input)
+	tenantName, resourceARN := fwflex.StringValueFromFramework(ctx, plan.TenantName), fwflex.StringValueFromFramework(ctx, plan.ResourceArn)
+	input := sesv2.CreateTenantResourceAssociationInput{
+		ResourceArn: aws.String(resourceARN),
+		TenantName:  aws.String(tenantName),
+	}
+	_, err := conn.CreateTenantResourceAssociation(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TenantName.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.TenantName.String())
-		return
-	}
-
-	plan.ID = types.StringValue(createID(plan.TenantName.ValueString(), plan.ResourceArn.ValueString()))
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-	if resp.Diagnostics.HasError() {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, tenantName)
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourceTenantResourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().SESV2Client(ctx)
-
-	var state resourceTenantResourceAssociationModel
+func (r *tenantResourceAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state tenantResourceAssociationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findTenantResourceAssociationByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().SESV2Client(ctx)
+
+	tenantName, resourceARN := fwflex.StringValueFromFramework(ctx, state.TenantName), fwflex.StringValueFromFramework(ctx, state.ResourceArn)
+	_, err := findTenantResourceAssociationByTwoPartKey(ctx, conn, tenantName, resourceARN)
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -125,44 +102,38 @@ func (r *resourceTenantResourceAssociation) Read(ctx context.Context, req resour
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
-	if resp.Diagnostics.HasError() {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, tenantName)
 		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourceTenantResourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().SESV2Client(ctx)
-
-	var state resourceTenantResourceAssociationModel
+func (r *tenantResourceAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state tenantResourceAssociationResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().SESV2Client(ctx)
+
+	tenantName, resourceARN := fwflex.StringValueFromFramework(ctx, state.TenantName), fwflex.StringValueFromFramework(ctx, state.ResourceArn)
 	input := sesv2.DeleteTenantResourceAssociationInput{
-		ResourceArn: state.ResourceArn.ValueStringPointer(),
-		TenantName:  state.TenantName.ValueStringPointer(),
+		ResourceArn: aws.String(resourceARN),
+		TenantName:  aws.String(tenantName),
 	}
-
 	_, err := conn.DeleteTenantResourceAssociation(ctx, &input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, tenantName)
 		return
 	}
 }
 
-func (r *resourceTenantResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tenantResourceAssociationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	customID := req.ID
 
 	parts := strings.Split(customID, "|")
@@ -174,52 +145,51 @@ func (r *resourceTenantResourceAssociation) ImportState(ctx context.Context, req
 	}
 	tenantName := parts[0]
 	resourceARN := parts[1]
-	resp.State.SetAttribute(ctx, path.Root(names.AttrID), customID)
 	resp.State.SetAttribute(ctx, path.Root("tenant_name"), tenantName)
 	resp.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), resourceARN)
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func findTenantResourceAssociationByID(ctx context.Context, conn *sesv2.Client, resourceID string) (*awstypes.TenantResource, error) {
-	parts := strings.SplitN(resourceID, "|", 2)
-	if len(parts) != 2 {
-		return nil, smarterr.NewError(
-			tfresource.NewEmptyResultError(),
-		)
-	}
-
-	tenantName := parts[0]
-	resourceARN := parts[1]
-
-	input := &sesv2.ListTenantResourcesInput{
+func findTenantResourceAssociationByTwoPartKey(ctx context.Context, conn *sesv2.Client, tenantName, resourceARN string) (*awstypes.TenantResource, error) {
+	input := sesv2.ListTenantResourcesInput{
 		TenantName: aws.String(tenantName),
 	}
 
-	p := sesv2.NewListTenantResourcesPaginator(conn, input)
+	output, err := findTenantResources(ctx, conn, &input)
 
-	for p.HasMorePages() {
-		out, err := p.NextPage(ctx)
-		if err != nil {
-			return nil, tfresource.ErrEmptyResult
-		}
-
-		for _, tenantResource := range out.TenantResources {
-			if aws.ToString(tenantResource.ResourceArn) == resourceARN {
-				return &tenantResource, nil
-			}
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, tfresource.ErrEmptyResult
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.TenantResource) bool {
+		return aws.ToString(v.ResourceArn) == resourceARN
+	}))
 }
 
-type resourceTenantResourceAssociationModel struct {
+func findTenantResources(ctx context.Context, conn *sesv2.Client, input *sesv2.ListTenantResourcesInput) ([]awstypes.TenantResource, error) {
+	var output []awstypes.TenantResource
+
+	pages := sesv2.NewListTenantResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TenantResources...)
+	}
+
+	return output, nil
+}
+
+type tenantResourceAssociationResourceModel struct {
 	framework.WithRegionModel
 	ResourceArn types.String `tfsdk:"resource_arn"`
-	ID          types.String `tfsdk:"id"`
 	TenantName  types.String `tfsdk:"tenant_name"`
-}
-
-func createID(tenantName, resourceARN string) string {
-	return fmt.Sprintf("%s|%s", tenantName, resourceARN)
 }
