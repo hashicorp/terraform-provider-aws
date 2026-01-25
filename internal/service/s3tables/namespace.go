@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
@@ -240,7 +241,7 @@ type namespaceResourceModel struct {
 
 var namespaceNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase letters, numbers, underscores and hyphens"),
 	tfstringvalidator.StartsWithLetterOrNumber,
 	tfstringvalidator.EndsWithLetterOrNumber,
 }
