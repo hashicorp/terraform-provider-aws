@@ -48,7 +48,7 @@ func TestAccSESV2TenantResourceAssociation_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, "|", "tenant_name", "resource_arn"),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, "|", "tenant_name", names.AttrResourceARN),
 				ImportStateVerifyIdentifierAttribute: "tenant_name",
 			},
 		},
@@ -98,7 +98,7 @@ func testAccCheckTenantResourceAssociationDestroy(ctx context.Context, t *testin
 				continue
 			}
 
-			_, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.Attributes["tenant_name"], rs.Primary.Attributes["resource_arn"])
+			_, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.Attributes["tenant_name"], rs.Primary.Attributes[names.AttrResourceARN])
 
 			if retry.NotFound(err) {
 				continue
@@ -124,7 +124,7 @@ func testAccCheckTenantResourceAssociationExists(ctx context.Context, t *testing
 
 		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
-		output, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.Attributes["tenant_name"], rs.Primary.Attributes["resource_arn"])
+		output, err := tfsesv2.FindTenantResourceAssociationByID(ctx, conn, rs.Primary.Attributes["tenant_name"], rs.Primary.Attributes[names.AttrResourceARN])
 
 		if err != nil {
 			return err
