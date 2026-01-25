@@ -190,6 +190,6 @@ func findTenantResources(ctx context.Context, conn *sesv2.Client, input *sesv2.L
 
 type tenantResourceAssociationResourceModel struct {
 	framework.WithRegionModel
-	ResourceArn types.String `tfsdk:"resource_arn"`
+	ResourceArn fwtypes.ARN  `tfsdk:"resource_arn"`
 	TenantName  types.String `tfsdk:"tenant_name"`
 }
