@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomputeoptimizer "github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +21,7 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 	var v computeoptimizer.GetEnrollmentStatusOutput
 	resourceName := "aws_computeoptimizer_enrollment_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComputeOptimizerEndpointID)
@@ -35,7 +34,7 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 			{
 				Config: testAccEnrollmentStatusConfig_basic("Active"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnrollmentStatusExists(ctx, resourceName, &v),
+					testAccCheckEnrollmentStatusExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "number_of_member_accounts_opted_in", "0"),
@@ -49,7 +48,7 @@ func testAccEnrollmentStatus_basic(t *testing.T) {
 			{
 				Config: testAccEnrollmentStatusConfig_basic("Inactive"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnrollmentStatusExists(ctx, resourceName, &v),
+					testAccCheckEnrollmentStatusExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "number_of_member_accounts_opted_in", "0"),
@@ -64,7 +63,7 @@ func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
 	var v computeoptimizer.GetEnrollmentStatusOutput
 	resourceName := "aws_computeoptimizer_enrollment_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ComputeOptimizerEndpointID)
@@ -77,7 +76,7 @@ func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
 			{
 				Config: testAccEnrollmentStatusConfig_includeMemberAccounts("Active", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnrollmentStatusExists(ctx, resourceName, &v),
+					testAccCheckEnrollmentStatusExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtTrue),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "number_of_member_accounts_opted_in", 0),
@@ -91,7 +90,7 @@ func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
 			{
 				Config: testAccEnrollmentStatusConfig_includeMemberAccounts("Inactive", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnrollmentStatusExists(ctx, resourceName, &v),
+					testAccCheckEnrollmentStatusExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", acctest.CtFalse),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "number_of_member_accounts_opted_in", 0),
@@ -101,14 +100,14 @@ func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
 	})
 }
 
-func testAccCheckEnrollmentStatusExists(ctx context.Context, n string, v *computeoptimizer.GetEnrollmentStatusOutput) resource.TestCheckFunc {
+func testAccCheckEnrollmentStatusExists(ctx context.Context, t *testing.T, n string, v *computeoptimizer.GetEnrollmentStatusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComputeOptimizerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ComputeOptimizerClient(ctx)
 
 		output, err := tfcomputeoptimizer.FindEnrollmentStatus(ctx, conn)
 

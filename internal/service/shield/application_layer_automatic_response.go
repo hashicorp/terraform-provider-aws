@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package shield
 
 import (
@@ -49,6 +51,7 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckWAFV2CloudFrontScope")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 

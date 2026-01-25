@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dataexchange
 
 import (
@@ -55,6 +57,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @NoImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newRevisionAssetsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &revisionAssetsResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)

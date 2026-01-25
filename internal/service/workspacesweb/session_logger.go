@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package workspacesweb
 
 import (
@@ -40,6 +42,7 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.SessionLogger")
 // @Testing(importStateIdAttribute="session_logger_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSessionLoggerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &sessionLoggerResource{}, nil
 }

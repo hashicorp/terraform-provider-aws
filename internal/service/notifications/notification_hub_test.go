@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +26,7 @@ func TestAccNotificationsNotificationHub_basic(t *testing.T) {
 
 	//lintignore:AWSAT003
 	rRegion := "us-west-2"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -35,12 +34,12 @@ func TestAccNotificationsNotificationHub_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationHubDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationHubConfig_basic(rRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationHubExists(ctx, resourceName, &notificationhub),
+					testAccCheckNotificationHubExists(ctx, t, resourceName, &notificationhub),
 				),
 			},
 			{
@@ -61,7 +60,7 @@ func TestAccNotificationsNotificationHub_disappears(t *testing.T) {
 	rRegion := "eu-west-1"
 	resourceName := "aws_notifications_notification_hub.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -69,12 +68,12 @@ func TestAccNotificationsNotificationHub_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationHubDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationHubDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationHubConfig_basic(rRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationHubExists(ctx, resourceName, &notificationhub),
+					testAccCheckNotificationHubExists(ctx, t, resourceName, &notificationhub),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceNotificationHub, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,9 +87,9 @@ func TestAccNotificationsNotificationHub_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckNotificationHubDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNotificationHubDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_notifications_notification_hub" {
@@ -114,14 +113,14 @@ func testAccCheckNotificationHubDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckNotificationHubExists(ctx context.Context, n string, v *awstypes.NotificationHubOverview) resource.TestCheckFunc {
+func testAccCheckNotificationHubExists(ctx context.Context, t *testing.T, n string, v *awstypes.NotificationHubOverview) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		output, err := tfnotifications.FindNotificationHubByRegion(ctx, conn, rs.Primary.Attributes["notification_hub_region"])
 
@@ -136,7 +135,7 @@ func testAccCheckNotificationHubExists(ctx context.Context, n string, v *awstype
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 	var input notifications.ListNotificationHubsInput
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -31,6 +33,7 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(importIgnore="cors_rule.0.max_age_seconds")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,

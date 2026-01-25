@@ -12,12 +12,10 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchatbot "github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
@@ -46,7 +44,7 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var slackchannelconfiguration types.SlackChannelConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdated := rName + "-updated"
 	resourceName := testResourceSlackChannelConfiguration
 
@@ -55,19 +53,19 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 	teamID := acctest.SkipIfEnvVarNotSet(t, envSlackTeamID)
 	channelID := acctest.SkipIfEnvVarNotSet(t, envSlackChannelID)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
+					testAccCheckSlackChannelConfigurationExists(ctx, t, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "configuration_name", rName),
 					acctest.MatchResourceAttrGlobalARN(ctx, testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceSlackChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -92,7 +90,7 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
+					testAccCheckSlackChannelConfigurationExists(ctx, t, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "configuration_name", rNameUpdated),
 					acctest.MatchResourceAttrGlobalARN(ctx, testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceSlackChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -110,26 +108,26 @@ func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var slackchannelconfiguration types.SlackChannelConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	// The slack workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
 	// Once it is created, export the name of the workspace in the env variable for this test
 	teamID := acctest.SkipIfEnvVarNotSet(t, envSlackTeamID)
 	channelID := acctest.SkipIfEnvVarNotSet(t, envSlackChannelID)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
+					testAccCheckSlackChannelConfigurationExists(ctx, t, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
@@ -138,9 +136,9 @@ func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChatbotClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chatbot_slack_channel_configuration" {
@@ -164,14 +162,14 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name string, slackchannelconfiguration *types.SlackChannelConfiguration) resource.TestCheckFunc {
+func testAccCheckSlackChannelConfigurationExists(ctx context.Context, t *testing.T, name string, slackchannelconfiguration *types.SlackChannelConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameSlackChannelConfiguration, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChatbotClient(ctx)
 
 		output, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
@@ -186,7 +184,7 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ChatbotClient(ctx)
 
 	input := chatbot.DescribeSlackChannelConfigurationsInput{}
 	_, err := conn.DescribeSlackChannelConfigurations(ctx, &input)

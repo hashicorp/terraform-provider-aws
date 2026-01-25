@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssm
 
 import (
@@ -39,6 +41,7 @@ import (
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
 // @CustomImport
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,

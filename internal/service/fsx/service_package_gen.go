@@ -66,6 +66,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Factory:  dataSourceWindowsFileSystem,
 			TypeName: "aws_fsx_windows_file_system",
 			Name:     "Windows File System",
+			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}

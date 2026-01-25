@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
@@ -31,6 +33,7 @@ import (
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
 // @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,

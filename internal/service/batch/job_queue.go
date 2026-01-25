@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package batch
 
 import (
@@ -42,6 +44,7 @@ import (
 // @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
 

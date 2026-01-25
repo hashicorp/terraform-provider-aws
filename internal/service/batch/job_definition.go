@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package batch
 
 import (
@@ -41,6 +43,7 @@ import (
 // @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
 // @Testing(preIdentityVersion="6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,

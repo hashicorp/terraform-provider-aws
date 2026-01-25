@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmanager
 
 import (
@@ -46,6 +48,7 @@ const (
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
 // @Testing(importIgnore="create_base_policy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
@@ -33,6 +35,7 @@ import (
 // @SDKResource("aws_iam_server_certificate", name="Server Certificate")
 // @Tags(identifierAttribute="name", resourceType="ServerCertificate")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.ServerCertificate", tlsKey=true, importStateId="rName", importIgnore="private_key")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCertificateCreate,

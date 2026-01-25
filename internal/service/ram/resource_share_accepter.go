@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ram
 
 import (
@@ -115,12 +117,12 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 			shareARN)
 	}
 
-	input := &ram.AcceptResourceShareInvitationInput{
+	input := ram.AcceptResourceShareInvitationInput{
 		ClientToken:                aws.String(id.UniqueId()),
 		ResourceShareInvitationArn: aws.String(invitationARN),
 	}
 
-	output, err := conn.AcceptResourceShareInvitation(ctx, input)
+	output, err := conn.AcceptResourceShareInvitation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting RAM Resource Share (%s) invitation (%s): %s", shareARN, invitationARN, err)
@@ -181,12 +183,12 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("share_name", resourceShare.Name)
 	d.Set(names.AttrStatus, resourceShare.Status)
 
-	input := &ram.ListResourcesInput{
+	input := ram.ListResourcesInput{
 		MaxResults:        aws.Int32(500),
 		ResourceOwner:     awstypes.ResourceOwnerOtherAccounts,
 		ResourceShareArns: []string{d.Id()},
 	}
-	resources, err := findResources(ctx, conn, input)
+	resources, err := findResources(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", d.Id(), err)
@@ -209,13 +211,13 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "The receiver account ID is required to leave a resource share")
 	}
 
-	input := &ram.DisassociateResourceShareInput{
+	input := ram.DisassociateResourceShareInput{
 		ClientToken:      aws.String(id.UniqueId()),
 		Principals:       []string{receiverAccountID},
 		ResourceShareArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DisassociateResourceShare(ctx, input)
+	_, err := conn.DisassociateResourceShare(ctx, &input)
 
 	switch {
 	case errs.IsA[*awstypes.UnknownResourceException](err):
