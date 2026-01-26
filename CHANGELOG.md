@@ -38,15 +38,18 @@ FEATURES:
 * **New Resource:** `aws_sagemaker_model_card` ([#45993](https://github.com/hashicorp/terraform-provider-aws/issues/45993))
 * **New Resource:** `aws_sagemaker_model_card_export_job` ([#46009](https://github.com/hashicorp/terraform-provider-aws/issues/46009))
 * **New Resource:** `aws_savingsplans_savings_plan` ([#45834](https://github.com/hashicorp/terraform-provider-aws/issues/45834))
+* **New Resource:** `aws_sesv2_tenant_resource_association` ([#45904](https://github.com/hashicorp/terraform-provider-aws/issues/45904))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
 
 ENHANCEMENTS:
 
 * aws_api_gateway_domain_name: Add `routing_mode` argument to support dynamic routing via routing rules ([#42961](https://github.com/hashicorp/terraform-provider-aws/issues/42961))
 * aws_apigatewayv2_domain_name: Add `routing_mode` argument to support dynamic routing via routing rules ([#42961](https://github.com/hashicorp/terraform-provider-aws/issues/42961))
+* data-source/aws_dynamodb_table: Add `global_secondary_index.key_schema` attribute ([#46157](https://github.com/hashicorp/terraform-provider-aws/issues/46157))
 * data-source/aws_networkmanager_core_network_policy_document: Add `segment_actions.routing_policy_names` argument ([#45928](https://github.com/hashicorp/terraform-provider-aws/issues/45928))
 * data-source/aws_vpc_ipam_pool: Add `source_resource` attribute ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
-* resource/aws_bedrockagent_data_source: Add `parsing_configuration.bedrock_data_automation_configuration` block ([#45966](https://github.com/hashicorp/terraform-provider-aws/issues/45966))
+* resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.parsing_configuration.bedrock_data_automation_configuration` block ([#45966](https://github.com/hashicorp/terraform-provider-aws/issues/45966))
+* resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.parsing_configuration.bedrock_foundation_model_configuration.parsing_modality` argument ([#46056](https://github.com/hashicorp/terraform-provider-aws/issues/46056))
 * resource/aws_docdb_cluster_instance: Add `certificate_rotation_restart` argument ([#45984](https://github.com/hashicorp/terraform-provider-aws/issues/45984))
 * resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
 * resource/aws_dynamodb_table: Adds warning when `stream_view_type` is set and `stream_enabled` is either `false` or unset. ([#45934](https://github.com/hashicorp/terraform-provider-aws/issues/45934))
@@ -96,6 +99,7 @@ BUG FIXES:
 * resource/aws_rds_cluster: Properly set `iam_database_authentication_enabled` when restored from snapshot ([#39461](https://github.com/hashicorp/terraform-provider-aws/issues/39461))
 * resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
 * resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
+* resource/aws_route53_zone: Fix `InvalidChangeBatch` errors during [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) operations when zone name changes ([#45242](https://github.com/hashicorp/terraform-provider-aws/issues/45242))
 * resource/aws_route53_zone: Fixes error where Delete would fail if the remote resource had already been deleted. ([#45985](https://github.com/hashicorp/terraform-provider-aws/issues/45985))
 * resource/aws_route53profiles_resource_association: Fix `Invalid JSON String Value` error on initial apply and `ConflictException` on subsequent apply when associating Route53 Resolver Query Log Configs ([#45958](https://github.com/hashicorp/terraform-provider-aws/issues/45958))
 * resource/aws_route53recoverycontrolconfig_control_panel: Fix crash when create returns an error ([#45954](https://github.com/hashicorp/terraform-provider-aws/issues/45954))
