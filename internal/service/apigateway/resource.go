@@ -48,17 +48,35 @@ func resourceResource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"full_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"parent_id", "path_part"},
+				ValidateFunc: func(val any, key string) (warns []string, errs []error) {
+					v := val.(string)
+					if !strings.HasPrefix(v, "/") {
+						errs = append(errs, fmt.Errorf("%q must start with '/'", key))
+					}
+					if strings.HasSuffix(v, "/") && v != "/" {
+						errs = append(errs, fmt.Errorf("%q must not end with '/' unless it is the root '/'", key))
+					}
+					return
+				},
+			},
 			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"full_path"},
 			},
 			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"path_part": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"full_path"},
 			},
 			"rest_api_id": {
 				Type:     schema.TypeString,
@@ -69,8 +87,20 @@ func resourceResource() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			customdiff.ComputedIf(names.AttrPath, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange("path_part")
+				return diff.HasChange("path_part") || diff.HasChange("full_path")
 			}),
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				fullPath := diff.Get("full_path").(string)
+				parentID := diff.Get("parent_id").(string)
+				pathPart := diff.Get("path_part").(string)
+
+				// Require either full_path OR (parent_id AND path_part)
+				if fullPath == "" && (parentID == "" || pathPart == "") {
+					return fmt.Errorf("either 'full_path' or both 'parent_id' and 'path_part' must be specified")
+				}
+
+				return nil
+			},
 		),
 	}
 }
@@ -78,20 +108,30 @@ func resourceResource() *schema.Resource {
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	restApiID := d.Get("rest_api_id").(string)
 
-	input := apigateway.CreateResourceInput{
-		ParentId:  aws.String(d.Get("parent_id").(string)),
-		PathPart:  aws.String(d.Get("path_part").(string)),
-		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+	if fullPath := d.Get("full_path").(string); fullPath != "" {
+		// Handle full_path creation logic
+		resourceID, err := createResourcesFromFullPath(ctx, conn, restApiID, fullPath)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating API Gateway Resource from full path %q: %s", fullPath, err)
+		}
+		d.SetId(resourceID)
+	} else {
+		// Handle traditional parent_id + path_part creation
+		input := apigateway.CreateResourceInput{
+			ParentId:  aws.String(d.Get("parent_id").(string)),
+			PathPart:  aws.String(d.Get("path_part").(string)),
+			RestApiId: aws.String(restApiID),
+		}
+
+		output, err := conn.CreateResource(ctx, &input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating API Gateway Resource: %s", err)
+		}
+
+		d.SetId(aws.ToString(output.Id))
 	}
-
-	output, err := conn.CreateResource(ctx, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway Resource: %s", err)
-	}
-
-	d.SetId(aws.ToString(output.Id))
 
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
@@ -112,15 +152,27 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Resource (%s): %s", d.Id(), err)
 	}
 
-	d.Set("parent_id", resource.ParentId)
-	d.Set("path_part", resource.PathPart)
+	// Set common attributes
 	d.Set(names.AttrPath, resource.Path)
+
+	// Set attributes based on creation mode
+	if fullPath := d.Get("full_path").(string); fullPath != "" {
+		// For full_path mode, only set the computed path
+		d.Set("full_path", aws.ToString(resource.Path))
+	} else {
+		// For traditional mode, set parent_id and path_part
+		d.Set("parent_id", resource.ParentId)
+		d.Set("path_part", resource.PathPart)
+	}
 
 	return diags
 }
 
 func resourceResourceUpdateOperations(d *schema.ResourceData) []types.PatchOperation {
 	operations := make([]types.PatchOperation, 0)
+	
+	// Only allow updates for traditional mode (parent_id + path_part)
+	// full_path mode forces recreation via ForceNew
 	if d.HasChange("path_part") {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
@@ -203,4 +255,78 @@ func findResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, reso
 	}
 
 	return output, nil
+}
+
+// createResourcesFromFullPath creates all necessary parent resources and returns the final resource ID
+func createResourcesFromFullPath(ctx context.Context, conn *apigateway.Client, restApiID, fullPath string) (string, error) {
+	// Get root resource ID first
+	restAPI, err := conn.GetRestApi(ctx, &apigateway.GetRestApiInput{
+		RestApiId: aws.String(restApiID),
+	})
+	if err != nil {
+		return "", fmt.Errorf("getting REST API %s: %w", restApiID, err)
+	}
+
+	rootResourceID := aws.ToString(restAPI.RootResourceId)
+
+	// Handle root path special case
+	if fullPath == "/" {
+		return rootResourceID, nil
+	}
+
+	// Split path into segments
+	pathSegments := strings.Split(strings.Trim(fullPath, "/"), "/")
+	
+	// Check if resources already exist and create missing ones
+	currentParentID := rootResourceID
+	
+	for _, segment := range pathSegments {
+		// Try to find existing resource
+		existingResource, err := findChildResource(ctx, conn, restApiID, currentParentID, segment)
+		if err == nil {
+			// Resource already exists, use it as parent for next iteration
+			currentParentID = aws.ToString(existingResource.Id)
+			continue
+		}
+		
+		// Resource doesn't exist, create it
+		input := apigateway.CreateResourceInput{
+			ParentId:  aws.String(currentParentID),
+			PathPart:  aws.String(segment),
+			RestApiId: aws.String(restApiID),
+		}
+
+		output, err := conn.CreateResource(ctx, &input)
+		if err != nil {
+			return "", fmt.Errorf("creating resource for path segment %q: %w", segment, err)
+		}
+		
+		currentParentID = aws.ToString(output.Id)
+	}
+
+	return currentParentID, nil
+}
+
+// findChildResource looks for a child resource with the given path part under the specified parent
+func findChildResource(ctx context.Context, conn *apigateway.Client, restApiID, parentID, pathPart string) (*apigateway.GetResourceOutput, error) {
+	// List all resources in the API
+	resources, err := conn.GetResources(ctx, &apigateway.GetResourcesInput{
+		RestApiId: aws.String(restApiID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("listing resources: %w", err)
+	}
+
+	// Find the resource with matching parent and path part
+	for _, resource := range resources.Items {
+		if aws.ToString(resource.ParentId) == parentID && aws.ToString(resource.PathPart) == pathPart {
+			// Found matching resource, get its details
+			return conn.GetResource(ctx, &apigateway.GetResourceInput{
+				RestApiId:  aws.String(restApiID),
+				ResourceId: resource.Id,
+			})
+		}
+	}
+
+	return nil, fmt.Errorf("resource not found")
 }
