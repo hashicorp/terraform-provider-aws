@@ -37,7 +37,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(generator=false)
-// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 // @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceOrganization() *schema.Resource {
 	return &schema.Resource{

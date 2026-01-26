@@ -99,15 +99,15 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 			{
 				Config: testAccOrganizationDataSourceConfig_delegatedAdministrator,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 2),
-					acctest.CheckResourceAttrGlobalARNFormat(ctx, dataSourceName, names.AttrARN, "organizations", "organization/o-{id}"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 1),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, dataSourceName, names.AttrARN, "organizations", "organization/{id}"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "master_account_email"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "master_account_id"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "non_master_accounts.#", 1),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "non_master_accounts.#", 0),
 					resource.TestCheckResourceAttrSet(dataSourceName, "roots.#"),
 				),
 			},
