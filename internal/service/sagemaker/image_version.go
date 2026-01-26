@@ -128,6 +128,9 @@ func resourceImageVersionCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("image_name").(string)
+
+	conns.GlobalMutexKV.Lock(name)
+	defer conns.GlobalMutexKV.Unlock(name)
 	input := sagemaker.CreateImageVersionInput{
 		ImageName:   aws.String(name),
 		BaseImage:   aws.String(d.Get("base_image").(string)),
@@ -308,6 +311,9 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	conns.GlobalMutexKV.Lock(name)
+	defer conns.GlobalMutexKV.Unlock(name)
 
 	log.Printf("[DEBUG] Deleting SageMaker AI Image Version: %s", d.Id())
 	input := sagemaker.DeleteImageVersionInput{
