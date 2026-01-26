@@ -65,9 +65,12 @@ add the annotation parameter `testNotNull=true` to the corresponding `@IdentityA
 New resource types with Resource Identity support are indicated by the annotation `@Testing(hasNoPreExistingResource=true)`.
 This will exclude the [generation of tests](#acceptance-testing) related to adding Identity data to an existing resource.
 
+Using the [`skaff`](skaff.md) provider scaffolding tool, as recommended, to create a new resource type will add suggested annotations.
+
 ## Adding Resource Identity to Existing Resource Type
 
 When adding Resource Identity to an existing resource type, there are several annotations to add to the resource type declaration.
+See the [Adding Resource Identity Support Guide](add-resource-identity-support.md) for steps to take.
 
 In order to [generate tests](#acceptance-testing) related to adding Identity data to an existing resource, we need to indicate the last version of the provider before Resource Identity was enabled on the resource type.
 Add the annotation `@Testing(preIdentityVersion="<version>")`, where version is the last version of the provider **before** Resource Identity is added to the resource type.
@@ -97,7 +100,7 @@ Some common annotations are documented below.
 By convention, the `Exists` check function returns a value from an API call for the remote resource.
 This type is specified using the annotation `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
-`<package path>;[<package alias>;]<function call>`.
+`<package path>;[<package alias>;]<type>`.
 For example, the S3 Object uses
 
 ```go
