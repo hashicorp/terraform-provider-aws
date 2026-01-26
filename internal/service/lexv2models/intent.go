@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -1152,10 +1151,10 @@ const (
 )
 
 func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
+		Refresh:                   statusIntent(conn, intentID, botID, botVersion, localeID),
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
 		NotFoundChecks:            20,
@@ -1171,10 +1170,10 @@ func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, intentID, b
 }
 
 func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{statusNormal},
 		Target:     []string{},
-		Refresh:    statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
+		Refresh:    statusIntent(conn, intentID, botID, botVersion, localeID),
 		Timeout:    timeout,
 		MinTimeout: 5 * time.Second,
 	}
@@ -1187,8 +1186,8 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, 
 	return nil, err
 }
 
-func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIntent(conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findIntentByIDs(ctx, conn, intentID, botID, botVersion, localeID)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -1214,9 +1213,8 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
