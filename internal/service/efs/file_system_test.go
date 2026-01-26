@@ -148,6 +148,77 @@ func TestAccEFSFileSystem_protection(t *testing.T) {
 	})
 }
 
+func TestSuppressReplicationOverwriteProtectionDiff(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name     string
+		old      string
+		new      string
+		expected bool
+	}{
+		{
+			name:     "REPLICATING to DISABLED should be suppressed",
+			old:      "REPLICATING",
+			new:      "DISABLED",
+			expected: true,
+		},
+		{
+			name:     "REPLICATING to ENABLED should be suppressed",
+			old:      "REPLICATING",
+			new:      "ENABLED",
+			expected: true,
+		},
+		{
+			name:     "REPLICATING to REPLICATING should be suppressed",
+			old:      "REPLICATING",
+			new:      "REPLICATING",
+			expected: true,
+		},
+		{
+			name:     "DISABLED to ENABLED should not be suppressed",
+			old:      "DISABLED",
+			new:      "ENABLED",
+			expected: false,
+		},
+		{
+			name:     "ENABLED to DISABLED should not be suppressed",
+			old:      "ENABLED",
+			new:      "DISABLED",
+			expected: false,
+		},
+		{
+			name:     "DISABLED to DISABLED should not be suppressed",
+			old:      "DISABLED",
+			new:      "DISABLED",
+			expected: false,
+		},
+		{
+			name:     "ENABLED to REPLICATING should not be suppressed",
+			old:      "ENABLED",
+			new:      "REPLICATING",
+			expected: false,
+		},
+		{
+			name:     "DISABLED to REPLICATING should not be suppressed",
+			old:      "DISABLED",
+			new:      "REPLICATING",
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual := tfefs.SuppressReplicationOverwriteProtectionDiff("protection.0.replication_overwrite", tc.old, tc.new, nil)
+			if actual != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, actual)
+			}
+		})
+	}
+}
+
 func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc awstypes.FileSystemDescription
