@@ -60,6 +60,16 @@ at a minimum the equivalent of the `Basic` test as well as the `ExistingResource
 If it is not possible to create a test case where all optional values are `null`,
 add the annotation parameter `testNotNull=true` to the corresponding `@IdentityAttribute` annotation.
 
+#### What **Not** to Include in Resource Identity
+
+The attributes used in Resource Identity should _only_ be those used to uniquely identify a resource.
+In some cases, when adding Resource Identity to an existing resource type, the existing `id` attribute or the identifier used for importing a resource may include one or more values intended to preserve write-only values when refreshing or importing a resource.
+These should not be included in Resource Identity.
+
+For example, the resource type `aws_s3_bucket_acl` has an attribute `acl` which represents the name of a predefined permissions grant.
+An S3 Bucket can have only one Bucket ACL, and the predefined grant name does not identify a Bucket ACL.
+While the `acl` value is part of the `id` attribute, it should not be part of the Resource Identity.
+
 ## Enabling Resource Identity on New Resource Type
 
 New resource types with Resource Identity support are indicated by the annotation `@Testing(hasNoPreExistingResource=true)`.
