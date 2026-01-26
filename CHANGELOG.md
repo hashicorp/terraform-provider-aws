@@ -2,7 +2,9 @@
 
 NOTES:
 
+* data-source/aws_organizations_organization: Add `return_organization_only` argument to return only the results of the [`DescribeOrganization`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganization.html) API and avoid API limits ([#40884](https://github.com/hashicorp/terraform-provider-aws/issues/40884))
 * resource/aws_cloudfront_anycast_ip_list: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing ([#43331](https://github.com/hashicorp/terraform-provider-aws/issues/43331))
+* resource/aws_organizations_organization: Add `return_organization_only` argument to return only the results of the [`DescribeOrganization`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganization.html) API and avoid API limits ([#40884](https://github.com/hashicorp/terraform-provider-aws/issues/40884))
 * resource/aws_savingsplans_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#45834](https://github.com/hashicorp/terraform-provider-aws/issues/45834))
 
 FEATURES:
@@ -48,9 +50,11 @@ ENHANCEMENTS:
 
 * aws_api_gateway_domain_name: Add `routing_mode` argument to support dynamic routing via routing rules ([#42961](https://github.com/hashicorp/terraform-provider-aws/issues/42961))
 * aws_apigatewayv2_domain_name: Add `routing_mode` argument to support dynamic routing via routing rules ([#42961](https://github.com/hashicorp/terraform-provider-aws/issues/42961))
+* data-source/aws_batch_job_definition: Add `allow_privilege_escalation` attribute to `eks_properties.pod_properties.containers.security_context` ([#45896](https://github.com/hashicorp/terraform-provider-aws/issues/45896))
 * data-source/aws_dynamodb_table: Add `global_secondary_index.key_schema` attribute ([#46157](https://github.com/hashicorp/terraform-provider-aws/issues/46157))
 * data-source/aws_networkmanager_core_network_policy_document: Add `segment_actions.routing_policy_names` argument ([#45928](https://github.com/hashicorp/terraform-provider-aws/issues/45928))
 * data-source/aws_vpc_ipam_pool: Add `source_resource` attribute ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
+* resource/aws_batch_job_definition: Add `allow_privilege_escalation` attribute to `eks_properties.pod_properties.containers.security_context` ([#45896](https://github.com/hashicorp/terraform-provider-aws/issues/45896))
 * resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.parsing_configuration.bedrock_data_automation_configuration` block ([#45966](https://github.com/hashicorp/terraform-provider-aws/issues/45966))
 * resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.parsing_configuration.bedrock_foundation_model_configuration.parsing_modality` argument ([#46056](https://github.com/hashicorp/terraform-provider-aws/issues/46056))
 * resource/aws_docdb_cluster_instance: Add `certificate_rotation_restart` argument ([#45984](https://github.com/hashicorp/terraform-provider-aws/issues/45984))
@@ -103,6 +107,7 @@ BUG FIXES:
 * resource/aws_placement_group: Correct validation of `partition_count` ([#45042](https://github.com/hashicorp/terraform-provider-aws/issues/45042))
 * resource/aws_rds_cluster: Properly set `iam_database_authentication_enabled` when restored from snapshot ([#39461](https://github.com/hashicorp/terraform-provider-aws/issues/39461))
 * resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
+* resource/aws_redshiftserverless_workgroup: Fix `ValidationException: Base capacity cannot be updated when PerformanceTarget is Enabled` error when updating `price_performance_target` and `base_capacity` ([#46137](https://github.com/hashicorp/terraform-provider-aws/issues/46137))
 * resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
 * resource/aws_route53_zone: Fix `InvalidChangeBatch` errors during [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) operations when zone name changes ([#45242](https://github.com/hashicorp/terraform-provider-aws/issues/45242))
 * resource/aws_route53_zone: Fixes error where Delete would fail if the remote resource had already been deleted. ([#45985](https://github.com/hashicorp/terraform-provider-aws/issues/45985))
