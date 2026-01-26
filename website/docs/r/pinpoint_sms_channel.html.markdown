@@ -24,6 +24,7 @@ resource "aws_pinpoint_app" "app" {}
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) ID of the application.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. By default, it is set to `true`.
 * `sender_id` - (Optional) Identifier of the sender for your messages.

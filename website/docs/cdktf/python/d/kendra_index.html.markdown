@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Returns information on a specific Index by id.
 
 ## Attribute Reference
@@ -129,4 +130,4 @@ A `jwt_token_type_configuration` block supports the following attributes:
 * `url` - Signing key URL.
 * `user_name_attribute_field` - The user name attribute field.
 
-<!-- cache-key: cdktf-0.20.8 input-e76a9b0bb218897eea66052e6f4809ec4cf76d678314db182219fa620bdbe4a4 -->
+<!-- cache-key: cdktf-0.20.8 input-648c3a9859a700aad722f8866abf71ceefdaf70879b0a7bab8e2edd91f423123 -->

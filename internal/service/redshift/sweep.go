@@ -1,18 +1,23 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -49,6 +54,8 @@ func RegisterSweepers() {
 		F:    sweepEventSubscriptions,
 	})
 
+	awsv2.Register("aws_redshift_integration", sweepIntegrations)
+
 	resource.AddTestSweepers("aws_redshift_scheduled_action", &resource.Sweeper{
 		Name: "aws_redshift_scheduled_action",
 		F:    sweepScheduledActions,
@@ -66,6 +73,8 @@ func RegisterSweepers() {
 			"aws_redshift_cluster",
 		},
 	})
+
+	awsv2.Register("aws_redshift_idc_application", sweepIDCApplications)
 }
 
 func sweepClusterSnapshots(region string) error {
@@ -113,7 +122,7 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeClustersInput{}
@@ -192,11 +201,34 @@ func sweepEventSubscriptions(region string) error {
 	return nil
 }
 
+func sweepIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := &redshift.DescribeIntegrationsInput{}
+	conn := client.RedshiftClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := redshift.NewDescribeIntegrationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Integrations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIntegrationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.IntegrationArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
+}
+
 func sweepScheduledActions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeScheduledActionsInput{}
@@ -237,7 +269,7 @@ func sweepSnapshotSchedules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeSnapshotSchedulesInput{}
@@ -336,7 +368,7 @@ func sweepHSMClientCertificates(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	conn := client.RedshiftClient(ctx)
@@ -378,7 +410,7 @@ func sweepHSMConfigurations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeHsmConfigurationsInput{}
@@ -419,7 +451,7 @@ func sweepAuthenticationProfiles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.RedshiftClient(ctx)
 	input := &redshift.DescribeAuthenticationProfilesInput{}
@@ -451,4 +483,26 @@ func sweepAuthenticationProfiles(region string) error {
 	}
 
 	return nil
+}
+
+func sweepIDCApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := redshift.DescribeRedshiftIdcApplicationsInput{}
+	conn := client.RedshiftClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := redshift.NewDescribeRedshiftIdcApplicationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.RedshiftIdcApplications {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIDCApplicationResource, client,
+				framework.NewAttribute("redshift_idc_application_arn", aws.ToString(v.RedshiftIdcApplicationArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

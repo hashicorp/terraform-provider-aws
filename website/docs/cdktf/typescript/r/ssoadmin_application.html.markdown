@@ -106,6 +106,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientToken` - (Optional) A unique, case-sensitive ID that you provide to ensure the idempotency of the request. AWS generates a random value when not provided.
 * `description` - (Optional) Description of the application.
 * `portalOptions` - (Optional) Options for the portal associated with an application. See [`portalOptions`](#portal_options-argument-reference) below.
@@ -130,11 +131,33 @@ If `IDENTITY_CENTER` is set, IAM Identity Center uses SAML identity-provider ini
 This resource exports the following attributes in addition to the arguments above:
 
 * `applicationAccount` - AWS account ID.
-* `applicationArn` - ARN of the application.
-* `id` - ARN of the application.
+* `applicationArn` - (**Deprecated** Reference `arn` instead) ARN of the application.
+* `arn` - ARN of the application.
+* `id` - (**Deprecated** Reference `arn` instead) ARN of the application.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssoadmin_application.example
+  identity = {
+    "arn" = "arn:aws:sso::123456789012:application/ssoins-1234567890abcdef/apl-1234567890abcdef"
+  }
+}
+
+resource "aws_ssoadmin_application" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SSO application.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Application using the `id`. For example:
 
@@ -166,4 +189,4 @@ Using `terraform import`, import SSO Admin Application using the `id`. For examp
 % terraform import aws_ssoadmin_application.example arn:aws:sso::123456789012:application/id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4211d41884b8ebf5a31fa7d4226c0acf2e3a18b5c3cb29b15884c5bc526302c5 -->
+<!-- cache-key: cdktf-0.20.8 input-e31ba54d4eb6caaf69a49740e7c10a79490bc7dfb87fafa1a6bc0f15240400a9 -->

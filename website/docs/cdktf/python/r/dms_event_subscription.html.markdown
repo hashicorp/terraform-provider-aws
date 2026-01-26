@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of event subscription.
 * `enabled` - (Optional, Default: true) Whether the event subscription should be enabled.
 * `event_categories` - (Optional) List of event categories to listen for, see `DescribeEventCategories` for a canonical list.
@@ -93,4 +94,4 @@ Using `terraform import`, import event subscriptions using the `name`. For examp
 % terraform import aws_dms_event_subscription.test my-awesome-event-subscription
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2f447ab96c9a08460b4acbd3ba91be11686915ef160434d71e6252904010aa15 -->
+<!-- cache-key: cdktf-0.20.8 input-fd538b8be88d2bc2d006259b7b6338b66cf74f3a9e1595c4e712c7ee7b8f08b7 -->

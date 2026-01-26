@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_feature_group"
 description: |-
-  Provides a SageMaker Feature Group resource.
+  Provides a SageMaker AI Feature Group resource.
 ---
 
 # Resource: aws_sagemaker_feature_group
 
-Provides a SageMaker Feature Group resource.
+Provides a SageMaker AI Feature Group resource.
 
 ## Example Usage
 
@@ -36,6 +36,7 @@ resource "aws_sagemaker_feature_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `feature_group_name` - (Required) The name of the Feature Group. The name must be unique within an AWS Region in an AWS account.
 * `record_identifier_feature_name` - (Required) The name of the Feature whose value uniquely identifies a Record defined in the Feature Store. Only the latest record per identifier value will be stored in the Online Store.
 * `event_time_feature_name` - (Required) The name of the feature that stores the EventTime of a Record in a Feature Group.
@@ -79,7 +80,7 @@ This resource supports the following arguments:
 
 #### Security Config
 
-* `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
+* `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker AI Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
 
 #### TTl Duration
 

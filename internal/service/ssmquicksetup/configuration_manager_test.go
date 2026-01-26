@@ -1,24 +1,19 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmquicksetup_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
-	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssmquicksetup "github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,10 +25,10 @@ func TestAccSSMQuickSetupConfigurationManager_basic(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -41,12 +36,12 @@ func TestAccSSMQuickSetupConfigurationManager_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
@@ -73,10 +68,10 @@ func TestAccSSMQuickSetupConfigurationManager_disappears(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -84,13 +79,13 @@ func TestAccSSMQuickSetupConfigurationManager_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmquicksetup.ResourceConfigurationManager, resourceName),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmquicksetup.ResourceConfigurationManager, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,10 +100,10 @@ func TestAccSSMQuickSetupConfigurationManager_description(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -116,12 +111,12 @@ func TestAccSSMQuickSetupConfigurationManager_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_description(rName, "foo"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "foo"),
 				),
@@ -137,7 +132,7 @@ func TestAccSSMQuickSetupConfigurationManager_description(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_description(rName, "bar"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "bar"),
 				),
@@ -153,10 +148,10 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -164,12 +159,12 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_parameters(rName, "10%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
@@ -189,7 +184,7 @@ func TestAccSSMQuickSetupConfigurationManager_parameters(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_parameters(rName, "15%"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_definition.*", map[string]string{
 						names.AttrType: "AWSQuickSetupType-PatchPolicy",
@@ -209,10 +204,10 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 	}
 
 	var cm ssmquicksetup.GetConfigurationManagerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssmquicksetup_configuration_manager.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
@@ -220,12 +215,12 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationManagerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -242,7 +237,7 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -252,7 +247,7 @@ func TestAccSSMQuickSetupConfigurationManager_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationManagerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationManagerExists(ctx, resourceName, &cm),
+					testAccCheckConfigurationManagerExists(ctx, t, resourceName, &cm),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -283,51 +278,48 @@ func testAccConfigurationManagerPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckHasIAMRole(ctx, t, "AWS-QuickSetup-PatchPolicy-LocalExecutionRole")
 }
 
-func testAccCheckConfigurationManagerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationManagerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMQuickSetupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMQuickSetupClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssmquicksetup_configuration_manager" {
 				continue
 			}
-			managerARN := rs.Primary.Attributes["manager_arn"]
 
-			_, err := tfssmquicksetup.FindConfigurationManagerByID(ctx, conn, managerARN)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+			_, err := tfssmquicksetup.FindConfigurationManagerByID(ctx, conn, rs.Primary.Attributes["manager_arn"])
+
+			if retry.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.SSMQuickSetup, create.ErrActionCheckingDestroyed, tfssmquicksetup.ResNameConfigurationManager, managerARN, err)
+				return err
 			}
 
-			return create.Error(names.SSMQuickSetup, create.ErrActionCheckingDestroyed, tfssmquicksetup.ResNameConfigurationManager, managerARN, errors.New("not destroyed"))
+			return fmt.Errorf("SSM Quick Setup Configuration Manager %s still exists", rs.Primary.Attributes["manager_arn"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckConfigurationManagerExists(ctx context.Context, name string, configurationmanager *ssmquicksetup.GetConfigurationManagerOutput) resource.TestCheckFunc {
+func testAccCheckConfigurationManagerExists(ctx context.Context, t *testing.T, n string, v *ssmquicksetup.GetConfigurationManagerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SSMQuickSetup, create.ErrActionCheckingExistence, tfssmquicksetup.ResNameConfigurationManager, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		managerARN := rs.Primary.Attributes["manager_arn"]
-		if managerARN == "" {
-			return create.Error(names.SSMQuickSetup, create.ErrActionCheckingExistence, tfssmquicksetup.ResNameConfigurationManager, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).SSMQuickSetupClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMQuickSetupClient(ctx)
+		output, err := tfssmquicksetup.FindConfigurationManagerByID(ctx, conn, rs.Primary.Attributes["manager_arn"])
 
-		out, err := tfssmquicksetup.FindConfigurationManagerByID(ctx, conn, managerARN)
 		if err != nil {
-			return create.Error(names.SSMQuickSetup, create.ErrActionCheckingExistence, tfssmquicksetup.ResNameConfigurationManager, managerARN, err)
+			return err
 		}
 
-		*configurationmanager = *out
+		*v = *output
 
 		return nil
 	}
@@ -380,7 +372,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -389,7 +381,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -414,7 +406,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -423,7 +415,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -452,7 +444,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -461,7 +453,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -485,7 +477,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -494,7 +486,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -522,7 +514,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : local.patch_policy_name,
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -531,7 +523,7 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "RateControlErrorThreshold" : "2%%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }

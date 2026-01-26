@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Data Handling and Conversion
 
@@ -122,6 +125,14 @@ To further understand the necessary data conversions used throughout the Terrafo
     - AWS Go SDK whole numeric type is always 64-bit, while the Terraform Plugin SDK type is implementation-specific.
 
     Conceptually, the first and second items above are the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more detail about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
+
+### Default Values
+
+If an AWS API sets a default value on the server side, no default should be set on the provider side.
+Instead, the argument should be marked as `Optional` and `Computed`.
+This avoids potential future conflicts if a server side default value changes.
+
+As a general rule, provider side default values should be avoided unless strictly necessary for a resource to function properly.
 
 ### Zero Value Mapping
 
@@ -259,6 +270,7 @@ type scheduleModel struct {
 }
 ```
 
+To ignore a field when expanding, but include it when flattening, use the option `noexpand`.
 To ignore a field when flattening, but include it when expanding, use the option `noflatten`.
 
 For example, from the struct `dataSourceReservedCacheNodeOfferingModel` for the ElastiCache Reserved Cache Node Offering:
@@ -279,7 +291,7 @@ type dataSourceReservedCacheNodeOfferingModel struct {
 In some cases, flattening and expanding need conditional handling.
 One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
 The AWS implementation uses an interface as the common type, along with various concrete implementations.
-Because the Terraform schema does not support union types (see https://github.com/hashicorp/terraform/issues/32587 for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
+Because the Terraform schema does not support union types (see [this issue](https://github.com/hashicorp/terraform/issues/32587) for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
 
 To override flattening behavior, implement the interface `flex.Flattener` on the model.
 The function should have a pointer receiver, as it will modify the struct in-place.

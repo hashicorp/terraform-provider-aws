@@ -29,9 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsSsoadminApplicationAssignments(this, "example", {
-      applicationArn: Token.asString(
-        awsSsoadminApplicationExample.applicationArn
-      ),
+      applicationArn: Token.asString(awsSsoadminApplicationExample.arn),
     });
   }
 }
@@ -40,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationArn` - (Required) ARN of the application.
 
 ## Attribute Reference
@@ -56,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `principalId` - An identifier for an object in IAM Identity Center, such as a user or group.
 * `principalType` - Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
 
-<!-- cache-key: cdktf-0.20.8 input-f5a2ce85fc0c5ffb1a4ebb58b8970d5f5807a4ffe74391bf11840fc1e9a7b701 -->
+<!-- cache-key: cdktf-0.20.8 input-2746ade34b1a6440566ec23228a499a3cea6c549aab6e20ea2724715c8d25855 -->

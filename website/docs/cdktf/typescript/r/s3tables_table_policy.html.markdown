@@ -56,7 +56,7 @@ class MyConvertedCode extends TerraformStack {
     awsS3TablesNamespaceExample.overrideLogicalId("example");
     const awsS3TablesTableExample = new S3TablesTable(this, "example_3", {
       format: "ICEBERG",
-      name: "example-table",
+      name: "example_table",
       namespace: awsS3TablesNamespaceExample,
       tableBucketArn: Token.asString(
         awsS3TablesNamespaceExample.tableBucketArn
@@ -83,8 +83,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourcePolicy` - (Required) Amazon Web Services resource-based policy document in JSON format.
 * `name` - (Required, Forces new resource) Name of the table.
   Must be between 1 and 255 characters in length.
@@ -130,4 +131,4 @@ Using `terraform import`, import S3 Tables Table Policy using the `tableBucketAr
 % terraform import aws_s3tables_table_policy.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace;example-table'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8a785b6f52d0ea0fd3ea7c49dc448a77c5d6b604d2d3279af70874b10ee9c3bd -->
+<!-- cache-key: cdktf-0.20.8 input-57209cbb00783ab621008d434b328fd17aa265167d029bcc888f884fa4dbd5f8 -->

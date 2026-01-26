@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `userPoolId` - (Required) The cognito pool ID
 
 ## Attribute Reference
@@ -66,6 +67,7 @@ This data source exports the following attributes in addition to the arguments a
 * `smsConfigurationFailure` - The reason why the SMS configuration can't send the messages to your users.
 * `smsVerificationMessage` - The contents of the SMS authentication message.
 * `tags` - Map of tags assigned to the resource.
+* [user_pool_add_ons](#user-pool-add-ons) - The user pool add-ons configuration.
 * `userPoolTags` - (Deprecated) Map of tags assigned to the resource.
 * `usernameAttributes` - Specifies whether a user can use an email address or phone number as a username when they sign up.
 
@@ -134,4 +136,13 @@ This data source exports the following attributes in addition to the arguments a
 * `maxLength` - Maximum allowed length.
 * `minLength` - Minimum allowed length.
 
-<!-- cache-key: cdktf-0.20.8 input-248870b64287dfd8eb6270d8115ae3300366c000a76f505a411906be62417cdc -->
+### user pool add-ons
+
+* `advancedSecurityAdditionalFlows` - A block of the threat protection configuration options for additional authentication types in your user pool, including custom authentication. [Detailed below](#advanced-security-additional-flows).
+* `advancedSecurityMode` - Mode for advanced security.
+
+### advanced security additional flows
+
+* `customAuthMode` - Mode of threat protection operation in custom authentication.
+
+<!-- cache-key: cdktf-0.20.8 input-8135c3f8d4be335b6b097746886c35412367d271deb541a82e592ab5a47edc5c -->

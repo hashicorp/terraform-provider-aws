@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -278,6 +278,7 @@ func testAccKeyDataSourceConfig_byKeyARN(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_key" "test" {
@@ -291,6 +292,7 @@ func testAccKeyDataSourceConfig_byKeyID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_kms_key" "test" {
@@ -304,6 +306,7 @@ func testAccKeyDataSourceConfig_byAliasARN(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -322,6 +325,7 @@ func testAccKeyDataSourceConfig_byAliasID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {
@@ -356,6 +360,7 @@ func testAccKeyDataSourceConfig_multiRegionByARN(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   multi_region            = true
 }
 
@@ -370,6 +375,7 @@ func testAccKeyDataSourceConfig_multiRegionByID(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   multi_region            = true
 }
 

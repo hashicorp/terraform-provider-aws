@@ -22,14 +22,15 @@ data aws_workspaces_image example {
 
 This data source supports the following arguments:
 
-* `image_id` – (Required) ID of the image.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `image_id` - (Required) ID of the image.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `name` – The name of the image.
-* `description` – The description of the image.
-* `os` – The operating system that the image is running.
-* `required_tenancy` – Specifies whether the image is running on dedicated hardware. When Bring Your Own License (BYOL) is enabled, this value is set to DEDICATED. For more information, see [Bring Your Own Windows Desktop Images](https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
-* `state` – The status of the image.
+* `name` - The name of the image.
+* `description` - The description of the image.
+* `os` - The operating system that the image is running.
+* `required_tenancy` - Specifies whether the image is running on dedicated hardware. When Bring Your Own License (BYOL) is enabled, this value is set to DEDICATED. For more information, see [Bring Your Own Windows Desktop Images](https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
+* `state` - The status of the image.

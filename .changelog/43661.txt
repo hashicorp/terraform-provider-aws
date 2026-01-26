@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_managed_prefix_list: Fix `PrefixListVersionMismatch: The prefix list has the incorrect version number` errors when updating entry description
+```

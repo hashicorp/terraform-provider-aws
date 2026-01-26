@@ -34,7 +34,8 @@ resource "aws_gamelift_fleet" "example" {
 
 This resource supports the following arguments:
 
-* `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet. Conflicts with `script_id`.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
 * `description` - (Optional) Human-readable description of the fleet.
 * `ec2_inbound_permission` - (Optional) Range of IP addresses and port settings that permit inbound traffic to access server processes running on the fleet. See below.
@@ -46,7 +47,7 @@ This resource supports the following arguments:
 * `new_game_session_protection_policy` - (Optional) Game session protection policy to apply to all instances in this fleetE.g., `FullProtection`. Defaults to `NoProtection`.
 * `resource_creation_limit_policy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtime_configuration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
-* `script_id` - (Optional) ID of the GameLift Script to be deployed on the fleet.
+* `script_id` - (Optional) ID of the GameLift Script to be deployed on the fleet. Conflicts with `build_id`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
@@ -122,4 +123,4 @@ Using `terraform import`, import GameLift Fleets using the ID. For example:
 % terraform import aws_gamelift_fleet.example <fleet-id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bb7364110eb682f1c0a8b20937e245e89dbedcb5915fce66d3f5e59fd6676d6 -->
+<!-- cache-key: cdktf-0.20.8 input-6ea1f098cc0c12ec16a41adcb3974867c5e505e740726ffac378e9412e57e9df -->

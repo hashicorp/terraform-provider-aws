@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ram
 
@@ -12,16 +14,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_ram_sharing_with_organization", name="Sharing With Organization")
+// @Region(global=true)
 func resourceSharingWithOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharingWithOrganizationCreate,
@@ -41,11 +44,12 @@ const (
 	servicePrincipalName            = "ram.amazonaws.com"
 )
 
-func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	output, err := conn.EnableSharingWithAwsOrganization(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
+	var input ram.EnableSharingWithAwsOrganizationInput
+	output, err := conn.EnableSharingWithAwsOrganization(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling RAM Sharing With Organization: %s", err)
@@ -60,12 +64,12 @@ func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceSharingWithOrganizationRead(ctx, d, meta)...)
 }
 
-func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	err := findSharingWithOrganization(ctx, meta.(*conns.AWSClient))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RAM Sharing With Organization %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -78,7 +82,7 @@ func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// See https://docs.aws.amazon.com/ram/latest/userguide/security-disable-sharing-with-orgs.html.
@@ -110,7 +114,7 @@ func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient
 	}
 
 	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
-		return &retry.NotFoundError{
+		return &sdkretry.NotFoundError{
 			Message: fmt.Sprintf("Organization service principal (%s) not enabled", servicePrincipalName),
 		}
 	}

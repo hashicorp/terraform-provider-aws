@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -31,22 +31,25 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			acctest.CtDisappears: testAccOrganizationDelegatedAdminAccount_disappears,
 		},
 		"Trail": {
-			acctest.CtBasic:         testAccTrail_basic,
-			"cloudwatch":            testAccTrail_cloudWatch,
-			"enableLogging":         testAccTrail_enableLogging,
-			"globalServiceEvents":   testAccTrail_globalServiceEvents,
-			"multiRegion":           testAccTrail_multiRegion,
-			"organization":          testAccTrail_organization,
-			"logValidation":         testAccTrail_logValidation,
-			"kmsKey":                testAccTrail_kmsKey,
-			"tags":                  testAccTrail_tags,
-			"eventSelector":         testAccTrail_eventSelector,
-			"eventSelectorDynamoDB": testAccTrail_eventSelectorDynamoDB,
-			"eventSelectorExclude":  testAccTrail_eventSelectorExclude,
-			"insightSelector":       testAccTrail_insightSelector,
-			"advancedEventSelector": testAccTrail_advancedEventSelector,
-			acctest.CtDisappears:    testAccTrail_disappears,
-			"migrateV0":             testAccTrail_migrateV0,
+			acctest.CtBasic:               testAccTrail_basic,
+			"cloudwatch":                  testAccTrail_cloudWatch,
+			"enableLogging":               testAccTrail_enableLogging,
+			"globalServiceEvents":         testAccTrail_globalServiceEvents,
+			"multiRegion":                 testAccTrail_multiRegion,
+			"organization":                testAccTrail_organization,
+			"logValidation":               testAccTrail_logValidation,
+			"kmsKey":                      testAccTrail_kmsKey,
+			"snsTopicNameBasic":           testAccTrail_snsTopicNameBasic,
+			"snsTopicNameAlternateRegion": testAccTrail_snsTopicNameAlternateRegion,
+			"tags":                        testAccTrail_tags,
+			"eventSelector":               testAccTrail_eventSelector,
+			"eventSelectorDynamoDB":       testAccTrail_eventSelectorDynamoDB,
+			"eventSelectorExclude":        testAccTrail_eventSelectorExclude,
+			"insightSelector":             testAccTrail_insightSelector,
+			"advancedEventSelector":       testAccTrail_advancedEventSelector,
+			acctest.CtDisappears:          testAccTrail_disappears,
+			"migrateV0":                   testAccTrail_migrateV0,
+			"Identity":                    testAccCloudTrailTrail_IdentitySerial,
 		},
 	}
 

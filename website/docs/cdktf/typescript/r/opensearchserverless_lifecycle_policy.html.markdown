@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the policy.
 
 ## Attribute Reference
@@ -103,4 +104,4 @@ Using `terraform import`, import OpenSearch Serverless Lifecycle Policy using th
 % terraform import aws_opensearchserverless_lifecycle_policy.example example/retention
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3f78cc031e0c7542bd3edb1d0f76e3d13d4f7aaf59e788e39679a51382594bb9 -->
+<!-- cache-key: cdktf-0.20.8 input-d1ef2d891fea3b1991beb9740e26e7e256d8a27589d3e21510986f4e9af7edf9 -->

@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_ecr_repository_creation_template: `prefix` can now be up to 256 characters
+```
+```release-note:bug
+data-source/aws_ecr_repository_creation_template: `prefix` can now be up to 256 characters
+```

@@ -36,7 +36,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_1",
       {
-        namespace: "example-namespace",
+        namespace: "example_namespace",
         tableBucketArn: example.arn,
       }
     );
@@ -49,8 +49,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namespace` - (Required, Forces new resource) Name of the namespace.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
@@ -96,4 +97,4 @@ Using `terraform import`, import S3 Tables Namespace using the `tableBucketArn` 
 % terraform import aws_s3tables_namespace.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23fbca81594192465f6491ea4ab2110f75a60e3dac8626c1df32b18174d62609 -->
+<!-- cache-key: cdktf-0.20.8 input-b9440cce56a2b3e5b7f6d7b9e4737dff2562956bed791d33b59a7d3d5131de13 -->

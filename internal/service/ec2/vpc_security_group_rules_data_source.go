@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -13,7 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,11 +30,7 @@ func newSecurityGroupRulesDataSource(context.Context) (datasource.DataSourceWith
 }
 
 type securityGroupRulesDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *securityGroupRulesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_vpc_security_group_rules"
+	framework.DataSourceWithModel[securityGroupRulesDataSourceModel]
 }
 
 func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -39,13 +38,14 @@ func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datas
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrIDs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(ctx),
 		},
 	}
 }
@@ -60,7 +60,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
+		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(svcTags(tftags.New(ctx, data.Tags)))...),
 	}
 
 	if len(input.Filters) == 0 {
@@ -77,7 +77,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 	}
 
 	data.ID = types.StringValue(d.Meta().Region(ctx))
-	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v awstypes.SecurityGroupRule) string {
+	data.IDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, tfslices.ApplyToAll(output, func(v awstypes.SecurityGroupRule) string {
 		return aws.ToString(v.SecurityGroupRuleId)
 	}))
 
@@ -85,8 +85,9 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 }
 
 type securityGroupRulesDataSourceModel struct {
-	Filters types.Set    `tfsdk:"filter"`
-	ID      types.String `tfsdk:"id"`
-	IDs     types.List   `tfsdk:"ids"`
-	Tags    tftags.Map   `tfsdk:"tags"`
+	framework.WithRegionModel
+	Filters customFilters        `tfsdk:"filter"`
+	ID      types.String         `tfsdk:"id"`
+	IDs     fwtypes.ListOfString `tfsdk:"ids"`
+	Tags    tftags.Map           `tfsdk:"tags"`
 }

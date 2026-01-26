@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `category` - (Required) The category of the custom action. Valid values: `Source`, `Build`, `Deploy`, `Test`, `Invoke`, `Approval`
 * `configurationProperty` - (Optional) The configuration properties for the custom action. Max 10 items.
 
@@ -129,4 +130,4 @@ Using `terraform import`, import CodeDeploy CustomActionType using the `id`. For
 % terraform import aws_codepipeline_custom_action_type.example Build:terraform:1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-618f4e853ef9774ea870455f957f72ac7ccbe371d784f81ae5996c728184b956 -->
+<!-- cache-key: cdktf-0.20.8 input-4dcbe62df4fef84eb87f37005370c29745e937921c73ef0d3c7b51ba84e7d0fb -->

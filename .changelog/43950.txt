@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_inspector2_filter: Support `code_repository_project_name`, `code_repository_provider_type`, `ecr_image_in_use_count`, and `ecr_image_last_in_use_at` in `filter_criteria`
+```

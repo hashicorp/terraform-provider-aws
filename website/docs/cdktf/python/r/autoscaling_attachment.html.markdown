@@ -56,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
 * `elb` - (Optional) Name of the ELB.
 * `lb_target_group_arn` - (Optional) ARN of a load balancer target group.
@@ -64,4 +65,4 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-3767bb40f260f9b690b5ce54548d1dacba1a025bee3fd0c8617e2820d6db1a21 -->
+<!-- cache-key: cdktf-0.20.8 input-f90ca9d93cfe5e7649f319003493d04e4ffb9afbe2566b8d73d0f2f8bded35b8 -->

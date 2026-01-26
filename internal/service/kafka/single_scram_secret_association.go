@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -21,11 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Single SCRAM Secret Association")
+// @FrameworkResource("aws_msk_single_scram_secret_association", name="Single SCRAM Secret Association")
 func newSingleSCRAMSecretAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &singleSCRAMSecretAssociationResource{}
 
@@ -33,13 +36,9 @@ func newSingleSCRAMSecretAssociationResource(context.Context) (resource.Resource
 }
 
 type singleSCRAMSecretAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[singleSCRAMSecretAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*singleSCRAMSecretAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_msk_single_scram_secret_association"
 }
 
 func (r *singleSCRAMSecretAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -114,7 +113,7 @@ func (r *singleSCRAMSecretAssociationResource) Read(ctx context.Context, request
 
 	err := findSingleSCRAMSecretAssociationByTwoPartKey(ctx, conn, data.ClusterARN.ValueString(), data.SecretARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -152,6 +151,7 @@ func (r *singleSCRAMSecretAssociationResource) Delete(ctx context.Context, reque
 }
 
 type singleSCRAMSecretAssociationResourceModel struct {
+	framework.WithRegionModel
 	ClusterARN fwtypes.ARN  `tfsdk:"cluster_arn"`
 	ID         types.String `tfsdk:"id"`
 	SecretARN  fwtypes.ARN  `tfsdk:"secret_arn"`
@@ -183,7 +183,7 @@ func findSingleSCRAMSecretAssociationByTwoPartKey(ctx context.Context, conn *kaf
 	}
 
 	if !slices.Contains(output, secretARN) {
-		return tfresource.NewEmptyResultError(nil)
+		return tfresource.NewEmptyResultError()
 	}
 
 	return nil

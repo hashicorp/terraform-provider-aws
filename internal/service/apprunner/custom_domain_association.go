@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -14,12 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -92,7 +95,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 	}
 }
 
-func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -122,7 +125,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceCustomDomainAssociationRead(ctx, d, meta)...)
 }
 
-func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -134,7 +137,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 
 	customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceArn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -155,7 +158,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -166,10 +169,11 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[INFO] Deleting App Runner Custom Domain Association: %s", d.Id())
-	_, err = conn.DisassociateCustomDomain(ctx, &apprunner.DisassociateCustomDomainInput{
+	input := apprunner.DisassociateCustomDomainInput{
 		DomainName: aws.String(domainName),
 		ServiceArn: aws.String(serviceARN),
-	})
+	}
+	_, err = conn.DisassociateCustomDomain(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -249,7 +253,7 @@ func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
+			return &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -273,11 +277,11 @@ const (
 	customDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 )
 
-func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -293,7 +297,7 @@ func waitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Cli
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusCreating},
 		Target:  []string{customDomainAssociationStatusPendingCertificateDNSValidation, customDomainAssociationStatusBindingCertificate},
 		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
@@ -313,7 +317,7 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusActive, customDomainAssociationStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
@@ -329,11 +333,11 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	return nil, err
 }
 
-func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []interface{} {
-	var results []interface{}
+func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []any {
+	var results []any
 
 	for _, record := range records {
-		m := map[string]interface{}{
+		m := map[string]any{
 			names.AttrName:   aws.ToString(record.Name),
 			names.AttrStatus: record.Status,
 			names.AttrType:   aws.ToString(record.Type),

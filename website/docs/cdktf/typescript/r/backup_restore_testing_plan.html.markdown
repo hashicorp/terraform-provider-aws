@@ -24,13 +24,11 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { BackupRestoreTestingPlan } from "./.gen/providers/aws/backup-restore-testing-plan";
-interface MyConfig {
-  name: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new BackupRestoreTestingPlan(this, "example", {
+      name: "example_restore_testing_plan",
       recoveryPointSelection: [
         {
           algorithm: "LATEST_WITHIN_WINDOW",
@@ -39,7 +37,6 @@ class MyConvertedCode extends TerraformStack {
         },
       ],
       scheduleExpression: "cron(0 12 ? * * *)",
-      name: config.name,
     });
   }
 }
@@ -48,8 +45,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` (Required): The name of the restore testing plan. Must be between 1 and 50 characters long and contain only alphanumeric characters and underscores.
 * `scheduleExpression` (Required): The schedule expression for the restore testing plan.
 * `scheduleExpressionTimezone` (Optional): The timezone for the schedule expression. If not provided, the state value will be used.
@@ -103,4 +101,4 @@ Using `terraform import`, import Backup Restore Testing Plan using the `name`. F
 % terraform import aws_backup_restore_testing_plan.example my_testing_plan
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-98db3ae18382b6c8b94d2b7f18b80388610b87baff76a2f102ab07a4c96f6a9e -->
+<!-- cache-key: cdktf-0.20.8 input-04700e4884f212cc6957888f86a65a523ac1af42772fc94d283b9ea277953fd1 -->

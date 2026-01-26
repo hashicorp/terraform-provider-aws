@@ -22,6 +22,7 @@ resource "aws_licensemanager_grant_accepter" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `grant_arn` - (Required) The ARN of the grant to accept.
 
 ## Attribute Reference

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53profiles
 
@@ -11,28 +13,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_route53profiles_resource_association", name="ResourceAssociation")
-func newResourceResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceAssociation{}
+func newResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceAssociationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -45,18 +45,14 @@ const (
 	ResNameResourceAssociation = "ResourceAssociation"
 )
 
-type resourceResourceAssociation struct {
-	framework.ResourceWithConfigure
+type resourceAssociationResource struct {
+	framework.ResourceWithModel[resourceAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceResourceAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53profiles_resource_association"
-}
-
-func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceAssociationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -82,7 +78,8 @@ func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"resource_properties": schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+				Computed:   true,
+				CustomType: types.StringType,
 				Optional:   true,
 			},
 			names.AttrResourceType: schema.StringAttribute{
@@ -106,7 +103,7 @@ func (r *resourceResourceAssociation) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceResourceAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceAssociationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state resourceAssociationResourceModel
@@ -156,7 +153,7 @@ func (r *resourceResourceAssociation) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceResourceAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceAssociationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state resourceAssociationResourceModel
@@ -166,7 +163,7 @@ func (r *resourceResourceAssociation) Read(ctx context.Context, req resource.Rea
 	}
 
 	out, err := findResourceAssociationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -186,7 +183,7 @@ func (r *resourceResourceAssociation) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceAssociationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
 	var state resourceAssociationResourceModel
@@ -223,15 +220,11 @@ func (r *resourceResourceAssociation) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *resourceResourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
-		Refresh:                   statusResourceAssociation(ctx, conn, id),
+		Refresh:                   statusResourceAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -249,7 +242,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusResourceAssociation(ctx, conn, id),
+		Refresh: statusResourceAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -261,10 +254,10 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 	return nil, err
 }
 
-func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusResourceAssociation(conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findResourceAssociationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -285,8 +278,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -294,19 +286,20 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	}
 
 	if out == nil || out.ProfileResourceAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileResourceAssociation, nil
 }
 
 type resourceAssociationResourceModel struct {
+	framework.WithRegionModel
 	ID                 types.String                               `tfsdk:"id"`
 	Name               types.String                               `tfsdk:"name"`
 	OwnerId            types.String                               `tfsdk:"owner_id"`
 	ProfileID          types.String                               `tfsdk:"profile_id"`
 	ResourceArn        types.String                               `tfsdk:"resource_arn"`
-	ResourceProperties jsontypes.Normalized                       `tfsdk:"resource_properties"`
+	ResourceProperties types.String                               `tfsdk:"resource_properties"`
 	ResourceType       types.String                               `tfsdk:"resource_type"`
 	Status             fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage      types.String                               `tfsdk:"status_message"`

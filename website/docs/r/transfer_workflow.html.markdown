@@ -58,6 +58,7 @@ resource "aws_transfer_workflow" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A textual description for the workflow.
 * `on_exception_steps` - (Optional) Specifies the steps (actions) to take if errors are encountered during execution of the workflow. See Workflow Steps below.
 * `steps` - (Required) Specifies the details for the steps that are in the specified workflow. See Workflow Steps below.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dynamodb
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -64,7 +66,7 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 	}
 }
 
-func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -99,7 +101,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceKinesisStreamingDestinationRead(ctx, d, meta)...)
 }
 
-func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -111,7 +113,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	tableName, streamARN := parts[0], parts[1]
 	output, err := findKinesisDataStreamDestinationByTwoPartKey(ctx, conn, streamARN, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -128,7 +130,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -140,7 +142,7 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	tableName, streamARN := parts[0], parts[1]
 	_, err = findKinesisDataStreamDestinationByTwoPartKey(ctx, conn, streamARN, tableName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -149,10 +151,11 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 	}
 
 	log.Printf("[DEBUG] Deleting DynamoDB Kinesis Streaming Destination: %s", d.Id())
-	_, err = conn.DisableKinesisStreamingDestination(ctx, &dynamodb.DisableKinesisStreamingDestinationInput{
+	input := dynamodb.DisableKinesisStreamingDestinationInput{
 		TableName: aws.String(tableName),
 		StreamArn: aws.String(streamARN),
-	})
+	}
+	_, err = conn.DisableKinesisStreamingDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -207,8 +210,7 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -217,20 +219,20 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.KinesisDataStreamDestinations, filter), nil
 }
 
-func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Client, streamARN, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusKinesisStreamingDestination(conn *dynamodb.Client, streamARN, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &dynamodb.DescribeKinesisStreamingDestinationInput{
 			TableName: aws.String(tableName),
 		}
 		output, err := findKinesisDataStreamDestination(ctx, conn, input, kinesisDataStreamDestinationForStream(streamARN))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -250,13 +252,13 @@ func waitKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.C
 		Pending: enum.Slice(awstypes.DestinationStatusDisabled, awstypes.DestinationStatusEnabling),
 		Target:  enum.Slice(awstypes.DestinationStatusActive),
 		Timeout: timeout,
-		Refresh: statusKinesisStreamingDestination(ctx, conn, streamARN, tableName),
+		Refresh: statusKinesisStreamingDestination(conn, streamARN, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
 
 		return output, err
 	}
@@ -272,13 +274,13 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 		Pending: enum.Slice(awstypes.DestinationStatusActive, awstypes.DestinationStatusDisabling),
 		Target:  enum.Slice(awstypes.DestinationStatusDisabled),
 		Timeout: timeout,
-		Refresh: statusKinesisStreamingDestination(ctx, conn, streamARN, tableName),
+		Refresh: statusKinesisStreamingDestination(conn, streamARN, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
 
 		return output, err
 	}

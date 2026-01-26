@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -12,13 +14,13 @@ import (
 	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,6 +31,7 @@ import (
 // @SDKResource("aws_dms_replication_instance", name="Replication Instance")
 // @Tags(identifierAttribute="replication_instance_arn")
 // @Testing(importIgnore="apply_immediately")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationInstanceCreate,
@@ -72,10 +75,37 @@ func resourceReplicationInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"dns_name_servers": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+			},
+			"kerberos_authentication_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key_cache_secret_iam_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"key_cache_secret_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"krb5_file_contents": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
 			},
 			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
@@ -148,12 +178,10 @@ func resourceReplicationInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -177,8 +205,14 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("dns_name_servers"); ok {
+		input.DnsNameServers = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("kerberos_authentication_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.KerberosAuthenticationSettings = expandKerberosAuthenticationSettings(v.([]any))
 	}
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
@@ -211,13 +245,13 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	instance, err := findReplicationInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -230,7 +264,11 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set("dns_name_servers", instance.DnsNameServers)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	if err := d.Set("kerberos_authentication_settings", flattenKerberosAuthenticationSettings(instance.KerberosAuthenticationSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kerberos_authentication_settings: %s", err)
+	}
 	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
@@ -250,7 +288,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
@@ -273,6 +311,10 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+		}
+
+		if d.HasChange("kerberos_authentication_settings") {
+			input.KerberosAuthenticationSettings = expandKerberosAuthenticationSettings(d.Get("kerberos_authentication_settings").([]any))
 		}
 
 		if d.HasChange("multi_az") {
@@ -309,14 +351,15 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Replication Instance: %s", d.Id())
-	_, err := conn.DeleteReplicationInstance(ctx, &dms.DeleteReplicationInstanceInput{
+	input := dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
-	})
+	}
+	_, err := conn.DeleteReplicationInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
@@ -331,6 +374,48 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
+}
+
+func expandKerberosAuthenticationSettings(tfList []any) *awstypes.KerberosAuthenticationSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.KerberosAuthenticationSettings
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["key_cache_secret_iam_arn"].(string); ok && v != "" {
+			apiObject.KeyCacheSecretIamArn = aws.String(v)
+		}
+		if v, ok := tfMap["key_cache_secret_id"].(string); ok && v != "" {
+			apiObject.KeyCacheSecretId = aws.String(v)
+		}
+		if v, ok := tfMap["krb5_file_contents"].(string); ok && v != "" {
+			apiObject.Krb5FileContents = aws.String(v)
+		}
+	}
+
+	return &apiObject
+}
+
+func flattenKerberosAuthenticationSettings(apiObject *awstypes.KerberosAuthenticationSettings) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"key_cache_secret_iam_arn": aws.ToString(apiObject.KeyCacheSecretIamArn),
+		"key_cache_secret_id":      aws.ToString(apiObject.KeyCacheSecretId),
+		"krb5_file_contents":       aws.ToString(apiObject.Krb5FileContents),
+	}
+
+	return []any{tfMap}
 }
 
 func findReplicationInstanceByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationInstance, error) {
@@ -365,8 +450,7 @@ func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -380,11 +464,11 @@ func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.
 	return output, nil
 }
 
-func statusReplicationInstance(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusReplicationInstance(conn *dms.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -400,7 +484,7 @@ func waitReplicationInstanceCreated(ctx context.Context, conn *dms.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusCreating, replicationInstanceStatusModifying},
 		Target:     []string{replicationInstanceStatusAvailable},
-		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Refresh:    statusReplicationInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -419,7 +503,7 @@ func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusModifying, replicationInstanceStatusUpgrading},
 		Target:     []string{replicationInstanceStatusAvailable},
-		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Refresh:    statusReplicationInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -438,7 +522,7 @@ func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Refresh:    statusReplicationInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting

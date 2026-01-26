@@ -36,6 +36,6 @@ func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		return nil
 	}
 
-	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, tags, optFns...)
+	return {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, tags, optFns...)
 }
 {{- end }}

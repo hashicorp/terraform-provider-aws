@@ -20,7 +20,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_ipam" "main" {
   description = "My IPAM"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {
@@ -51,7 +51,7 @@ variable "ipam_regions" {
 
 locals {
   # ensure current provider region is an operating_regions entry
-  all_ipam_regions = distinct(concat([data.aws_region.current.name], var.ipam_regions))
+  all_ipam_regions = distinct(concat([data.aws_region.current.region], var.ipam_regions))
 }
 ```
 
@@ -59,9 +59,11 @@ locals {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) A description for the IPAM.
 * `enable_private_gua` - (Optional) Enable this option to use your own GUA ranges as private IPv6 addresses. Default: `false`.
+* `metered_account` - (Optional) AWS account that is charged for active IP addresses managed in IPAM. Valid values are `ipam-owner` (default) and `resource-owner`.
 * `operating_regions` - (Required) Determines which locales can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. You **must** set your provider block region as an operating_region.
 * `tier` - (Optional) specifies the IPAM tier. Valid options include `free` and `advanced`. Default is `advanced`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

@@ -38,7 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `name` – (Required) Identifier for the serverless cache.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Identifier for the serverless cache.
 
 ## Attribute Reference
 
@@ -50,7 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 * `dailySnapshotTime` - The daily time that snapshots will be created from the new serverless cache. Only available for engine types `"redis"` and `"valkey"`.
 * `description` - Description of the serverless cache.
 * `endpoint` - Represents the information required for client programs to connect to the cache. See [`endpoint` Block](#endpoint-block) for details.
-* `engine` – Name of the cache engine.
+* `engine` - Name of the cache engine.
 * `fullEngineVersion` - The name and version number of the engine the serverless cache is compatible with.
 * `kmsKeyId` - ARN of the customer managed key for encrypting the data at rest.
 * `majorEngineVersion` - The version number of the engine the serverless cache is compatible with.
@@ -58,7 +59,7 @@ This data source exports the following attributes in addition to the arguments a
 * `securityGroupIds` - A list of the one or more VPC security groups associated with the serverless cache.
 * `snapshotRetentionLimit` - The number of snapshots that will be retained for the serverless cache. Available for Redis only.
 * `status` - The current status of the serverless cache.
-* `subnetIds` – A list of the identifiers of the subnets where the VPC endpoint for the serverless cache are deployed.
+* `subnetIds` - A list of the identifiers of the subnets where the VPC endpoint for the serverless cache are deployed.
 * `userGroupId` - The identifier of the UserGroup associated with the serverless cache. Available for Redis only.
 
 ### `cacheUsageLimits` Block
@@ -97,4 +98,4 @@ The `readerEndpoint` block exports the following attributes:
 * `address` - The DNS hostname of the cache node.
 * `port` - The port number that the cache engine is listening on. Set as integer.
 
-<!-- cache-key: cdktf-0.20.8 input-d2aefac0ebbbe62167539f079f29f724c5f6b79e6dc1f34257d5078b71badbe1 -->
+<!-- cache-key: cdktf-0.20.8 input-3d25f0a9931b8a6eaf0e86c011ef3faf53b9aedab3126234240977bbda92873e -->

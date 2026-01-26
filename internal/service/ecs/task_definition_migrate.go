@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	ctx := context.Background()
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 

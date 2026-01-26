@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `default_policy` argument
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `copy_tags`, `create_interval`, `exclusions`, `extend_deletion`, `policy_language`, `resource_type` and `retain_interval` attributes to `policy_details` configuration block
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `policy_details.create_rule.scripts` argument
+```
+
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy:Add `policy_details.schedule.archive_rule` argument
+```

@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_db_instance: `character_set_name` now cannot be set with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
+```

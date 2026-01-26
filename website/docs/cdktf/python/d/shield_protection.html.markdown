@@ -54,12 +54,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> Exactly one of `protection_id` or `resource_arn` is required.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `protection_id` - (Optional) Unique identifier for the protection.
 * `resource_arn` - (Optional) ARN (Amazon Resource Name) of the resource being protected.
+
+~> Exactly one of `protection_id` or `resource_arn` is required.
 
 ## Attribute Reference
 
@@ -68,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the protection.
 * `protection_arn` - ARN of the protection.
 
-<!-- cache-key: cdktf-0.20.8 input-59de3a79156bc1c7c56349a69033dc1dcd795ab4a1f865d892748664811bc987 -->
+<!-- cache-key: cdktf-0.20.8 input-66dc62e394597208ae34bc89474728ddcc0aaad829a1ef7e3d313016b8890a8c -->

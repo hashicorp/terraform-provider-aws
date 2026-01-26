@@ -54,13 +54,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
-
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
 ## Attribute Reference
 
@@ -81,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `service_role` - Service role of the instance.
 * `tags` - A map of tags to assigned to the instance.
 
-<!-- cache-key: cdktf-0.20.8 input-291c4ad40849a230a01292738ffaea2b18d7af4337f42323b47b37a0faa76046 -->
+<!-- cache-key: cdktf-0.20.8 input-c32a17ecd6c0c47a21038fc69d6955947565ac2871bd485f076d94c78e61056a -->

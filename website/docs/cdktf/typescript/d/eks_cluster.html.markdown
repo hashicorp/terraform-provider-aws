@@ -42,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -61,6 +64,7 @@ This data source exports the following attributes in addition to the arguments a
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `clusterId` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `createdAt` - Unix epoch time stamp in seconds for when the cluster was created.
+* `deletionProtection` - Whether deletion protection for the cluster is enabled.
 * `enabledClusterLogTypes` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
@@ -97,10 +101,10 @@ This data source exports the following attributes in addition to the arguments a
     * `endpointPrivateAccess` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpointPublicAccess` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `publicAccessCidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
-    * `securityGroupIds` – List of security group IDs
-    * `subnetIds` – List of subnet IDs
-    * `vpcId` – The VPC associated with your cluster.
+    * `securityGroupIds` - List of security group IDs
+    * `subnetIds` - List of subnet IDs
+    * `vpcId` - The VPC associated with your cluster.
 * `zonalShiftConfig` - Contains Zonal Shift Configuration.
     * `enabled` - Whether zonal shift is enabled.
 
-<!-- cache-key: cdktf-0.20.8 input-bfc1820b5d496a8bf6afc407d9dfcf5fb0f38224aa1464b69a5f962e938f3448 -->
+<!-- cache-key: cdktf-0.20.8 input-b18434906ba80518682a27fbecd4607c7592f24bd2e720edd829ff1f366ad757 -->

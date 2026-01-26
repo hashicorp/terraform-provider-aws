@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fsx_filesystem_arn` - (Required) The Amazon Resource Name (ARN) for the FSx for Windows file system.
 * `password` - (Required) The password of the user who has the permissions to access files and folders in the FSx for Windows file system.
 * `user` - (Required) The user who has the permissions to access files and folders in the FSx for Windows file system.
@@ -81,4 +82,4 @@ Using `terraform import`, import `aws_datasync_location_fsx_windows_file_system`
 % terraform import aws_datasync_location_fsx_windows_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:476956259333:file-system/fs-08e04cd442c1bb94a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4eec17500a279969bf934f139b5e4af49e794bbe75e137b1fefca8b157890cbf -->
+<!-- cache-key: cdktf-0.20.8 input-2da7401743d99b106356bb955822d9973dd365f7ff80ac5e2fa21d33e18262b7 -->

@@ -69,6 +69,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `keyArn` - (Optional) ARN of the key.
 
 ## Attribute Reference
@@ -107,4 +108,4 @@ Using `terraform import`, import Payment Cryptography Control Plane Key Alias us
 % terraform import aws_paymentcryptography_key_alias.example alias/4681482429376900170
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-141e49e545d7faaf02295cdbf1b52210b11bc31ee05c4aa246832f8600067649 -->
+<!-- cache-key: cdktf-0.20.8 input-57aaeb2b4eb765eb363fc96c32ee5a4a3f92b76e6cfb8c7acfa1e42ed70dd4e7 -->

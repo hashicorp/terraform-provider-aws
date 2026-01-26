@@ -1,5 +1,5 @@
 ---
-subcategory: "Meta Data Sources"
+subcategory: "Billing"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-
@@ -59,6 +59,10 @@ resource "aws_s3_bucket_policy" "allow_billing_logging" {
   policy = data.aws_iam_policy_document.allow_billing_logging.json
 }
 ```
+
+## Argument Reference
+
+This data source does not support any arguments.
 
 ## Attribute Reference
 

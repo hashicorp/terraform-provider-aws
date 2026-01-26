@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +26,7 @@ func testAccIPGroup_basic(t *testing.T) {
 	var v types.WorkspacesIpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ipGroupNewName := sdkacctest.RandomWithPrefix("tf-acc-test-upd")
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(sdkacctest.RandString(20)))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -118,7 +118,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.WorkspacesIpGroup
 	ipGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(sdkacctest.RandString(20)))
+	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", sdkacctest.RandString(20))
 	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.Test(t, resource.TestCase{
@@ -131,7 +131,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceIPGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfworkspaces.ResourceIPGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,7 +185,7 @@ func testAccCheckIPGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfworkspaces.FindIPGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -298,7 +298,7 @@ resource "aws_workspaces_ip_group" "test" {
 
 func testAccIPGroupConfig_multipleDirectories(name, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(name, domain),
+		testAccDirectoryConfig_base(name, domain),
 		fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
   name = %[1]q

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -18,7 +20,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,7 +49,7 @@ func resourceTaskDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceTaskDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set(names.AttrARN, d.Id())
 
 				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
@@ -65,8 +68,6 @@ func resourceTaskDefinition() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaVersion: 1,
 		MigrateState:  resourceTaskDefinitionMigrateState,
 
@@ -83,7 +84,7 @@ func resourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
@@ -113,6 +114,12 @@ func resourceTaskDefinition() *schema.Resource {
 			"cpu": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
+			},
+			"enable_fault_injection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"ephemeral_storage": {
@@ -145,25 +152,6 @@ func resourceTaskDefinition() *schema.Resource {
 					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
 				),
-			},
-			"inference_accelerator": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"device_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
 			},
 			"ipc_mode": {
 				Type:             schema.TypeString,
@@ -248,6 +236,7 @@ func resourceTaskDefinition() *schema.Resource {
 						"EC2",
 						"FARGATE",
 						"EXTERNAL",
+						"MANAGED_INSTANCES",
 					}, false),
 				},
 			},
@@ -456,15 +445,15 @@ func resourceTaskDefinition() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var str strings.Builder
-					tfMap := v.(map[string]interface{})
+					tfMap := v.(map[string]any)
 
 					if v, ok := tfMap["configure_at_launch"].(bool); ok {
 						str.WriteString(strconv.FormatBool(v))
 					}
-					if v, ok := tfMap["docker_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-						tfMap := v.([]interface{})[0].(map[string]interface{})
+					if v, ok := tfMap["docker_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						tfMap := v.([]any)[0].(map[string]any)
 
 						if v, ok := tfMap["autoprovision"].(bool); ok {
 							str.WriteString(strconv.FormatBool(v))
@@ -475,10 +464,10 @@ func resourceTaskDefinition() *schema.Resource {
 							}
 							str.WriteString(v)
 						}
-						if v, ok := tfMap["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
+						if v, ok := tfMap["driver_opts"].(map[string]any); ok && len(v) > 0 {
 							str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
 						}
-						if v, ok := tfMap["labels"].(map[string]interface{}); ok && len(v) > 0 {
+						if v, ok := tfMap["labels"].(map[string]any); ok && len(v) > 0 {
 							str.WriteString(strconv.Itoa(sdkv2.HashStringValueMap(flex.ExpandStringValueMap(v))))
 						}
 						if v, ok := tfMap[names.AttrScope].(string); ok {
@@ -488,11 +477,11 @@ func resourceTaskDefinition() *schema.Resource {
 							str.WriteString(v)
 						}
 					}
-					if v, ok := tfMap["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-						tfMap := v.([]interface{})[0].(map[string]interface{})
+					if v, ok := tfMap["efs_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						tfMap := v.([]any)[0].(map[string]any)
 
-						if v, ok := tfMap["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-							tfMap := v.([]interface{})[0].(map[string]interface{})
+						if v, ok := tfMap["authorization_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+							tfMap := v.([]any)[0].(map[string]any)
 
 							if v, ok := tfMap["access_point_id"].(string); ok && v != "" {
 								str.WriteString(v)
@@ -514,11 +503,11 @@ func resourceTaskDefinition() *schema.Resource {
 							str.WriteString(strconv.Itoa(v))
 						}
 					}
-					if v, ok := tfMap["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-						tfMap := v.([]interface{})[0].(map[string]interface{})
+					if v, ok := tfMap["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						tfMap := v.([]any)[0].(map[string]any)
 
-						if v, ok := tfMap["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-							tfMap := v.([]interface{})[0].(map[string]interface{})
+						if v, ok := tfMap["authorization_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+							tfMap := v.([]any)[0].(map[string]any)
 
 							if v, ok := tfMap["credentials_parameter"].(string); ok && v != "" {
 								str.WriteString(v)
@@ -544,7 +533,7 @@ func resourceTaskDefinition() *schema.Resource {
 	}
 }
 
-func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -564,16 +553,16 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Cpu = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
-		input.EphemeralStorage = expandEphemeralStorage(v.([]interface{}))
+	if v, ok := d.GetOk("enable_fault_injection"); ok {
+		input.EnableFaultInjection = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]any)) > 0 {
+		input.EphemeralStorage = expandEphemeralStorage(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("inference_accelerator"); ok {
-		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipc_mode"); ok {
@@ -601,7 +590,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PlacementConstraints = apiObject
 	}
 
-	if proxyConfigs := d.Get("proxy_configuration").([]interface{}); len(proxyConfigs) > 0 {
+	if proxyConfigs := d.Get("proxy_configuration").([]any); len(proxyConfigs) > 0 {
 		input.ProxyConfiguration = expandProxyConfiguration(proxyConfigs)
 	}
 
@@ -609,7 +598,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.RequiresCompatibilities = flex.ExpandStringyValueSet[awstypes.Compatibility](v.(*schema.Set))
 	}
 
-	if runtimePlatformConfigs := d.Get("runtime_platform").([]interface{}); len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
+	if runtimePlatformConfigs := d.Get("runtime_platform").([]any); len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
 		input.RuntimePlatform = expandRuntimePlatform(runtimePlatformConfigs)
 	}
 
@@ -644,7 +633,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		err := createTags(ctx, conn, d.Get(names.AttrARN).(string), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceTaskDefinitionRead(ctx, d, meta)...)
 		}
 
@@ -656,7 +645,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceTaskDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -666,7 +655,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	taskDefinition, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -680,14 +669,12 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, arn)
 	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
 	d.Set("cpu", taskDefinition.Cpu)
+	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
-	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting inference accelerators: %s", err)
-	}
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
@@ -727,7 +714,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -735,7 +722,7 @@ func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceTaskDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining ECS Task Definition Revision: %s", d.Id())
@@ -764,7 +751,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -775,7 +762,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	}
 
 	if output == nil || output.TaskDefinition == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TaskDefinition, output.Tags, nil
@@ -801,7 +788,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	}
 
 	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -810,23 +797,23 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	return taskDefinition, tags, nil
 }
 
-func validTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
+func validTaskDefinitionContainerDefinitions(v any, k string) (ws []string, errors []error) {
 	_, err := expandContainerDefinitions(v.(string))
 	if err != nil {
-		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
+		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %w", err))
 	}
 	return
 }
 
-func flattenTaskDefinitionPlacementConstraints(apiObjects []awstypes.TaskDefinitionPlacementConstraint) []interface{} {
+func flattenTaskDefinitionPlacementConstraints(apiObjects []awstypes.TaskDefinitionPlacementConstraint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		tfMap[names.AttrExpression] = aws.ToString(apiObject.Expression)
 		tfMap[names.AttrType] = apiObject.Type
@@ -837,7 +824,7 @@ func flattenTaskDefinitionPlacementConstraints(apiObjects []awstypes.TaskDefinit
 	return tfList
 }
 
-func flattenRuntimePlatform(apiObject *awstypes.RuntimePlatform) []interface{} {
+func flattenRuntimePlatform(apiObject *awstypes.RuntimePlatform) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -848,7 +835,7 @@ func flattenRuntimePlatform(apiObject *awstypes.RuntimePlatform) []interface{} {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if cpu != "" {
 		tfMap["cpu_architecture"] = cpu
@@ -857,12 +844,12 @@ func flattenRuntimePlatform(apiObject *awstypes.RuntimePlatform) []interface{} {
 		tfMap["operating_system_family"] = os
 	}
 
-	return []interface{}{
+	return []any{
 		tfMap,
 	}
 }
 
-func flattenProxyConfiguration(apiObject *awstypes.ProxyConfiguration) []interface{} {
+func flattenProxyConfiguration(apiObject *awstypes.ProxyConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -872,51 +859,21 @@ func flattenProxyConfiguration(apiObject *awstypes.ProxyConfiguration) []interfa
 		meshProperties[aws.ToString(property.Name)] = aws.ToString(property.Value)
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["container_name"] = aws.ToString(apiObject.ContainerName)
 	tfMap[names.AttrProperties] = meshProperties
 	tfMap[names.AttrType] = apiObject.Type
 
-	return []interface{}{
+	return []any{
 		tfMap,
 	}
 }
 
-func flattenInferenceAccelerators(apiObjects []awstypes.InferenceAccelerator) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
-			names.AttrDeviceName: aws.ToString(apiObject.DeviceName),
-			"device_type":        aws.ToString(apiObject.DeviceType),
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func expandInferenceAccelerators(tfList []interface{}) []awstypes.InferenceAccelerator {
-	apiObjects := make([]awstypes.InferenceAccelerator, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		apiObject := awstypes.InferenceAccelerator{
-			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
-			DeviceType: aws.String(tfMap["device_type"].(string)),
-		}
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandTaskDefinitionPlacementConstraints(tfList []interface{}) ([]awstypes.TaskDefinitionPlacementConstraint, error) {
+func expandTaskDefinitionPlacementConstraints(tfList []any) ([]awstypes.TaskDefinitionPlacementConstraint, error) {
 	var apiObjects []awstypes.TaskDefinitionPlacementConstraint
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		t := tfMap[names.AttrType].(string)
 		e := tfMap[names.AttrExpression].(string)
 		if err := validPlacementConstraint(t, e); err != nil {
@@ -931,9 +888,9 @@ func expandTaskDefinitionPlacementConstraints(tfList []interface{}) ([]awstypes.
 	return apiObjects, nil
 }
 
-func expandRuntimePlatform(tfList []interface{}) *awstypes.RuntimePlatform {
+func expandRuntimePlatform(tfList []any) *awstypes.RuntimePlatform {
 	tfMapRaw := tfList[0]
-	tfMap := tfMapRaw.(map[string]interface{})
+	tfMap := tfMapRaw.(map[string]any)
 	apiObject := &awstypes.RuntimePlatform{}
 
 	if v := tfMap["cpu_architecture"].(string); v != "" {
@@ -946,12 +903,12 @@ func expandRuntimePlatform(tfList []interface{}) *awstypes.RuntimePlatform {
 	return apiObject
 }
 
-func expandProxyConfiguration(tfList []interface{}) *awstypes.ProxyConfiguration {
+func expandProxyConfiguration(tfList []any) *awstypes.ProxyConfiguration {
 	tfMapRaw := tfList[0]
-	tfMap := tfMapRaw.(map[string]interface{})
+	tfMap := tfMapRaw.(map[string]any)
 
 	properties := make([]awstypes.KeyValuePair, 0)
-	for k, v := range flex.ExpandStringValueMap(tfMap[names.AttrProperties].(map[string]interface{})) {
+	for k, v := range flex.ExpandStringValueMap(tfMap[names.AttrProperties].(map[string]any)) {
 		properties = append(properties, awstypes.KeyValuePair{
 			Name:  aws.String(k),
 			Value: aws.String(v),
@@ -967,11 +924,11 @@ func expandProxyConfiguration(tfList []interface{}) *awstypes.ProxyConfiguration
 	return apiObject
 }
 
-func expandVolumes(tfList []interface{}) []awstypes.Volume {
+func expandVolumes(tfList []any) []awstypes.Volume {
 	apiObjects := make([]awstypes.Volume, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.Volume{
 			Name: aws.String(tfMap[names.AttrName].(string)),
@@ -981,15 +938,15 @@ func expandVolumes(tfList []interface{}) []awstypes.Volume {
 			apiObject.ConfiguredAtLaunch = aws.Bool(v)
 		}
 
-		if v, ok := tfMap["docker_volume_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["docker_volume_configuration"].([]any); ok && len(v) > 0 {
 			apiObject.DockerVolumeConfiguration = expandDockerVolumeConfiguration(v)
 		}
 
-		if v, ok := tfMap["efs_volume_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["efs_volume_configuration"].([]any); ok && len(v) > 0 {
 			apiObject.EfsVolumeConfiguration = expandEFSVolumeConfiguration(v)
 		}
 
-		if v, ok := tfMap["fsx_windows_file_server_volume_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["fsx_windows_file_server_volume_configuration"].([]any); ok && len(v) > 0 {
 			apiObject.FsxWindowsFileServerVolumeConfiguration = expandFSxWindowsFileServerVolumeConfiguration(v)
 		}
 
@@ -1005,8 +962,8 @@ func expandVolumes(tfList []interface{}) []awstypes.Volume {
 	return apiObjects
 }
 
-func expandDockerVolumeConfiguration(tfList []interface{}) *awstypes.DockerVolumeConfiguration {
-	tfMap := tfList[0].(map[string]interface{})
+func expandDockerVolumeConfiguration(tfList []any) *awstypes.DockerVolumeConfiguration {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.DockerVolumeConfiguration{}
 
 	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
@@ -1023,22 +980,22 @@ func expandDockerVolumeConfiguration(tfList []interface{}) *awstypes.DockerVolum
 		apiObject.Driver = aws.String(v)
 	}
 
-	if v, ok := tfMap["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["driver_opts"].(map[string]any); ok && len(v) > 0 {
 		apiObject.DriverOpts = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["labels"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["labels"].(map[string]any); ok && len(v) > 0 {
 		apiObject.Labels = flex.ExpandStringValueMap(v)
 	}
 
 	return apiObject
 }
 
-func expandEFSVolumeConfiguration(tfList []interface{}) *awstypes.EFSVolumeConfiguration {
-	tfMap := tfList[0].(map[string]interface{})
+func expandEFSVolumeConfiguration(tfList []any) *awstypes.EFSVolumeConfiguration {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.EFSVolumeConfiguration{}
 
-	if v, ok := tfMap["authorization_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["authorization_config"].([]any); ok && len(v) > 0 {
 		apiObject.AuthorizationConfig = expandEFSAuthorizationConfig(v)
 	}
 
@@ -1061,8 +1018,8 @@ func expandEFSVolumeConfiguration(tfList []interface{}) *awstypes.EFSVolumeConfi
 	return apiObject
 }
 
-func expandEFSAuthorizationConfig(tfList []interface{}) *awstypes.EFSAuthorizationConfig {
-	tfMap := tfList[0].(map[string]interface{})
+func expandEFSAuthorizationConfig(tfList []any) *awstypes.EFSAuthorizationConfig {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.EFSAuthorizationConfig{}
 
 	if v, ok := tfMap["access_point_id"].(string); ok && v != "" {
@@ -1076,11 +1033,11 @@ func expandEFSAuthorizationConfig(tfList []interface{}) *awstypes.EFSAuthorizati
 	return apiObject
 }
 
-func expandFSxWindowsFileServerVolumeConfiguration(tfList []interface{}) *awstypes.FSxWindowsFileServerVolumeConfiguration {
-	tfMap := tfList[0].(map[string]interface{})
+func expandFSxWindowsFileServerVolumeConfiguration(tfList []any) *awstypes.FSxWindowsFileServerVolumeConfiguration {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.FSxWindowsFileServerVolumeConfiguration{}
 
-	if v, ok := tfMap["authorization_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["authorization_config"].([]any); ok && len(v) > 0 {
 		apiObject.AuthorizationConfig = expandFSxWindowsFileServerAuthorizationConfig(v)
 	}
 
@@ -1095,8 +1052,8 @@ func expandFSxWindowsFileServerVolumeConfiguration(tfList []interface{}) *awstyp
 	return apiObject
 }
 
-func expandFSxWindowsFileServerAuthorizationConfig(tfList []interface{}) *awstypes.FSxWindowsFileServerAuthorizationConfig {
-	tfMap := tfList[0].(map[string]interface{})
+func expandFSxWindowsFileServerAuthorizationConfig(tfList []any) *awstypes.FSxWindowsFileServerAuthorizationConfig {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.FSxWindowsFileServerAuthorizationConfig{}
 
 	if v, ok := tfMap["credentials_parameter"].(string); ok && v != "" {
@@ -1110,11 +1067,11 @@ func expandFSxWindowsFileServerAuthorizationConfig(tfList []interface{}) *awstyp
 	return apiObject
 }
 
-func flattenVolumes(apiObjects []awstypes.Volume) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenVolumes(apiObjects []awstypes.Volume) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrName: aws.ToString(apiObject.Name),
 		}
 
@@ -1144,9 +1101,9 @@ func flattenVolumes(apiObjects []awstypes.Volume) []interface{} {
 	return tfList
 }
 
-func flattenDockerVolumeConfiguration(apiObject *awstypes.DockerVolumeConfiguration) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{})
+func flattenDockerVolumeConfiguration(apiObject *awstypes.DockerVolumeConfiguration) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
 
 	if v := apiObject.Autoprovision; v != nil {
 		tfMap["autoprovision"] = aws.ToBool(v)
@@ -1171,9 +1128,9 @@ func flattenDockerVolumeConfiguration(apiObject *awstypes.DockerVolumeConfigurat
 	return tfList
 }
 
-func flattenEFSVolumeConfiguration(apiObject *awstypes.EFSVolumeConfiguration) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{})
+func flattenEFSVolumeConfiguration(apiObject *awstypes.EFSVolumeConfiguration) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
 
 	if apiObject != nil {
 		if v := apiObject.AuthorizationConfig; v != nil {
@@ -1200,9 +1157,9 @@ func flattenEFSVolumeConfiguration(apiObject *awstypes.EFSVolumeConfiguration) [
 	return tfList
 }
 
-func flattenEFSAuthorizationConfig(apiObject *awstypes.EFSAuthorizationConfig) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{})
+func flattenEFSAuthorizationConfig(apiObject *awstypes.EFSAuthorizationConfig) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
 
 	if apiObject != nil {
 		if v := apiObject.AccessPointId; v != nil {
@@ -1217,9 +1174,9 @@ func flattenEFSAuthorizationConfig(apiObject *awstypes.EFSAuthorizationConfig) [
 	return tfList
 }
 
-func flattenFSxWindowsFileServerVolumeConfiguration(apiObject *awstypes.FSxWindowsFileServerVolumeConfiguration) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{})
+func flattenFSxWindowsFileServerVolumeConfiguration(apiObject *awstypes.FSxWindowsFileServerVolumeConfiguration) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
 
 	if apiObject != nil {
 		if v := apiObject.AuthorizationConfig; v != nil {
@@ -1240,9 +1197,9 @@ func flattenFSxWindowsFileServerVolumeConfiguration(apiObject *awstypes.FSxWindo
 	return tfList
 }
 
-func flattenFSxWindowsFileServerAuthorizationConfig(apiObject *awstypes.FSxWindowsFileServerAuthorizationConfig) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{})
+func flattenFSxWindowsFileServerAuthorizationConfig(apiObject *awstypes.FSxWindowsFileServerAuthorizationConfig) []any {
+	var tfList []any
+	tfMap := make(map[string]any)
 
 	if apiObject != nil {
 		if v := apiObject.CredentialsParameter; v != nil {
@@ -1259,8 +1216,8 @@ func flattenFSxWindowsFileServerAuthorizationConfig(apiObject *awstypes.FSxWindo
 	return tfList
 }
 
-func expandEphemeralStorage(tfList []interface{}) *awstypes.EphemeralStorage {
-	tfMap := tfList[0].(map[string]interface{})
+func expandEphemeralStorage(tfList []any) *awstypes.EphemeralStorage {
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.EphemeralStorage{
 		SizeInGiB: int32(tfMap["size_in_gib"].(int)),
@@ -1269,15 +1226,15 @@ func expandEphemeralStorage(tfList []interface{}) *awstypes.EphemeralStorage {
 	return apiObject
 }
 
-func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []interface{} {
+func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["size_in_gib"] = apiObject.SizeInGiB
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // taskDefinitionARNStripRevision strips the trailing revision number from a task definition ARN

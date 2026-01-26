@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloud9
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -109,12 +111,10 @@ func resourceEnvironmentEC2() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -144,7 +144,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.NotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEnvironmentEC2(ctx, input)
 	}, "User")
 
@@ -161,13 +161,13 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
 	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cloud9 EC2 Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,7 +187,7 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -208,14 +208,15 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEnvironmentEC2Read(ctx, d, meta)...)
 }
 
-func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentEC2Delete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
 	log.Printf("[INFO] Deleting Cloud9 EC2 Environment: %s", d.Id())
-	_, err := conn.DeleteEnvironment(ctx, &cloud9.DeleteEnvironmentInput{
+	input := cloud9.DeleteEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -246,7 +247,7 @@ func findEnvironment(ctx context.Context, conn *cloud9.Client, input *cloud9.Des
 	}
 
 	if environment.Lifecycle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return environment, nil
@@ -257,8 +258,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -267,7 +267,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environments, nil
@@ -286,19 +286,17 @@ func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusEnvironmentStatus(conn *cloud9.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -317,7 +315,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusCreating),
 		Target:  enum.Slice(types.EnvironmentLifecycleStatusCreated),
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -325,7 +323,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err
@@ -341,7 +339,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -349,7 +347,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err

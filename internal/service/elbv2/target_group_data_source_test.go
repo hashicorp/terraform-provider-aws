@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -18,6 +18,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceNameByARN := "data.aws_lb_target_group.alb_tg_test_with_arn"
 	datasourceNameByName := "data.aws_lb_target_group.alb_tg_test_with_name"
+	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,8 +29,8 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 				Config: testAccTargetGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByARN, names.AttrARN),
-					resource.TestCheckResourceAttrSet(datasourceNameByARN, "arn_suffix"),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, "arn_suffix", resourceName, "arn_suffix"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrPort, "8080"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrProtocol, "HTTP"),
@@ -51,10 +52,11 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, "target_control_port", resourceName, "target_control_port"),
 
 					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, "arn_suffix"),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, "arn_suffix", resourceName, "arn_suffix"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrPort, "8080"),
 					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrProtocol, "HTTP"),
@@ -75,6 +77,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, "target_control_port", resourceName, "target_control_port"),
 				),
 			},
 		},
@@ -84,7 +87,8 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
+	dataSourceName := "data.aws_lb_target_group.alb_tg_test_with_arn"
+	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -94,31 +98,32 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 			{
 				Config: testAccTargetGroupDataSourceConfig_appCookie(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceNameArn, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceNameArn, "arn_suffix"),
-					resource.TestCheckResourceAttr(resourceNameArn, "load_balancer_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrPort, "8080"),
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrProtocol, "HTTP"),
-					resource.TestCheckResourceAttr(resourceNameArn, "protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttrSet(resourceNameArn, names.AttrVPCID),
-					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_algorithm_type"),
-					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_cross_zone_enabled"),
-					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr(resourceNameArn, "slow_start", "0"),
-					resource.TestCheckResourceAttr(resourceNameArn, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceNameArn, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceNameArn, "stickiness.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameArn, "stickiness.0.cookie_duration", "600"),
-					resource.TestCheckResourceAttr(resourceNameArn, "stickiness.0.cookie_name", "cookieName"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn_suffix", resourceName, "arn_suffix"),
+					resource.TestCheckResourceAttr(dataSourceName, "load_balancer_arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrPort, "8080"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(dataSourceName, "protocol_version", "HTTP1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "load_balancing_cross_zone_enabled"),
+					resource.TestCheckResourceAttr(dataSourceName, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(dataSourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "stickiness.0.cookie_duration", "600"),
+					resource.TestCheckResourceAttr(dataSourceName, "stickiness.0.cookie_name", "cookieName"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "target_control_port", resourceName, "target_control_port"),
 				),
 			},
 		},
@@ -128,8 +133,9 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
-	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"
+	datasourceNameByARN := "data.aws_alb_target_group.alb_tg_test_with_arn"
+	datasourceNameByName := "data.aws_alb_target_group.alb_tg_test_with_name"
+	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -139,48 +145,50 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 			{
 				Config: testAccTargetGroupDataSourceConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceNameArn, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceNameArn, "arn_suffix"),
-					resource.TestCheckResourceAttr(resourceNameArn, "load_balancer_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrPort, "8080"),
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrProtocol, "HTTP"),
-					resource.TestCheckResourceAttr(resourceNameArn, names.AttrProtocol, "HTTP"),
-					resource.TestCheckResourceAttrSet(resourceNameArn, names.AttrVPCID),
-					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr(resourceNameArn, "slow_start", "0"),
-					resource.TestCheckResourceAttr(resourceNameArn, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceNameArn, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceNameArn, "stickiness.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, "arn_suffix", resourceName, "arn_suffix"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "load_balancer_arns.#", "0"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrPort, "8080"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttrSet(datasourceNameByARN, names.AttrVPCID),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "slow_start", "0"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "tags.Name", rName),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, "target_control_port", resourceName, "target_control_port"),
 
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "arn_suffix"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8080"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, "arn_suffix", resourceName, "arn_suffix"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "load_balancer_arns.#", "0"),
+					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrPort, "8080"),
+					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrProtocol, "HTTP"),
+					resource.TestCheckResourceAttrSet(datasourceNameByName, names.AttrVPCID),
+					resource.TestCheckResourceAttr(datasourceNameByName, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(datasourceNameByName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(datasourceNameByName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, "target_control_port", resourceName, "target_control_port"),
 				),
 			},
 		},
@@ -222,6 +230,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.matcher", resourceTg1, "health_check.0.matcher"),
 					resource.TestCheckResourceAttr(dataSourceMatchFirstTag, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "tags.Name", resourceTg1, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "target_control_port", resourceTg1, "target_control_port"),
 
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, names.AttrName, resourceTg2, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, names.AttrARN, resourceTg2, names.AttrARN),
@@ -238,6 +247,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.matcher", resourceTg2, "health_check.0.matcher"),
 					resource.TestCheckResourceAttr(dataSourceMatchSecondTag, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "tags.Name", resourceTg2, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "target_control_port", resourceTg2, "target_control_port"),
 
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, names.AttrName, resourceTg1, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, names.AttrARN, resourceTg1, names.AttrARN),
@@ -254,6 +264,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.matcher", resourceTg1, "health_check.0.matcher"),
 					resource.TestCheckResourceAttr(dataSourceMatchFirstTagAndName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "tags.Name", resourceTg1, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "target_control_port", resourceTg1, "target_control_port"),
 				),
 			},
 		},

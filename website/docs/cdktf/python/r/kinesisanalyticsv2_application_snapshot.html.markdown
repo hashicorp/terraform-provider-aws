@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_name` - (Required) The name of an existing  [Kinesis Analytics v2 Application](/docs/providers/aws/r/kinesisanalyticsv2_application.html). Note that the application must be running for a snapshot to be created.
 * `snapshot_name` - (Required) The name of the application snapshot.
 
@@ -80,4 +81,4 @@ Using `terraform import`, import `aws_kinesisanalyticsv2_application` using `app
 % terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd3010fed4591275bcebfac88611f10eb5c9c79e722ef1789997282c4a9937ac -->
+<!-- cache-key: cdktf-0.20.8 input-5ac926c44cefce4326b4039401a810b06811737525199b76aaf095d740e93895 -->

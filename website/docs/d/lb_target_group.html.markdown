@@ -39,6 +39,7 @@ data "aws_lb_target_group" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) Full ARN of the target group.
 * `name` - (Optional) Unique name of the target group.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match a pair on the desired target group.
@@ -46,6 +47,8 @@ This data source supports the following arguments:
 ~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence. `tags` has the lowest precedence.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 See the [LB Target Group Resource](/docs/providers/aws/r/lb_target_group.html) for details
 on the returned attributes - they are identical.

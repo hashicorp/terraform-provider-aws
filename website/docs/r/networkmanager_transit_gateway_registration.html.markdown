@@ -3,14 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_transit_gateway_registration"
 description: |-
-  Registers a transit gateway to a global network.
+  Manages a Network Manager transit gateway registration.
 ---
 
 # Resource: aws_networkmanager_transit_gateway_registration
 
-Registers a transit gateway to a global network. The transit gateway can be in any AWS Region,
-but it must be owned by the same AWS account that owns the global network.
-You cannot register a transit gateway in more than one global network.
+Manages a Network Manager transit gateway registration. Registers a transit gateway to a global network. The transit gateway can be in any AWS Region, but it must be owned by the same AWS account that owns the global network. You cannot register a transit gateway in more than one global network.
 
 ## Example Usage
 
@@ -29,14 +27,21 @@ resource "aws_networkmanager_transit_gateway_registration" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `global_network_id` - (Required) The ID of the Global Network to register to.
-* `transit_gateway_arn` - (Required) The ARN of the Transit Gateway to register.
+* `global_network_id` - (Required) ID of the Global Network to register to.
+* `transit_gateway_arn` - (Required) ARN of the Transit Gateway to register.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

@@ -36,8 +36,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) Fully-qualified domain name to look up. If no domain name is found, an error will be returned.
-* `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
+* `domainNameId` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 
 ## Attribute Reference
 
@@ -50,6 +53,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cloudfrontDomainName` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
 * `cloudfrontZoneId` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `endpointConfiguration` - List of objects with the endpoint configuration of this domain name.
+    * `ipAddressType` - The IP address types that can invoke an API (RestApi).
     * `types` - List of endpoint types.
 * `policy` - A stringified JSON policy document that applies to the execute-api service for this DomainName regardless of the caller and Method configuration. Supported only for private custom domain names.
 * `regionalCertificateArn` - ARN for an AWS-managed certificate that is used for validating the regional domain name.
@@ -59,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `securityPolicy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-d1bbc749fbaf28bf7bd0285d5c505d36f1e500937869ce42689dba50f9b69962 -->
+<!-- cache-key: cdktf-0.20.8 input-c0c4a9382879894c240e1244b5e57489ab3c252465a026d69b6a30328159be01 -->

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -21,11 +23,7 @@ func newUserGroupDataSource(context.Context) (datasource.DataSourceWithConfigure
 }
 
 type userGroupDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*userGroupDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_cognito_user_group"
+	framework.DataSourceWithModel[userGroupDataSourceModel]
 }
 
 func (d *userGroupDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -80,6 +78,7 @@ func (d *userGroupDataSource) Read(ctx context.Context, request datasource.ReadR
 }
 
 type userGroupDataSourceModel struct {
+	framework.WithRegionModel
 	Description types.String `tfsdk:"description"`
 	GroupName   types.String `tfsdk:"name"`
 	ID          types.String `tfsdk:"id"`

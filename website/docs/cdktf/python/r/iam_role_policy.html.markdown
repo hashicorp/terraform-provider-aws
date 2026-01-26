@@ -67,23 +67,47 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Optional) The name of the role policy. If omitted, Terraform will
-assign a random, unique name.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified
-  prefix. Conflicts with `name`.
-* `policy` - (Required) The inline policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
+* `name` - (Optional) The name of the role policy.
+  If omitted, Terraform will assign a random, unique name.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix.
+  Conflicts with `name`.
+* `policy` - (Required) The inline policy document.
+  This is a JSON formatted string.
+  For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 * `role` - (Required) The name of the IAM role to attach to the policy.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The role policy ID, in the form of `role_name:role_policy_name`.
-* `name` - The name of the policy.
-* `policy` - The policy document attached to the role.
-* `role` - The name of the role associated with the policy.
+This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_role_policy.example
+  identity = {
+    role = "role_of_mypolicy_name"
+    name = "mypolicy_name"
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `role` (String) Name of the IAM role.
+* `name` (String) Name of the role policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
@@ -99,13 +123,13 @@ from imports.aws.iam_role_policy import IamRolePolicy
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        IamRolePolicy.generate_config_for_import(self, "mypolicy", "role_of_mypolicy_name:mypolicy_name")
+        IamRolePolicy.generate_config_for_import(self, "example", "role_of_mypolicy_name:mypolicy_name")
 ```
 
 Using `terraform import`, import IAM Role Policies using the `role_name:role_policy_name`. For example:
 
 ```console
-% terraform import aws_iam_role_policy.mypolicy role_of_mypolicy_name:mypolicy_name
+% terraform import aws_iam_role_policy.example role_of_mypolicy_name:mypolicy_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b6beb5815b64b8dd60186c81392d0cbbcf75384f0e28fd091019cf868ea7fd92 -->
+<!-- cache-key: cdktf-0.20.8 input-0e68cae2f7251bf7bc23af7be305ee3e8e4157eb2f6c286526091e8858c55886 -->

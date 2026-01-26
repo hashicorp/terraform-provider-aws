@@ -1,12 +1,12 @@
 ---
 subcategory: "Transit Gateway"
 layout: "aws"
-page_title: "AWS: aws_ec2_transitgateway_route_table_propagations"
+page_title: "AWS: aws_ec2_transit_gateway_route_table_propagations"
 description: |-
    Provides information for multiple EC2 Transit Gateway Route Table Propagations
 ---
 
-# Data Source: aws_ec2_transitgateway_route_table_propagations
+# Data Source: aws_ec2_transit_gateway_route_table_propagations
 
 Provides information for multiple EC2 Transit Gateway Route Table Propagations, such as their identifiers.
 
@@ -22,12 +22,10 @@ data "aws_ec2_transit_gateway_route_table_propagations" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
-
-The following arguments are optional:
-
 * `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

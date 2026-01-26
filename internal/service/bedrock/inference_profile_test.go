@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -97,7 +97,7 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceInferenceProfile, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,9 +203,10 @@ func testAccCheckInferenceProfileExists(ctx context.Context, name string, infere
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-		resp, err := conn.GetInferenceProfile(ctx, &bedrock.GetInferenceProfileInput{
+		input := bedrock.GetInferenceProfileInput{
 			InferenceProfileIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := conn.GetInferenceProfile(ctx, &input)
 		if err != nil {
 			return create.Error(names.Bedrock, create.ErrActionCheckingExistence, tfbedrock.ResNameInferenceProfile, rs.Primary.ID, err)
 		}

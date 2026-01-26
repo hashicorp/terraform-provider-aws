@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_regex_pattern_set: Remove maximum items limit on the `regular_expression` argument
+```

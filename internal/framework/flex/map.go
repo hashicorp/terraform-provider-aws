@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -23,22 +23,6 @@ func ExpandFrameworkStringValueMap(ctx context.Context, v basetypes.MapValuable)
 	var output map[string]string
 
 	must(Expand(ctx, v, &output))
-
-	return output
-}
-
-// FlattenFrameworkStringMap converts a map of string pointers to a framework Map value.
-//
-// A nil map is converted to a null Map.
-// An empty map is converted to a null Map.
-func FlattenFrameworkStringMap(ctx context.Context, v map[string]*string) types.Map {
-	if len(v) == 0 {
-		return types.MapNull(types.StringType)
-	}
-
-	var output types.Map
-
-	must(Flatten(ctx, v, &output))
 
 	return output
 }

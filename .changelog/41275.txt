@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Fix blue/green deployments failing with "not in available state" by improving stability and handling `storage-config-upgrade` and `storage-initialization` statuses
+```

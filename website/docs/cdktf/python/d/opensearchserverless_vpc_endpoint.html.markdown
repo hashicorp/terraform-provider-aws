@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_id` - (Required) The unique identifier of the endpoint.
 
 ## Attribute Reference
@@ -47,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnet_ids` - The IDs of the subnets from which you access OpenSearch Serverless.
 * `vpc_id` - The ID of the VPC from which you access OpenSearch Serverless.
 
-<!-- cache-key: cdktf-0.20.8 input-2c446629971d0d10ff448173c283856675b8628bf661beac57c916ae51592d6d -->
+<!-- cache-key: cdktf-0.20.8 input-453a45d4e65f4e4387fbbf1976dce29bbb05ee03472d3d54133f075557e63323 -->

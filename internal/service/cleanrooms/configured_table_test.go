@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms_test
@@ -72,7 +72,7 @@ func TestAccCleanRoomsConfiguredTable_disappears(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceConfiguredTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceConfiguredTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -275,9 +275,10 @@ func testAccCheckConfiguredTableDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := conn.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+			input := cleanrooms.GetConfiguredTableInput{
 				ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetConfiguredTable(ctx, &input)
 
 			if err == nil {
 				return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, errors.New("not destroyed"))
@@ -300,9 +301,10 @@ func testAccCheckConfiguredTableExists(ctx context.Context, name string, configu
 		}
 
 		client := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		resp, err := client.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+		input := cleanrooms.GetConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := client.GetConfiguredTable(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, err)

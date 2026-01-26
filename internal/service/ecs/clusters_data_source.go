@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -21,11 +23,7 @@ func newClustersDataSource(context.Context) (datasource.DataSourceWithConfigure,
 }
 
 type clustersDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*clustersDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_ecs_clusters"
+	framework.DataSourceWithModel[clustersDataSourceModel]
 }
 
 func (d *clustersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -41,7 +39,7 @@ func (d *clustersDataSource) Schema(ctx context.Context, request datasource.Sche
 }
 
 func (d *clustersDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data dataSourceClustersModel
+	var data clustersDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -79,6 +77,7 @@ func listClusters(ctx context.Context, conn *ecs.Client, input *ecs.ListClusters
 	return output, nil
 }
 
-type dataSourceClustersModel struct {
+type clustersDataSourceModel struct {
+	framework.WithRegionModel
 	ClusterARNs fwtypes.ListOfString `tfsdk:"cluster_arns"`
 }

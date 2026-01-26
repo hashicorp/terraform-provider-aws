@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cur_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,17 +16,18 @@ func testAccReportDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	dataSourceName := "data.aws_cur_report_definition.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	reportName := acctest.RandomWithPrefix(t, "tf_acc_test")
+	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt(t))
+	s3Prefix := "test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, bucketName),
+				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, s3BucketName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "report_name", resourceName, "report_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "time_unit", resourceName, "time_unit"),
@@ -49,17 +49,18 @@ func testAccReportDefinitionDataSource_additional(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	dataSourceName := "data.aws_cur_report_definition.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	reportName := acctest.RandomWithPrefix(t, "tf_acc_test")
+	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt(t))
+	s3Prefix := "test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, bucketName),
+				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, s3BucketName, s3Prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "report_name", resourceName, "report_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "time_unit", resourceName, "time_unit"),
@@ -80,7 +81,7 @@ func testAccReportDefinitionDataSource_additional(t *testing.T) {
 	})
 }
 
-func testAccReportDefinitionDataSourceConfig_basic(reportName string, bucketName string) string {
+func testAccReportDefinitionDataSourceConfig_basic(reportName, s3BucketName, s3Prefix string) string {
 	return fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
@@ -134,7 +135,7 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = ""
+  s3_prefix                  = %[3]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
   tags = {
@@ -145,10 +146,10 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, bucketName)
+`, reportName, s3BucketName, s3Prefix)
 }
 
-func testAccReportDefinitionDataSourceConfig_additional(reportName string, bucketName string) string {
+func testAccReportDefinitionDataSourceConfig_additional(reportName, s3BucketName, s3Prefix string) string {
 	return fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
@@ -202,7 +203,7 @@ resource "aws_cur_report_definition" "test" {
   compression                = "GZIP"
   additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = aws_s3_bucket.test.id
-  s3_prefix                  = ""
+  s3_prefix                  = %[3]q
   s3_region                  = aws_s3_bucket.test.region
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
   refresh_closed_reports     = true
@@ -216,5 +217,5 @@ resource "aws_cur_report_definition" "test" {
 data "aws_cur_report_definition" "test" {
   report_name = aws_cur_report_definition.test.report_name
 }
-`, reportName, bucketName)
+`, reportName, s3BucketName, s3Prefix)
 }

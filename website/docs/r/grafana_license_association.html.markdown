@@ -49,6 +49,7 @@ resource "aws_iam_role" "assume" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `grafana_token` - (Optional) A token from Grafana Labs that ties your AWS account with a Grafana Labs account.
 * `license_type` - (Required) The type of license for the workspace license association. Valid values are `ENTERPRISE` and `ENTERPRISE_FREE_TRIAL`.
 * `workspace_id` - (Required) The workspace id.

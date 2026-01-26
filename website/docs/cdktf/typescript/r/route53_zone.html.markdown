@@ -91,14 +91,28 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { Route53Zone } from "./.gen/providers/aws/route53-zone";
+import { Vpc } from "./.gen/providers/aws/vpc";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    const primary = new Vpc(this, "primary", {
+      cidrBlock: "10.6.0.0/16",
+      enableDnsHostnames: true,
+      enableDnsSupport: true,
+    });
+    const secondary = new Vpc(this, "secondary", {
+      cidrBlock: "10.7.0.0/16",
+      enableDnsHostnames: true,
+      enableDnsSupport: true,
+    });
     new Route53Zone(this, "private", {
       name: "example.com",
       vpc: [
         {
-          vpcId: example.id,
+          vpcId: primary.id,
+        },
+        {
+          vpcId: secondary.id,
         },
       ],
     });
@@ -134,6 +148,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `primaryNameServer` - The Route 53 name server that created the SOA record.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Zones using the zone `id`. For example:
@@ -162,4 +184,4 @@ Using `terraform import`, import Route53 Zones using the zone `id`. For example:
 % terraform import aws_route53_zone.myzone Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8a7477da45196901e3ea8ac68ebc92bd2954c60b50b24acf390c93289191b92e -->
+<!-- cache-key: cdktf-0.20.8 input-36b1e071614d9565eafcfeff03b67f03d2e97f15716be0f40a74b2e3fc843194 -->

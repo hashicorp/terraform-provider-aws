@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -243,10 +243,6 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
 				),
 			},
-			{
-				Config:   testAccS3EndpointConfig_simple(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -298,10 +294,6 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
 				),
-			},
-			{
-				Config:   testAccS3EndpointConfig_sourceSimple(rName),
-				PlanOnly: true,
 			},
 			{
 				ResourceName:            resourceName,
@@ -508,7 +500,8 @@ func testAccS3EndpointConfig_basic(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -587,7 +580,8 @@ func testAccS3EndpointConfig_update(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test2" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"

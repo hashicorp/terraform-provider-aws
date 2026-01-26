@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -23,11 +25,7 @@ func newFoundationModelDataSource(context.Context) (datasource.DataSourceWithCon
 }
 
 type foundationModelDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *foundationModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_foundation_model"
+	framework.DataSourceWithModel[foundationModelDataSourceModel]
 }
 
 func (d *foundationModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -106,6 +104,7 @@ func (d *foundationModelDataSource) Read(ctx context.Context, request datasource
 }
 
 type foundationModelDataSourceModel struct {
+	framework.WithRegionModel
 	CustomizationsSupported    fwtypes.SetOfString `tfsdk:"customizations_supported"`
 	ID                         types.String        `tfsdk:"id"`
 	InferenceTypesSupported    fwtypes.SetOfString `tfsdk:"inference_types_supported"`

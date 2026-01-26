@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenWorkflowParameter(apiObject *awstypes.WorkflowParameter) map[string]interface{} {
+func flattenWorkflowParameter(apiObject *awstypes.WorkflowParameter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)
@@ -30,12 +30,12 @@ func flattenWorkflowParameter(apiObject *awstypes.WorkflowParameter) map[string]
 	return tfMap
 }
 
-func flattenWorkflowParameters(apiObjects []awstypes.WorkflowParameter) []interface{} {
+func flattenWorkflowParameters(apiObjects []awstypes.WorkflowParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenWorkflowParameter(&apiObject))
@@ -44,12 +44,12 @@ func flattenWorkflowParameters(apiObjects []awstypes.WorkflowParameter) []interf
 	return tfList
 }
 
-func flattenWorkflowConfiguration(apiObject *awstypes.WorkflowConfiguration) map[string]interface{} {
+func flattenWorkflowConfiguration(apiObject *awstypes.WorkflowConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"on_failure": apiObject.OnFailure,
 	}
 
@@ -68,12 +68,12 @@ func flattenWorkflowConfiguration(apiObject *awstypes.WorkflowConfiguration) map
 	return tfMap
 }
 
-func flattenWorkflowConfigurations(apiObjects []awstypes.WorkflowConfiguration) []interface{} {
+func flattenWorkflowConfigurations(apiObjects []awstypes.WorkflowConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		if apiObjects == nil {
@@ -86,7 +86,7 @@ func flattenWorkflowConfigurations(apiObjects []awstypes.WorkflowConfiguration) 
 	return tfList
 }
 
-func expandWorkflowParameter(tfMap map[string]interface{}) *awstypes.WorkflowParameter {
+func expandWorkflowParameter(tfMap map[string]any) *awstypes.WorkflowParameter {
 	if tfMap == nil {
 		return nil
 	}
@@ -106,7 +106,7 @@ func expandWorkflowParameter(tfMap map[string]interface{}) *awstypes.WorkflowPar
 	return apiObject
 }
 
-func expandWorkflowParameters(tfList []interface{}) []awstypes.WorkflowParameter {
+func expandWorkflowParameters(tfList []any) []awstypes.WorkflowParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -114,7 +114,7 @@ func expandWorkflowParameters(tfList []interface{}) []awstypes.WorkflowParameter
 	var apiObjects []awstypes.WorkflowParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -131,7 +131,7 @@ func expandWorkflowParameters(tfList []interface{}) []awstypes.WorkflowParameter
 	return apiObjects
 }
 
-func expandWorkflowConfiguration(tfMap map[string]interface{}) *awstypes.WorkflowConfiguration {
+func expandWorkflowConfiguration(tfMap map[string]any) *awstypes.WorkflowConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -157,7 +157,7 @@ func expandWorkflowConfiguration(tfMap map[string]interface{}) *awstypes.Workflo
 	return apiObject
 }
 
-func expandWorkflowConfigurations(tfList []interface{}) []awstypes.WorkflowConfiguration {
+func expandWorkflowConfigurations(tfList []any) []awstypes.WorkflowConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -165,7 +165,7 @@ func expandWorkflowConfigurations(tfList []interface{}) []awstypes.WorkflowConfi
 	var apiObjects []awstypes.WorkflowConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -180,4 +180,66 @@ func expandWorkflowConfigurations(tfList []interface{}) []awstypes.WorkflowConfi
 	}
 
 	return apiObjects
+}
+func expandLoggingConfiguration(tfMap map[string]any) *awstypes.ImageLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ImageLoggingConfiguration{}
+
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+		apiObject.LogGroupName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenLoggingConfiguration(apiObject *awstypes.ImageLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.LogGroupName; v != nil {
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+func expandPipelineLoggingConfiguration(tfMap map[string]any) *awstypes.PipelineLoggingConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.PipelineLoggingConfiguration{}
+
+	if v, ok := tfMap["image_log_group_name"].(string); ok && v != "" {
+		apiObject.ImageLogGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["pipeline_log_group_name"].(string); ok && v != "" {
+		apiObject.PipelineLogGroupName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenPipelineLoggingConfiguration(apiObject *awstypes.PipelineLoggingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ImageLogGroupName; v != nil {
+		tfMap["image_log_group_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PipelineLogGroupName; v != nil {
+		tfMap["pipeline_log_group_name"] = aws.ToString(v)
+	}
+
+	return tfMap
 }

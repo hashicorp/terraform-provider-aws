@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography_test
@@ -13,11 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfpaymentcryptography "github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
@@ -31,24 +30,34 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 	}
 
 	var key paymentcryptography.GetKeyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "exportable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_algorithm", "TDES_3KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_class", "SYMMETRIC_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_usage", "TR31_P0_PIN_ENCRYPTION_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.decrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.encrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.wrap", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.unwrap", acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/[0-9a-z]{16}$`)),
 				),
 			},
 			{
@@ -68,22 +77,22 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 	}
 
 	var key1, key2 paymentcryptography.GetKeyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key1),
+					testAccCheckKeyExists(ctx, t, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -100,7 +109,7 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 			{
 				Config: testAccKeyConfig_tags2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key2),
+					testAccCheckKeyExists(ctx, t, resourceName, &key2),
 					testAccCheckKeyNotRecreated(&key1, &key2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -120,22 +129,22 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 	}
 
 	var key1, key2, key3 paymentcryptography.GetKeyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key1),
+					testAccCheckKeyExists(ctx, t, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
@@ -149,7 +158,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 			{
 				Config: testAccKeyConfig_disable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key2),
+					testAccCheckKeyExists(ctx, t, resourceName, &key2),
 					testAccCheckKeyNotRecreated(&key1, &key2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
@@ -158,7 +167,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 			{
 				Config: testAccKeyConfig_enable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key3),
+					testAccCheckKeyExists(ctx, t, resourceName, &key3),
 					testAccCheckKeyNotRecreated(&key2, &key3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
@@ -175,33 +184,106 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 	}
 
 	var key paymentcryptography.GetKeyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpaymentcryptography.ResourceKey, resourceName),
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpaymentcryptography.ResourceKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccPaymentCryptographyKey_upgradeV6_0_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var key paymentcryptography.GetKeyOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_paymentcryptography_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "exportable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_algorithm", "TDES_3KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_class", "SYMMETRIC_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_usage", "TR31_P0_PIN_ENCRYPTION_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.decrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.encrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.wrap", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.key_modes_of_use.unwrap", acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "exportable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_algorithm", "TDES_3KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_class", "SYMMETRIC_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_usage", "TR31_P0_PIN_ENCRYPTION_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.decrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.encrypt", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.wrap", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "key_attributes.0.key_modes_of_use.0.unwrap", acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PaymentCryptographyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_paymentcryptography_key" {
@@ -229,7 +311,7 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyExists(ctx context.Context, name string, key *paymentcryptography.GetKeyOutput) resource.TestCheckFunc {
+func testAccCheckKeyExists(ctx context.Context, t *testing.T, name string, key *paymentcryptography.GetKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -240,7 +322,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *paymentcryptog
 			return create.Error(names.PaymentCryptography, create.ErrActionCheckingExistence, tfpaymentcryptography.ResNameKey, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PaymentCryptographyClient(ctx)
 		resp, err := conn.GetKey(ctx, &paymentcryptography.GetKeyInput{
 			KeyIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -256,7 +338,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *paymentcryptog
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).PaymentCryptographyClient(ctx)
 
 	input := &paymentcryptography.ListKeysInput{}
 	_, err := conn.ListKeys(ctx, input)

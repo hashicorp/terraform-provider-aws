@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -18,10 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,7 +55,7 @@ func TestAccS3TablesNamespace_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccNamespaceImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ";", "table_bucket_arn", names.AttrNamespace),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrNamespace,
 			},
@@ -85,7 +84,7 @@ func TestAccS3TablesNamespace_disappears(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfs3tables.NewResourceNamespace, resourceName, namespaceDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfs3tables.ResourceNamespace, resourceName, namespaceDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,53 +101,41 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameNamespace, rs.Primary.ID, err)
+			_, err := tfs3tables.FindNamespaceByTwoPartKey(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameNamespace, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Namespace %s still exists", rs.Primary.Attributes[names.AttrNamespace])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckNamespaceExists(ctx context.Context, name string, namespace *s3tables.GetNamespaceOutput) resource.TestCheckFunc {
+func testAccCheckNamespaceExists(ctx context.Context, n string, v *s3tables.GetNamespaceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+		output, err := tfs3tables.FindNamespaceByTwoPartKey(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, rs.Primary.ID, err)
+			return err
 		}
 
-		*namespace = *resp
+		*v = *output
 
 		return nil
-	}
-}
-
-func testAccNamespaceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["table_bucket_arn"] + tfs3tables.NamespaceIDSeparator + rs.Primary.Attributes[names.AttrNamespace], nil
 	}
 }
 

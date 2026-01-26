@@ -34,11 +34,13 @@ resource "aws_cloudwatch_log_group" "dada" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the metric filter.
 * `pattern` - (Required) A valid [CloudWatch Logs filter pattern](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/FilterAndPatternSyntax.html)
   for extracting metric data out of ingested log events.
 * `log_group_name` - (Required) The name of the log group to associate the metric filter with.
 * `metric_transformation` - (Required) A block defining collection of information needed to define how metric data gets emitted. See below.
+* `apply_on_transformed_logs` - (Optional) Whether the metric filter will be applied on the transformed version of the log events instead of the original ingested log events. Defaults to `false`. Valid only for log groups that have an active log transformer.
 
 The `metric_transformation` block supports the following arguments:
 

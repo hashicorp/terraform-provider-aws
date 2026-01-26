@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,7 +77,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,7 +153,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(ctx, &vpc),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(ctx, &vpc),
 				),
 			},
@@ -503,7 +503,7 @@ func testAccCheckEndpointGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfglobalaccelerator.FindEndpointGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -526,7 +526,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2t
 
 		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.ToString(vpc.VpcId), aws.ToString(vpc.OwnerId))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Already gone.
 			return nil
 		}
@@ -555,7 +555,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -565,7 +565,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 }
 `, rName)
 }
@@ -628,7 +628,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -638,7 +638,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id                    = aws_lb.test.id
@@ -687,7 +687,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -697,7 +697,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id                    = aws_instance.test.id
@@ -724,7 +724,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -744,7 +744,7 @@ resource "aws_eip" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id = aws_eip.test.id
@@ -771,7 +771,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -781,7 +781,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   health_check_port = 80
 
@@ -802,7 +802,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -812,7 +812,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   port_override {
     endpoint_port = 8081
@@ -836,7 +836,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -856,14 +856,14 @@ resource "aws_eip" "test" {
 data "aws_region" "current" {}
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id = aws_eip.test.id
     weight      = 10
   }
 
-  endpoint_group_region         = data.aws_region.current.name
+  endpoint_group_region         = data.aws_region.current.region
   health_check_interval_seconds = 30
   health_check_port             = 1234
   health_check_protocol         = "TCP"
@@ -882,7 +882,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -900,7 +900,7 @@ resource "aws_eip" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id = aws_eip.test.id
@@ -1034,7 +1034,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 resource "aws_globalaccelerator_listener" "test" {
-  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  accelerator_arn = aws_globalaccelerator_accelerator.test.arn
   protocol        = "TCP"
 
   port_range {
@@ -1044,7 +1044,7 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "test" {
-  listener_arn = aws_globalaccelerator_listener.test.id
+  listener_arn = aws_globalaccelerator_listener.test.arn
 
   endpoint_configuration {
     endpoint_id                    = aws_lb.alt_test.arn

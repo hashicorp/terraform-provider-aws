@@ -3,13 +3,14 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connection"
 description: |-
-  Creates a connection between two devices.
+  Manages a Network Manager Connection.
 ---
 
 # Resource: aws_networkmanager_connection
 
-Creates a connection between two devices.
-The devices can be a physical or virtual appliance that connects to a third-party appliance in a VPC, or a physical appliance that connects to another physical appliance in an on-premises network.
+Manages a Network Manager Connection.
+
+Use this resource to create a connection between two devices in your global network.
 
 ## Example Usage
 
@@ -23,22 +24,33 @@ resource "aws_networkmanager_connection" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `connected_device_id` - (Required) The ID of the second device in the connection.
-* `connected_link_id` - (Optional) The ID of the link for the second device.
-* `description` - (Optional) A description of the connection.
-* `device_id` - (Required) The ID of the first device in the connection.
-* `global_network_id` - (Required) The ID of the global network.
-* `link_id` - (Optional) The ID of the link for the first device.
+* `connected_device_id` - (Required) ID of the second device in the connection.
+* `device_id` - (Required) ID of the first device in the connection.
+* `global_network_id` - (Required) ID of the global network.
+
+The following arguments are optional:
+
+* `connected_link_id` - (Optional) ID of the link for the second device.
+* `description` - (Optional) Description of the connection.
+* `link_id` - (Optional) ID of the link for the first device.
 * `tags` - (Optional) Key-value tags for the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the connection.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the connection.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+* `update` - (Default `10m`)
 
 ## Import
 

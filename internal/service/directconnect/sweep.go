@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -63,7 +63,7 @@ func sweepConnections(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &directconnect.DescribeConnectionsInput{}
 	conn := client.DirectConnectClient(ctx)
@@ -101,7 +101,7 @@ func sweepGatewayAssociationProposals(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 	conn := client.DirectConnectClient(ctx)
@@ -157,7 +157,7 @@ func sweepGatewayAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	conn := client.DirectConnectClient(ctx)
@@ -294,7 +294,7 @@ func sweepGateways(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	conn := client.DirectConnectClient(ctx)
@@ -378,7 +378,7 @@ func sweepLags(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &directconnect.DescribeLagsInput{}
 	conn := client.DirectConnectClient(ctx)
@@ -416,7 +416,7 @@ func sweepMacSecKeys(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := &directconnect.DescribeConnectionsInput{}
 	dxConn := client.DirectConnectClient(ctx)

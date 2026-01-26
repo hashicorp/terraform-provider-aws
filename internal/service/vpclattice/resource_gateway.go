@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package vpclattice
 
@@ -12,23 +14,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,6 +41,8 @@ import (
 
 // @FrameworkResource("aws_vpclattice_resource_gateway", name="Resource Gateway")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceGatewayOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGatewayResource{}
 
@@ -47,13 +54,9 @@ func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type resourceGatewayResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourceGatewayResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*resourceGatewayResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpclattice_resource_gateway"
 }
 
 func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -67,6 +70,19 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"ipv4_addresses_per_eni": schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.AtLeast(1),
+					int32validator.AtMost(62),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.RequiresReplace(),
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -83,6 +99,9 @@ func (r *resourceGatewayResource) Schema(ctx context.Context, request resource.S
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ResourceGatewayStatus](),
@@ -135,6 +154,11 @@ func (r *resourceGatewayResource) Create(ctx context.Context, request resource.C
 	input.Tags = getTagsIn(ctx)
 	input.VpcIdentifier = fwflex.StringFromFramework(ctx, data.VPCID)
 
+	// Ipv4AddressesPerEni is irrelevant if IPAddressType is IPv6
+	if data.IPAddressType.ValueEnum() != awstypes.ResourceGatewayIpAddressTypeIpv6 {
+		input.Ipv4AddressesPerEni = fwflex.Int32FromFramework(ctx, data.IPV4AddressesPerEni)
+	}
+
 	outputCRG, err := conn.CreateResourceGateway(ctx, &input)
 
 	if err != nil {
@@ -174,7 +198,7 @@ func (r *resourceGatewayResource) Read(ctx context.Context, request resource.Rea
 
 	output, err := findResourceGatewayByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -253,9 +277,10 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
-	_, err := conn.DeleteResourceGateway(ctx, &vpclattice.DeleteResourceGatewayInput{
+	input := vpclattice.DeleteResourceGatewayInput{
 		ResourceGatewayIdentifier: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteResourceGateway(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -274,10 +299,6 @@ func (r *resourceGatewayResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *resourceGatewayResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetResourceGatewayOutput, error) {
 	input := vpclattice.GetResourceGatewayInput{
 		ResourceGatewayIdentifier: aws.String(id),
@@ -286,7 +307,7 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 	output, err := conn.GetResourceGateway(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -297,17 +318,17 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findResourceGatewayByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -320,7 +341,7 @@ func statusResourceGateway(ctx context.Context, conn *vpclattice.Client, id stri
 }
 
 func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceGatewayOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceGatewayStatusCreateInProgress, awstypes.ResourceGatewayStatusUpdateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceGatewayStatusActive),
 		Refresh:                   statusResourceGateway(ctx, conn, id),
@@ -338,7 +359,7 @@ func waitResourceGatewayActive(ctx context.Context, conn *vpclattice.Client, id 
 }
 
 func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceGatewayOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceGatewayStatusDeleteInProgress),
 		Target:  []string{},
 		Refresh: statusResourceGateway(ctx, conn, id),
@@ -355,15 +376,17 @@ func waitResourceGatewayDeleted(ctx context.Context, conn *vpclattice.Client, id
 }
 
 type resourceGatewayResourceModel struct {
-	ARN              types.String                                              `tfsdk:"arn"`
-	ID               types.String                                              `tfsdk:"id"`
-	IPAddressType    fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
-	Name             types.String                                              `tfsdk:"name"`
-	SecurityGroupIDs fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
-	Status           fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
-	SubnetIDs        fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
-	Tags             tftags.Map                                                `tfsdk:"tags"`
-	TagsAll          tftags.Map                                                `tfsdk:"tags_all"`
-	Timeouts         timeouts.Value                                            `tfsdk:"timeouts"`
-	VPCID            types.String                                              `tfsdk:"vpc_id"`
+	framework.WithRegionModel
+	ARN                 types.String                                              `tfsdk:"arn"`
+	ID                  types.String                                              `tfsdk:"id"`
+	IPAddressType       fwtypes.StringEnum[awstypes.ResourceGatewayIpAddressType] `tfsdk:"ip_address_type"`
+	IPV4AddressesPerEni types.Int32                                               `tfsdk:"ipv4_addresses_per_eni"`
+	Name                types.String                                              `tfsdk:"name"`
+	SecurityGroupIDs    fwtypes.SetOfString                                       `tfsdk:"security_group_ids"`
+	Status              fwtypes.StringEnum[awstypes.ResourceGatewayStatus]        `tfsdk:"status"`
+	SubnetIDs           fwtypes.SetOfString                                       `tfsdk:"subnet_ids"`
+	Tags                tftags.Map                                                `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                            `tfsdk:"timeouts"`
+	VPCID               types.String                                              `tfsdk:"vpc_id"`
 }

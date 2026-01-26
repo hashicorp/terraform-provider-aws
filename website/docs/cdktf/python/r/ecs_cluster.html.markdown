@@ -170,6 +170,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
 * `service_connect_defaults` - (Optional) Default Service Connect namespace. See [`service_connect_defaults` Block](#service_connect_defaults-block) for details.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
@@ -225,7 +226,6 @@ The `setting` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the cluster.
-* `id` - ARN that identifies the cluster.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -253,4 +253,4 @@ Using `terraform import`, import ECS clusters using the cluster name. For exampl
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-eb369f3378f4ec15c9415352837de55fe8e8dd9a1953726d45bed6355a9336be -->
+<!-- cache-key: cdktf-0.20.8 input-e367a347aeed7ca364c486ddb6273745fd543ff092421952bc06e05858ddf421 -->

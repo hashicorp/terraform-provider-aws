@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the MedicalVocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -107,4 +108,4 @@ Using `terraform import`, import Transcribe MedicalVocabulary using the `vocabul
 % terraform import aws_transcribe_medical_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ec2666cdcba506c91a439366946ad3db8a956be1cc1dfb2a6e10b62b3551dac0 -->
+<!-- cache-key: cdktf-0.20.8 input-a643fd29ad0104b790c33f51f5deebc72792fced3c7684ab6ad82b7c35cfd5ca -->

@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticationProtocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directoryId` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
 * `displayLabel` - (Required) Display label.
@@ -100,4 +101,4 @@ Using `terraform import`, import RADIUS settings using the directory ID. For exa
 % terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->
+<!-- cache-key: cdktf-0.20.8 input-703a60ef5d69b19402c1617cb0d9ca42fb3ae90041096384251b219bdc27296f -->

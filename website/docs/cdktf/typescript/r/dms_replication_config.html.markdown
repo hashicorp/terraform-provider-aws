@@ -53,6 +53,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `computeConfig` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `startReplication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replicationConfigIdentifier` - (Required) Unique identifier that you want to use to create the config.
@@ -70,8 +71,8 @@ This resource supports the following arguments:
 * `availabilityZone` - (Optional) The Availability Zone where the DMS Serverless replication using this configuration will run. The default value is a random.
 * `dnsNameServers` - (Optional) A list of custom DNS name servers supported for the DMS Serverless replication to access your source or target database.
 * `kmsKeyId` - (Optional) An Key Management Service (KMS) key Amazon Resource Name (ARN) that is used to encrypt the data during DMS Serverless replication. If you don't specify a value for the KmsKeyId parameter, DMS uses your default encryption key.
-* `maxCapacityUnits` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 2 DCUs as the minimum value allowed. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
-* `minCapacityUnits` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS scans the current activity of available source tables to identify an optimum setting for this parameter.
+* `maxCapacityUnits` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 1 DCUs as the minimum value allowed. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
+* `minCapacityUnits` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS sets the lowest allowed value, 1.
 * `multiAz` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availabilityZone` parameter if the `multiAz` parameter is set to `true`.
 * `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
@@ -99,6 +100,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dms_replication_config.example
+  identity = {
+    "arn" = "arn:aws:dms:us-east-1:123456789012:replication-config:example-config"
+  }
+}
+
+resource "aws_dms_replication_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DMS replication configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `arn`. For example:
 
@@ -130,4 +152,4 @@ Using `terraform import`, import a replication config using the `arn`. For examp
 % terraform import aws_dms_replication_config.example arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-86e6d3f65d28d35f34f5f46f6277a3024fd2ee92daeca5d7b43d0b122aa9b265 -->
+<!-- cache-key: cdktf-0.20.8 input-a051c2c95f3eb0e5ffcfea95c04da5f91fdab8eb82504169fc30362757b9ccce -->

@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configurationSetName` - (Required) The name of the configuration set.
 * `deliveryOptions` - (Optional) An object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`deliveryOptions` Block](#delivery_options-block) for details.
 * `reputationOptions` - (Optional) An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set. See [`reputationOptions` Block](#reputation_options-block) for details.
@@ -154,4 +155,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set using
 % terraform import aws_sesv2_configuration_set.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-241342fefebf27269fa69fbd8ee7fe802fa28b50c7b041bca4b7e55f6ebe4c34 -->
+<!-- cache-key: cdktf-0.20.8 input-c18e9185ee28dfdb9ff931be23e36acb5c1a21acc12e542aaa2dadc297d200fc -->

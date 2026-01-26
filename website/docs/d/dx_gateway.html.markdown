@@ -20,6 +20,8 @@ data "aws_dx_gateway" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `name` - (Required) Name of the gateway to retrieve.
 
 ## Attribute Reference
@@ -30,3 +32,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the gateway.
 * `id` - ID of the gateway.
 * `owner_account_id` - AWS Account ID of the gateway.
+* `tags` - A map of tags assigned to the gateway.

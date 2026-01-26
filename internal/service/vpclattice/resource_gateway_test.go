@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -165,11 +165,12 @@ func TestAccVPCLatticeResourceGateway_multipleSubnets(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeResourceGateway_tags(t *testing.T) {
+func TestAccVPCLatticeResourceGateway_ipv4AddressesPerEni(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourcegateway vpclattice.GetResourceGatewayOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_gateway.test"
+	addressType := "IPV4"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -181,34 +182,21 @@ func TestAccVPCLatticeResourceGateway_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccResourceGatewayConfig_ipv4AddressesPerEni(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, addressType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_addresses_per_eni", "5"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourcegateway/rgw-.+`)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccResourceGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccResourceGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -301,7 +289,7 @@ func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceGateway, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -320,7 +308,7 @@ func testAccCheckResourceGatewayDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfvpclattice.FindResourceGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -434,37 +422,16 @@ resource "aws_vpclattice_resource_gateway" "test" {
 `, rName))
 }
 
-func testAccResourceGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccResourceGatewayConfig_ipv4AddressesPerEni(rName string, ipAddressesPerEni int32) string {
 	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_resource_gateway" "test" {
-  name               = %[1]q
-  vpc_id             = aws_vpc.test.id
-  security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = [aws_subnet.test.id]
-  ip_address_type    = "IPV4"
-
-  tags = {
-    %[2]q = %[3]q
-  }
+  name                   = %[1]q
+  vpc_id                 = aws_vpc.test.id
+  security_group_ids     = [aws_security_group.test.id]
+  subnet_ids             = [aws_subnet.test.id]
+  ipv4_addresses_per_eni = %[2]d
 }
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccResourceGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpclattice_resource_gateway" "test" {
-  name               = %[1]q
-  vpc_id             = aws_vpc.test.id
-  security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = [aws_subnet.test.id]
-  ip_address_type    = "IPV4"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, ipAddressesPerEni))
 }
 
 func testAccResourceGatewayConfig_update1(rName string) string {

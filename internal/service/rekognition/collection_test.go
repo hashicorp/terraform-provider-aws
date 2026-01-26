@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition_test
@@ -10,24 +10,25 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrekognition "github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRekognitionCollection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
@@ -35,18 +36,21 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName),
+					testAccCheckCollectionExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "rekognition", "collection/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "collection_id"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -60,10 +64,10 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 func TestAccRekognitionCollection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_collection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
@@ -71,13 +75,13 @@ func TestAccRekognitionCollection_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceCollection, resourceName),
+					testAccCheckCollectionExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +92,7 @@ func TestAccRekognitionCollection_disappears(t *testing.T) {
 func TestAccRekognitionCollection_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_collection.test"
 
 	tags1 := `
@@ -108,7 +112,7 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
   }
 `
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
@@ -116,12 +120,12 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCollectionConfig_tags(rName, tags1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName),
+					testAccCheckCollectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -129,7 +133,7 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
 			{
 				Config: testAccCollectionConfig_tags(rName, tags2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName),
+					testAccCheckCollectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -138,7 +142,7 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
 			{
 				Config: testAccCollectionConfig_tags(rName, tags3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName),
+					testAccCheckCollectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -147,7 +151,7 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCollectionExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckCollectionExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -158,7 +162,7 @@ func testAccCheckCollectionExists(ctx context.Context, name string) resource.Tes
 			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameCollection, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RekognitionClient(ctx)
 		_, err := tfrekognition.FindCollectionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -169,9 +173,9 @@ func testAccCheckCollectionExists(ctx context.Context, name string) resource.Tes
 	}
 }
 
-func testAccCheckCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCollectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RekognitionClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rekognition_collection" {
@@ -179,7 +183,7 @@ func testAccCheckCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfrekognition.FindCollectionByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -195,7 +199,7 @@ func testAccCheckCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccCollectionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).RekognitionClient(ctx)
 
 	input := &rekognition.ListCollectionsInput{}
 	_, err := conn.ListCollections(ctx, input)
@@ -212,10 +216,6 @@ func testAccCollectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
   collection_id = %[1]q
-
-  tags = {
-    test = 1
-  }
 }
 `, rName)
 }

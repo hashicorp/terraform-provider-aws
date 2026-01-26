@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -14,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,12 +65,12 @@ func resourceBasePathMapping() *schema.Resource {
 	}
 }
 
-func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	domainName, basePath := d.Get(names.AttrDomainName).(string), d.Get("base_path").(string)
-	input := &apigateway.CreateBasePathMappingInput{
+	input := apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(domainName),
 		BasePath:   aws.String(basePath),
@@ -87,8 +89,8 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (interface{}, error) {
-		return conn.CreateBasePathMapping(ctx, input)
+	_, err := tfresource.RetryWhenIsA[any, *types.BadRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.CreateBasePathMapping(ctx, &input)
 	})
 
 	if err != nil {
@@ -100,7 +102,7 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -111,7 +113,7 @@ func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, me
 
 	mapping, err := findBasePathMappingByThreePartKey(ctx, conn, domainName, basePath, domainNameID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -134,7 +136,7 @@ func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -192,7 +194,7 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -202,7 +204,7 @@ func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Deleting API Gateway Base Path Mapping: %s", d.Id())
-	input := &apigateway.DeleteBasePathMappingInput{
+	input := apigateway.DeleteBasePathMappingInput{
 		DomainName: aws.String(domainName),
 		BasePath:   aws.String(basePath),
 	}
@@ -210,7 +212,7 @@ func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, 
 		input.DomainNameId = aws.String(domainNameID)
 	}
 
-	_, err = conn.DeleteBasePathMapping(ctx, input)
+	_, err = conn.DeleteBasePathMapping(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -260,7 +262,7 @@ func basePathMappingParseResourceID(id string) (string, string, string, error) {
 }
 
 func findBasePathMappingByThreePartKey(ctx context.Context, conn *apigateway.Client, domainName, basePath, domainNameID string) (*apigateway.GetBasePathMappingOutput, error) {
-	input := &apigateway.GetBasePathMappingInput{
+	input := apigateway.GetBasePathMappingInput{
 		BasePath:   aws.String(basePath),
 		DomainName: aws.String(domainName),
 	}
@@ -268,12 +270,11 @@ func findBasePathMappingByThreePartKey(ctx context.Context, conn *apigateway.Cli
 		input.DomainNameId = aws.String(domainNameID)
 	}
 
-	output, err := conn.GetBasePathMapping(ctx, input)
+	output, err := conn.GetBasePathMapping(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -282,7 +283,7 @@ func findBasePathMappingByThreePartKey(ctx context.Context, conn *apigateway.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

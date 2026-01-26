@@ -30,6 +30,7 @@ resource "aws_s3control_access_grants_location" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) The AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `iam_role_arn` - (Required) The ARN of the IAM role that S3 Access Grants should use when fulfilling runtime access
 requests to the location.

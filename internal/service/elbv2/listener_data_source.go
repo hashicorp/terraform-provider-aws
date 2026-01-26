@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -206,6 +208,45 @@ func dataSourceListener() *schema.Resource {
 								},
 							},
 						},
+						"jwt_validation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrIssuer: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"jwks_endpoint": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"additional_claim": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFormat: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"order": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -304,7 +345,7 @@ func dataSourceListener() *schema.Resource {
 	}
 }
 
-func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 

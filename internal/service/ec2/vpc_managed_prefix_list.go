@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -19,9 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,10 +41,9 @@ func resourceManagedPrefixList() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("entry")
 			}),
-			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -100,7 +100,7 @@ func resourceManagedPrefixList() *schema.Resource {
 	}
 }
 
-func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -133,14 +133,14 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	pl, err := findManagedPrefixListByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,7 +171,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -250,11 +250,12 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if len(descriptionOnlyRemovals) > 0 {
-				_, err := conn.ModifyManagedPrefixList(ctx, &ec2.ModifyManagedPrefixListInput{
+				removeInput := ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
-				})
+				}
+				_, err := conn.ModifyManagedPrefixList(ctx, &removeInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
@@ -302,15 +303,16 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceManagedPrefixListRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Managed Prefix List: %s", d.Id())
-	_, err := conn.DeleteManagedPrefixList(ctx, &ec2.DeleteManagedPrefixListInput{
+	input := ec2.DeleteManagedPrefixListInput{
 		PrefixListId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteManagedPrefixList(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
 		return diags
@@ -328,25 +330,26 @@ func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries int32) error {
-	_, err := conn.ModifyManagedPrefixList(ctx, &ec2.ModifyManagedPrefixListInput{
+	input := ec2.ModifyManagedPrefixListInput{
 		PrefixListId: aws.String(id),
 		MaxEntries:   aws.Int32(maxEntries),
-	})
+	}
+	_, err := conn.ModifyManagedPrefixList(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %w", id, err)
 	}
 
 	_, err = waitManagedPrefixListModified(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
+		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %w", id, err)
 	}
 
 	return nil
 }
 
-func expandAddPrefixListEntry(tfMap map[string]interface{}) awstypes.AddPrefixListEntry {
+func expandAddPrefixListEntry(tfMap map[string]any) awstypes.AddPrefixListEntry {
 	apiObject := awstypes.AddPrefixListEntry{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
@@ -360,7 +363,7 @@ func expandAddPrefixListEntry(tfMap map[string]interface{}) awstypes.AddPrefixLi
 	return apiObject
 }
 
-func expandAddPrefixListEntries(tfList []interface{}) []awstypes.AddPrefixListEntry {
+func expandAddPrefixListEntries(tfList []any) []awstypes.AddPrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -368,7 +371,7 @@ func expandAddPrefixListEntries(tfList []interface{}) []awstypes.AddPrefixListEn
 	var apiObjects []awstypes.AddPrefixListEntry
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -380,7 +383,7 @@ func expandAddPrefixListEntries(tfList []interface{}) []awstypes.AddPrefixListEn
 	return apiObjects
 }
 
-func expandRemovePrefixListEntry(tfMap map[string]interface{}) awstypes.RemovePrefixListEntry {
+func expandRemovePrefixListEntry(tfMap map[string]any) awstypes.RemovePrefixListEntry {
 	apiObject := awstypes.RemovePrefixListEntry{}
 
 	if v, ok := tfMap["cidr"].(string); ok && v != "" {
@@ -390,7 +393,7 @@ func expandRemovePrefixListEntry(tfMap map[string]interface{}) awstypes.RemovePr
 	return apiObject
 }
 
-func expandRemovePrefixListEntries(tfList []interface{}) []awstypes.RemovePrefixListEntry {
+func expandRemovePrefixListEntries(tfList []any) []awstypes.RemovePrefixListEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -398,7 +401,7 @@ func expandRemovePrefixListEntries(tfList []interface{}) []awstypes.RemovePrefix
 	var apiObjects []awstypes.RemovePrefixListEntry
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -410,8 +413,8 @@ func expandRemovePrefixListEntries(tfList []interface{}) []awstypes.RemovePrefix
 	return apiObjects
 }
 
-func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		tfMap["cidr"] = aws.ToString(v)
@@ -424,12 +427,12 @@ func flattenPrefixListEntry(apiObject awstypes.PrefixListEntry) map[string]inter
 	return tfMap
 }
 
-func flattenPrefixListEntries(apiObjects []awstypes.PrefixListEntry) []interface{} {
+func flattenPrefixListEntries(apiObjects []awstypes.PrefixListEntry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPrefixListEntry(apiObject))

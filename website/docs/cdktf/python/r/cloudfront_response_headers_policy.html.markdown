@@ -201,6 +201,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The response headers policy ARN.
 * `etag` - The current version of the response headers policy.
 * `id` - The identifier for the response headers policy.
 
@@ -229,4 +230,4 @@ Using `terraform import`, import Cloudfront Response Headers Policies using the 
 % terraform import aws_cloudfront_response_headers_policy.policy 658327ea-f89d-4fab-a63d-7e88639e58f9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-015ebf3c41b00de152866a203b3d14470dd71734e394f1f186a58180ccfe1018 -->
+<!-- cache-key: cdktf-0.20.8 input-6342c39bae1caf7a7f08b94c142f192dfa4db6ec11c8a42449942e17fbbe00d9 -->

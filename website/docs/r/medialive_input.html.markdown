@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinations` - (Optional) Destination settings for PUSH type inputs. See [Destinations](#destinations) for more details.
 * `input_devices` - (Optional) Settings for the devices. See [Input Devices](#input-devices) for more details.
 * `media_connect_flows` - (Optional) A list of the MediaConnect Flows. See [Media Connect Flows](#media-connect-flows) for more details.

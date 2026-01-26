@@ -85,6 +85,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hierarchyStructure` - (Required) A block that defines the hierarchy structure's levels. The `hierarchyStructure` block is documented below.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 
@@ -144,4 +145,4 @@ Using `terraform import`, import Amazon Connect User Hierarchy Structures using 
 % terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d4221332a1de6be2872d8c5ee9a0bd06fd2ef712cb35778939fcdd12ecf0c17c -->
+<!-- cache-key: cdktf-0.20.8 input-1ec63b94e553c040864bb96f69d9e98bc1f1f0df3abca8c09021fced4cc3f8e1 -->

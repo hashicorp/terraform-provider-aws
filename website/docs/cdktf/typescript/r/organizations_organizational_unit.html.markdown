@@ -60,6 +60,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_organizational_unit.example
+  identity = {
+    id = "ou-1234567"
+  }
+}
+
+resource "aws_organizations_organizational_unit" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the organizational unit.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Organizations Organizational Units using the `id`. For example:
 
 ```typescript
@@ -90,4 +115,4 @@ Using `terraform import`, import AWS Organizations Organizational Units using th
 % terraform import aws_organizations_organizational_unit.example ou-1234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e83646b093e28cb1e4ec4a1afa0a1e1832d418c207b7f14b799f6e614b256dc8 -->
+<!-- cache-key: cdktf-0.20.8 input-47d36d419e7fb1ef0a73c4585cab42d74c8abb97c37f8d4895438f6cea41c9d1 -->

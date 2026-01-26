@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -13,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +83,7 @@ func resourceAccess() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -124,7 +127,7 @@ func resourceAccess() *schema.Resource {
 	}
 }
 
-func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -141,7 +144,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]any))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -158,7 +161,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandPOSIXProfile(v.([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrRole); ok {
@@ -176,7 +179,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -187,7 +190,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	access, err := findAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -218,7 +221,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -237,7 +240,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("home_directory_mappings") {
-		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]any))
 	}
 
 	if d.HasChange("home_directory_type") {
@@ -254,7 +257,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("posix_profile") {
-		input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]any))
 	}
 
 	if d.HasChange(names.AttrRole) {
@@ -270,7 +273,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAccessRead(ctx, d, meta)...)
 }
 
-func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -280,10 +283,11 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
-	_, err = conn.DeleteAccess(ctx, &transfer.DeleteAccessInput{
+	input := transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
-	})
+	}
+	_, err = conn.DeleteAccess(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -324,7 +328,7 @@ func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID
 	output, err := conn.DescribeAccess(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -335,7 +339,7 @@ func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID
 	}
 
 	if output == nil || output.Access == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Access, nil

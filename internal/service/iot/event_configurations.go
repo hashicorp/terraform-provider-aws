@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -10,28 +12,30 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_iot_event_configurations", name="Event Configurations")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(hasExistsFunction=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(generator=false)
 func resourceEventConfigurations() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventConfigurationsPut,
 		ReadWithoutTimeout:   resourceEventConfigurationsRead,
 		UpdateWithoutTimeout: resourceEventConfigurationsPut,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"event_configurations": {
@@ -44,14 +48,14 @@ func resourceEventConfigurations() *schema.Resource {
 	}
 }
 
-func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	input := &iot.UpdateEventConfigurationsInput{}
 
-	if v, ok := d.GetOk("event_configurations"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EventConfigurations = tfmaps.ApplyToAllValues(v.(map[string]interface{}), func(v interface{}) awstypes.Configuration {
+	if v, ok := d.GetOk("event_configurations"); ok && len(v.(map[string]any)) > 0 {
+		input.EventConfigurations = tfmaps.ApplyToAllValues(v.(map[string]any), func(v any) awstypes.Configuration {
 			return awstypes.Configuration{
 				Enabled: v.(bool),
 			}
@@ -71,13 +75,13 @@ func resourceEventConfigurationsPut(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventConfigurationsRead(ctx, d, meta)...)
 }
 
-func resourceEventConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	output, err := findEventConfigurations(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Event Configurations (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -99,7 +103,7 @@ func findEventConfigurations(ctx context.Context, conn *iot.Client) (map[string]
 	output, err := conn.DescribeEventConfigurations(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -110,7 +114,7 @@ func findEventConfigurations(ctx context.Context, conn *iot.Client) (map[string]
 	}
 
 	if output == nil || len(output.EventConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EventConfigurations, nil

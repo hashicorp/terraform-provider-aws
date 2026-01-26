@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package redshiftserverless
 
@@ -19,18 +21,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Domain Association")
+// @FrameworkResource("aws_redshiftserverless_custom_domain_association", name="Custom Domain Association")
 func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customDomainAssociationResource{}
 
@@ -42,13 +45,9 @@ func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithC
 }
 
 type customDomainAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customDomainAssociationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*customDomainAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_redshiftserverless_custom_domain_association"
 }
 
 func (r *customDomainAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -134,7 +133,7 @@ func (r *customDomainAssociationResource) Read(ctx context.Context, request reso
 
 	output, err := findCustomDomainAssociationByTwoPartKey(ctx, conn, data.WorkgroupName.ValueString(), data.CustomDomainName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -222,7 +221,7 @@ func findCustomDomainAssociationByTwoPartKey(ctx context.Context, conn *redshift
 	output, err := conn.GetCustomDomainAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -233,13 +232,14 @@ func findCustomDomainAssociationByTwoPartKey(ctx context.Context, conn *redshift
 	}
 
 	if output == nil || output.CustomDomainCertificateExpiryTime == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 type customDomainAssociationResourceModel struct {
+	framework.WithRegionModel
 	CustomDomainCertificateARN        fwtypes.ARN       `tfsdk:"custom_domain_certificate_arn"`
 	CustomDomainCertificateExpiryTime timetypes.RFC3339 `tfsdk:"custom_domain_certificate_expiry_time"`
 	CustomDomainName                  types.String      `tfsdk:"custom_domain_name"`

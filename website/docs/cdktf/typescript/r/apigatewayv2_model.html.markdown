@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apiId` - (Required) API identifier.
 * `contentType` - (Required)  The content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.
 * `name` - (Required) Name of the model. Must be alphanumeric. Must be between 1 and 128 characters in length.
@@ -98,4 +99,4 @@ Using `terraform import`, import `aws_apigatewayv2_model` using the API identifi
 % terraform import aws_apigatewayv2_model.example aabbccddee/1122334
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-063f47681aa238116147c2530543550c6286bab9afb427347d6c9ef713ac5596 -->
+<!-- cache-key: cdktf-0.20.8 input-7240fd7c721fbbb475ef93144bd6a8c765dbf7888fc32060fe97f08fe32effe0 -->

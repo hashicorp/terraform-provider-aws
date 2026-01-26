@@ -48,6 +48,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizerFunctionArn` - (Required) The ARN of the authorizer's Lambda function.
 * `enableCachingForHttp`  - (Optional) Specifies whether the HTTP caching is enabled or not. Default: `false`.
 * `name` - (Required) The name of the authorizer.
@@ -92,4 +95,4 @@ Using `terraform import`, import IOT Authorizers using the name. For example:
 % terraform import aws_iot_authorizer.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fc60ef7cd562c3e99b100a1641cd648afe6e9b18f170f7c7eb8339fc049ab953 -->
+<!-- cache-key: cdktf-0.20.8 input-20ce0de0e39a1c1bba34229da617821343acba3c6dcab34b78f2adcf637f476b -->
