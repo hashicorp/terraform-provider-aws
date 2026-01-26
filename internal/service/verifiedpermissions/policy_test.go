@@ -11,12 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	interflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -31,24 +29,24 @@ func TestAccVerifiedPermissionsPolicy_basic(t *testing.T) {
 	}
 
 	var policy verifiedpermissions.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_policy.test"
 
 	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatement),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
@@ -70,22 +68,22 @@ func TestAccVerifiedPermissionsPolicy_templateLinked(t *testing.T) {
 	}
 
 	var policy verifiedpermissions.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_templateLinked(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.template_linked.0.policy_template_id"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.template_linked.0.principal.0.entity_id", "TestUsers"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.template_linked.0.principal.0.entity_type", "User"),
@@ -110,7 +108,7 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 	}
 
 	var policy verifiedpermissions.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_policy.test"
 
 	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
@@ -118,19 +116,19 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 	policyStatementEffectUpdated := "forbid (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
 	policyStatementResourceUpdated := "forbid (principal, action == Action::\"view\", resource in Album:: \"test_album_updated\");"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatement),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
@@ -144,7 +142,7 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementActionUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
@@ -158,7 +156,7 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementEffectUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
@@ -172,7 +170,7 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementResourceUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
@@ -189,24 +187,24 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 	}
 
 	var policy verifiedpermissions.GetPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_policy.test"
 
 	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					testAccCheckPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -215,9 +213,9 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedpermissions_policy" {
@@ -246,7 +244,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPolicyExists(ctx context.Context, name string, policy *verifiedpermissions.GetPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, t *testing.T, name string, policy *verifiedpermissions.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -257,7 +255,7 @@ func testAccCheckPolicyExists(ctx context.Context, name string, policy *verified
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNamePolicy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 		rID, err := interflex.ExpandResourceId(rs.Primary.ID, tfverifiedpermissions.ResourcePolicyIDPartsCount, false)
 		if err != nil {
 			return err
