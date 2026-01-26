@@ -600,7 +600,15 @@ func TestAccS3ObjectDataSource_body_base64(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectDataSourceConfig_bodyBase64(rName),
+				Config: testAccObjectDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+			{
+				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
@@ -614,6 +622,14 @@ func TestAccS3ObjectDataSource_body_base64(t *testing.T) {
 						bodyString := state.RootModule().Outputs["body_base64"].Value.(string)
 						return resource.TestCheckResourceAttr(resourceName, names.AttrContent, bodyString)(state)
 					},
+				),
+			},
+			{
+				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
 				),
 			},
 		},
@@ -1089,7 +1105,7 @@ data "aws_s3_object" "test" {
 `, rName))
 }
 
-func testAccObjectDataSourceConfig_bodyBase64(rName string) string {
+func testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName string, downloadBody bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1104,10 +1120,12 @@ resource "aws_s3_object" "test" {
 data "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = aws_s3_object.test.key
+
+  download_body = %[2]t
 }
 
 output "body_base64" {
-  value = base64decode(data.aws_s3_object.test.body_base64)
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64): null
 }
-`, rName)
+`, rName, downloadBody)
 }
