@@ -74,6 +74,7 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `checksum_mode` - (Optional) To retrieve the object's checksum, this argument must be `ENABLED`. If you enable `checksum_mode` and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `ENABLED`
+* `download_body` - Set to `true` to always download object data to `body_base64` attribute. Defaults to `false`.
 * `key` - (Required) Full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
