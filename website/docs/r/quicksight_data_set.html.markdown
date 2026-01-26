@@ -367,6 +367,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 ### refresh_properties
 
 * `refresh_configuration` - (Required) The refresh configuration for the data set. See [refresh_configuration](#refresh_configuration).
+* `failure_configuration` - (Optional) The failure configuration of a dataset. See [failure_configuration](#failure_configuration).
 
 ### refresh_configuration
 
@@ -381,6 +382,14 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `column_name` - (Required) The name of the lookback window column.
 * `size` - (Required) The lookback window column size.
 * `size_unit` - (Required) The size unit that is used for the lookback window column. Valid values for this structure are `HOUR`, `DAY`, and `WEEK`.
+
+### failure_configuration
+
+* `email_alert` - (Optional) The configuration settings for the email alerts that are sent when a dataset refresh fails. See [email_alert](#email_alert)
+
+### email_alert
+
+* `alert_status` - (Optional) The status value that determines if email alerts are sent.
 
 ### tag_rules
 
