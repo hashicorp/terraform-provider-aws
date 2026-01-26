@@ -88,7 +88,9 @@ const (
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	ctx := t.Context()
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	const expectedEndpointRegion = providerRegion
+	// Multi-party Approval uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for Multi-party Approval, but the AWS SDK's endpoint resolution returns one for the current region.
+	const expectedEndpointRegion = "us-east-1" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
