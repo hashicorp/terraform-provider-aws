@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"encoding/base64"
 	"regexp"
 	"strings"
 	"time"
@@ -39,6 +40,10 @@ func dataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"body": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"body_base64": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +187,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
-	input := &s3.HeadObjectInput{
+	input := s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
@@ -196,7 +201,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 		input.VersionId = aws.String(v.(string))
 	}
 
-	output, err := findObject(ctx, conn, input, optFns...)
+	output, err := findObject(ctx, conn, &input, optFns...)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -254,24 +259,26 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
+	downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
+	buf := manager.NewWriteAtBuffer(make([]byte, 0))
+	inputObjectDownload := s3.GetObjectInput{
+		Bucket:    aws.String(bucket),
+		Key:       aws.String(key),
+		VersionId: output.VersionId,
+	}
+	if v, ok := d.GetOk("range"); ok {
+		input.Range = aws.String(v.(string))
+	}
+
+	_, err = downloader.Download(ctx, buf, &inputObjectDownload)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+
+	base64Body := base64.StdEncoding.EncodeToString(buf.Bytes())
+	d.Set("body_base64", base64Body)
+
 	if isContentTypeAllowed(output.ContentType) {
-		downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
-		buf := manager.NewWriteAtBuffer(make([]byte, 0))
-		input := &s3.GetObjectInput{
-			Bucket:    aws.String(bucket),
-			Key:       aws.String(key),
-			VersionId: output.VersionId,
-		}
-		if v, ok := d.GetOk("range"); ok {
-			input.Range = aws.String(v.(string))
-		}
-
-		_, err := downloader.Download(ctx, buf, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-		}
-
 		d.Set("body", string(buf.Bytes()))
 	}
 
