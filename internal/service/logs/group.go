@@ -102,6 +102,11 @@ func resourceGroup() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -265,9 +270,26 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return diags
 	}
 
-	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", d.Id())
+	forceDestroy := d.Get("force_destroy").(bool)
+	logGroupName := d.Id()
+
+	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", logGroupName)
+
+	if forceDestroy {
+		// If retention policy is set, we need to clear it first to ensure proper deletion
+		if v, ok := d.GetOk("retention_in_days"); ok && v.(int) > 0 {
+			input := cloudwatchlogs.DeleteRetentionPolicyInput{
+				LogGroupName: aws.String(logGroupName),
+			}
+			_, err := conn.DeleteRetentionPolicy(ctx, &input)
+			if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return sdkdiag.AppendErrorf(diags, "removing retention policy on CloudWatch Logs Log Group (%s): %s", logGroupName, err)
+			}
+		}
+	}
+
 	input := cloudwatchlogs.DeleteLogGroupInput{
-		LogGroupName: aws.String(d.Id()),
+		LogGroupName: aws.String(logGroupName),
 	}
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.OperationAbortedException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteLogGroup(ctx, &input)
@@ -281,7 +303,56 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
+	if forceDestroy {
+		// Wait for log group to be fully deleted before removing from state
+		err = waitLogGroupDeleted(ctx, conn, logGroupName)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudWatch Logs Log Group (%s) deletion: %s", logGroupName, err)
+		}
+	}
+
 	return diags
+}
+
+// waitLogGroupDeleted waits for a log group to be fully deleted
+func waitLogGroupDeleted(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"Deleting"},
+		Target:  []string{"Deleted"},
+		Refresh: statusLogGroup(ctx, conn, logGroupName),
+		Timeout: 5 * time.Minute,
+		Delay:   10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+// statusLogGroup returns a StateRefreshFunc that checks log group deletion status
+func statusLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) retry.StateRefreshFunc {
+	return func(context.Context) (any, string, error) {
+		input := cloudwatchlogs.DescribeLogGroupsInput{
+			LogGroupNamePrefix: aws.String(logGroupName),
+		}
+
+		output, err := conn.DescribeLogGroups(ctx, &input)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, "Deleted", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, lg := range output.LogGroups {
+			if aws.ToString(lg.LogGroupName) == logGroupName {
+				return lg, "Deleting", nil
+			}
+		}
+
+		return nil, "Deleted", nil
+	}
 }
 
 func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.LogGroup, error) {
@@ -319,6 +390,7 @@ func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes
 	d.Set(names.AttrName, lg.LogGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
-	// Support in-place update of non-refreshable attribute.
+	// Support in-place update of non-refreshable attributes.
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	d.Set("force_destroy", d.Get("force_destroy"))
 }
