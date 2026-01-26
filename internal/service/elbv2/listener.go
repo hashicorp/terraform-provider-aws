@@ -620,6 +620,44 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	lbARN := d.Get("load_balancer_arn").(string)
+
+	// Check for duplicate listener on same load balancer with same port/protocol
+	if v, ok := d.GetOk(names.AttrPort); ok {
+		port := int32(v.(int))
+
+		// Determine protocol (using same logic as creation)
+		var protocol awstypes.ProtocolEnum
+		if v, ok := d.GetOk(names.AttrProtocol); ok {
+			protocol = awstypes.ProtocolEnum(v.(string))
+		} else if strings.Contains(lbARN, "loadbalancer/app/") {
+			// Default to HTTP for Application Load Balancers if no protocol specified
+			if _, ok := d.GetOk(names.AttrCertificateARN); ok {
+				protocol = awstypes.ProtocolEnumHttps
+			} else {
+				protocol = awstypes.ProtocolEnumHttp
+			}
+		}
+
+		// Only check for duplicates if we have a protocol to check
+		if protocol != "" {
+			// Query existing listeners on this load balancer
+			describeInput := &elasticloadbalancingv2.DescribeListenersInput{
+				LoadBalancerArn: aws.String(lbARN),
+			}
+			existingListener, err := findListener(ctx, conn, describeInput, func(listener *awstypes.Listener) bool {
+				return aws.ToInt32(listener.Port) == port && listener.Protocol == protocol
+			})
+
+			if err != nil && !tfresource.NotFound(err) {
+				return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listeners for Load Balancer (%s): %s", lbARN, err)
+			}
+
+			if existingListener != nil {
+				return sdkdiag.AppendErrorf(diags, "ELBv2 Listener on port %d with protocol %s already exists on Load Balancer (%s)", port, protocol, lbARN)
+			}
+		}
+	}
+
 	input := &elasticloadbalancingv2.CreateListenerInput{
 		LoadBalancerArn: aws.String(lbARN),
 		Tags:            getTagsIn(ctx),
