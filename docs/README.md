@@ -7,7 +7,16 @@ This directory contains documentation for the [Terraform AWS Provider Contributo
 
 ## Local Development
 
-To serve the contributing guide locally, [`mkdocs`](https://www.mkdocs.org/user-guide/installation/) and the [`mkdocs-material`](https://github.com/squidfunk/mkdocs-material#quick-start) extension must be installed. Both require Python and `pip`.
+To serve the contributing guide locally, [`mkdocs`](https://www.mkdocs.org/user-guide/installation/) and the [`mkdocs-material`](https://github.com/squidfunk/mkdocs-material#quick-start) extension must be installed.
+Both require Python and `pip`.
+
+If using [Homebrew](https://brew.sh), install both with
+
+```console
+% brew install mkdocs-material
+```
+
+Otherwise, install directly using `pip3`
 
 ```console
 % pip3 install mkdocs
