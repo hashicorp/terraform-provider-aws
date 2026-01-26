@@ -4,6 +4,7 @@
 package networkmanager_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1297,7 +1298,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_attachmentRoutingP
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction,
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON),
 				),
@@ -1306,7 +1307,8 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_attachmentRoutingP
 	})
 }
 
-const testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction = `
+func testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction() string {
+	return fmt.Sprintf(`
 data "aws_networkmanager_core_network_policy_document" "test" {
   version = "2025.11"
 
@@ -1314,7 +1316,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     asn_ranges = ["64512-65534"]
 
     edge_locations {
-      location = "us-east-1"
+      location = %[1]q
     }
   }
 
@@ -1335,4 +1337,5 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
   }
 }
-`
+`, acctest.Region())
+}
