@@ -602,8 +602,8 @@ func prepareCapacityUpdates(d *schema.ResourceData) []updateOp {
 	}
 
 	ops = slices.DeleteFunc(ops, func(op updateOp) bool {
-		// When price_performance_target is disabled, prevent subsequent operations from
-		// setting base_capacity again
+		// When disabling price_performance_target, base_capacity is already set in the same
+		// request. Remove any duplicate base_capacity-only operations
 		return hasPPTDisabledChange && op.name == opUpdateBaseCapacity
 	})
 
