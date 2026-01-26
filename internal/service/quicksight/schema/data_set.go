@@ -608,15 +608,10 @@ func DataSetRefreshPropertiesSchema() *schema.Schema {
 							"email_alert": {
 								Type:     schema.TypeList,
 								Optional: true,
-								MinItems: 1,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"alert_status": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
-										},
+										"alert_status": stringEnumSchema[awstypes.RefreshFailureAlertStatus](attrOptional),
 									},
 								},
 							},
