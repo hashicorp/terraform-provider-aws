@@ -612,7 +612,7 @@ func TestAccS3ObjectDataSource_body_base64(t *testing.T) {
 
 					func(state *terraform.State) error {
 						bodyString := state.RootModule().Outputs["body_base64"].Value.(string)
-						return resource.TestCheckResourceAttr(resourceName, "content", bodyString)(state)
+						return resource.TestCheckResourceAttr(resourceName, names.AttrContent, bodyString)(state)
 					},
 				),
 			},
