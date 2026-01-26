@@ -83,6 +83,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the object.
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
+* `body_base64` - Object data as base64 encoded string.
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cache_control` - Caching behavior along the request/reply chain.
 * `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
