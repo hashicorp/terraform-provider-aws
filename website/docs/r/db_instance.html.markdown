@@ -474,6 +474,29 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 
 * `enabled` - (Optional) Enables [low-downtime updates](#low-downtime-updates) when `true`.
   Default is `false`.
+#### Example
+
+```hcl
+resource "aws_db_instance" "example" {
+  identifier          = "example"
+  engine              = "postgres"
+  engine_version      = "15"
+  instance_class      = "db.t3.micro"
+  allocated_storage   = 20
+  username            = "admin"
+  password            = "example-password"
+  skip_final_snapshot = true
+
+  # Blue/Green updates are set with a BLOCK (not an argument).
+  blue_green_update {
+    enabled = true
+  }
+}
+``` 
+> **Note:** `blue_green_update` is a **block**, not an argument.  
+> Using `blue_green_update = { ... }` will cause an error like:  
+> *"An argument named `blue_green_update` is not expected here. Did you mean to define a block of type `blue_green_update`?"*
+
 
 [instance-replication]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
