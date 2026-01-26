@@ -267,7 +267,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 		VersionId: output.VersionId,
 	}
 	if v, ok := d.GetOk("range"); ok {
-		input.Range = aws.String(v.(string))
+		inputObjectDownload.Range = aws.String(v.(string))
 	}
 
 	_, err = downloader.Download(ctx, buf, &inputObjectDownload)
