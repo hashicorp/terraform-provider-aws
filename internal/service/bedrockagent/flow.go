@@ -897,7 +897,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 											},
 										},
 									},
-									"input": schema.ListNestedBlock{
+									"inputs": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeInputModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeBetween(0, 20),
@@ -927,7 +927,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 											},
 										},
 									},
-									"output": schema.ListNestedBlock{
+									"outputs": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeOutputModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeBetween(0, 5),
@@ -1250,9 +1250,9 @@ func (m flowConnectionConfigurationModel) Expand(ctx context.Context) (result an
 
 type flowNodeModel struct {
 	Configuration fwtypes.ListNestedObjectValueOf[flowNodeConfigurationModel] `tfsdk:"configuration"`
-	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]         `tfsdk:"input"`
+	Inputs        fwtypes.ListNestedObjectValueOf[flowNodeInputModel]         `tfsdk:"inputs"`
 	Name          types.String                                                `tfsdk:"name"`
-	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel]        `tfsdk:"output"`
+	Outputs       fwtypes.ListNestedObjectValueOf[flowNodeOutputModel]        `tfsdk:"outputs"`
 	Type          fwtypes.StringEnum[awstypes.FlowNodeType]                   `tfsdk:"type"`
 }
 
