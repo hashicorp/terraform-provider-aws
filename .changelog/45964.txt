@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc_security_group_ingress_rule: Fix `ModifySecurityGroupRules` API error and prevent false diffs when using `referenced_security_group_id` with `accountId/groupId` format
+```
+
+```release-note:bug
+resource/aws_vpc_security_group_egress_rule: Fix `ModifySecurityGroupRules` API error and prevent false diffs when using `referenced_security_group_id` with `accountId/groupId` format
+```
