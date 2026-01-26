@@ -661,14 +661,11 @@ service "arcregionswitch" {
 
   names {
     provider_name_upper = "ARCRegionSwitch"
-    human_friendly      = "Application Resilience Controller Region Switch"
+    human_friendly      = "ARC (Application Recovery Controller) Region Switch"
   }
 
   endpoint_info {
     endpoint_api_call = "ListPlans"
-    endpoint_region_overrides = {
-      "aws" = "us-east-1"
-    }
   }
 
   resource_prefix {
@@ -677,7 +674,7 @@ service "arcregionswitch" {
 
   provider_package_correct = "arcregionswitch"
   doc_prefix               = ["arcregionswitch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "arczonalshift" {
@@ -693,7 +690,7 @@ service "arczonalshift" {
 
   names {
     provider_name_upper = "ARCZonalShift"
-    human_friendly      = "Application Recovery Controller Zonal Shift"
+    human_friendly      = "ARC (Application Recovery Controller) Zonal Shift"
   }
 
   endpoint_info {
@@ -706,7 +703,7 @@ service "arczonalshift" {
 
   provider_package_correct = "arczonalshift"
   doc_prefix               = ["arczonalshift_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "athena" {

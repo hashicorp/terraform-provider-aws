@@ -4,6 +4,8 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
+ARC (Application Recovery Controller) Region Switch
+ARC (Application Recovery Controller) Zonal Shift
 Account Management
 Amazon Q Business
 Amplify
@@ -17,8 +19,6 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
-Application Recovery Controller Zonal Shift
-Application Resilience Controller Region Switch
 Application Signals
 Athena
 Audit Manager
