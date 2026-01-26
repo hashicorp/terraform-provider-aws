@@ -46,8 +46,9 @@ This resource supports the following arguments:
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
      `false`.
-* `availability_zones` - (Optional) A list of EC2 Availability Zones that
-  instances in the DB cluster can be created in.
+* `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the DB cluster can be created in.
+  DocumentDB automatically assigns 3 AZs if less than 3 AZs are configured, which will show as a difference requiring resource recreation next Terraform apply.
+  We recommend specifying 3 AZs or using [the `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) if necessary.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
@@ -70,6 +71,7 @@ This resource supports the following arguments:
   show up in logs. Please refer to the DocumentDB Naming Constraints. Conflicts with `master_password` and `manage_master_user_password`.
 * `master_password_wo_version` - (Optional) Used together with `master_password_wo` to trigger an update. Increment this value when an update to the `master_password_wo` is required.
 * `master_username` - (Required unless a `snapshot_identifier` or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user.
+* `network_type` - The network type of the DB cluster (`IPV4` or `DUAL`).
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00

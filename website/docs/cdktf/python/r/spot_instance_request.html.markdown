@@ -27,8 +27,8 @@ price availability or by a user.
 
 ~> **NOTE:** Because their behavior depends on the live status of the spot
 market, Spot Instance Requests have a unique lifecycle that makes them behave
-differently than other Terraform resources. Most importantly: there is __no
-guarantee__ that a Spot Instance exists to fulfill the request at any given
+differently than other Terraform resources. Most importantly: there is **no
+guarantee** that a Spot Instance exists to fulfill the request at any given
 point in time. See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
 for more information.
@@ -65,7 +65,9 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 Spot Instance Requests support all the same arguments as [`aws_instance`](instance.html), with the addition of:
+
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
@@ -84,9 +86,9 @@ Spot Instance Requests support all the same arguments as [`aws_instance`](instan
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Spot Instance Request ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-These attributes are exported, but they are expected to change over time and so
-should only be used for informational purposes, not for resource dependencies:
+The following attributes are exported, but they are expected to change over time and so should only be used for informational purposes, not for resource dependencies:
 
 * `spot_bid_status` - The current [bid
   status](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html)
@@ -103,7 +105,6 @@ should only be used for informational purposes, not for resource dependencies:
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC
 * `private_ip` - The private IP address assigned to the instance
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -113,4 +114,4 @@ should only be used for informational purposes, not for resource dependencies:
 * `read` - (Default `15m`)
 * `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-50307933fada942576beaa181659096ae40adb8da4b5a7ed19aaaa574eb2d97a -->
+<!-- cache-key: cdktf-0.20.8 input-3c8d9d417a791c4e27b860748141dc76bf531c247fe983ae0328aa35b7f13ffd -->

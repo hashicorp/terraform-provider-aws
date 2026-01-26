@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer
@@ -19,7 +19,7 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttyp
 	if rd.Id() != "" {
 		arnARN, err := arn.Parse(rd.Id())
 		if err != nil {
-			return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+			return fmt.Errorf("could not parse import ID %q as ARN: %w", rd.Id(), err)
 		}
 		rd.Set(attr.ResourceAttributeName(), rd.Id())
 		for _, attr := range identitySpec.IdentityDuplicateAttrs {
@@ -54,7 +54,7 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttyp
 
 	arnARN, err := arn.Parse(arnVal)
 	if err != nil {
-		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", attr.Name(), arnVal, err)
+		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %w", attr.Name(), arnVal, err)
 	}
 
 	rd.Set(names.AttrRegion, arnARN.Region)
@@ -70,7 +70,7 @@ func RegionalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttyp
 func RegionalARNValue(_ context.Context, rd *schema.ResourceData, attrName string, arnValue string) error {
 	arnARN, err := arn.Parse(arnValue)
 	if err != nil {
-		return fmt.Errorf("could not parse %q as ARN: %s", arnValue, err)
+		return fmt.Errorf("could not parse %q as ARN: %w", arnValue, err)
 	}
 	rd.Set(attrName, arnValue)
 
@@ -93,7 +93,7 @@ func GlobalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttypes
 	if rd.Id() != "" {
 		_, err := arn.Parse(rd.Id())
 		if err != nil {
-			return fmt.Errorf("could not parse import ID %q as ARN: %s", rd.Id(), err)
+			return fmt.Errorf("could not parse import ID %q as ARN: %w", rd.Id(), err)
 		}
 		rd.Set(attr.ResourceAttributeName(), rd.Id())
 		for _, attr := range identitySpec.IdentityDuplicateAttrs {
@@ -120,7 +120,7 @@ func GlobalARN(_ context.Context, rd *schema.ResourceData, identitySpec inttypes
 
 	_, err = arn.Parse(arnVal)
 	if err != nil {
-		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %s", attr.Name(), arnVal, err)
+		return fmt.Errorf("identity attribute %q: could not parse %q as ARN: %w", attr.Name(), arnVal, err)
 	}
 
 	rd.Set(attr.ResourceAttributeName(), arnVal)

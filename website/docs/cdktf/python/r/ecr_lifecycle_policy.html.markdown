@@ -87,6 +87,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecr_lifecycle_policy.example
+  identity = {
+    repository = "tf-example"
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `repository` - (String) Name of the ECR repository.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Lifecycle Policy using the name of the repository. For example:
 
 ```python
@@ -110,4 +136,4 @@ Using `terraform import`, import ECR Lifecycle Policy using the name of the repo
 % terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-487ed98978ebc4eddd7f97bad9cf62d8746ef3704442c80acbaac795635f6ad5 -->
+<!-- cache-key: cdktf-0.20.8 input-53d56512218d03c2134728fa742975b333d9d826165629799db2caf9c4197f2f -->

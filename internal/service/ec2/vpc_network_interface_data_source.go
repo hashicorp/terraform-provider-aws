@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -90,6 +92,10 @@ func dataSourceNetworkInterface() *schema.Resource {
 						},
 						"instance_owner_id": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 					},
@@ -244,6 +250,10 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkI
 
 	if v := apiObject.InstanceOwnerId; v != nil {
 		tfMap["instance_owner_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
 	}
 
 	return tfMap

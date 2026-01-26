@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package logs
 
@@ -7,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -340,7 +341,7 @@ func flattenMetricTransformation(apiObject awstypes.MetricTransformation) map[st
 	}
 
 	if v := apiObject.DefaultValue; v != nil {
-		tfMap[names.AttrDefaultValue] = strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
+		tfMap[names.AttrDefaultValue] = flex.Float64ToStringValue(v)
 	}
 
 	if v := apiObject.Dimensions; v != nil {

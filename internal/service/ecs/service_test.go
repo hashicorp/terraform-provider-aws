@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os/exec"
+	"strconv"
 	"testing"
 	"time"
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,17 +44,17 @@ func Test_GetRoleNameFromARN(t *testing.T) {
 		{"empty", "", ""},
 		{
 			names.AttrRole,
-			"arn:aws:iam::0123456789:role/EcsService", //lintignore:AWSAT005
+			"arn:aws:iam::0123456789:role/EcsService", // lintignore:AWSAT005
 			"EcsService",
 		},
 		{
 			"role with path",
-			"arn:aws:iam::0123456789:role/group/EcsService", //lintignore:AWSAT005
+			"arn:aws:iam::0123456789:role/group/EcsService", // lintignore:AWSAT005
 			"/group/EcsService",
 		},
 		{
 			"role with complex path",
-			"arn:aws:iam::0123456789:role/group/subgroup/my-role", //lintignore:AWSAT005
+			"arn:aws:iam::0123456789:role/group/subgroup/my-role", // lintignore:AWSAT005
 			"/group/subgroup/my-role",
 		},
 	}
@@ -77,7 +79,7 @@ func TestClustereNameFromARN(t *testing.T) {
 		{"empty", "", ""},
 		{
 			"cluster",
-			"arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", //lintignore:AWSAT003,AWSAT005
+			"arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster", // lintignore:AWSAT003,AWSAT005
 			"my-cluster",
 		},
 	}
@@ -111,17 +113,17 @@ func TestServiceNameFromARN(t *testing.T) {
 		},
 		{
 			name:     "short ARN format",
-			arn:      "arn:aws:ecs:us-west-2:123456789:service/service_name", //lintignore:AWSAT003,AWSAT005
+			arn:      "arn:aws:ecs:us-west-2:123456789:service/service_name", // lintignore:AWSAT003,AWSAT005
 			expected: names.AttrServiceName,
 		},
 		{
 			name:     "long ARN format",
-			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name", //lintignore:AWSAT003,AWSAT005
+			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name", // lintignore:AWSAT003,AWSAT005
 			expected: names.AttrServiceName,
 		},
 		{
 			name:     "ARN with special characters",
-			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster-name/service-name-123", //lintignore:AWSAT003,AWSAT005
+			arn:      "arn:aws:ecs:us-west-2:123456789:service/cluster-name/service-name-123", // lintignore:AWSAT003,AWSAT005
 			expected: "service-name-123",
 		},
 	}
@@ -156,11 +158,11 @@ func TestAccECSService_basic(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster", "aws_ecs_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", "aws_ecs_task_definition.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -185,9 +187,9 @@ func TestAccECSService_basic(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("service/%s/%s", clusterName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -290,7 +292,7 @@ func TestAccECSService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -379,13 +381,33 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
+				Config:      testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, false),
+				ExpectError: regexache.MustCompile(`force_new_deployment should be true when capacity_provider_strategy is being updated`),
+			},
+			{
+				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "10"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -407,6 +429,9 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 1, 0, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -418,6 +443,9 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 				Config: testAccServiceConfig_capacityProviderStrategy(rName, 10, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "10"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.base", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -456,10 +484,13 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.capacity_provider", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -467,6 +498,9 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategy(rName, 1, "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.capacity_provider", "FARGATE_SPOT"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.0.weight", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -478,10 +512,11 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 				Config: testAccServiceConfig_updateCapacityProviderStrategyRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -1012,6 +1047,14 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "deployment_configuration.0.lifecycle_hook.*.role_arn", "aws_iam_role.global", names.AttrARN),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "POST_SCALE_UP"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "POST_TEST_TRAFFIC_SHIFT"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "[1,\"2\",true]",
+						"lifecycle_stages.0": "POST_SCALE_UP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "3.14",
+						"lifecycle_stages.0": "TEST_TRAFFIC_SHIFT",
+					}),
 					// Load balancer advanced configuration checks
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.alternate_target_group_arn"),
@@ -1035,10 +1078,91 @@ func TestAccECSService_BlueGreenDeployment_basic(t *testing.T) {
 					// Lifecycle hooks configuration checks
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "deployment_configuration.0.lifecycle_hook.*.lifecycle_stages.*", "PRE_SCALE_UP"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "{\"bool_key\":true,\"int_key\":10,\"list_key\":[1,\"2\",true],\"object_key\":{\"bool_key\":true,\"int_key\":10,\"list_key\":[1,\"2\",true],\"string_key\":\"string_val\"},\"string_key\":\"string_val\"}",
+						"lifecycle_stages.0": "PRE_SCALE_UP",
+					}),
 					// Service Connect test traffic rules checks
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.test_traffic_rules.0.header.0.name", "x-test-header-2"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.test_traffic_rules.0.header.0.value.0.exact", "test-value-2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_BlueGreenDeployment_outOfBandRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "2"),
+					testAccCheckServiceRemoveBlueGreenDeploymentConfigurations(ctx, &service),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.lifecycle_hook.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
+	acctest.Skip(t, "SIGINT handling can't reliably be tested in CI")
+
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttrPair(resourceName, "task_definition", "aws_ecs_task_definition.test", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName, false),
+				PreConfig: func() {
+					go func() {
+						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start() // lintignore:XR007
+					}()
+				},
+				ExpectError: regexache.MustCompile("execution halted|context canceled"),
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttrPair(resourceName, "task_definition", "aws_ecs_task_definition.test", names.AttrARN),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1110,6 +1234,14 @@ func TestAccECSService_BlueGreenDeployment_changeStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       acctest.CtTrue,
+						"lifecycle_stages.0": "POST_SCALE_UP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "deployment_configuration.0.lifecycle_hook.*", map[string]string{
+						"hook_details":       "\"Test string\"",
+						"lifecycle_stages.0": "TEST_TRAFFIC_SHIFT",
+					}),
 				),
 			},
 			{
@@ -1203,7 +1335,7 @@ func TestAccECSService_BlueGreenDeployment_waitServiceActive(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
@@ -2577,31 +2709,483 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "ENABLED"),
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingDisabled)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingDisabled)),
+				},
+			},
+			{
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
+			},
+		},
+	})
+}
+
+// Linear and Canary Deployment Strategy Tests
+
+func TestAccECSService_LinearDeployment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_linearDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.linear_configuration.0.step_percent", "50"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.linear_configuration.0.step_bake_time_in_minutes", "1"),
 				),
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName),
+				Config: testAccServiceConfig_linearDeployment_updated(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.linear_configuration.0.step_percent", "25"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.linear_configuration.0.step_bake_time_in_minutes", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_LinearDeployment_outOfBandRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_linearDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+					testAccCheckServiceRemoveLinearDeploymentConfigurations(ctx, &service),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccServiceConfig_linearDeployment_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_LinearDeployment_createFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceConfig_linearDeployment_withFailure(rName, true),
+				ExpectError: regexache.MustCompile(`No rollback candidate was found`),
+			},
+		},
+	})
+}
+
+func TestAccECSService_LinearDeployment_changeStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_linearDeployment_zeroBakeTime(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
 				),
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "DISABLED"),
+				Config: testAccServiceConfig_linearDeployment_switchToRolling(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "ROLLING"),
 				),
 			},
 			{
-				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, "ENABLED"),
+				Config: testAccServiceConfig_linearDeployment_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_LinearDeployment_updateFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_linearDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+				),
+			},
+			{
+				Config:      testAccServiceConfig_linearDeployment_withFailure(rName, true),
+				ExpectError: regexache.MustCompile(`Service deployment rolled back`),
+			},
+		},
+	})
+}
+
+func TestAccECSService_LinearDeployment_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_linearDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_linearDeployment_zeroBakeTime(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_LinearDeployment_waitServiceActive(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_linearDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "LINEAR"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.canary_configuration.0.canary_percent", "20"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.canary_configuration.0.canary_bake_time_in_minutes", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_canaryDeployment_updated(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.bake_time_in_minutes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.canary_configuration.0.canary_percent", "10"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.canary_configuration.0.canary_bake_time_in_minutes", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_outOfBandRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+					testAccCheckServiceRemoveCanaryDeploymentConfigurations(ctx, &service),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_createFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceConfig_canaryDeployment_withFailure(rName, true),
+				ExpectError: regexache.MustCompile(`No rollback candidate was found`),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_changeStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_canaryDeployment_zeroBakeTime(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_canaryDeployment_switchToRolling(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "ROLLING"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_updateFailure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+				),
+			},
+			{
+				Config:      testAccServiceConfig_canaryDeployment_withFailure(rName, true),
+				ExpectError: regexache.MustCompile(`Service deployment rolled back`),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_canaryDeployment_zeroBakeTime(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_CanaryDeployment_waitServiceActive(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16]
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_canaryDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "CANARY"),
 				),
 			},
 		},
@@ -2619,7 +3203,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -2648,21 +3232,20 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		var output *awstypes.Service
-		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+		err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 			var err error
 			output, err = tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
-			if tfresource.NotFound(err) {
-				return retry.RetryableError(err)
+			if retry.NotFound(err) {
+				return tfresource.RetryableError(err)
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			return nil
 		})
-
 		if err != nil {
 			return err
 		}
@@ -2682,6 +3265,59 @@ func testAccCheckServiceDisableServiceConnect(ctx context.Context, service *awst
 			Service: service.ServiceName,
 			ServiceConnectConfiguration: &awstypes.ServiceConnectConfiguration{
 				Enabled: false,
+			},
+		}
+
+		_, err := conn.UpdateService(ctx, input)
+		return err
+	}
+}
+
+func testAccCheckServiceRemoveBlueGreenDeploymentConfigurations(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		input := &ecs.UpdateServiceInput{
+			Cluster: service.ClusterArn,
+			Service: service.ServiceName,
+			DeploymentConfiguration: &awstypes.DeploymentConfiguration{
+				Strategy:          awstypes.DeploymentStrategyRolling,
+				BakeTimeInMinutes: aws.Int32(0),
+				LifecycleHooks:    []awstypes.DeploymentLifecycleHook{},
+			},
+		}
+
+		_, err := conn.UpdateService(ctx, input)
+		return err
+	}
+}
+
+func testAccCheckServiceRemoveLinearDeploymentConfigurations(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		input := &ecs.UpdateServiceInput{
+			Cluster: service.ClusterArn,
+			Service: service.ServiceArn,
+			DeploymentConfiguration: &awstypes.DeploymentConfiguration{
+				Strategy: awstypes.DeploymentStrategyRolling,
+			},
+		}
+
+		_, err := conn.UpdateService(ctx, input)
+		return err
+	}
+}
+
+func testAccCheckServiceRemoveCanaryDeploymentConfigurations(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		input := &ecs.UpdateServiceInput{
+			Cluster: service.ClusterArn,
+			Service: service.ServiceArn,
+			DeploymentConfiguration: &awstypes.DeploymentConfiguration{
+				Strategy: awstypes.DeploymentStrategyRolling,
 			},
 		}
 
@@ -3289,7 +3925,7 @@ resource "aws_ecs_task_definition" "test" {
       essential = true
       environment = [
         {
-          name  = "TEST_SUFFIX"
+          name  = "test_name"
           value = "test_val"
         }
       ]
@@ -3343,12 +3979,14 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
+      hook_details     = jsonencode([1, "2", true])
     }
 
     lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
+      hook_details     = "3.14"
     }
   }
 
@@ -3429,7 +4067,7 @@ resource "aws_ecs_task_definition" "should_fail" {
       ]
       environment = [
         {
-          name  = "TEST_SUFFIX"
+          name  = "test_name"
           value = "test_val"
         }
       ]
@@ -3532,10 +4170,47 @@ func testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName string, sho
 	}
 
 	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+
+resource "aws_ecs_task_definition" "test2" {
+  family                   = "%[1]s-test2"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  container_definitions = jsonencode([
+    {
+      name      = "test"
+      image     = "nginx:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      environment = [
+        {
+          name  = "test_name_2"
+          value = "test_val_2"
+        }
+      ]
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+          protocol      = "tcp"
+          name          = "http"
+          appProtocol   = "http"
+        }
+      ]
+    }
+  ])
+}
+
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.test.arn
+  task_definition = aws_ecs_task_definition.test2.arn
   desired_count   = 1
   launch_type     = "FARGATE"
 
@@ -3547,6 +4222,12 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = %[2]s
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["PRE_SCALE_UP"]
+      hook_details = jsonencode({ "bool_key" : true, "string_key" : "string_val", "int_key" : 10, "list_key" : [1, "2", true], "object_key" : {
+        "bool_key" : true,
+        "string_key" : "string_val",
+        "int_key" : 10,
+        "list_key" : [1, "2", true]
+      } })
     }
   }
 
@@ -3592,6 +4273,7 @@ resource "aws_ecs_service" "test" {
     }
   }
 
+  sigint_rollback       = true
   wait_for_steady_state = true
 
   depends_on = [
@@ -3685,12 +4367,14 @@ resource "aws_ecs_service" "test" {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
+      hook_details     = "true"
     }
 
     lifecycle_hook {
       hook_target_arn  = aws_lambda_function.hook_success.arn
       role_arn         = aws_iam_role.global.arn
       lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
+      hook_details     = jsonencode("Test string")
     }
   }
 
@@ -3823,6 +4507,446 @@ resource "aws_ecs_service" "test" {
   ]
 }
 `, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_linearDeployment_basic(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "LINEAR"
+    bake_time_in_minutes = 2
+
+    linear_configuration {
+      step_percent              = 50
+      step_bake_time_in_minutes = 1
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_linearDeployment_updated(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "LINEAR"
+    bake_time_in_minutes = 3
+
+    linear_configuration {
+      step_percent              = 25
+      step_bake_time_in_minutes = 2
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_linearDeployment_zeroBakeTime(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "LINEAR"
+    bake_time_in_minutes = 0
+
+    linear_configuration {
+      step_percent              = 100
+      step_bake_time_in_minutes = 0
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_linearDeployment_switchToRolling(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy = "ROLLING"
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName))
+}
+
+func testAccServiceConfig_linearDeployment_withFailure(rName string, shouldFail bool) string {
+	var taskDef string
+	if shouldFail {
+		taskDef = "aws_ecs_task_definition.should_fail.arn"
+	} else {
+		taskDef = "aws_ecs_task_definition.test.arn"
+	}
+
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "should_fail" {
+  family                   = "%[1]s-should-fail"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.global.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "test"
+      image     = "nginx:invalid-tag"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          protocol      = "tcp"
+        }
+      ]
+    }
+  ])
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = %[2]s
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "LINEAR"
+    bake_time_in_minutes = 1
+
+    linear_configuration {
+      step_percent              = 50
+      step_bake_time_in_minutes = 1
+    }
+  }
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.primary.arn
+    container_name   = "test"
+    container_port   = 80
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.alternate.arn
+      production_listener_rule   = aws_lb_listener_rule.production.arn
+      test_listener_rule         = aws_lb_listener_rule.test.arn
+      role_arn                   = aws_iam_role.global.arn
+    }
+  }
+
+  wait_for_steady_state = true
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, taskDef))
+}
+
+func testAccServiceConfig_canaryDeployment_basic(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "CANARY"
+    bake_time_in_minutes = 2
+
+    canary_configuration {
+      canary_percent              = 20
+      canary_bake_time_in_minutes = 1
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_canaryDeployment_updated(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "CANARY"
+    bake_time_in_minutes = 3
+
+    canary_configuration {
+      canary_percent              = 10
+      canary_bake_time_in_minutes = 2
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_canaryDeployment_zeroBakeTime(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "CANARY"
+    bake_time_in_minutes = 0
+
+    canary_configuration {
+      canary_percent              = 100
+      canary_bake_time_in_minutes = 0
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_canaryDeployment_switchToRolling(rName string) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy = "ROLLING"
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName))
+}
+
+func testAccServiceConfig_canaryDeployment_withFailure(rName string, shouldFail bool) string {
+	var taskDef string
+	if shouldFail {
+		taskDef = "aws_ecs_task_definition.should_fail.arn"
+	} else {
+		taskDef = "aws_ecs_task_definition.test.arn"
+	}
+
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_task_definition" "should_fail" {
+  family                   = "%[1]s-should-fail"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.global.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "test"
+      image     = "nginx:invalid-tag"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          protocol      = "tcp"
+        }
+      ]
+    }
+  ])
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = %[2]s
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "CANARY"
+    bake_time_in_minutes = 1
+
+    canary_configuration {
+      canary_percent              = 20
+      canary_bake_time_in_minutes = 1
+    }
+  }
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.primary.arn
+    container_name   = "test"
+    container_port   = 80
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.alternate.arn
+      production_listener_rule   = aws_lb_listener_rule.production.arn
+      test_listener_rule         = aws_lb_listener_rule.test.arn
+      role_arn                   = aws_iam_role.global.arn
+    }
+  }
+
+  wait_for_steady_state = true
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, taskDef))
 }
 
 func testAccServiceConfig_deploymentConfiguration_strategy(rName string, strategy string) string {
@@ -4281,6 +5405,8 @@ resource "aws_ecs_service" "test" {
   name                 = %[1]q
   task_definition      = aws_ecs_task_definition.test.arn
 
+  availability_zone_rebalancing = "DISABLED"
+
   ordered_placement_strategy {
     type  = "binpack"
     field = "memory"
@@ -4358,6 +5484,8 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
+  availability_zone_rebalancing = "DISABLED"
+
   ordered_placement_strategy {
     type  = "binpack"
     field = "memory"
@@ -4429,6 +5557,8 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
 
+  availability_zone_rebalancing = "DISABLED"
+
   ordered_placement_strategy {
     type = "random"
   }
@@ -4463,6 +5593,8 @@ resource "aws_ecs_service" "test" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+
+  availability_zone_rebalancing = "DISABLED"
 
   ordered_placement_strategy {
     type  = "binpack"
@@ -7298,7 +8430,12 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
-func testAccServiceConfig_availabilityZoneRebalancing(rName string, serviceRebalancing string) string {
+func testAccServiceConfig_availabilityZoneRebalancing(rName string, azRebalancing awstypes.AvailabilityZoneRebalancing) string {
+	val := string(azRebalancing)
+	if val != "null" {
+		val = strconv.Quote(val)
+	}
+
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -7324,37 +8461,7 @@ resource "aws_ecs_service" "test" {
   name                          = %[1]q
   cluster                       = aws_ecs_cluster.test.id
   task_definition               = aws_ecs_task_definition.test.arn
-  availability_zone_rebalancing = %[2]q
+  availability_zone_rebalancing = %[2]s
 }
-  `, rName, serviceRebalancing)
-}
-
-func testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<DEFINITION
-  [
-    {
-      "cpu": 128,
-      "essential": true,
-      "image": "ghost:latest",
-      "memory": 128,
-      "name": "ghost"
-    }
-  ]
-  DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-}
-  `, rName)
+  `, rName, val)
 }

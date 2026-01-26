@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package finspace
 
@@ -14,13 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -256,7 +259,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := findKxEnvironmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxEnvironment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -403,7 +406,7 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 }
 
 func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.EnvironmentStatusCreateRequested, types.EnvironmentStatusCreating),
 		Target:                    enum.Slice(types.EnvironmentStatusCreated),
 		Refresh:                   statusKxEnvironment(ctx, conn, id),
@@ -421,7 +424,7 @@ func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id str
 }
 
 func waitTransitGatewayConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.TgwStatusUpdateRequested, types.TgwStatusUpdating),
 		Target:  enum.Slice(types.TgwStatusSuccessfullyUpdated),
 		Refresh: statusTransitGatewayConfiguration(ctx, conn, id),
@@ -437,7 +440,7 @@ func waitTransitGatewayConfigurationUpdated(ctx context.Context, conn *finspace.
 }
 
 func waitCustomDNSConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DnsStatusUpdateRequested, types.DnsStatusUpdating),
 		Target:  enum.Slice(types.DnsStatusSuccessfullyUpdated),
 		Refresh: statusCustomDNSConfiguration(ctx, conn, id),
@@ -453,7 +456,7 @@ func waitCustomDNSConfigurationUpdated(ctx context.Context, conn *finspace.Clien
 }
 
 func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentStatusDeleteRequested, types.EnvironmentStatusDeleting),
 		Target:  []string{},
 		Refresh: statusKxEnvironment(ctx, conn, id),
@@ -468,10 +471,10 @@ func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id str
 	return nil, err
 }
 
-func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
+func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -483,10 +486,10 @@ func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) 
 	}
 }
 
-func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -498,10 +501,10 @@ func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Clien
 	}
 }
 
-func statusCustomDNSConfiguration(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
+func statusCustomDNSConfiguration(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -521,7 +524,7 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -531,14 +534,14 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	}
 	// Treat DELETED status as NotFound
 	if out != nil && out.Status == types.EnvironmentStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   errors.New("status is deleted"),
 			LastRequest: in,
 		}
 	}
 
 	if out == nil || out.EnvironmentArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

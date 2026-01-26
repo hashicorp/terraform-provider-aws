@@ -743,7 +743,7 @@ The `rate_based_statement` block supports the following arguments:
 
   **NOTE:** This setting doesn't determine how often AWS WAF checks the rate, but how far back it looks each time it checks. AWS WAF checks the rate about every 10 seconds.
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [`forwarded_ip_config`](#forwarded_ip_config-block) below for details.
-* `limit` - (Required) Limit on requests per 5-minute period for a single originating IP address.
+* `limit` - (Required) Limit on requests per 5-minute (or `evaluation_window_sec`) period for a single originating IP address (or for other aggregate key, depending on `aggregate_key_type` and `custom_key`).
 * `scope_down_statement` - (Optional) Optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement-block) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
 
 ### `regex_match_statement` Block
@@ -838,8 +838,17 @@ The `managed_rule_group_configs` block support the following arguments:
 * `creation_path` - (Required) The path of the account creation endpoint for your application. This is the page on your website that accepts the completed registration form for a new user. This page must accept POST requests.
 * `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `registration_page_path` - (Required) The path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
-* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block) for more details.
+* `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block-acfp) for more details.
 * `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.
+
+### `request_inspection` Block (ACFP)
+
+* `addressFields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`addressFields`](#address_fields-block) for more details.
+* `emailField` (Optional) The name of the field in the request payload that contains your customer's email. See [`emailField`](#email_field-block) for more details.
+* `passwordField` (Optional) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
+* `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
+* `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
+* `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
 
 ### `aws_managed_rules_anti_ddos_rule_set` Block
 
@@ -863,11 +872,8 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `request_inspection` Block
 
-* `address_fields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`address_fields`](#address_fields-block) for more details.
-* `email_field` (Optional) The name of the field in the request payload that contains your customer's email. See [`email_field`](#email_field-block) for more details.
 * `password_field` (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
 * `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `phone_number_fields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phone_number_fields`](#phone_number_fields-block) for more details.
 * `username_field` (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
 
 ### `address_fields` Block

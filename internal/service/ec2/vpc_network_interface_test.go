@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -318,7 +318,7 @@ func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &networkInterface),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterface(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -418,7 +418,52 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
-						"device_index": "1",
+						"device_index":       "1",
+						"network_card_index": "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
+					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+			},
+		},
+	})
+}
+
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
+// This test requires an expensive instance type that supports multiple network cards, such as "c6in.32xlarge" or "c6in.metal".
+// Set the environment variable `VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS` to run this test.
+func TestAccVPCNetworkInterface_attachmentNetworkCardIndex(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "attachment.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
+						"device_index":       "1",
+						"network_card_index": "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
@@ -1109,7 +1154,7 @@ func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1444,6 +1489,52 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName string, networkCardIndex int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.32xlarge", "c6in.metal"),
+		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test2.id
+  associate_public_ip_address = false
+  private_ip                  = "172.16.11.50"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  attachment {
+    instance           = aws_instance.test.id
+    device_index       = 1
+    network_card_index = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, networkCardIndex))
 }
 
 func testAccVPCNetworkInterfaceConfig_externalAttachment(rName string) string {

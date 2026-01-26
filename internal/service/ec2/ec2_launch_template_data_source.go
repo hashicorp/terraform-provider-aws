@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -701,6 +703,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrAvailabilityZone: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"group_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

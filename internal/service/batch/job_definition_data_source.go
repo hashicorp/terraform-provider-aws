@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package batch
 
@@ -156,7 +158,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		output, err := findJobDefinitions(ctx, conn, input)
 
 		if len(output) == 0 {
-			err = tfresource.NewEmptyResultError(input)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		if err != nil {
@@ -179,7 +181,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			})
 
 			if i == -1 {
-				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) revision (%d)", name, status, revision), tfresource.NewEmptyResultError(input).Error())
+				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) revision (%d)", name, status, revision), tfresource.NewEmptyResultError().Error())
 
 				return
 			}

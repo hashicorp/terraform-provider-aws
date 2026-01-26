@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrock_guardrail: Add `input_action`, `input_enabled`, `input_modalities`, `output_action`, `output_enabled`, and `output_modalities` arguments to the `content_policy_config.filters_config` block
+```

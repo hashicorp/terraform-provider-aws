@@ -1,17 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
-	"sync"
+	"math/big"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -27,72 +26,8 @@ type Retryable func(error) (bool, error)
 
 // RetryWhen retries the function `f` when the error it returns satisfies `retryable`.
 // `f` is retried until `timeout` expires.
-func RetryWhen(ctx context.Context, timeout time.Duration, f func() (any, error), retryable Retryable) (any, error) {
-	var output any
-
-	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
-		var err error
-		var again bool
-
-		output, err = f()
-		again, err = retryable(err)
-
-		if again {
-			return sdkretry.RetryableError(err)
-		}
-
-		if err != nil {
-			return sdkretry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-// RetryGWhen is the generic version of RetryWhen which obviates the need for a type
-// assertion after the call. It retries the function `f` when the error it returns
-// satisfies `retryable`. `f` is retried until `timeout` expires.
-func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, error), retryable Retryable) (T, error) {
-	var output T
-
-	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
-		var err error
-		var again bool
-
-		output, err = f()
-		again, err = retryable(err)
-
-		if again {
-			return sdkretry.RetryableError(err)
-		}
-
-		if err != nil {
-			return sdkretry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return output, nil
+func RetryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable) (T, error) {
+	return retryWhen(ctx, timeout, f, retryable)
 }
 
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
@@ -207,7 +142,7 @@ func RetryWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), isNewResource bool) (T, error) {
 	return retry.Op(f).If(func(_ T, err error) (bool, error) {
-		if isNewResource && NotFound(err) {
+		if isNewResource && retry.NotFound(err) {
 			return true, err
 		}
 
@@ -223,7 +158,7 @@ type Options struct {
 	ContinuousTargetOccurence int           // Number of times the Target state has to occur continuously
 }
 
-func (o Options) Apply(c *sdkretry.StateChangeConf) {
+func (o Options) Apply(c *retry.StateChangeConf) {
 	if o.Delay > 0 {
 		c.Delay = o.Delay
 	}
@@ -256,7 +191,12 @@ func WithDelay(delay time.Duration) OptionsFunc {
 // WithDelayRand sets the delay to a value between 0s and the passed duration
 func WithDelayRand(delayRand time.Duration) OptionsFunc {
 	return func(o *Options) {
-		o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
+		n, err := rand.Int(rand.Reader, big.NewInt(delayRand.Milliseconds()))
+		if err != nil {
+			// Fallback to maximum delay if crypto/rand fails
+			n = big.NewInt(delayRand.Milliseconds())
+		}
+		o.Delay = time.Duration(n.Int64()) * time.Millisecond
 	}
 }
 
@@ -287,65 +227,35 @@ func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
 // Retry allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
-func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, optFns ...OptionsFunc) error {
-	// These are used to pull the error out of the function; need a mutex to
-	// avoid a data race.
-	var resultErr error
-	var resultErrMu sync.Mutex
-
-	options := Options{}
+func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *RetryError, optFns ...OptionsFunc) error {
+	options := Options{
+		MinPollInterval: 500 * time.Millisecond, //nolint:mnd // 500ms is the Plugin SDKv2 default
+	}
 	for _, fn := range optFns {
 		fn(&options)
 	}
 
-	c := &sdkretry.StateChangeConf{
-		Pending:    []string{"retryableerror"},
-		Target:     []string{"success"},
-		Timeout:    timeout,
-		MinTimeout: 500 * time.Millisecond,
-		Refresh: func() (any, string, error) {
-			rerr := f()
-
-			resultErrMu.Lock()
-			defer resultErrMu.Unlock()
-
-			if rerr == nil {
-				resultErr = nil
-				return 42, "success", nil
-			}
-
-			resultErr = rerr.Err
-
-			if rerr.Retryable {
-				return 42, "retryableerror", nil
-			}
-
-			return nil, "quit", rerr.Err
+	_, err := retryWhen(ctx, timeout,
+		func(ctx context.Context) (any, error) {
+			return nil, f(ctx)
 		},
-	}
+		func(err error) (bool, error) {
+			if err, ok := errs.As[*RetryError](err); ok {
+				if err != nil {
+					return err.isRetryable, err.err
+				}
+				return false, nil
+			}
 
-	options.Apply(c)
+			return false, err
+		},
+		backoff.WithDelay(backoff.SDKv2HelperRetryCompatibleDelay(options.Delay, options.PollInterval, options.MinPollInterval)),
+	)
 
-	_, waitErr := c.WaitForStateContext(ctx)
-
-	// Need to acquire the lock here to be able to avoid race using resultErr as
-	// the return value
-	resultErrMu.Lock()
-	defer resultErrMu.Unlock()
-
-	// resultErr may be nil because the wait timed out and resultErr was never
-	// set; this is still an error
-	if resultErr == nil {
-		return waitErr
-	}
-	// resultErr takes precedence over waitErr if both are set because it is
-	// more likely to be useful
-	return resultErr
+	return err
 }
 
-type retryable func(error) (bool, error)
-
-func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable retryable, opts ...backoff.Option) (T, error) {
+func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable, opts ...backoff.Option) (T, error) {
 	return retry.Op(f).If(func(_ T, err error) (bool, error) {
 		return retryable(err)
 	})(ctx, timeout, opts...)

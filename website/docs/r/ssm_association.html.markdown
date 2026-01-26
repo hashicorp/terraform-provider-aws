@@ -251,6 +251,7 @@ This resource supports the following arguments:
 * `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `association_name` - (Optional) The descriptive name for the association.
 * `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
+* `calendar_names` - (Optional) One or more Systems Manager Change Calendar names. The association runs only when the Change Calendar is open.
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
@@ -286,11 +287,37 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_association.example
+  identity = {
+    association_id = "10abcdef-0abc-1234-5678-90abcdef123456"
+  }
+}
+
+resource "aws_ssm_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `association_id` - (String) ID of the SSM association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
 ```terraform
 import {
-  to = aws_ssm_association.test-association
+  to = aws_ssm_association.example
   id = "10abcdef-0abc-1234-5678-90abcdef123456"
 }
 ```
@@ -298,5 +325,5 @@ import {
 Using `terraform import`, import SSM associations using the `association_id`. For example:
 
 ```console
-% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+% terraform import aws_ssm_association.example 10abcdef-0abc-1234-5678-90abcdef123456
 ```

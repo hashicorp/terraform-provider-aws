@@ -80,6 +80,7 @@ The following arguments are optional:
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
+* `logging_configuration` - (Optional) Configuration block with logging configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
 * `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
 * `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
@@ -108,6 +109,13 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_tests_enabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeout_minutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
+
+### logging_configuration
+
+The following arguments are optional:
+
+* `image_log_group_name` - (Optional) Name of the CloudWatch Log Group to send image logs to.
+* `pipeline_log_group_name` - (Optional) Name of the CloudWatch Log Group to send pipeline logs to.
 
 ### schedule
 
@@ -155,6 +163,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_image_pipeline.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example"
+  }
+}
+
+resource "aws_imagebuilder_image_pipeline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder image pipeline.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
 

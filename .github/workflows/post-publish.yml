@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Post Publish
 
 on:
@@ -5,7 +8,7 @@ on:
     inputs:
       release_tag:
         type: string
-        description: 'Semver release tag e.g. 1.1.0 (v prefix will be added automatically)'
+        description: "Semver release tag e.g. 1.1.0 (v prefix will be added automatically)"
         required: true
 
 jobs:
@@ -13,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@90353323866d42ef3686f589d834ba5f30ce6534 # v0.14.0
+        uses: breathingdust/github-jira-tidy@25fc54d07fdd98ec9ad14c962fc2dfdc524c48f0 # v0.17.0
         with:
-          jira_host: 'hashicorp.atlassian.net'
-          jira_username: 'sdavis@hashicorp.com'
+          jira_host: "hashicorp.atlassian.net"
+          jira_username: "sdavis3@ibm.com"
           jira_password: ${{ secrets.jira_password }}
           jira_jql_filter: ${{ secrets.jira_jql_filter }}
-          jira_github_url_field_id: 'cf[10089]'
+          jira_github_url_field_id: "Issue Link[URL Field]"
           github_release_name: v${{ github.event.inputs.release_tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

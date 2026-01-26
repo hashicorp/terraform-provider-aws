@@ -48,9 +48,10 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) The AWS IoT Certificate ARN or Amazon Cognito Identity ID.
 * `thing` - (Required) The name of the thing.
+* `thing_principal_type` - (Optional) The type of relationship to specify when attaching a principal to a thing. Valid values are `EXCLUSIVE_THING` (the thing will be the only one attached to the principal) or `NON_EXCLUSIVE_THING` (multiple things can be attached to the principal). Defaults to `NON_EXCLUSIVE_THING`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-a366ef677589b84a1367df4c5a1d0fdc33e3820caf0b7fe08d98a3d77e30f0e6 -->
+<!-- cache-key: cdktf-0.20.8 input-c873a0763f90bef9207d6cd8217274a8b60de2b0b76878bae66306d383da05f7 -->

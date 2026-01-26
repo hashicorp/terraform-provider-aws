@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -31,8 +31,6 @@ func TestAccDataZoneAssetType_basic(t *testing.T) {
 
 	var assettype datazone.GetAssetTypeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_asset_type.test"
 	projectName := "aws_datazone_project.test"
 	domainName := "aws_datazone_domain.test"
@@ -48,7 +46,7 @@ func TestAccDataZoneAssetType_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAssetTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssetTypeConfig_basic(rName, pName, dName),
+				Config: testAccAssetTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -79,8 +77,6 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 
 	var assettype datazone.GetAssetTypeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datazone_asset_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,10 +90,10 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAssetTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssetTypeConfig_basic(rName, pName, dName),
+				Config: testAccAssetTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceAssetType, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceAssetType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,8 +160,8 @@ func testAccAssetTypeImportStateIdFunc(resourceName string) resource.ImportState
 	}
 }
 
-func testAccAssetTypeConfig_basic(rName, pName, dName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), fmt.Sprintf(`
+func testAccAssetTypeConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_datazone_asset_type" "test" {
   description               = %[1]q
   domain_identifier         = aws_datazone_domain.test.id

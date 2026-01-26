@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -13,7 +13,6 @@ provider "aws" {
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = var.rName
-  visibility          = var.rName
 
   tags = var.resource_tags
 }

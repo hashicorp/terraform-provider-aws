@@ -109,6 +109,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeartifact_repository_permissions_policy.example
+  identity = {
+    "arn" = "arn:aws:codeartifact:us-west-2:123456789012:repository/example-domain/example-repo"
+  }
+}
+
+resource "aws_codeartifact_repository_permissions_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository Permissions Policies using the CodeArtifact Repository ARN. For example:
 
 ```typescript
@@ -139,4 +160,4 @@ Using `terraform import`, import CodeArtifact Repository Permissions Policies us
 % terraform import aws_codeartifact_repository_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-67711a3a4aa4d0f5f8059dc33a8972e13bff56da2a95882748e689ea8ac61b9a -->
+<!-- cache-key: cdktf-0.20.8 input-f92acb04ce87065e02f467c779a70eadd9a1e2da02eb1629e4769dd6881884d1 -->

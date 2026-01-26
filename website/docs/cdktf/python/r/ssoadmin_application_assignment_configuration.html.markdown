@@ -54,6 +54,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssoadmin_application_assignment_configuration.example
+  identity = {
+    "arn" = "arn:aws:sso::123456789012:application/ssoins-1234567890abcdef/apl-1234567890abcdef"
+  }
+}
+
+resource "aws_ssoadmin_application_assignment_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SSO application.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Application Assignment Configuration using the `id`. For example:
 
 ```python
@@ -77,4 +98,4 @@ Using `terraform import`, import SSO Admin Application Assignment Configuration 
 % terraform import aws_ssoadmin_application_assignment_configuration.example arn:aws:sso::123456789012:application/id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d2e30a58f52e19ae15a14ceee35887bbc8bb788b03abf4de890e527928c03318 -->
+<!-- cache-key: cdktf-0.20.8 input-ffa55329744f4ec9f9950dde22fcfb6155d1432bf6b23ba1c7370d772f6d6199 -->

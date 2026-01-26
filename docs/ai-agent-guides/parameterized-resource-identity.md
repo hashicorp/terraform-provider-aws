@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding Resource Identity to parameterized Resources
 
 You are working on the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws), specifically focused on adding [resource identity](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity) to Plugin SDKV2 resources whose identity is composed from multiple parameters (parameterized).
@@ -32,7 +35,7 @@ Use the following steps to add resource identity to an existing resource:
 				}
 ```
 
-- If the service does not use generated tag tests, you will need to create template files in the `testdata/tmpl` directory. For each resource, create a file named `<resource>_tags.gtpl` (e.g., `trust_store_tags.gtpl`).
+- If the service does not use generated tag tests, you will need to create template files in the `testdata/tmpl` directory. For each resource, create a file named `<resource>_basic.gtpl` (e.g., `trust_store_basic.gtpl`).
 - Populate each template file with the configuration from the resource's `_basic` test. If populating from the `_basic` configuration, be sure to replace any string format directives (e.g. `name = %[1]q`) with a corresponding reference to a variable (e.g. `name = var.rName`).
 - The generators will use the template files to generate the resource identity test configuration. These will be located in the `testdata` directory for the service. **Do not manually create test directories or files as they will be generated.**
 - The region template must be included inside each resource block in the template files. Add it as the first line after the resource declaration:
@@ -41,7 +44,7 @@ Use the following steps to add resource identity to an existing resource:
 resource "aws_service_thing" "test" {
 {{- template "region" }}
   name = var.rName
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 ```
 
@@ -66,7 +69,42 @@ data "aws_region" "current" {
 
 Repeat steps 2 and 3 for each resource in the service. When all resources are complete, proceed to the next section.
 
-## 4. Submit a pull request
+## 4. Update import documentation
+
+- Update the import section of the registry documentation for each resource following the template below.
+
+````markdown
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = <resource-name>.example
+  identity = {
+    <required key/value pairs here>
+  }
+}
+
+resource "<resource-name>" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+<required attributes here>
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+````
+
+- The instructions for importing by `identity`, including the identity schema, should appear before instructions for import blocks with an `id` argument or importing via the CLI.
+- Refer to `website/docs/r/kms_key.html.markdown` for a reference implementation.
+
+## 5. Submit a pull request
 
 **!!!Important!!!**: Ask for confirmation before proceeding with this step.
 
@@ -99,7 +137,7 @@ Relates #42988
 ### Test Failures
 
 - Ensure `PKG` parameter is included in test commands
-- Verify template file names match exactly (`<resource>_tags.gtpl`)
+- Verify template file names match exactly (`<resource>_basic.gtpl`)
 - Check region template placement is inside resource blocks
 - Don't create test directories manually - let the generator create them
 - If a generated test panics because a `testAccCheck*Exists` helper function has incorrect arguments, add a `@Testing(existsType="")` annotation. NEVER modify the function signature of an existing "exists" helper function

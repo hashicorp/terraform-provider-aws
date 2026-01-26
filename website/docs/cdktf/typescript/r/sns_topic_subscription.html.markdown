@@ -422,6 +422,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sns_topic_subscription.example
+  identity = {
+    "arn" = "arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
+  }
+}
+
+resource "aws_sns_topic_subscription" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SNS topic subscription.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Topic Subscriptions using the subscription `arn`. For example:
 
 ```typescript
@@ -452,4 +473,4 @@ Using `terraform import`, import SNS Topic Subscriptions using the subscription 
 % terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ab088b4466cd5931507de5a381d629d3e2b8f799cfc390e719af6c61a8f0fb5a -->
+<!-- cache-key: cdktf-0.20.8 input-481921e69616672308afc7cf698dfebc33439d2dbadb62b5ed7a6942e89ca73d -->

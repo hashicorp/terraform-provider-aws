@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -16,12 +18,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -122,7 +125,7 @@ func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.Resour
 
 	policy, err := findLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic App Cookie Stickiness Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -204,7 +207,7 @@ func findLoadBalancerPolicyByTwoPartKey(ctx context.Context, conn *elasticloadba
 	output, err := conn.DescribeLoadBalancerPolicies(ctx, &input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.AccessPointNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -244,7 +247,7 @@ func findLoadBalancerListenerPolicyByThreePartKey(ctx context.Context, conn *ela
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
 const appCookieStickinessPolicyResourceIDSeparator = ":"

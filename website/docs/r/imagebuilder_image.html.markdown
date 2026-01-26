@@ -36,6 +36,7 @@ The following arguments are optional:
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
+* `logging_configuration` - (Optional) Configuration block with logging configuration. Detailed below.
 * `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -62,6 +63,12 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
 * `container_tags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
+
+### logging_configuration
+
+The following arguments are optional:
+
+* `log_group_name` - (Optional) Name of the CloudWatch Log Group to send logs to.
 
 ### workflow
 
@@ -111,6 +118,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_image.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1"
+  }
+}
+
+resource "aws_imagebuilder_image" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder image.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
 

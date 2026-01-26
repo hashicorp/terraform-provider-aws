@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 // Reference: https://github.com/hashicorp/crt-core-helloworld/blob/main/.release/ci.hcl (private repository)
@@ -15,7 +15,7 @@ project "terraform-provider-aws" {
   team = "_UNUSED_"
 
   slack {
-    notification_channel = "CN0G9S7M4" // #feed-tf-aws
+    notification_channel = "C09L3G3V55J" // #feed-tf-aws
   }
 
   github {
@@ -93,8 +93,8 @@ event "promote-production" {
 
     post-promotion {
       organization = "hashicorp"
-      repository = "terraform-provider-aws"
-      workflow = "crt-post-promote-production.yml"
+      repository   = "terraform-provider-aws"
+      workflow     = "crt-post-promote-production.yml"
     }
   }
 
@@ -104,3 +104,4 @@ event "promote-production" {
     on = "always"
   }
 }
+

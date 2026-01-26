@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -8,28 +8,27 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsGroup_basic(t *testing.T) {
+func TestAccLogsLogGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
-
-	expectedLogGroupClass := "STANDARD"
-	if acctest.Partition() != endpoints.AwsPartitionID {
-		expectedLogGroupClass = ""
-	}
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -41,9 +40,9 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "logs", fmt.Sprintf("log-group:%s", rName)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "logs", "log-group:{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
-					resource.TestCheckResourceAttr(resourceName, "log_group_class", expectedLogGroupClass),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
@@ -60,7 +59,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_nameGenerate(t *testing.T) {
+func TestAccLogsLogGroup_nameGenerate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -88,7 +87,7 @@ func TestAccLogsGroup_nameGenerate(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_namePrefix(t *testing.T) {
+func TestAccLogsLogGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
@@ -116,7 +115,7 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_disappears(t *testing.T) {
+func TestAccLogsLogGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -132,7 +131,7 @@ func TestAccLogsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,7 +139,7 @@ func TestAccLogsGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_kmsKey(t *testing.T) {
+func TestAccLogsLogGroup_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -184,7 +183,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_logGroupClass(t *testing.T) {
+func TestAccLogsLogGroup_logGroupClass(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -211,7 +210,7 @@ func TestAccLogsGroup_logGroupClass(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_retentionPolicy(t *testing.T) {
+func TestAccLogsLogGroup_retentionPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -253,7 +252,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_multiple(t *testing.T) {
+func TestAccLogsLogGroup_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -279,7 +278,7 @@ func TestAccLogsGroup_multiple(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_skipDestroy(t *testing.T) {
+func TestAccLogsLogGroup_skipDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -302,7 +301,7 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 	})
 }
 
-func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
+func TestAccLogsLogGroup_skipDestroyInconsistentPlan(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -334,7 +333,7 @@ func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
 
 // Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is set.
 // Even if retention_in_days is changed in the configuration, the diff should be suppressed and the plan should be empty.
-func TestAccLogsGroup_logGroupClassDELIVERY1(t *testing.T) {
+func TestAccLogsLogGroup_logGroupClassDELIVERY1(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -375,7 +374,7 @@ func TestAccLogsGroup_logGroupClassDELIVERY1(t *testing.T) {
 }
 
 // Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is not set.
-func TestAccLogsGroup_logGroupClassDELIVERY2(t *testing.T) {
+func TestAccLogsLogGroup_logGroupClassDELIVERY2(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -394,6 +393,435 @@ func TestAccLogsGroup_logGroupClassDELIVERY2(t *testing.T) {
 					// AWS API forces retention_in_days to 2 for DELIVERY log group class
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLogsLogGroup_requiredTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// New resources missing required tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+			// Creation with required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			// Updates which remove required tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+		},
+	})
+}
+
+func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// New resources missing required tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("error"),
+					testAccGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+			// Creation with required tags in default_tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyComplianceAndDefaultTags1("error", tagKey, acctest.CtValue1),
+					testAccGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			// Updates which remove required tags from default_tags fail
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyComplianceAndDefaultTags1("error", nonRequiredTagKey, acctest.CtValue1),
+					testAccGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ExpectError: regexache.MustCompile("Missing Required Tags"),
+			},
+		},
+	})
+}
+
+func TestAccLogsLogGroup_requiredTags_warning(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// New resources missing required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("warning"),
+					testAccGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			// Updates adding required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("warning"),
+					testAccGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			// Updates which remove required tags also succeed
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("warning"),
+					testAccGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsLogGroup_requiredTags_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckResourceGroupsTaggingAPIRequiredTags(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// New resources missing required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("disabled"),
+					testAccGroupConfig_basic(rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			// Updates adding required tags succeeds
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("disabled"),
+					testAccGroupConfig_tags1(rName, tagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							tagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						tagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			// Updates which remove required tags also succeed
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigTagPolicyCompliance("disabled"),
+					testAccGroupConfig_tags1(rName, nonRequiredTagKey, acctest.CtValue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						nonRequiredTagKey: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsLogGroup_deletionProtectionEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_deletionProtectionEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				// Disable deletion protection
+				Config: testAccGroupConfig_deletionProtectionEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+// A smoke test to verify setting provider_meta does not trigger unexpected
+// behavior for Plugin SDK V2 based resources
+func TestAccLogsLogGroup_providerMeta(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigProviderMeta(),
+					testAccGroupConfig_basic(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -570,4 +998,26 @@ resource "aws_cloudwatch_log_group" "test" {
   log_group_class = "DELIVERY"
 }
 `, rName)
+}
+
+func testAccGroupConfig_tags1(rName, key1, value1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]s = %[3]q
+  }
+}
+`, rName, key1, value1)
+}
+
+func testAccGroupConfig_deletionProtectionEnabled(rName string, deletionProtectionEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+
+  deletion_protection_enabled = %[2]t
+}
+`, rName, deletionProtectionEnabled)
 }

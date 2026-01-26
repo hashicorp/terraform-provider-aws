@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune_test
@@ -13,7 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,13 +42,15 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_actual", dataSourceNameLatest, "version_actual"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
-					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_description"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("exportable_log_types"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("supported_timezones"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})
@@ -63,9 +69,11 @@ func TestAccNeptuneEngineVersionDataSource_upgradeTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_actual"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("valid_upgrade_targets"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -255,7 +263,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -272,7 +280,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -289,7 +297,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -301,7 +309,7 @@ func TestAccNeptuneEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {

@@ -56,8 +56,9 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `engine_version` - (Optional, Forces new resources) Engine version that the package is compatible with. This argument is required and only valid when `package_type` is `ZIP-PLUGIN`. Format: `OpenSearch_X.Y` or `Elasticsearch_X.Y`, where `X` and `Y` are the major and minor version numbers, respectively.
 * `package_name` - (Required, Forces new resource) Unique name for the package.
-* `package_type` - (Required, Forces new resource) The type of package.
+* `package_type` - (Required, Forces new resource) The type of package. Valid values are `TXT-DICTIONARY`, `ZIP-PLUGIN`, `PACKAGE-LICENSE` and `PACKAGE-CONFIG`.
 * `package_source` - (Required, Forces new resource) Configuration block for the package source options.
 * `package_description` - (Optional, Forces new resource) Description of the package.
 
@@ -98,4 +99,4 @@ Using `terraform import`, import AWS Opensearch Packages using the Package ID. F
 % terraform import aws_opensearch_package.example package-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-82909e8ee5d2aedb6f5bf6d3183168d87f0515afdd09e6a766ba941f0fb8ac56 -->
+<!-- cache-key: cdktf-0.20.8 input-169155167290beff262a5746c715655425f50a9c8880956a4335928ea9a9d636 -->

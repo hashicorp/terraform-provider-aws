@@ -139,6 +139,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `tokens` - If you used Easy DKIM to configure DKIM authentication for the domain, then this object contains a set of unique strings that you use to create a set of CNAME records that you add to the DNS configuration for your domain. When Amazon SES detects these records in the DNS configuration for your domain, the DKIM authentication process is complete. If you configured DKIM authentication for the domain by providing your own public-private key pair, then this object contains the selector for the public key.
 * `identity_type` - The email identity type. Valid values: `EMAIL_ADDRESS`, `DOMAIN`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `verification_status` - The verification status of the identity. The status can be one of the following: `PENDING`, `SUCCESS`, `FAILED`, `TEMPORARY_FAILURE`, and `NOT_STARTED`.
 * `verified_for_sending_status` - Specifies whether or not the identity is verified.
 
 ## Import
@@ -166,4 +167,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity using th
 % terraform import aws_sesv2_email_identity.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d126beb9f9a5eaed8432b97a8433209e089df6b5fd1db728654b464d8e34e7b8 -->
+<!-- cache-key: cdktf-0.20.8 input-88f3c49793b5250ecd3149d0128546a1fab7415acb0656c7679e91af284a6d6f -->

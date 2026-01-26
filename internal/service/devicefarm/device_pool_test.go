@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -142,8 +142,8 @@ func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceDevicePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,8 +173,8 @@ func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceDevicePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -215,7 +215,7 @@ func testAccCheckDevicePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			// Try to find the resource
 			_, err := tfdevicefarm.FindDevicePoolByARN(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

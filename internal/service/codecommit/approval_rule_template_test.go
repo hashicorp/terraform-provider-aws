@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecommit_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodecommit "github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +66,7 @@ func TestAccCodeCommitApprovalRuleTemplate_disappears(t *testing.T) {
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceApprovalRuleTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceApprovalRuleTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,7 +180,7 @@ func testAccCheckApprovalRuleTemplateDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfcodecommit.FindApprovalRuleTemplateByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

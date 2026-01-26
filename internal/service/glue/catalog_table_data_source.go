@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -95,6 +97,11 @@ func dataSourceCatalogTable() *schema.Resource {
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						names.AttrParameters: {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						names.AttrType: {
 							Type:     schema.TypeString,

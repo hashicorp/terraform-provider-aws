@@ -1,0 +1,4 @@
+
+```release-note:bug
+resource/aws_launch_template: Fix `Error decoding ... from prior state: unsupported attribute "elastic_gpu_specifications"` errors when upgrading from a pre-v6.0.0 provider version
+```

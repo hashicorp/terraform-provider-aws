@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Allow `remote_network_config` to be updated in-place, enabling support for EKS hybrid nodes on existing clusters
+```

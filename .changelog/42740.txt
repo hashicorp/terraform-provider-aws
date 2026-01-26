@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix performance of update when the WebACL has a large number of rules
+```

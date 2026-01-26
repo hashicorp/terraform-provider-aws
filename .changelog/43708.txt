@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_nat_gateway: Fix inconsistent final plan for `secondary_private_ip_addresses`
+```

@@ -80,6 +80,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_workflow.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:workflow/build/example/1.0.0"
+  }
+}
+
+resource "aws_imagebuilder_workflow" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder workflow.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Image Builder Workflow using the `arn`. For example:
 
 ```terraform

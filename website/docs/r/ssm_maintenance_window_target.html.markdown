@@ -79,6 +79,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_target.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "23639a0b-ddbc-4bca-9e72-78d96EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `window_id` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window target.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
 
 ```terraform

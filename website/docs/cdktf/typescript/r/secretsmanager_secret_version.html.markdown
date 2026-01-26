@@ -129,6 +129,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_secretsmanager_secret_version.example
+  identity = {
+    secret_id  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+    version_id = "xxxxx-xxxxxxx-xxxxxxx-xxxxx"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `secretId` - (String) ID of the secret.
+* `versionId` - (String) ID of the secret version.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_version` using the secret ID and version ID. For example:
 
 ```typescript
@@ -159,4 +187,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_version` using the s
 % terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6b6df14bd595b5f3cee390173689ffffbf2a5709b8bdd64308e55d171f572317 -->
+<!-- cache-key: cdktf-0.20.8 input-fc8a23275ada9475c3bc2e4d14a782882cf9cbdf4a6bf4bbb9f29faf6be79826 -->

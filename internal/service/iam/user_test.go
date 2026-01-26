@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -14,9 +14,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,7 +86,7 @@ func TestAccIAMUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -522,6 +527,67 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 	})
 }
 
+// Verify behavior when name and tags are updated simultaneously
+func TestAccIAMUser_nameAndTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var u awstypes.User
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := rName + "-updated"
+	resourceName := "aws_iam_user.user"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_nameAndTags(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &u),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				Config: testAccUserConfig_nameAndTags(rNameUpdated, acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, "aws_iam_user.user", &u),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameUpdated)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameUpdated)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
@@ -533,7 +599,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfiam.FindUserByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -612,7 +678,7 @@ func testAccCheckUserCreatesAccessKey(ctx context.Context, user *awstypes.User) 
 		}
 
 		if _, err := conn.CreateAccessKey(ctx, input); err != nil {
-			return fmt.Errorf("error creating IAM User (%s) Access Key: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error creating IAM User (%s) Access Key: %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -632,7 +698,7 @@ func testAccCheckUserCreatesLoginProfile(ctx context.Context, user *awstypes.Use
 		}
 
 		if _, err := conn.CreateLoginProfile(ctx, input); err != nil {
-			return fmt.Errorf("error creating IAM User (%s) Login Profile: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error creating IAM User (%s) Login Profile: %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -650,17 +716,17 @@ func testAccCheckUserCreatesMFADevice(ctx context.Context, user *awstypes.User) 
 
 		createVirtualMFADeviceOutput, err := conn.CreateVirtualMFADevice(ctx, createVirtualMFADeviceInput)
 		if err != nil {
-			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error creating IAM User (%s) Virtual MFA Device: %w", aws.ToString(user.UserName), err)
 		}
 
 		secret := string(createVirtualMFADeviceOutput.VirtualMFADevice.Base32StringSeed)
 		authenticationCode1, err := totp.GenerateCode(secret, time.Now().Add(-30*time.Second))
 		if err != nil {
-			return fmt.Errorf("error generating Virtual MFA Device authentication code 1: %s", err)
+			return fmt.Errorf("error generating Virtual MFA Device authentication code 1: %w", err)
 		}
 		authenticationCode2, err := totp.GenerateCode(secret, time.Now())
 		if err != nil {
-			return fmt.Errorf("error generating Virtual MFA Device authentication code 2: %s", err)
+			return fmt.Errorf("error generating Virtual MFA Device authentication code 2: %w", err)
 		}
 
 		enableVirtualMFADeviceInput := &iam.EnableMFADeviceInput{
@@ -671,7 +737,7 @@ func testAccCheckUserCreatesMFADevice(ctx context.Context, user *awstypes.User) 
 		}
 
 		if _, err := conn.EnableMFADevice(ctx, enableVirtualMFADeviceInput); err != nil {
-			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error enabling IAM User (%s) Virtual MFA Device: %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -734,7 +800,7 @@ func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T,
 		}
 
 		if _, err := conn.UploadSigningCertificate(ctx, input); err != nil {
-			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -754,18 +820,18 @@ func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) reso
 
 		output, err := conn.CreatePolicy(ctx, input)
 		if err != nil {
-			return fmt.Errorf("externally creating IAM Policy (%s): %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("externally creating IAM Policy (%s): %w", aws.ToString(user.UserName), err)
 		}
 
 		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 			return tfiam.FindPolicyByARN(ctx, conn, aws.ToString(output.Policy.Arn))
 		}, true)
 		if err != nil {
-			return fmt.Errorf("waiting for external creation of IAM Policy (%s): %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("waiting for external creation of IAM Policy (%s): %w", aws.ToString(user.UserName), err)
 		}
 
 		if err := tfiam.AttachPolicyToUser(ctx, conn, aws.ToString(user.UserName), aws.ToString(output.Policy.Arn)); err != nil {
-			return fmt.Errorf("externally attaching IAM User (%s) to policy (%s): %s", aws.ToString(user.UserName), aws.ToString(output.Policy.Arn), err)
+			return fmt.Errorf("externally attaching IAM User (%s) to policy (%s): %w", aws.ToString(user.UserName), aws.ToString(output.Policy.Arn), err)
 		}
 
 		return nil
@@ -786,14 +852,14 @@ func testAccCheckUserInlinePolicy(ctx context.Context, user *awstypes.User) reso
 
 		_, err := conn.PutUserPolicy(ctx, input)
 		if err != nil {
-			return fmt.Errorf("externally putting IAM User (%s) policy: %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("externally putting IAM User (%s) policy: %w", aws.ToString(user.UserName), err)
 		}
 
 		_, err = tfresource.RetryWhenNotFound(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 			return tfiam.FindUserPolicyByTwoPartKey(ctx, conn, aws.ToString(user.UserName), aws.ToString(user.UserName))
 		})
 		if err != nil {
-			return fmt.Errorf("waiting for external creation of inline IAM User Policy (%s): %s", aws.ToString(user.UserName), err)
+			return fmt.Errorf("waiting for external creation of inline IAM User Policy (%s): %w", aws.ToString(user.UserName), err)
 		}
 
 		return nil
@@ -825,4 +891,16 @@ resource "aws_iam_user" "test" {
   name          = %q
 }
 `, rName)
+}
+
+func testAccUserConfig_nameAndTags(rName, key1, value1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "user" {
+  name = %[1]q
+
+  tags = {
+    %[2]s = %[3]q
+  }
+}
+`, rName, key1, value1)
 }

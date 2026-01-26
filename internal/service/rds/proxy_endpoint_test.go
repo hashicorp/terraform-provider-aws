@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -209,7 +209,7 @@ func TestAccRDSProxyEndpoint_disappears(t *testing.T) {
 				Config: testAccProxyEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxyEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxyEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -237,7 +237,7 @@ func TestAccRDSProxyEndpoint_Disappears_proxy(t *testing.T) {
 				Config: testAccProxyEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxy(), "aws_db_proxy.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxy(), "aws_db_proxy.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -270,7 +270,7 @@ func testAccCheckProxyEndpointDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfrds.FindDBProxyEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["db_proxy_name"], rs.Primary.Attributes["db_proxy_endpoint_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

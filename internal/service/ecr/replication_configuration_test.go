@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -116,7 +116,7 @@ func testAccReplicationConfiguration_disappears(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion(), "current"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceReplicationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceReplicationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,7 +209,7 @@ func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.T
 
 			_, err := tfecr.FindReplicationConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

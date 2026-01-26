@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -84,6 +87,10 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			}
+			s["network_interface"].Elem.(*schema.Resource).Schema["network_card_index"] = &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
 			}
 			s["primary_network_interface"] = &schema.Schema{
 				Type:     schema.TypeList,
@@ -211,7 +218,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -253,7 +260,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 		return findSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -354,7 +361,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 			"host":         *instance.PrivateIpAddress,
 		})
 	}
-	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
+	if err := readBlockDevices(ctx, d, meta.(*conns.AWSClient), instance, false); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

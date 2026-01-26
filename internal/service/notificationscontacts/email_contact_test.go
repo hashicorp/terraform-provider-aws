@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package notificationscontacts_test
@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/notificationscontacts/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,20 +19,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotificationscontacts "github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var emailcontact awstypes.EmailContact
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsContactsEndpointID)
@@ -41,12 +39,12 @@ func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailContactDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailContactConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &emailcontact),
+					testAccCheckEmailContactExists(ctx, t, resourceName, &emailcontact),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -74,11 +72,11 @@ func TestAccNotificationsContactsEmailContact_basic(t *testing.T) {
 func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var emailcontact awstypes.EmailContact
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsContactsEndpointID)
@@ -86,13 +84,13 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailContactDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailContactConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &emailcontact),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotificationscontacts.ResourceEmailContact, resourceName),
+					testAccCheckEmailContactExists(ctx, t, resourceName, &emailcontact),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotificationscontacts.ResourceEmailContact, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -108,11 +106,11 @@ func TestAccNotificationsContactsEmailContact_disappears(t *testing.T) {
 func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EmailContact
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rEmailAddress := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_notificationscontacts_email_contact.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsContactsEndpointID)
@@ -120,12 +118,12 @@ func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailContactDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailContactDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailContactConfig_tags1(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &v),
+					testAccCheckEmailContactExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -148,7 +146,7 @@ func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 			{
 				Config: testAccEmailContactConfig_tags2(rName, rEmailAddress, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &v),
+					testAccCheckEmailContactExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -165,7 +163,7 @@ func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 			{
 				Config: testAccEmailContactConfig_tags1(rName, rEmailAddress, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEmailContactExists(ctx, resourceName, &v),
+					testAccCheckEmailContactExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -182,9 +180,9 @@ func TestAccNotificationsContactsEmailContact_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckEmailContactDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEmailContactDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsContactsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsContactsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_notificationscontacts_email_contact" {
@@ -193,7 +191,7 @@ func testAccCheckEmailContactDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfnotificationscontacts.FindEmailContactByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -208,14 +206,14 @@ func testAccCheckEmailContactDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckEmailContactExists(ctx context.Context, n string, v *awstypes.EmailContact) resource.TestCheckFunc {
+func testAccCheckEmailContactExists(ctx context.Context, t *testing.T, n string, v *awstypes.EmailContact) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsContactsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsContactsClient(ctx)
 
 		output, err := tfnotificationscontacts.FindEmailContactByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -230,7 +228,7 @@ func testAccCheckEmailContactExists(ctx context.Context, n string, v *awstypes.E
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsContactsClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).NotificationsContactsClient(ctx)
 
 	var input notificationscontacts.ListEmailContactsInput
 

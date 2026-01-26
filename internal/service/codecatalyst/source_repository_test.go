@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecatalyst_test
@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcodecatalyst "github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
@@ -26,10 +24,10 @@ import (
 func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sourcerepository codecatalyst.GetSourceRepositoryOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecatalyst_source_repository.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
@@ -37,12 +35,12 @@ func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSourceRepositoryDestroy(ctx),
+		CheckDestroy:             testAccCheckSourceRepositoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSourceRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceRepositoryExists(ctx, resourceName, &sourcerepository),
+					testAccCheckSourceRepositoryExists(ctx, t, resourceName, &sourcerepository),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "tf-cc-aws-provider"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "tf-cc"),
@@ -55,10 +53,10 @@ func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 func TestAccCodeCatalystSourceRepository_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sourcerepository codecatalyst.GetSourceRepositoryOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecatalyst_source_repository.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
@@ -66,13 +64,13 @@ func TestAccCodeCatalystSourceRepository_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSourceRepositoryDestroy(ctx),
+		CheckDestroy:             testAccCheckSourceRepositoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSourceRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSourceRepositoryExists(ctx, resourceName, &sourcerepository),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecatalyst.ResourceSourceRepository(), resourceName),
+					testAccCheckSourceRepositoryExists(ctx, t, resourceName, &sourcerepository),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecatalyst.ResourceSourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,9 +78,9 @@ func TestAccCodeCatalystSourceRepository_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSourceRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSourceRepositoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCatalystClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecatalyst_source_repository" {
@@ -112,7 +110,7 @@ func testAccCheckSourceRepositoryDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckSourceRepositoryExists(ctx context.Context, name string, sourcerepository *codecatalyst.GetSourceRepositoryOutput) resource.TestCheckFunc {
+func testAccCheckSourceRepositoryExists(ctx context.Context, t *testing.T, name string, sourcerepository *codecatalyst.GetSourceRepositoryOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -125,7 +123,7 @@ func testAccCheckSourceRepositoryExists(ctx context.Context, name string, source
 		spaceName := rs.Primary.Attributes["space_name"]
 		projectName := rs.Primary.Attributes["project_name"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCatalystClient(ctx)
 		input := codecatalyst.GetSourceRepositoryInput{
 			Name:        aws.String(rs.Primary.ID),
 			SpaceName:   aws.String(spaceName),

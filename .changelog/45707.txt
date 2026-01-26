@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_iam_saml_provider: Add `saml_provider_uuid` attribute
+```
+
+```release-note:enhancement
+data-source/aws_iam_saml_provider: Add `saml_provider_uuid` attribute
+```
