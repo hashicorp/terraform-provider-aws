@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -295,7 +294,7 @@ func findSigningJobByID(ctx context.Context, conn *signer.Client, id string) (*s
 	output, err := conn.DescribeSigningJob(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -311,8 +310,8 @@ func findSigningJobByID(ctx context.Context, conn *signer.Client, id string) (*s
 	return output, nil
 }
 
-func statusSigningJob(ctx context.Context, conn *signer.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSigningJob(conn *signer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSigningJobByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -328,10 +327,10 @@ func statusSigningJob(ctx context.Context, conn *signer.Client, id string) sdkre
 }
 
 func waitSigningJobSucceeded(ctx context.Context, conn *signer.Client, id string, timeout time.Duration) (*signer.DescribeSigningJobOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.SigningStatusInProgress),
 		Target:  enum.Slice(types.SigningStatusSucceeded),
-		Refresh: statusSigningJob(ctx, conn, id),
+		Refresh: statusSigningJob(conn, id),
 		Timeout: timeout,
 	}
 
