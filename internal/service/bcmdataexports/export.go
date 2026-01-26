@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -42,7 +41,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(v60RefreshError=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
 
@@ -409,10 +407,10 @@ func (r *exportResource) UpgradeState(ctx context.Context) map[int64]resource.St
 }
 
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
-		Refresh:                   statusExport(ctx, conn, id),
+		Refresh:                   statusExport(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -427,10 +425,10 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 }
 
 func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ExportStatusCodeUnhealthy),
 		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
-		Refresh:                   statusExport(ctx, conn, id),
+		Refresh:                   statusExport(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -444,8 +442,8 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 	return nil, err
 }
 
-func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusExport(conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findExportByARN(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -466,7 +464,7 @@ func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn
 
 	out, err := conn.GetExport(ctx, &in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
