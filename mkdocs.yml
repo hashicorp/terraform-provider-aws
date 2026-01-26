@@ -20,6 +20,7 @@ nav:
           - Add a New Ephemeral Resource Type: add-a-new-ephemeral-resource.md
           - Add a New Function: add-a-new-function.md
           - Add a New AWS Region: add-a-new-region.md
+          - Add Resource Identity Support: add-resource-identity-support.md
           - Add Resource Import Support: add-import-support.md
           - Resource Filtering: resource-filtering.md
           - Resource Name Generation: resource-name-generation.md
