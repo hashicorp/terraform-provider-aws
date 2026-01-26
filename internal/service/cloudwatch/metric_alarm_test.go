@@ -190,6 +190,29 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchMetricAlarm_dataPointsToAlarmZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_datapointsToZero(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 	ctx := acctest.Context(t)
 	var alarm types.MetricAlarm
@@ -678,6 +701,28 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   datapoints_to_alarm       = 2
+  evaluation_periods        = 2
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = 120
+  statistic                 = "Average"
+  threshold                 = 80
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+}
+`, rName)
+}
+
+func testAccMetricAlarmConfig_datapointsToZero(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  datapoints_to_alarm       = 0
   evaluation_periods        = 2
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"

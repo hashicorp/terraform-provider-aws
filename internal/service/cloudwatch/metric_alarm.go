@@ -40,7 +40,7 @@ import (
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMetricAlarm() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricAlarmCreate,
 		ReadWithoutTimeout:   resourceMetricAlarmRead,
@@ -90,7 +90,7 @@ func resourceMetricAlarm() *schema.Resource {
 			"datapoints_to_alarm": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"dimensions": {
 				Type:          schema.TypeMap,
@@ -348,7 +348,6 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		alarm, err := findMetricAlarmByName(ctx, conn, d.Id())
-
 		if err != nil {
 			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
@@ -428,7 +427,6 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := expandPutMetricAlarmInput(ctx, d)
 
 		_, err := conn.PutMetricAlarm(ctx, input)
-
 		if err != nil {
 			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
@@ -465,7 +463,6 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 	}
 
 	output, err := conn.DescribeAlarms(ctx, input)
-
 	if err != nil {
 		return nil, smarterr.NewError(err)
 	}
