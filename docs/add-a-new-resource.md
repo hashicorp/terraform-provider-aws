@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <!-- markdownlint-configure-file { "code-block-style": false } -->
-# Adding a New Resource
+# Adding a New Resource Type
 
 New resources are required when AWS adds a new service, or adds new features within an existing service which would require a new resource to manage in Terraform. Typically anything with a new set of CRUD API endpoints is a great candidate for a new resource.
 

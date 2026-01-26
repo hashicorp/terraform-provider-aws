@@ -14,13 +14,13 @@ nav:
   - Contribute:
       - Development Environment: development-environment.md
       - Contribution Guides:
-          - Resource: add-a-new-resource.md
-          - Service: add-a-new-service.md
-          - Data source: add-a-new-datasource.md
-          - Ephemeral Resource: add-a-new-ephemeral-resource.md
-          - Function: add-a-new-function.md
-          - AWS Region: add-a-new-region.md
-          - Import Support: add-import-support.md
+          - Add a New AWS Service: add-a-new-service.md
+          - Add a New Resource Type: add-a-new-resource.md
+          - Add a New Data Source Type: add-a-new-datasource.md
+          - Add a New Ephemeral Resource Type: add-a-new-ephemeral-resource.md
+          - Add a New Function: add-a-new-function.md
+          - Add a New AWS Region: add-a-new-region.md
+          - Add Resource Import Support: add-import-support.md
           - Resource Filtering: resource-filtering.md
           - Resource Identity: resource-identity.md
           - Resource Name Generation: resource-name-generation.md
