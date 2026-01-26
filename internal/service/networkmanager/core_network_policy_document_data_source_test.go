@@ -1288,3 +1288,51 @@ const testAccPolicyDocumentRoutingPolicyNamesExpectedJSON = `{
     }
   ]
 }`
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_attachmentRoutingPolicyRulesEmptyAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON),
+				),
+			},
+		},
+	})
+}
+
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_attachmentRoutingPolicyRulesEmptyAction = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["64512-65534"]
+
+    edge_locations {
+      location = "us-east-1"
+    }
+  }
+
+  segments {
+    name = "test"
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 10
+
+    conditions {
+      type  = "routing-policy-label"
+      value = "test"
+    }
+
+    action {
+      associate_routing_policies = []
+    }
+  }
+}
+`
