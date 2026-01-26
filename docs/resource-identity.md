@@ -55,7 +55,7 @@ the full annotation is `@IdentityAttribute("set_identifier", optional="true")`.
 If a resource type has optional identifying attributes,
 the default generated test should be the case where all optional values are `null`.
 For other cases, manually create additional acceptance tests,
-at a minimum the equivalent of the `Basic` test as well as the `ExistingResource` test when adding Resource Identity to an exisiting resource type.
+at a minimum the equivalent of the `Basic` test as well as the `ExistingResource` test when adding Resource Identity to an existing resource type.
 
 If it is not possible to create a test case where all optional values are `null`,
 add the annotation parameter `testNotNull=true` to the corresponding `@IdentityAttribute` annotation.
@@ -80,7 +80,7 @@ For example, the resource type `aws_rds_integration` has an `id` attribute that 
 The annotation is `@ArnIdentity(identityDuplicateAttributes="id")`.
 
 In some rare cases, there will be multiple attributes that match the Identity attribute.
-Specifcy this with the annotation parameter `identityDuplicateAttributes="<attr>[;<attr>]"`.
+Specify this with the annotation parameter `identityDuplicateAttributes="<attr>[;<attr>]"`.
 For example, the resource type `aws_ssoadmin_application` has both an `id` attribute and a deprecated alternate ARN attribute `application_arn`.
 The annotation is `@ArnIdentity(identityDuplicateAttributes="id;application_arn")`.
 
