@@ -33,7 +33,8 @@ import (
 
 const (
 	// Allow IAM role to become visible to the index
-	propagationTimeout = 2 * time.Minute
+	propagationTimeout         = 2 * time.Minute
+	athenaRolePropagationDelay = 10 * time.Second
 
 	// accessDeniedExceptionMessage describes the error returned when the IAM role has not yet propagated
 	accessDeniedExceptionAssumeRoleMessage              = "Failed to assume your role. Verify the trust relationships of the role in the IAM console"
@@ -104,10 +105,12 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	dataSourceID := d.Get("data_source_id").(string)
 	id := dataSourceCreateResourceID(awsAccountID, dataSourceID)
+
+	dataSourceParameters := quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]any))
 	input := &quicksight.CreateDataSourceInput{
 		AwsAccountId:         aws.String(awsAccountID),
 		DataSourceId:         aws.String(dataSourceID),
-		DataSourceParameters: quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]any)),
+		DataSourceParameters: dataSourceParameters,
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
 		Tags:                 getTagsIn(ctx),
 		Type:                 awstypes.DataSourceType(d.Get(names.AttrType).(string)),
@@ -127,6 +130,16 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]any))
+	}
+
+	// If an IAM role is being passed to an Athena Data Source, the retry logic below does not work
+	// (i.e. does not throw an assume role error on initial creation, but when waiting for successful creation)
+	// and we need to wait for propagation before attempting to create the Data Source
+	switch v := dataSourceParameters.(type) {
+	case *awstypes.DataSourceParametersMemberAthenaParameters:
+		if v.Value.RoleArn != nil {
+			time.Sleep(athenaRolePropagationDelay)
+		}
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
