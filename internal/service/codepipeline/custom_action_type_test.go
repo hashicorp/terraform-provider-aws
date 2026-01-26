@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,22 +20,22 @@ import (
 func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ActionType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
+					testAccCheckCustomActionTypeExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "0"),
@@ -66,22 +64,22 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ActionType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
+					testAccCheckCustomActionTypeExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcodepipeline.ResourceCustomActionType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,22 +91,22 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ActionType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomActionTypeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
+					testAccCheckCustomActionTypeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -121,7 +119,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 			{
 				Config: testAccCustomActionTypeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
+					testAccCheckCustomActionTypeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -130,7 +128,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 			{
 				Config: testAccCustomActionTypeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
+					testAccCheckCustomActionTypeExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -142,22 +140,22 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ActionType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomActionTypeConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
+					testAccCheckCustomActionTypeExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "2"),
@@ -205,7 +203,7 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *types.ActionType) resource.TestCheckFunc {
+func testAccCheckCustomActionTypeExists(ctx context.Context, t *testing.T, n string, v *types.ActionType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -217,7 +215,7 @@ func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *types.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodePipelineClient(ctx)
 
 		output, err := tfcodepipeline.FindCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
 
@@ -231,9 +229,9 @@ func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *types.
 	}
 }
 
-func testAccCheckCustomActionTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomActionTypeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodePipelineClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codepipeline_custom_action_type" {
