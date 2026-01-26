@@ -16,7 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -55,6 +58,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
@@ -1004,6 +1008,77 @@ func TestAccRDSClusterInstance_Replica_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterInstance_clusterLevelMonitoringInterval(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_clusterLevelMonitoringInterval(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
+				),
+			},
+			{
+				// Change monitoring_interval of aws_rds_cluster resource from 60 to 30.
+				// Since there are no changes in aws_rds_cluster_instance, aws_rds_cluster_instance resource will not be refreshed.
+				Config: testAccClusterInstanceConfig_clusterLevelMonitoringInterval(rName, 30),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				// Force refresh aws_rds_cluster_instance resource to pick up monitoring_interval change from aws_rds_cluster resource.
+				// After refresh, no drift is expected in the plan and monitoring_interval in aws_rds_cluster_instance resource is expected to be 30.
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_interval"), knownvalue.Int32Exact(30)),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				// Change monitoring_interval of aws_rds_cluster resource from 30 to 0.
+				// Since there are no changes in aws_rds_cluster_instance, aws_rds_cluster_instance resource will not be refreshed.
+				Config: testAccClusterInstanceConfig_clusterLevelMonitoringInterval(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				// Force refresh aws_rds_cluster_instance resource to pick up monitoring_interval change from aws_rds_cluster resource
+				// After refresh, no drift is expected in the plan and monitoring_interval in aws_rds_cluster instance resource is expected to be 0.
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_interval"), knownvalue.Int32Exact(0)),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1200,6 +1275,60 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, engine, rName))
+}
+
+func testAccClusterInstanceConfig_clusterLevelMonitoringIntervalBase(rName, engine string, monitoringInterval int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccClusterInstanceConfig_orderableEngineBase(engine, false),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier = %[1]q
+  availability_zones = [
+    data.aws_availability_zones.available.names[0],
+    data.aws_availability_zones.available.names[1],
+    data.aws_availability_zones.available.names[2]
+  ]
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharacters"
+  skip_final_snapshot = true
+
+  monitoring_interval = %[2]d
+  monitoring_role_arn = aws_iam_role.test.arn
+
+  apply_immediately = true
+}
+`, rName, monitoringInterval))
 }
 
 func testAccClusterInstanceConfig_basic(rName string) string {
@@ -1793,4 +1922,28 @@ resource "aws_rds_cluster_instance" "test" {
   performance_insights_retention_period = %[2]d
 }
 `, rName, performanceInsightsRetentionPeriod))
+}
+
+func testAccClusterInstanceConfig_clusterLevelMonitoringInterval(rName string, monitoringInterval int) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_clusterLevelMonitoringIntervalBase(rName, "aurora-mysql", monitoringInterval), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier              = %[1]q
+  engine                  = data.aws_rds_engine_version.default.engine
+  cluster_identifier      = aws_rds_cluster.test.id
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_parameter_group_name = aws_db_parameter_group.test.name
+  promotion_tier          = "3"
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = data.aws_rds_engine_version.default.parameter_group_family
+
+  parameter {
+    name         = "back_log"
+    value        = "32767"
+    apply_method = "pending-reboot"
+  }
+}
+`, rName))
 }
