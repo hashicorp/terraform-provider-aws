@@ -2539,6 +2539,61 @@ func TestAccVPCRoute_Identity_ToPrefixList(t *testing.T) {
 	})
 }
 
+// Resource Identity was added after v6.10.0
+func TestAccVPCRoute_Identity_ToPrefixList_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/prefix_list_to_instance_v6.10.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Route/prefix_list_to_instance/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": knownvalue.Null(),
+						"destination_prefix_list_id":  knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_prefix_list_id")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckRouteExists(ctx context.Context, n string, v *awstypes.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
