@@ -116,7 +116,7 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 }
 
 // Retrieve only DescribeOrganization response attributes.
-func testAccOrganizationDataSource_describeOrganizationOnly(t *testing.T) {
+func testAccOrganizationDataSource_returnOrganizationOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_organization.test"
 	dataSourceName := "data.aws_organizations_organization.test"
@@ -130,7 +130,7 @@ func testAccOrganizationDataSource_describeOrganizationOnly(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationDataSourceConfig_describeOrganizationOnly,
+				Config: testAccOrganizationDataSourceConfig_returnOrganizationOnly,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "feature_set", dataSourceName, "feature_set"),
@@ -208,11 +208,12 @@ data "aws_organizations_organization" "test" {
 }
 `)
 
-const testAccOrganizationDataSourceConfig_describeOrganizationOnly = `
+const testAccOrganizationDataSourceConfig_returnOrganizationOnly = `
 resource "aws_organizations_organization" "test" {}
 
 data "aws_organizations_organization" "test" {
-    describe_organization_only = true
-    depends_on = [aws_organizations_organization.test]
+  return_organization_only = true
+
+  depends_on = [aws_organizations_organization.test]
 }
 `

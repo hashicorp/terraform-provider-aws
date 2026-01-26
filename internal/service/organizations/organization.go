@@ -58,11 +58,6 @@ func resourceOrganization() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"describe_organization_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -184,6 +179,10 @@ func resourceOrganization() *schema.Resource {
 					},
 				},
 			},
+			"return_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"roots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -289,7 +288,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("master_account_email", org.MasterAccountEmail)
 	d.Set("master_account_id", org.MasterAccountId)
 
-	if d.Get("describe_organization_only").(bool) {
+	if _, ok := d.GetOk("return_organization_only"); ok {
 		return diags
 	}
 

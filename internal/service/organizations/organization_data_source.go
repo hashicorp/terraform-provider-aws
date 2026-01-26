@@ -26,11 +26,6 @@ func dataSourceOrganization() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOrganizationRead,
 
 		Schema: map[string]*schema.Schema{
-			"describe_organization_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -149,6 +144,10 @@ func dataSourceOrganization() *schema.Resource {
 					},
 				},
 			},
+			"return_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"roots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -207,8 +206,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
 
-	// If describe organization only is requested, return here
-	if d.Get("describe_organization_only").(bool) {
+	if _, ok := d.GetOk("return_organization_only"); ok {
 		return diags
 	}
 
