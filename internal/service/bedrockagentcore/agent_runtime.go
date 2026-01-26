@@ -89,7 +89,6 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
 			},
-			"lifecycle_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[lifecycleConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -100,6 +99,24 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 		},
 
 		Blocks: map[string]schema.Block{
+			"lifecycle_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"idle_runtime_session_timeout": schema.Int32Attribute{
+							Optional: true,
+							Computed: true,
+						},
+						"max_lifetime": schema.Int32Attribute{
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"agent_runtime_artifact": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[agentRuntimeArtifactModel](ctx),
 				Validators: []validator.List{
