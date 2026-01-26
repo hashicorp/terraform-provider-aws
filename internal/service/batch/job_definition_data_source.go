@@ -273,11 +273,12 @@ type eksContainerResourceRequirementsModel struct {
 }
 
 type eksContainerSecurityContextModel struct {
-	Privileged             types.Bool  `tfsdk:"privileged"`
-	ReadOnlyRootFilesystem types.Bool  `tfsdk:"read_only_root_file_system"`
-	RunAsGroup             types.Int64 `tfsdk:"run_as_group"`
-	RunAsNonRoot           types.Bool  `tfsdk:"run_as_non_root"`
-	RunAsUser              types.Int64 `tfsdk:"run_as_user"`
+	AllowPrivilegeEscalation types.Bool  `tfsdk:"allow_privilege_escalation"`
+	Privileged               types.Bool  `tfsdk:"privileged"`
+	ReadOnlyRootFilesystem   types.Bool  `tfsdk:"read_only_root_file_system"`
+	RunAsGroup               types.Int64 `tfsdk:"run_as_group"`
+	RunAsNonRoot             types.Bool  `tfsdk:"run_as_non_root"`
+	RunAsUser                types.Int64 `tfsdk:"run_as_user"`
 }
 
 type eksContainerVolumeMountModel struct {
