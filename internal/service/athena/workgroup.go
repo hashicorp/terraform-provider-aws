@@ -580,7 +580,7 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			if d.HasChange("configuration.0.result_configuration.0.encryption_configuration") {
 				// encryption_option is required if result_configuration is set.
 				// we can remove the configuration if unset
-				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.ResultConfigurationUpdates == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration.EncryptionOption == "") {
+				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.ResultConfigurationUpdates == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration.EncryptionOption == "") {
 					input.ConfigurationUpdates.ResultConfigurationUpdates = &types.ResultConfigurationUpdates{}
 					input.ConfigurationUpdates.ResultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
 				}
