@@ -121,6 +121,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 					testAccCheckTaskExists(ctx, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
 				),
 			},
 			{
@@ -134,6 +135,27 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 					testAccCheckTaskExists(ctx, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
+				),
+			},
+			{
+				// Disable the schedule by setting status to DISABLED
+				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusDisabled)),
+				),
+			},
+			{
+				// Re-enable the schedule by setting status to ENABLED
+				Config: testAccTaskConfig_scheduleWithStatus(rName, "cron(0 12 ? * SUN,MON *)", string(awstypes.ScheduleStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.status", string(awstypes.ScheduleStatusEnabled)),
 				),
 			},
 			{
@@ -1107,6 +1129,24 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, cron))
+}
+
+func testAccTaskConfig_scheduleWithStatus(rName, cron, status string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationNFS(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.test.arn
+
+  schedule {
+    schedule_expression = %[2]q
+    status              = %[3]q
+  }
+}
+`, rName, cron, status))
 }
 
 func testAccTaskConfig_cloudWatchLogGroupARN(rName string) string {
