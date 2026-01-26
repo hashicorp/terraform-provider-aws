@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/connect v1.156.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.157.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.16
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.57.1
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.12
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.4
