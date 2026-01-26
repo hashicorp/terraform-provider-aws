@@ -39,7 +39,7 @@ These will map the planned Terraform state to the AWS API call, or an AWS API re
 ### Implement Resource Identity
 
 This will identify which of the resource type's attributes make up the resource's globally-unique identity.
-The [Resource Identity Reference](resource-identity.md) covers everything you need to know about enabling Resource Identity on a resource type.
+The [Resource Identity Reference](resource-identity.md) provides more detail on enabling Resource Identity on a resource type.
 
 ### Register Resource to the provider
 
