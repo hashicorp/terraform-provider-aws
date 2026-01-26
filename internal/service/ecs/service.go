@@ -1673,6 +1673,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	if d.HasChangesExcept(names.AttrForceDelete, names.AttrTags, names.AttrTagsAll) {
 		cluster := d.Get("cluster").(string)
@@ -1916,6 +1917,17 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		} else if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	// Update tags, as this isn't supported in UpdateService
+	newTags := getTagsIn(ctx)
+	err := updateTags(ctx, conn, d.Id(), d.Get(names.AttrTags), newTags)
+
+	// If default tags only, continue. Otherwise, error.
+	if err != nil {
+		if v, ok := d.GetOk(names.AttrTags); !((!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err)) {
+			return sdkdiag.AppendErrorf(diags, "setting ECS Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
