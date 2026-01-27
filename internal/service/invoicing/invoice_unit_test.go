@@ -39,7 +39,7 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
+	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_TESTS_ENABLED")
 
 	var invoiceUnit invoicing.GetInvoiceUnitOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
