@@ -21,7 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInvoicingInvoiceUnit_basic(t *testing.T) {
+func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccInvoicingInvoiceUnit_basic,
+		// acctest.CtDisappears: testAccInvoicingInvoiceUnit_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	invoiceReceiver := acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
@@ -31,7 +42,7 @@ func TestAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_invoicing_invoice_unit.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
