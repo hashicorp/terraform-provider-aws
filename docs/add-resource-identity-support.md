@@ -1,6 +1,7 @@
 <!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Identity Support
 
 !!! note
@@ -42,3 +43,60 @@ Follow these steps:
 
 1. Run the acceptance tests for the resource type to ensure everything is functioning as expected.
   If needed, make adjustments to the annotations or test configuration and re-run `go generate internal/service/<service>/generate.go`.
+
+1. Update resource import documentation following the templates below.
+
+    * ARN Identity
+
+        ``````markdown
+        In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+        ```terraform
+        import {
+        to = <resource-name>.example
+        identity = {
+            "arn" = <example-arn-value>
+        }
+        }
+
+        resource "<resource-name>" "example" {
+        ### Configuration omitted for brevity ###
+        }
+        ```
+
+        ### Identity Schema
+
+        #### Required
+
+        * `arn` (String) <description here>.
+        ``````
+
+    * Parameterized Identity
+
+        ``````markdown
+        In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+        ```terraform
+        import {
+        to = <resource-name>.example
+        identity = {
+            <required key/value pairs here>
+        }
+        }
+
+        resource "<resource-name>" "example" {
+        ### Configuration omitted for brevity ###
+        }
+        ```
+
+        ### Identity Schema
+
+        #### Required
+
+        <required attributes here>
+
+        #### Optional
+
+        * `account_id` (String) AWS Account where this resource is managed.
+        * `region` (String) Region where this resource is managed.
+        ``````
