@@ -12,9 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinvoicing "github.com/hashicorp/terraform-provider-aws/internal/service/invoicing"
@@ -35,8 +39,7 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	invoiceReceiver := acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
-	linkedAccount := acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_LINKED_ACCOUNT_ID")
+	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_RECEIVER_ACCOUNT_ID")
 
 	var invoiceUnit invoicing.GetInvoiceUnitOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -49,7 +52,7 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvoiceUnitConfig_basic(rName, invoiceReceiver, linkedAccount),
+				Config: testAccInvoiceUnitConfig_basic(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -58,17 +61,35 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "invoice_receiver", invoiceReceiver),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "invoice_receiver"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.linked_accounts.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.linked_accounts.*", linkedAccount),
+					// resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.linked_accounts.*", linkedAccount),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "tax_inheritance_disabled", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invoice_receiver"), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"linked_accounts": knownvalue.SetExact([]knownvalue.Check{
+								tfknownvalue.AccountID(),
+							}),
+						}),
+					})),
+				},
 			},
 			{
-				Config: testAccInvoiceUnitConfig_description(rName, invoiceReceiver, linkedAccount, "test"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				Config: testAccInvoiceUnitConfig_description(rName, "test"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -78,14 +99,22 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "invoice_receiver", invoiceReceiver),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.linked_accounts.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.linked_accounts.*", linkedAccount),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "tax_inheritance_disabled", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("invoice_receiver"), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"linked_accounts": knownvalue.SetExact([]knownvalue.Check{
+								tfknownvalue.AccountID(),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -142,29 +171,33 @@ func testAccCheckInvoiceUnitDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccInvoiceUnitConfig_basic(rName, invoiceReceiver, linkedAccount string) string {
+func testAccInvoiceUnitConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_invoicing_invoice_unit" "test" {
   name             = %[1]q
-  invoice_receiver = %[2]q
+  invoice_receiver = data.aws_caller_identity.current.account_id
 
   rule {
-    linked_accounts = [%[3]q]
+    linked_accounts = [data.aws_caller_identity.current.account_id]
   }
 }
-`, rName, invoiceReceiver, linkedAccount)
+
+data "aws_caller_identity" "current" {}
+`, rName)
 }
 
-func testAccInvoiceUnitConfig_description(rName, invoiceReceiver, linkedAccount, description string) string {
+func testAccInvoiceUnitConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_invoicing_invoice_unit" "test" {
   name             = %[1]q
-  invoice_receiver = %[2]q
+  invoice_receiver = data.aws_caller_identity.current.account_id
 
   rule {
-    linked_accounts = [%[3]q]
+    linked_accounts = [data.aws_caller_identity.current.account_id]
   }
-  description = %[4]q
+  description = %[2]q
 }
-`, rName, invoiceReceiver, linkedAccount, description)
+
+data "aws_caller_identity" "current" {}
+`, rName, description)
 }
