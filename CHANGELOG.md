@@ -96,7 +96,6 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Fixes error when `name` is known after apply ([#45917](https://github.com/hashicorp/terraform-provider-aws/issues/45917))
 * resource/aws_eks_cluster: Fix `kubernetes_network_config` argument name in EKS Auto Mode validation error message ([#45997](https://github.com/hashicorp/terraform-provider-aws/issues/45997))
 * resource/aws_emrserverless_application: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
-* resource/aws_ivs_recording_configuration: Change minimum value of `thumbnail_configuration.target_interval_seconds` from `5` to `1`
 * resource/aws_lakeformation_permissions: Remove incorrect validation from `catalog_id`, `data_location.catalog_id`, `database.catalog_id`, `lf_tag_policy.catalog_id`, `table.catalog_id`, and `table_with_columns.catalog_id` arguments ([#43931](https://github.com/hashicorp/terraform-provider-aws/issues/43931))
 * resource/aws_lambda_event_source_mapping: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_lambda_invocation: Fix panic when deleting or replacing resource with empty input in CRUD lifecycle scope ([#45967](https://github.com/hashicorp/terraform-provider-aws/issues/45967))
