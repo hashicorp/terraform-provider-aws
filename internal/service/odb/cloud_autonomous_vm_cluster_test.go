@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"strings"
 	"testing"
 
@@ -89,11 +91,15 @@ func TestAccODBCloudAutonomousVmCluster_variables(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             autonomousVMClusterResourceTestEntity.testAccCheckCloudAutonomousVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
-			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
-				Config:             autonomousVmClusterConfig_useVariables(avmcDisplayName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: autonomousVmClusterConfig_useVariables(avmcDisplayName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloud_exadata_infrastructure_id"), knownvalue.StringExact("exa_gjrmtxl4qk")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("odb_network_id"), knownvalue.StringExact("odbnet_3l9st3litg")),
+					},
+				},
 			},
 		},
 	})
