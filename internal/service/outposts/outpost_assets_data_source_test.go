@@ -23,7 +23,7 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +47,7 @@ func TestAccOutpostsAssetsDataSource_statusFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -71,7 +71,7 @@ func TestAccOutpostsAssetsDataSource_hostFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
