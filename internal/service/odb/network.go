@@ -227,27 +227,27 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional:    true,
 				Computed:    true,
 				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
-				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
+				Description: "Specifies the configuration for Amazon KMS access from the ODB network.",
 			},
 			"sts_access": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
-				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
+				Description: "Specifies the configuration for Amazon STS access from the ODB network.",
 			},
 			"kms_policy_document": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "Specifies the endpoint policy for Amazon S3 access from the ODB network.",
+				Description: "Specifies the endpoint policy for Amazon KMS access from the ODB network.",
 			},
 			"sts_policy_document": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "Specifies the endpoint policy for Amazon S3 access from the ODB network.",
+				Description: "Specifies the endpoint policy for Amazon STS access from the ODB network.",
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
