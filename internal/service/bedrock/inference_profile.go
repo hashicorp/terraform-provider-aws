@@ -127,18 +127,17 @@ func (r *inferenceProfileResource) Schema(ctx context.Context, req resource.Sche
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplaceIf(
 						func(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
-							// Only require replacement if we have a prior state value to compare against.
-							// If state is null (like after import), don't force replacement.
-							// model_source is a write-only attribute that AWS API doesn't return.
+							// model_source is not returned from the AWS API.
+							// If state is null (such as after import), don't force replacement.
 							if req.StateValue.IsNull() {
 								resp.RequiresReplace = false
 								return
 							}
-							// If state has a value, require replacement if plan differs
+							// When state is non-null, require replacement for any changes
 							resp.RequiresReplace = !req.PlanValue.Equal(req.StateValue)
 						},
-						"If the value of this write-only attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
-						"If the value of this write-only attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+						"If the value of this attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+						"If the value of this attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
 					),
 				},
 				Validators: []validator.List{
