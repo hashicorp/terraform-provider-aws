@@ -4529,3 +4529,36 @@ rules:
           patterns:
             - pattern-regex: "(?i)ConfigService"
     severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - "/internal/service/configservice"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: connect-in-func-name
+    languages:
+      - go
+    message: Do not use "Connect" in func name inside connect package
+    paths:
+      include:
+        - "/internal/service/connect"
+      exclude:
+        - "/internal/service/connect/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING

@@ -16,7 +16,7 @@ List Resources are dependent on [resource identity](https://developer.hashicorp.
 
 Naming of a new List Resource should be identical to the target resource. For example, if adding a new list resource for `aws_batch_job_definition`, the list resource should be named `aws_batch_job_definition`.
 
-Use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
+Always use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
 
 ### SDK resources
 
@@ -49,6 +49,10 @@ Use the AWS API documentation to resolve the appropriate types to be able to lis
 For `@SdkResource()` resources, the primary identifier is set using `d.SetId()`. Sometimes additional identifiers are needed and can be found in the annotation `@IdentityAttribute(<attribute>)`. These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute>", value)`.
 
 For `@FrameworkResource()` resources, `flex.Flatten` will be used to set all attributes. If an attribute is not set correctly, use the `flex` functions to set values.
+
+### Adding custom query parameters
+
+Sometimes a list resource will have custom query parameters that can be used to filter the results returned by the AWS API. If this is the case, these parameters should be added by implementing the `ListResourceConfigSchema` method on the resource. A simple example can be found on the `aws_s3_object` list resource.
 
 ### Implement acceptance tests
 
@@ -124,13 +128,10 @@ Run the acceptance tests for the new list resource to ensure everything is funct
 ### Prerequisites Issues
 
 - **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first. This is a hard blocker - the list resource cannot be created without it.
-- **Branch Naming**: Use the convention `f-list-resource-<service-name>_<resource-name>` (e.g., `f-list-resource-batch_job_definition`)
 
 ### Common Implementation Issues
 
 - **Incorrect AWS API Types**: The `skaff` generator may use incorrect response types. Check AWS API documentation for the correct type (e.g., `awstypes.Batch` vs `awstypes.BatchDefinition`)
-- **Variable Name Errors**: Generated code contains compilation errors:
-    - Change `r.Meta()` to `l.Meta()`
 - **Resource Identifier**: Use the same identifier as the target resource (often name, not ARN)
 
 ### Test Configuration Issues

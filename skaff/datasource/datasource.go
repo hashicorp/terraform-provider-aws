@@ -22,9 +22,6 @@ import (
 //go:embed datasource.gtpl
 var datasourceTmpl string
 
-//go:embed datasourcefw.gtpl
-var datasourceFrameworkTmpl string
-
 //go:embed datasourcetest.gtpl
 var datasourceTestTmpl string
 
@@ -44,12 +41,11 @@ type TemplateData struct {
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	PluginFramework      bool
 	HumanDataSourceName  string
 	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, pluginFramework, tags bool) error {
+func Create(dsName, snakeName string, comments, force, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -91,17 +87,12 @@ func Create(dsName, snakeName string, comments, force, pluginFramework, tags boo
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		PluginFramework:      pluginFramework,
 		HumanDataSourceName:  convert.ToHumanResName(dsName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
-	tmpl := datasourceTmpl
-	if pluginFramework {
-		tmpl = datasourceFrameworkTmpl
-	}
 	f := fmt.Sprintf("%s_data_source.go", snakeName)
-	if err = writeTemplate("newds", f, tmpl, force, templateData); err != nil {
+	if err = writeTemplate("newds", f, datasourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource template: %w", err)
 	}
 

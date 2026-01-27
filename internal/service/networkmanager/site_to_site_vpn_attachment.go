@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmanager
 
 import (
@@ -31,6 +33,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(randomBgpAsn="64512;65534")
 // @Testing(randomIPv4Address="172.0.0.0/24")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,

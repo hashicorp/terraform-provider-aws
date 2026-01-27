@@ -6,6 +6,8 @@ package tags
 import (
 	dataschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -24,6 +26,17 @@ func TagsAttributeComputedOnly() dataschema.MapAttribute {
 		CustomType:  MapType,
 		ElementType: types.StringType,
 		Computed:    true,
+	}
+}
+
+func TagsAttributeForceNew() schema.Attribute {
+	return schema.MapAttribute{
+		CustomType:  MapType,
+		ElementType: types.StringType,
+		Optional:    true,
+		PlanModifiers: []planmodifier.Map{
+			mapplanmodifier.RequiresReplace(),
+		},
 	}
 }
 

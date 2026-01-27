@@ -1412,6 +1412,12 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	for fromField := range expandSourceFields(ctx, typeFrom, flexer.getOptions()) {
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
+		if fromFieldOpts.NoExpand() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noexpand source field", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+			})
+			continue
+		}
 
 		// TRACE: Log XML wrapper tag detection
 		if xmlWrapperField := fromFieldOpts.XMLWrapperField(); xmlWrapperField != "" {

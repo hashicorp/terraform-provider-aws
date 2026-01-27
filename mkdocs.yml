@@ -38,6 +38,7 @@ nav:
       - AI Agents: ai-agents.md
       - AI Agent Guides:
           - Go-VCR: ai-agent-guides/go-vcr-migration.md
+          - List Resource: ai-agent-guides/list-resource.md
           - Resource Identity (ARN-based): ai-agent-guides/arn-based-resource-identity.md
           - Resource Identity (Parameterized): ai-agent-guides/parameterized-resource-identity.md
           - Smarterr: ai-agent-guides/smarterr.md

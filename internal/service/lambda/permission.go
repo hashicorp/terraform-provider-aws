@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lambda
 
 import (
@@ -39,6 +41,7 @@ var functionRegexp = `^(arn:[\w-]+:lambda:)?(` + inttypes.CanonicalRegionPattern
 // @Testing(preIdentityVersion="6.9.0")
 // @Testing(existsType="github.com/hashicorp/terraform-provider-aws/internal/service/lambda;tflambda;tflambda.PolicyStatement")
 // @Testing(importStateIdFunc="testAccPermissionImportStateIDFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,

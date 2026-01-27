@@ -31,7 +31,10 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -244,7 +247,10 @@ func TestAccKMSReplicaExternalKey_tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -323,7 +329,10 @@ func TestAccKMSReplicaExternalKey_tags_EmptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -398,7 +407,10 @@ func TestAccKMSReplicaExternalKey_tags_AddOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -491,7 +503,10 @@ func TestAccKMSReplicaExternalKey_tags_EmptyTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -597,7 +612,10 @@ func TestAccKMSReplicaExternalKey_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -753,7 +771,10 @@ func TestAccKMSReplicaExternalKey_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -854,7 +875,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_providerOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1059,7 +1083,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_nonOverlapping(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1238,7 +1265,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_overlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1433,7 +1463,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_updateToProviderOnly(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1533,7 +1566,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_updateToResourceOnly(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1632,7 +1668,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_emptyResourceTag(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1706,7 +1745,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_emptyProviderOnlyTag(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1772,7 +1814,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_nullOverlappingResourceTag(t 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1843,7 +1888,10 @@ func TestAccKMSReplicaExternalKey_tags_DefaultTags_nullNonOverlappingResourceTag
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1914,7 +1962,10 @@ func TestAccKMSReplicaExternalKey_tags_ComputedTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1978,7 +2029,10 @@ func TestAccKMSReplicaExternalKey_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2085,7 +2139,10 @@ func TestAccKMSReplicaExternalKey_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2182,7 +2239,10 @@ func TestAccKMSReplicaExternalKey_tags_IgnoreTags_Overlap_DefaultTag(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2351,7 +2411,10 @@ func TestAccKMSReplicaExternalKey_tags_IgnoreTags_Overlap_ResourceTag(t *testing
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.KMSServiceID),
 		CheckDestroy: testAccCheckReplicaExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{

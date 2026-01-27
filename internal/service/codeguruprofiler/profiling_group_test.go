@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodeguruprofiler "github.com/hashicorp/terraform-provider-aws/internal/service/codeguruprofiler"
@@ -29,22 +27,22 @@ func TestAccCodeGuruProfilerProfilingGroup_basic(t *testing.T) {
 	}
 
 	var profilinggroup awstypes.ProfilingGroupDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codeguruprofiler_profiling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codeguru-profiler", "profilingGroup/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
@@ -68,22 +66,22 @@ func TestAccCodeGuruProfilerProfilingGroup_disappears(t *testing.T) {
 	}
 
 	var profilinggroup awstypes.ProfilingGroupDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codeguruprofiler_profiling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeguruprofiler.ResourceProfilingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -99,22 +97,22 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 	}
 
 	var profilinggroup awstypes.ProfilingGroupDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codeguruprofiler_profiling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfilingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codeguru-profiler", "profilingGroup/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
@@ -124,7 +122,7 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 			{
 				Config: testAccProfilingGroupConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "codeguru-profiler", "profilingGroup/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
@@ -142,22 +140,22 @@ func TestAccCodeGuruProfilerProfilingGroup_tags(t *testing.T) {
 	}
 
 	var profilinggroup awstypes.ProfilingGroupDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codeguruprofiler_profiling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfilingGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -165,7 +163,7 @@ func TestAccCodeGuruProfilerProfilingGroup_tags(t *testing.T) {
 			{
 				Config: testAccProfilingGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -174,7 +172,7 @@ func TestAccCodeGuruProfilerProfilingGroup_tags(t *testing.T) {
 			{
 				Config: testAccProfilingGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfilingGroupExists(ctx, resourceName, &profilinggroup),
+					testAccCheckProfilingGroupExists(ctx, t, resourceName, &profilinggroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -183,9 +181,9 @@ func TestAccCodeGuruProfilerProfilingGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckProfilingGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProfilingGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruProfilerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeGuruProfilerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codeguruprofiler_profiling_group" {
@@ -209,7 +207,7 @@ func testAccCheckProfilingGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckProfilingGroupExists(ctx context.Context, name string, profilinggroup *awstypes.ProfilingGroupDescription) resource.TestCheckFunc {
+func testAccCheckProfilingGroupExists(ctx context.Context, t *testing.T, name string, profilinggroup *awstypes.ProfilingGroupDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -220,7 +218,7 @@ func testAccCheckProfilingGroupExists(ctx context.Context, name string, profilin
 			return create.Error(names.CodeGuruProfiler, create.ErrActionCheckingExistence, tfcodeguruprofiler.ResNameProfilingGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruProfilerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeGuruProfilerClient(ctx)
 		resp, err := tfcodeguruprofiler.FindProfilingGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -234,7 +232,7 @@ func testAccCheckProfilingGroupExists(ctx context.Context, name string, profilin
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruProfilerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CodeGuruProfilerClient(ctx)
 
 	input := &codeguruprofiler.ListProfilingGroupsInput{}
 	_, err := conn.ListProfilingGroups(ctx, input)

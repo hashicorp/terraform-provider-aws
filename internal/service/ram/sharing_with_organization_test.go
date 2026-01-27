@@ -27,7 +27,7 @@ func testAccSharingWithOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_sharing_with_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -52,7 +52,7 @@ func testAccSharingWithOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_sharing_with_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -84,7 +83,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	acctest.PreCheckOrganizationMemberAccount(ctx, t)
 
-	_, err := tfsecuritylake.FindDataLakes(ctx, acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx), &securitylake.ListDataLakesInput{}, tfslices.PredicateTrue[*awstypes.DataLakeResource]())
+	_, err := tfsecuritylake.FindDataLakes(ctx, acctest.ProviderMeta(ctx, t).SecurityLakeClient(ctx), &securitylake.ListDataLakesInput{}, tfslices.PredicateTrue[*awstypes.DataLakeResource]())
 
 	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "must be a delegated Security Lake administrator account") {
 		t.Skip("this AWS account must be a delegated Security Lake administrator account")
@@ -118,7 +117,7 @@ func deleteGlueDatabase(ctx context.Context, t *testing.T, region string) {
 	input := glue.DeleteDatabaseInput{
 		Name: aws.String(databaseName),
 	}
-	_, err := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx).DeleteDatabase(ctx, &input, func(o *glue.Options) {
+	_, err := acctest.ProviderMeta(ctx, t).GlueClient(ctx).DeleteDatabase(ctx, &input, func(o *glue.Options) {
 		o.Region = region
 	})
 	if errs.IsA[*gluetypes.EntityNotFoundException](err) {
