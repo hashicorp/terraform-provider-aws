@@ -369,7 +369,9 @@ fumpt: ## Run gofumpt
 	@echo "make: Fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-gen: prereq-go ## Run all Go generators
+gen: prereq-go gen-raw ## Run all Go generators (with Go version check)
+
+gen-raw: ## Run all Go generators
 	@echo "make: Running Go generators..."
 	$(GO_VER) generate ./...
 	# Generate service package lists last as they may depend on output of earlier generators.
@@ -1182,6 +1184,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	fumpt \
 	gen \
 	gen-check \
+	gen-raw \
 	generate-changelog \
 	gh-workflows-lint \
 	go-build \

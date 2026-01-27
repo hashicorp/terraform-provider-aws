@@ -37,7 +37,7 @@ func TestAccS3TablesTableBucket_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
-		CheckDestroy:             testAccCheckTableBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -47,7 +47,7 @@ func TestAccS3TablesTableBucket_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &v),
+					testAccCheckTableBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "s3tables", "bucket/{name}"),
@@ -252,7 +252,7 @@ func TestAccS3TablesTableBucket_Identity_ExistingResource(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3TablesServiceID),
-		CheckDestroy: testAccCheckTableBucketDestroy(ctx),
+		CheckDestroy: testAccCheckTableBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -261,7 +261,7 @@ func TestAccS3TablesTableBucket_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &v),
+					testAccCheckTableBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -311,7 +311,7 @@ func TestAccS3TablesTableBucket_Identity_ExistingResource_NoRefresh_NoChange(t *
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3TablesServiceID),
-		CheckDestroy: testAccCheckTableBucketDestroy(ctx),
+		CheckDestroy: testAccCheckTableBucketDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -325,7 +325,7 @@ func TestAccS3TablesTableBucket_Identity_ExistingResource_NoRefresh_NoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &v),
+					testAccCheckTableBucketExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

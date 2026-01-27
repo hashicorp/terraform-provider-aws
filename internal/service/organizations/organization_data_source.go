@@ -144,6 +144,10 @@ func dataSourceOrganization() *schema.Resource {
 					},
 				},
 			},
+			"return_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"roots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -201,6 +205,10 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("master_account_email", org.MasterAccountEmail)
 	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
+
+	if _, ok := d.GetOk("return_organization_only"); ok {
+		return diags
+	}
 
 	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID(ctx)
 	isDelegatedAdministrator := true

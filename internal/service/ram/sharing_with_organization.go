@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -114,7 +113,7 @@ func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient
 	}
 
 	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
-		return &sdkretry.NotFoundError{
+		return &retry.NotFoundError{
 			Message: fmt.Sprintf("Organization service principal (%s) not enabled", servicePrincipalName),
 		}
 	}

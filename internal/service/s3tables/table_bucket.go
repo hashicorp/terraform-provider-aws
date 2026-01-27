@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -47,7 +46,6 @@ import (
 // @Testing(importStateIdFunc="testAccTableBucketImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="6.19.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketResource{}, nil
 }
@@ -469,7 +467,7 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, input *s3tables
 	output, err := conn.GetTableBucket(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -497,7 +495,7 @@ func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.
 	output, err := conn.GetTableBucketEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -525,7 +523,7 @@ func findTableBucketMaintenanceConfiguration(ctx context.Context, conn *s3tables
 	output, err := conn.GetTableBucketMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}

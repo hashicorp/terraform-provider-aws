@@ -316,7 +316,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
-							{{ if not .Optional -}}
+							{{ if or (not .Optional) .TestNotNull -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 							{{ end -}}
 						{{ end }}
@@ -435,7 +435,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
-							{{ if not .Optional -}}
+							{{ if or (not .Optional) .TestNotNull -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 							{{ end -}}
 						{{ end }}
@@ -613,7 +613,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								{{ if not .Optional -}}
+								{{ if or (not .Optional) .TestNotNull -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 								{{ end -}}
 							{{ end }}
@@ -672,7 +672,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								{{ if not .Optional -}}
+								{{ if or (not .Optional) .TestNotNull -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 								{{ end -}}
 							{{ end }}
@@ -730,7 +730,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								{{ if not .Optional -}}
+								{{ if or (not .Optional) .TestNotNull -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 								{{ end -}}
 							{{ end }}
@@ -861,7 +861,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								{{ if not .Optional -}}
+								{{ if or (not .Optional) .TestNotNull -}}
 									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 								{{ end -}}
 							{{ end }}
@@ -997,7 +997,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									{{ if not .Optional -}}
+									{{ if or (not .Optional) .TestNotNull -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 									{{ end -}}
 								{{ end }}
@@ -1148,7 +1148,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									{{ if not .Optional -}}
+									{{ if or (not .Optional) .TestNotNull -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 									{{ end -}}
 								{{ end }}
@@ -1205,7 +1205,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									{{ if not .Optional -}}
+									{{ if or (not .Optional) .TestNotNull -}}
 										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 									{{ end -}}
 								{{ end }}
@@ -1345,7 +1345,7 @@ func {{ template "testname" . }}_Identity_Upgrade(t *testing.T) {
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
-							{{ if not .Optional -}}
+							{{ if or (not .Optional) .TestNotNull -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 							{{ end -}}
 						{{ end }}
@@ -1438,7 +1438,7 @@ func {{ template "testname" . }}_Identity_Upgrade_NoRefresh(t *testing.T) {
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
-							{{ if not .Optional -}}
+							{{ if or (not .Optional) .TestNotNull -}}
 								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
 							{{ end -}}
 						{{ end }}

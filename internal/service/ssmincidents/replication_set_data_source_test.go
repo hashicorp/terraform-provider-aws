@@ -22,7 +22,7 @@ func testAccReplicationSetDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ssmincidents_replication_set.test"
 	resourceName := "aws_ssmincidents_replication_set.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
