@@ -23,7 +23,14 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newOutboundWebIdentityFederationDataSource,
+			TypeName: "aws_iam_outbound_web_identity_federation",
+			Name:     "Outbound Web Identity Federation",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
