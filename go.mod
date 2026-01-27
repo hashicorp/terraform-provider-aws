@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/connect v1.157.0
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.9
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.2
@@ -105,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.54.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.281.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.282.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
@@ -121,7 +121,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.13
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.18
-	github.com/aws/aws-sdk-go-v2/service/evidently v1.28.16
+	github.com/aws/aws-sdk-go-v2/service/evidently v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/evs v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.33.17
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.42.9
@@ -134,7 +134,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glue v1.136.1
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.10
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.17
-	github.com/aws/aws-sdk-go-v2/service/groundstation v1.39.7
+	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.2
