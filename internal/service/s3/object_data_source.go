@@ -106,8 +106,9 @@ func dataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"download_body": {
-				Type:     nullable.TypeNullableBool,
-				Optional: true,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"etag": {
 				Type:     schema.TypeString,
