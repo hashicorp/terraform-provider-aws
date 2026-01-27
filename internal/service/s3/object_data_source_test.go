@@ -1147,9 +1147,9 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket  = aws_s3_bucket.test.bucket
-  key     = "%[1]s-key"
-  content = "Hello World"
+  bucket       = aws_s3_bucket.test.bucket
+  key          = "%[1]s-key"
+  content      = "Hello World"
   content_type = "text/plain"
 }
 
