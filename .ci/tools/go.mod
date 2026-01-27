@@ -324,7 +324,7 @@ require (
 	github.com/terraform-linters/tflint-plugin-sdk v0.23.1 // indirect
 	github.com/terraform-linters/tflint-ruleset-terraform v0.13.0 // indirect
 	github.com/tetafro/godot v1.5.4 // indirect
-	github.com/theupdateframework/go-tuf/v2 v2.3.1 // indirect
+	github.com/theupdateframework/go-tuf/v2 v2.4.1 // indirect
 	github.com/timakin/bodyclose v0.0.0-20241222091800-1db5c5ca4d67 // indirect
 	github.com/timonwong/loggercheck v0.11.0 // indirect
 	github.com/tomarrell/wrapcheck/v2 v2.12.0 // indirect
