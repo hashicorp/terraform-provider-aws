@@ -70,6 +70,178 @@ For example, the resource type `aws_s3_bucket_acl` has an attribute `acl` which 
 An S3 Bucket can have only one Bucket ACL, and the predefined grant name does not identify a Bucket ACL.
 While the `acl` value is part of the `id` attribute, it should not be part of the Resource Identity.
 
+#### Multiple Identity Attributes
+
+In order to support importing resources by ID from the command line or in `import` blocks and work with `id` attributes composed from multiple fields,
+Resource Identities with multiple attributes need a handler struct to perform the mapping.
+
+##### Plugin Framework
+
+In order to parse an import ID, Framework-based resource types must define a struct which implements the interface `inttypes.ImportIDParser`.
+
+```go
+type ImportIDParser interface {
+	Parse(id string) (string, map[string]string, error)
+}
+```
+
+The function `Parse` takes the import ID as a parameter and returns:
+
+1. The value to be assigned to the `id` attribute, if any (see below)
+1. A `map[string]string` of the resource attributes to be set
+1. Any error
+
+The name of this struct is set in the annotation `@ImportIDHandler("<struct name>")`.
+
+For example, the resource type `aws_vpc_security_group_vpc_association` has an import ID handler as follows:
+
+```go
+var _ inttypes.ImportIDParser = securityGroupVPCAssociationImportID{}
+
+type securityGroupVPCAssociationImportID struct{}
+
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+	sgID, vpcID, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <security-group-id>"+intflex.ResourceIdSeparator+"<vpc-id>", id)
+	}
+
+	result := map[string]string{
+		"security_group_id": sgID,
+		names.AttrVPCID:     vpcID,
+	}
+
+	return id, result, nil
+}
+```
+
+and has the annotation `@ImportIDHandler("securityGroupVPCAssociationImportID")`.
+
+In some cases, the resource import will also need to set an `id` attribute composed from multiple fields.
+In this case, the import ID parser must also implement the interface `inttypes.FrameworkImportIDCreator`.
+
+```go
+type FrameworkImportIDCreator interface {
+	Create(ctx context.Context, state tfsdk.State) string
+}
+```
+
+The function `Create` takes the state values and returns a single string value.
+
+This is specified by the annotation parameter `setIDAttribute=true` on the `@ImportIDHandler` annotation.
+
+For example, the resource type `aws_cloudfrontkeyvaluestore_key`has an import ID handler equivalent to:
+
+```go
+var (
+	_ inttypes.ImportIDParser           = securityGroupVPCAssociationImportID{}
+	_ inttypes.FrameworkImportIDCreator = securityGroupVPCAssociationImportID{}
+)
+
+type securityGroupVPCAssociationImportID struct{}
+
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+	kvsARN, key, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <key-value-store-arn>"+intflex.ResourceIdSeparator+"<key>", id)
+	}
+
+	result := map[string]string{
+		"key_value_store_arn": kvsARN,
+		names.AttrKey:         key,
+	}
+
+	return id, result, nil
+}
+
+func (securityGroupVPCAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	parts := make([]string, 0, keyResourceIDPartCount)
+
+	var attrVal types.String
+
+	state.GetAttribute(ctx, path.Root("key_value_store_arn"), &attrVal)
+	parts = append(parts, attrVal.ValueString())
+
+	state.GetAttribute(ctx, path.Root(names.AttrKey), &attrVal)
+	parts = append(parts, attrVal.ValueString())
+
+	return strings.Join(parts, intflex.ResourceIdSeparator)
+}
+```
+
+and has the annotation `@ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)`.
+
+##### Plugin SDK
+
+For resource types implemented using the Plugin SDK, the import ID handler must both parse the import ID and create the `id` attribute composed from multiple fields.
+The import ID handler must implement the interface `inttypes.SDKv2ImportID`
+
+```go
+type SDKv2ImportID interface {
+	Parse(id string) (string, map[string]string, error)
+	Create(d *schema.ResourceData) string
+}
+```
+
+The function `Parse` takes the import ID as a parameter and returns:
+
+1. The value to be assigned to the `id` attribute
+1. A `map[string]string` of the resource attributes to be set
+1. Any error
+
+The function `Create` takes the state values and returns a single string value.
+
+The name of this struct is set in the annotation `@ImportIDHandler("<struct name>")`.
+
+For example, a number of resource types associated with S3 Buckets, such as `aws_s3_bucket_logging` and `aws_s3_bucket_versioning` share an import ID handler equivalent to:
+
+```go
+var _ inttypes.SDKv2ImportID = resourceImportID{}
+
+type resourceImportID struct{}
+
+func (resourceImportID) Create(d *schema.ResourceData) string {
+	bucket := d.Get(names.AttrBucket).(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
+	if expectedBucketOwner == "" {
+		return bucket
+	}
+
+	parts := []string{bucket, expectedBucketOwner}
+	return strings.Join(parts, resourceIDSeparator)
+}
+
+func (resourceImportID) Parse(id string) (string, map[string]string, error) {
+	bucket, expectedBucketOwner, err := parseResourceID(id)
+	if err != nil {
+		return id, nil, err
+	}
+
+	results := map[string]string{
+		names.AttrBucket: bucket,
+	}
+	if expectedBucketOwner != "" {
+		results[names.AttrExpectedBucketOwner] = expectedBucketOwner
+	}
+
+	return id, results, nil
+}
+
+func parseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, resourceIDSeparator)
+
+	if len(parts) == 1 && parts[0] != "" {
+		return parts[0], "", nil
+	}
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER", id, resourceIDSeparator)
+}
+```
+
 ## Enabling Resource Identity on New Resource Type
 
 New resource types with Resource Identity support are indicated by the annotation `@Testing(hasNoPreExistingResource=true)`.
