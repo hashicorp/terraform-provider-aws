@@ -27,7 +27,7 @@ import (
 
 // Regions are hard coded due to limited availability of Bedrock service
 const (
-	foundationModelARN = "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
+	foundationModelARN = "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
 )
 
 func TestAccBedrockInferenceProfile_basic(t *testing.T) {
@@ -73,6 +73,16 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 					"model_source.0.copy_from",
 				},
 			},
+			// Validate a replacement is not planned following import.
+			// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/45705
+			{
+				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
 		},
 	})
 }
@@ -101,55 +111,6 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccBedrockInferenceProfile_importNoReplacement(t *testing.T) {
-	ctx := acctest.Context(t)
-	var inferenceprofile bedrock.GetInferenceProfileOutput
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_inference_profile.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
-				},
-			},
-			// After import, re-apply the same config. The key assertion is that this does NOT
-			// trigger a replacement (destroy + create). The model_source attribute is write-only
-			// and the AWS API doesn't return it, so after import the state has model_source=null.
-			// With the fix, the plan should show no-op (not replace).
-			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
 			},
 		},
 	})
