@@ -12,6 +12,8 @@ Provides an IAM managed policy for a Single Sign-On (SSO) Permission Set resourc
 
 ~> **NOTE:** Creating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
 
+!> **WARNING:** Do not use this resource together with the `aws_ssoadmin_managed_policy_attachments_exclusive` resource for the same permission set. Doing so will cause a conflict and will lead to managed policies being removed.
+
 ## Example Usage
 
 ### Basic Usage

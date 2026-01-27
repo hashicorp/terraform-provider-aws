@@ -93,6 +93,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newManagedPolicyAttachmentsExclusiveResource,
+			TypeName: "aws_ssoadmin_managed_policy_attachments_exclusive",
+			Name:     "Managed Policy Attachments Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newTrustedTokenIssuerResource,
 			TypeName: "aws_ssoadmin_trusted_token_issuer",
 			Name:     "Trusted Token Issuer",
