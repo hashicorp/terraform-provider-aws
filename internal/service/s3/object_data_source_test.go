@@ -1125,7 +1125,7 @@ data "aws_s3_object" "test" {
 }
 
 output "body_base64" {
-  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64): null
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
 }
 `, rName, downloadBody)
 }
