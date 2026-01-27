@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -226,7 +226,7 @@ func TestAccGlueWorkflow_disappears(t *testing.T) {
 				Config: testAccWorkflowConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceWorkflow(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

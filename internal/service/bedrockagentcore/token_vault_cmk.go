@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +83,7 @@ func (r *tokenVaultCMKResource) Schema(ctx context.Context, request resource.Sch
 
 func (r *tokenVaultCMKResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data tokenVaultCMKResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -89,7 +92,7 @@ func (r *tokenVaultCMKResource) Create(ctx context.Context, request resource.Cre
 
 	tokenVaultID := fwflex.StringValueFromFramework(ctx, data.TokenVaultID)
 	var input bedrockagentcorecontrol.SetTokenVaultCMKInput
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -100,12 +103,12 @@ func (r *tokenVaultCMKResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *tokenVaultCMKResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data tokenVaultCMKResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -114,8 +117,8 @@ func (r *tokenVaultCMKResource) Read(ctx context.Context, request resource.ReadR
 
 	tokenVaultID := fwflex.StringValueFromFramework(ctx, data.TokenVaultID)
 	out, err := findTokenVaultByID(ctx, conn, tokenVaultID)
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -124,18 +127,18 @@ func (r *tokenVaultCMKResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *tokenVaultCMKResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var new, old tokenVaultCMKResourceModel
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -143,7 +146,7 @@ func (r *tokenVaultCMKResource) Update(ctx context.Context, request resource.Upd
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, new, old)
-	smerr.EnrichAppend(ctx, &response.Diagnostics, d)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -151,7 +154,7 @@ func (r *tokenVaultCMKResource) Update(ctx context.Context, request resource.Upd
 	if diff.HasChanges() {
 		tokenVaultID := fwflex.StringValueFromFramework(ctx, new.TokenVaultID)
 		var input bedrockagentcorecontrol.SetTokenVaultCMKInput
-		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -163,7 +166,7 @@ func (r *tokenVaultCMKResource) Update(ctx context.Context, request resource.Upd
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *tokenVaultCMKResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
@@ -193,7 +196,7 @@ func findTokenVault(ctx context.Context, conn *bedrockagentcorecontrol.Client, i
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -321,7 +321,7 @@ func TestAccAthenaDatabase_disappears(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceDatabase(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -412,7 +412,7 @@ func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfathena.FindDatabaseByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

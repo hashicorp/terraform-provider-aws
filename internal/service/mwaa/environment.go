@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package mwaa
 
@@ -692,7 +694,7 @@ func findEnvironment(ctx context.Context, conn *mwaa.Client, input *mwaa.GetEnvi
 	}
 
 	if output == nil || output.Environment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environment, nil
@@ -702,7 +704,7 @@ func statusEnvironment(conn *mwaa.Client, name string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		environment, err := findEnvironmentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

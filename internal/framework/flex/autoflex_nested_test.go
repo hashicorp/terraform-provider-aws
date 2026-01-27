@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -75,7 +75,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		"single nested block pointer": {
-			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust(ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws02{},
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
 		},
@@ -85,7 +85,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws02{},
 		},
 		"single nested block value": {
-			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust(ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws03{},
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
@@ -171,10 +171,10 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 	testCases := autoFlexTestCases{
 		"single nested block pointer": {
 			Source: &tf03{
-				Field1: fwtypes.NewObjectValueOfMust[tf02](
+				Field1: fwtypes.NewObjectValueOfMust(
 					ctx,
 					&tf02{
-						Field1: fwtypes.NewObjectValueOfMust[tf01](
+						Field1: fwtypes.NewObjectValueOfMust(
 							ctx,
 							&tf01{
 								Field1: types.BoolValue(true),
@@ -796,7 +796,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			},
 			Target: &tf02{},
 			WantTarget: &tf02{
-				Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tf01{
 					Field1: types.StringValue("a"),
 					Field2: types.Int64Value(1),
 				}),
@@ -817,7 +817,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			},
 			Target: &tf02{},
 			WantTarget: &tf02{
-				Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tf01{
 					Field1: types.StringValue("a"),
 					Field2: types.Int64Value(1),
 				}),
@@ -866,8 +866,8 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 			},
 			Target: &tf03{},
 			WantTarget: &tf03{
-				Field1: fwtypes.NewObjectValueOfMust[tf02](ctx, &tf02{
-					Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &tf02{
+					Field1: fwtypes.NewObjectValueOfMust(ctx, &tf01{
 						Field1: types.BoolValue(true),
 						Field2: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
 							types.StringValue("a"),

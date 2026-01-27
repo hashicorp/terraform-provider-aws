@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -72,7 +74,7 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 	var data dataSourceGlobalClusterData
 	conn := d.Meta().RDSClient(ctx)
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -83,7 +85,7 @@ func (d *dataSourceGlobalCluster) Read(ctx context.Context, request datasource.R
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("GlobalCluster")))
+	smerr.AddEnrich(ctx, &response.Diagnostics, flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("GlobalCluster")))
 	if response.Diagnostics.HasError() {
 		return
 	}

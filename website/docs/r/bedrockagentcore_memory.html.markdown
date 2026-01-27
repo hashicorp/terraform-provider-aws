@@ -37,7 +37,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 }
 
 resource "aws_bedrockagentcore_memory" "example" {
-  name                  = "example-memory"
+  name                  = "example_memory"
   event_expiry_duration = 30
 }
 ```
@@ -50,7 +50,7 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_bedrockagentcore_memory" "example" {
-  name                      = "example-memory"
+  name                      = "example_memory"
   description               = "Memory for customer service agent"
   event_expiry_duration     = 60
   encryption_key_arn        = aws_kms_key.example.arn
@@ -64,7 +64,7 @@ resource "aws_bedrockagentcore_memory" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the memory.
-* `event_expiry_duration` - (Required) Number of minutes after which memory events expire. Must be a positive integer.
+* `event_expiry_duration` - (Required) Number of days after which memory events expire. Must be a positive integer in the range of 7 to 365.
 
 The following arguments are optional:
 

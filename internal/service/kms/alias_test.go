@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccKMSAlias_disappears(t *testing.T) {
 				Config: testAccAliasConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &alias),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceAlias(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -269,7 +269,7 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfkms.FindAliasByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

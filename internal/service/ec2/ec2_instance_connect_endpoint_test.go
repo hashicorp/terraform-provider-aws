@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +41,7 @@ func TestAccEC2InstanceConnectEndpoint_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance-connect-endpoint/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv4)),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "network_interface_ids.#", 1),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", acctest.CtTrue),
@@ -73,7 +75,7 @@ func TestAccEC2InstanceConnectEndpoint_disappears(t *testing.T) {
 				Config: testAccInstanceConnectEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstanceConnectEndpoint, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceInstanceConnectEndpoint, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -168,6 +170,87 @@ func TestAccEC2InstanceConnectEndpoint_securityGroupIDs(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceConnectEndpoint_ipAddressTypeIPv4(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_ipAddressType(rName, string(awstypes.IpAddressTypeIpv4), true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv4)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2InstanceConnectEndpoint_ipAddressTypeIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_ipAddressType(rName, string(awstypes.IpAddressTypeIpv6), false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeIpv6)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2InstanceConnectEndpoint_ipAddressTypeDualStack(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_instance_connect_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceConnectEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConnectEndpointConfig_ipAddressType(rName, string(awstypes.IpAddressTypeDualstack), false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceConnectEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeDualstack)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2InstanceConnectEndpoint_fipsRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_connect_endpoint.test"
@@ -248,7 +331,7 @@ func testAccCheckInstanceConnectEndpointDestroy(ctx context.Context) resource.Te
 
 			_, err := tfec2.FindInstanceConnectEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -319,4 +402,18 @@ resource "aws_ec2_instance_connect_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConnectEndpointConfig_ipAddressType(rName, ipAddressType string, preserveClientIP bool) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_ec2_instance_connect_endpoint" "test" {
+  preserve_client_ip = %[3]t
+  subnet_id          = aws_subnet.test[0].id
+  ip_address_type    = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipAddressType, preserveClientIP))
 }

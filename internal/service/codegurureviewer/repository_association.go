@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codegurureviewer
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -301,7 +303,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 	out, err := findRepositoryAssociationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeGuru Reviewer Repository Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -371,8 +373,7 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -381,17 +382,17 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	}
 
 	if output == nil || output.RepositoryAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryAssociation, nil
 }
 
-func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRepositoryAssociation(conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRepositoryAssociationByARN(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -407,7 +408,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RepositoryAssociationStateAssociating),
 		Target:                    enum.Slice(types.RepositoryAssociationStateAssociated),
-		Refresh:                   statusRepositoryAssociation(ctx, conn, id),
+		Refresh:                   statusRepositoryAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -416,7 +417,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -428,14 +429,14 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RepositoryAssociationStateDisassociating, types.RepositoryAssociationStateAssociated),
 		Target:  []string{},
-		Refresh: statusRepositoryAssociation(ctx, conn, id),
+		Refresh: statusRepositoryAssociation(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

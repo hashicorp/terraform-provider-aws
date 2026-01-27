@@ -62,6 +62,7 @@ This data source exports the following attributes in addition to the arguments a
 * `condition` - Set of conditions associated with the rule.
   [Detailed below](#condition).
 * `tags` - Tags assigned to the Listener Rule.
+* `transform` - Block for transform to apply to requests that match this rule. [Detailed below](#transform).
 
 ### `action`
 
@@ -75,6 +76,8 @@ This data source exports the following attributes in addition to the arguments a
   [Detailed below](#fixed_response).
 * `forward` - An action to forward the request.
   [Detailed below](#forward).
+* `jwt_validation` - An action to validate using JWT.
+  [Detailed below](#jwt_validation).
 * `redirect` - An action to redirect the request.
   [Detailed below](#redirect).
 
@@ -132,6 +135,18 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the target group.
 * `weight` - Weight of the target group.
 
+#### `jwt_validation`
+
+* `issuer` - Issuer of the JWT.
+* `jwks_endpoint` - JSON Web Key Set (JWKS) endpoint.
+* `additional_claim` - Additional claims to validate.
+
+#### `additional_claim`
+
+* `format` - Format of the claim value.
+* `name` - Name of the claim to validate.
+* `values` - List of expected values of the claim.
+
 #### `redirect`
 
 * `host` - The hostname.
@@ -173,3 +188,22 @@ This data source exports the following attributes in addition to the arguments a
 #### `query_string`
 
 * `values` - Set of `key`-`value` pairs indicating the query string parameters to match.
+
+### `transform`
+
+* `type` - Type of transform.
+* `host_header_rewrite_config` - Block for host header rewrite. [Detailed below](#host_header_rewrite_config).
+* `url_rewrite_config` - Block for URL rewrite. [Detailed below](#url_rewrite_config).
+
+#### `host_header_rewrite_config`
+
+* `rewrite` - Block for host header rewrite configuration. [Detailed below](#rewrite).
+
+#### `url_rewrite_config`
+
+* `rewrite` - Block for URL rewrite configuration. [Detailed below](#rewrite).
+
+#### `rewrite`
+
+* `regex` - Regular expression to match in the input string.
+* `replace` - Replacement string to use when rewriting the matched input.

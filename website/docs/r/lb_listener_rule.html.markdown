@@ -202,6 +202,73 @@ resource "aws_lb_listener_rule" "oidc" {
     target_group_arn = aws_lb_target_group.static.arn
   }
 }
+
+# JWT-validation Action
+
+resource "aws_lb_listener_rule" "oidc" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+}
+
+# With transform
+
+resource "aws_lb_listener_rule" "transform" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -214,18 +281,20 @@ This resource supports the following arguments:
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transform` - (Optional) Configuration block that defines the transform to apply to requests matching this rule. See [Transform Blocks](#transform-blocks) below for more details. Once specified, to remove the transform from the rule, remove the `transform` block from the configuration.
 
 ### Action Blocks
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito`, `authenticate-oidc` and `jwt-validation`.
 * `authenticate_cognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
 * `authenticate_oidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
   Specify only if `type` is `forward`.
   Cannot be specified with `target_group_arn`.
+* `jwt_validation` - (Optional) Information for creating a JWT validation action. Required if `type` is `jwt-validation`.
 * `order` - (Optional) Order for the action.
   The action with the lowest value for order is performed first.
   Valid values are between `1` and `50000`.
@@ -298,6 +367,18 @@ Authentication Request Extra Params Blocks (for `authentication_request_extra_pa
 * `key` - (Required) The key of query parameter
 * `value` - (Required) The value of query parameter
 
+JWT Validation Blocks (for `jwt_validation`) supports the following:
+
+* `issuer` - (Required) Issuer of the JWT.
+* `jwks_endpoint` - (Required) JSON Web Key Set (JWKS) endpoint. This endpoint contains JSON Web Keys (JWK) that are used to validate signatures from the provider. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+* `additional_claim` - (Optional) Repeatable configuration block for additional claims to validate.
+
+Additional Claim Blocks (for `additional_claim`) supports the following:
+
+* `format` - (Required) Format of the claim value. Valid values are `single-string`, `string-array` and `space-separated-values`.
+* `name` - (Required) Name of the claim to validate. `exp`, `iss`, `nbf`, or `iat` cannot be specified because they are validated by default.
+* `values` - (Required) List of expected values of the claim.
+
 ### Condition Blocks
 
 One or more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `http-header` and `query-string` which can be specified multiple times.
@@ -345,6 +426,33 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
+
+#### Transform Blocks
+
+Transform Blocks (for `transform`) support the following:
+
+* `type` - (Required) Type of transform. Valid values are `host-header-rewrite` and `url-rewrite`.
+* `host_header_rewrite_config` - (Optional) Configuration block for host header rewrite. Required if `type` is `host-header-rewrite`. See [Host Header Rewrite Config Blocks](#host-header-rewrite-config-blocks) below.
+* `url_rewrite_config` - (Optional) Configuration block for URL rewrite. Required if `type` is `url-rewrite`. See [URL Rewrite Config Blocks](#url-rewrite-config-blocks) below.
+
+### Host Header Rewrite Config Blocks
+
+Host Header Rewrite Config Blocks (for `host_header_rewrite_config`) support the following:
+
+* `rewrite` - (Optional) Block for host header rewrite configuration. Only one block is accepted. See [Rewrite Blocks](#rewrite-blocks) below.
+
+### URL Rewrite Config Blocks
+
+URL Rewrite Config Blocks (for `url_rewrite_config`) support the following:
+
+* `rewrite` - (Optional) Block for URL rewrite configuration. Only one block is accepted. See [Rewrite Blocks](#rewrite-blocks) below.
+
+### Rewrite Blocks
+
+Rewrite Blocks (for `rewrite`) support the following:
+
+* `regex` - (Required) Regular expression to match in the input string. Length constraints: Between 1 and 1024 characters.
+* `replace` - (Required) Replacement string to use when rewriting the matched input. Capture groups in the regular expression (for example, `$1` and `$2`) can be specified. Length constraints: Between 0 and 1024 characters.
 
 ## Attribute Reference
 

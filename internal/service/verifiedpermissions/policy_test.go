@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -207,7 +207,7 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

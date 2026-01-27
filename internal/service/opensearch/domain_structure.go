@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -435,6 +435,65 @@ func getMasterUserOptions(d *schema.ResourceData) []any {
 		}
 	}
 	return []any{}
+}
+
+func expandIdentityCenterOptions(tfList []any) *awstypes.IdentityCenterOptionsInput {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.IdentityCenterOptionsInput{}
+	}
+
+	apiObject := &awstypes.IdentityCenterOptionsInput{}
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["enabled_api_access"].(bool); ok {
+		apiObject.EnabledAPIAccess = aws.Bool(v)
+	}
+
+	if apiObject.EnabledAPIAccess != nil && aws.ToBool(apiObject.EnabledAPIAccess) {
+		if v, ok := tfMap["identity_center_instance_arn"].(string); ok && v != "" {
+			apiObject.IdentityCenterInstanceARN = aws.String(v)
+		}
+
+		if v, ok := tfMap["roles_key"].(string); ok && v != "" {
+			apiObject.RolesKey = awstypes.RolesKeyIdCOption(v)
+		}
+
+		if v, ok := tfMap["subject_key"].(string); ok && v != "" {
+			apiObject.SubjectKey = awstypes.SubjectKeyIdCOption(v)
+		}
+	}
+
+	return apiObject
+}
+
+func flattenIdentityCenterOptions(apiObject *awstypes.IdentityCenterOptions) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnabledAPIAccess; v != nil {
+		tfMap["enabled_api_access"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.IdentityCenterInstanceARN; v != nil {
+		tfMap["identity_center_instance_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.RolesKey; v != "" {
+		tfMap["roles_key"] = v
+	}
+
+	if v := apiObject.SubjectKey; v != "" {
+		tfMap["subject_key"] = v
+	}
+
+	return []any{tfMap}
 }
 
 func expandLogPublishingOptions(tfList []any) map[string]awstypes.LogPublishingOption {

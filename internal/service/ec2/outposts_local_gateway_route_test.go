@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +66,7 @@ func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 				Config: testAccOutpostsLocalGatewayRouteConfig_destinationCIDRBlock(destinationCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocalGatewayRouteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLocalGatewayRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLocalGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,7 +100,7 @@ func testAccCheckLocalGatewayRouteDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfec2.FindLocalGatewayRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["local_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

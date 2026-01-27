@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -32,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -62,7 +64,7 @@ func (r *s3AccessPointAttachmentResource) Schema(ctx context.Context, request re
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$`), "must between 3 and 50 lowercase letters, numbers, or hyphens"),
-					fwvalidators.SuffixNoneOf("-ext-s3alias"),
+					tfstringvalidator.SuffixNoneOf("-ext-s3alias"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -274,7 +276,7 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -381,7 +383,7 @@ func findS3AccessPointAttachmentByName(ctx context.Context, conn *fsx.Client, na
 	}
 
 	if output.S3AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -428,7 +430,7 @@ func statusS3AccessPointAttachment(conn *fsx.Client, name string) retry.StateRef
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -453,7 +455,7 @@ func waitS3AccessPointAttachmentCreated(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -475,7 +477,7 @@ func waitS3AccessPointAttachmentDeleted(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -115,7 +115,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_disappears(t *testing.T) {
 				Config: testAccPolicyTemplateConfig_basic(`permit (principal in ?principal, action in PhotoFlash::Action::"FullPhotoAccess", resource == ?resource) unless { resource.IsPrivate };`, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicyTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicyTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +138,7 @@ func testAccCheckPolicyTemplateDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err = tfverifiedpermissions.FindPolicyTemplateByID(ctx, conn, policyStoreID, policyTemplateID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

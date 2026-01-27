@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package qldb
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	"github.com/aws/aws-sdk-go-v2/service/qldb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,7 +124,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	ledger, err := findLedgerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QLDB Ledger %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -134,8 +136,9 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	d.Set(names.AttrARN, ledger.Arn)
 	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
-	if ledger.EncryptionDescription != nil {
-		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+	encryptionDescription := ledger.EncryptionDescription
+	if encryptionDescription != nil {
+		d.Set(names.AttrKMSKey, encryptionDescription.KmsKeyArn)
 	} else {
 		d.Set(names.AttrKMSKey, nil)
 	}
@@ -215,8 +218,7 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -225,24 +227,23 @@ func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qld
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.State; state == types.LedgerStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
 	return output, nil
 }
 
-func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLedgerState(conn *qldb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLedgerByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -258,7 +259,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, time
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateCreating),
 		Target:     enum.Slice(types.LedgerStateActive),
-		Refresh:    statusLedgerState(ctx, conn, name),
+		Refresh:    statusLedgerState(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
@@ -276,7 +277,7 @@ func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, name string, time
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateActive, types.LedgerStateDeleting),
 		Target:     []string{},
-		Refresh:    statusLedgerState(ctx, conn, name),
+		Refresh:    statusLedgerState(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -11,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -86,7 +89,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 
 	recorderStatus, err := findConfigurationRecorderStatusByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Configuration Recorder Status (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -144,7 +147,7 @@ func findConfigurationRecorderStatuses(ctx context.Context, conn *configservice.
 	output, err := conn.DescribeConfigurationRecorderStatus(ctx, input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -155,7 +158,7 @@ func findConfigurationRecorderStatuses(ctx context.Context, conn *configservice.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConfigurationRecordersStatus, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -43,6 +43,7 @@ type invokeActionModel struct {
 	InvocationType fwtypes.StringEnum[awstypes.InvocationType] `tfsdk:"invocation_type"`
 	LogType        fwtypes.StringEnum[awstypes.LogType]        `tfsdk:"log_type"`
 	ClientContext  types.String                                `tfsdk:"client_context"`
+	TenantId       types.String                                `tfsdk:"tenant_id"`
 }
 
 func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
@@ -76,6 +77,10 @@ func (a *invokeAction) Schema(ctx context.Context, req action.SchemaRequest, res
 			},
 			"client_context": schema.StringAttribute{
 				Description: "Up to 3,583 bytes of base64-encoded data about the invoking client to pass to the function in the context object. This is only used for mobile applications.",
+				Optional:    true,
+			},
+			"tenant_id": schema.StringAttribute{
+				Description: "The Tenant Id for lambda function invocation. This is mandatory, if tenancy_config is enabled in lambda function",
 				Optional:    true,
 			},
 		},
@@ -134,6 +139,10 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	if !config.Qualifier.IsNull() {
 		input.Qualifier = config.Qualifier.ValueStringPointer()
 	}
+	// Set optional parameters
+	if !config.TenantId.IsNull() {
+		input.TenantId = config.TenantId.ValueStringPointer()
+	}
 
 	if !config.ClientContext.IsNull() {
 		clientContext := config.ClientContext.ValueString()
@@ -173,22 +182,7 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 	// Handle different invocation types
 	switch invocationType {
 	case awstypes.InvocationTypeRequestResponse:
-		// For synchronous invocations, we get an immediate response
-		statusCode := output.StatusCode
-		payloadLength := len(output.Payload)
-
-		var message string
-		if logType == awstypes.LogTypeTail && output.LogResult != nil {
-			message = fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes, logs included)",
-				functionName, statusCode, payloadLength)
-		} else {
-			message = fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes)",
-				functionName, statusCode, payloadLength)
-		}
-
-		resp.SendProgress(action.InvokeProgressEvent{
-			Message: message,
-		})
+		a.handleSyncInvocation(resp, functionName, output, logType)
 
 	case awstypes.InvocationTypeEvent:
 		// For asynchronous invocations, we only get confirmation that the request was accepted
@@ -212,5 +206,33 @@ func (a *invokeAction) Invoke(ctx context.Context, req action.InvokeRequest, res
 		"executed_version":   aws.ToString(output.ExecutedVersion),
 		"has_logs":           output.LogResult != nil,
 		"payload_length":     len(output.Payload),
+	})
+}
+
+func (a *invokeAction) handleSyncInvocation(resp *action.InvokeResponse, functionName string, output *lambda.InvokeOutput, logType awstypes.LogType) {
+	statusCode := output.StatusCode
+	payloadLength := len(output.Payload)
+
+	// Send success message
+	resp.SendProgress(action.InvokeProgressEvent{
+		Message: fmt.Sprintf("Lambda function %s invoked successfully (status: %d, payload: %d bytes)",
+			functionName, statusCode, payloadLength),
+	})
+
+	// Output logs if available
+	if logType != awstypes.LogTypeTail || output.LogResult == nil {
+		return
+	}
+
+	logData, err := base64.StdEncoding.DecodeString(aws.ToString(output.LogResult))
+	if err != nil {
+		resp.SendProgress(action.InvokeProgressEvent{
+			Message: fmt.Sprintf("Failed to decode Lambda logs: %s", err),
+		})
+		return
+	}
+
+	resp.SendProgress(action.InvokeProgressEvent{
+		Message: fmt.Sprintf("Lambda function logs:\n%s", string(logData)),
 	})
 }

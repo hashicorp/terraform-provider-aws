@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer_test
@@ -26,6 +26,7 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 			"tags":                       testAccAccessAnalyzerAnalyzer_tagsSerial,
 			"type_Organization":          testAccAnalyzer_typeOrganization,
 			"upgradeV5_95_0":             testAccAnalyzer_upgradeV5_95_0,
+			"nullInResourceTags":         testAccAnalyzer_nullInResourceTags,
 		},
 		"ArchiveRule": {
 			acctest.CtBasic:      testAccAnalyzerArchiveRule_basic,

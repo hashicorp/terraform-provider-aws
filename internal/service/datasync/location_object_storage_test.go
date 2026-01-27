@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -152,7 +152,7 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationObjectStorage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -355,7 +355,7 @@ func testAccCheckLocationObjectStorageDestroy(ctx context.Context) resource.Test
 
 			_, err := tfdatasync.FindLocationObjectStorageByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

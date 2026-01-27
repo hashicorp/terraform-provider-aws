@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -19,9 +19,11 @@ var (
 	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
+	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
+	ResourceModelCard                              = newModelCardResource
 	ResourceModelPackageGroup                      = resourceModelPackageGroup
 	ResourceModelPackageGroupPolicy                = resourceModelPackageGroupPolicy
 	ResourceMonitoringSchedule                     = resourceMonitoringSchedule
@@ -50,8 +52,11 @@ var (
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindLabelingJobByName                     = findLabelingJobByName
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
+	FindModelCardByName                       = findModelCardByName
+	FindModelCardExportJobByARN               = findModelCardExportJobByARN
 	FindModelPackageGroupByName               = findModelPackageGroupByName
 	FindModelPackageGroupPolicyByName         = findModelPackageGroupPolicyByName
 	FindMonitoringScheduleByName              = findMonitoringScheduleByName
