@@ -625,10 +625,20 @@ func TestAccS3ObjectDataSource_body_base64(t *testing.T) {
 				),
 			},
 			{
+				// body and body_base64 should be unset
 				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+			{
+				// preserves legacy behavior with download_body unset/null with content_type as a downloadable type
+				Config: testAccObjectDataSourceConfig_bodyBase64_readable(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "body", "Hello World"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
 				),
 			},
@@ -1128,4 +1138,28 @@ output "body_base64" {
   value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
 }
 `, rName, downloadBody)
+}
+
+func testAccObjectDataSourceConfig_bodyBase64_readable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-key"
+  content = "Hello World"
+  content_type = "text/plain"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+}
+
+output "body_base64" {
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
+}
+`, rName)
 }
