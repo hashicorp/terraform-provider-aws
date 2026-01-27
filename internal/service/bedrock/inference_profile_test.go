@@ -68,9 +68,7 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 			// Validate a replacement is not planned following import.
@@ -111,6 +109,14 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -145,9 +151,7 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 			{
@@ -156,15 +160,18 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 		},
