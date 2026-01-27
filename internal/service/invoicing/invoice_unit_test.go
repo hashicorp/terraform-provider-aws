@@ -31,6 +31,7 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccInvoicingInvoiceUnit_basic,
 		// acctest.CtDisappears: testAccInvoicingInvoiceUnit_disappears,
+		names.AttrRegion: testAccInvoicingInvoiceUnit_region,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -127,6 +128,54 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	})
 }
 
+func testAccInvoicingInvoiceUnit_region(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_TESTS_ENABLED")
+
+	var invoiceUnit invoicing.GetInvoiceUnitOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_invoicing_invoice_unit.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.InvoicingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvoiceUnitConfig_region(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.CrossRegionAttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				// This test step succeeds because `aws_invoicing_invoice_unit` is global
+				// Import assigns the default region when not set
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIgnore:              []string{names.AttrRegion},
+			},
+		},
+	})
+}
+
 func testAccCheckInvoiceUnitExists(ctx context.Context, n string, v *invoicing.GetInvoiceUnitOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -200,4 +249,20 @@ resource "aws_invoicing_invoice_unit" "test" {
 
 data "aws_caller_identity" "current" {}
 `, rName, description)
+}
+
+func testAccInvoiceUnitConfig_region(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_invoicing_invoice_unit" "test" {
+  name             = %[1]q
+  region           = %[2]q
+  invoice_receiver = data.aws_caller_identity.current.account_id
+
+  rule {
+    linked_accounts = [data.aws_caller_identity.current.account_id]
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, rName, acctest.AlternateRegion())
 }
