@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -105,7 +106,7 @@ func dataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"download_body": {
-				Type:     schema.TypeBool,
+				Type:     nullable.TypeNullableBool,
 				Optional: true,
 			},
 			"etag": {
@@ -263,7 +264,17 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
-	if d.Get("download_body").(bool) || isContentTypeAllowed(output.ContentType) {
+	downloadBody, downloadBodyNull, err := nullable.Bool(d.Get("download_body").(string)).ValueBool()
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+
+	// skip object download if download_body is explicitly set to false
+	if !downloadBodyNull && !downloadBody {
+		return diags
+	}
+
+	if downloadBody || isContentTypeAllowed(output.ContentType) {
 		downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
 		buf := manager.NewWriteAtBuffer(make([]byte, 0))
 		inputObjectDownload := s3.GetObjectInput{
@@ -280,8 +291,10 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 		}
 
-		base64Body := base64.StdEncoding.EncodeToString(buf.Bytes())
-		d.Set("body_base64", base64Body)
+		if downloadBody {
+			base64Body := base64.StdEncoding.EncodeToString(buf.Bytes())
+			d.Set("body_base64", base64Body)
+		}
 
 		if isContentTypeAllowed(output.ContentType) {
 			d.Set("body", string(buf.Bytes()))
