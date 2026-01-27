@@ -197,7 +197,6 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 			"primary_replication_group_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validateReplicationGroupID,
 			},
 			"transit_encryption_enabled": {
@@ -521,6 +520,20 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
+		}
+	}
+
+	if d.HasChange("primary_replication_group_id") {
+		member, err := findGlobalReplicationGroupMemberByID(ctx, conn, d.Id(), d.Get("primary_replication_group_id").(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if _, err := conn.FailoverGlobalReplicationGroup(ctx, &elasticache.FailoverGlobalReplicationGroupInput{
+			GlobalReplicationGroupId:  aws.String(d.Id()),
+			PrimaryRegion:             aws.String(aws.ToString(member.ReplicationGroupRegion)),
+			PrimaryReplicationGroupId: aws.String(d.Get("primary_replication_group_id").(string)),
+		}); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
