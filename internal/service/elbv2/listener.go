@@ -347,7 +347,7 @@ func resourceListener() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 									names.AttrPort: {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Optional: true,
 										Default:  "#{port}",
 									},
