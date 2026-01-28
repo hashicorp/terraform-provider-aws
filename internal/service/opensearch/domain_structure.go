@@ -69,6 +69,10 @@ func expandAIMLOptionsInput(tfMap map[string]any) *awstypes.AIMLOptionsInput {
 		apiObject.S3VectorsEngine = expandS3VectorsEngine(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["serverless_vector_acceleration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ServerlessVectorAcceleration = expandServerlessVectorAcceleration(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
@@ -92,6 +96,20 @@ func expandS3VectorsEngine(tfMap map[string]any) *awstypes.S3VectorsEngine {
 	}
 
 	apiObject := &awstypes.S3VectorsEngine{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandServerlessVectorAcceleration(tfMap map[string]any) *awstypes.ServerlessVectorAcceleration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ServerlessVectorAcceleration{}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
@@ -309,6 +327,10 @@ func flattenAIMLOptionsOutput(apiObject *awstypes.AIMLOptionsOutput) map[string]
 		tfMap["s3_vectors_engine"] = []any{flattenS3VectorsEngine(v)}
 	}
 
+	if v := apiObject.ServerlessVectorAcceleration; v != nil {
+		tfMap["serverless_vector_acceleration"] = []any{flattenServerlessVectorAcceleration(v)}
+	}
+
 	return tfMap
 }
 
@@ -325,6 +347,18 @@ func flattenNaturalLanguageQueryGenerationOptionsOutput(apiObject *awstypes.Natu
 }
 
 func flattenS3VectorsEngine(apiObject *awstypes.S3VectorsEngine) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+	}
+
+	return tfMap
+}
+
+func flattenServerlessVectorAcceleration(apiObject *awstypes.ServerlessVectorAcceleration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
