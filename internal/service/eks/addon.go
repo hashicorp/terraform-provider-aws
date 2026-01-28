@@ -130,6 +130,11 @@ func resourceAddon() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrNamespace: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -168,6 +173,12 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if v, ok := d.GetOk("service_account_role_arn"); ok {
 		input.ServiceAccountRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrNamespace); ok {
+		input.NamespaceConfig = &types.AddonNamespaceConfigRequest{
+			Namespace: aws.String(v.(string)),
+		}
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -246,6 +257,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "setting pod_identity_association: %s", err)
 	}
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
+	d.Set(names.AttrNamespace, d.Get(names.AttrNamespace)) // Create-only.
 
 	setTagsOut(ctx, addon.Tags)
 
