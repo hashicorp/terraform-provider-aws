@@ -367,6 +367,22 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 			return
 		}
 
+		if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) && new.CacheUsageLimits.IsNull() {
+			// Removing CacheUsageLimits.
+			// https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/Scaling.html#Pre-Scaling.console
+			input.CacheUsageLimits = &awstypes.CacheUsageLimits{
+				DataStorage: &awstypes.DataStorage{
+					Maximum: aws.Int32(0),
+					Minimum: aws.Int32(0),
+					Unit:    awstypes.DataStorageUnitGb,
+				},
+				ECPUPerSecond: &awstypes.ECPUPerSecond{
+					Maximum: aws.Int32(0),
+					Minimum: aws.Int32(0),
+				},
+			}
+
+		}
 		// If no engine changes are made, unset related fields to prevent the following error:
 		// This API supports only cross-engine upgrades to Valkey engine currently.
 		if new.Engine.Equal(old.Engine) && new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
