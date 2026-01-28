@@ -29,5 +29,5 @@ Otherwise, install directly using `pip3`
 Once installed, the documentation can be served from the root directory:
 
 ```console
-% mkdocs serve
+% mkdocs serve --live-reload
 ```
