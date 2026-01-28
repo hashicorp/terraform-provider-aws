@@ -36,7 +36,9 @@ import (
 // @FrameworkResource("aws_ssoadmin_managed_policy_attachments_exclusive", name="Managed Policy Attachments Exclusive")
 // @IdentityAttribute("instance_arn")
 // @IdentityAttribute("permission_set_arn")
+// @ArnFormat(global=true)
 // @ImportIDHandler("managedPolicyAttachmentsExclusiveImportID")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstances")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsTakesT=false)
 // @Testing(checkDestroyNoop=true)
@@ -50,10 +52,6 @@ func newManagedPolicyAttachmentsExclusiveResource(_ context.Context) (resource.R
 
 	return r, nil
 }
-
-const (
-	ResNameManagedPolicyAttachmentsExclusive = "Managed Policy Attachments Exclusive"
-)
 
 type managedPolicyAttachmentsExclusiveResource struct {
 	framework.ResourceWithModel[managedPolicyAttachmentsExclusiveResourceModel]
