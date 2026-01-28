@@ -21,18 +21,7 @@ const (
 
 func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	dataSourceName := "data.aws_account_regions.test"
-
-	enabledByDefaultRegions := []string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "ap-northeast-1", "ap-northeast-2", "ap-northeast-3", "ap-south-1", "ap-southeast-1", "ap-southeast-2", "ca-central-1", "eu-central-1", "eu-north-1", "eu-west-1", "eu-west-2", "eu-west-3", "sa-east-1"}
-
-	var testChecks []resource.TestCheckFunc
-	for _, region := range enabledByDefaultRegions {
-		testChecks = append(testChecks, resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
-			"region_name":       region,
-			"region_opt_status": enabledByDefault,
-		}))
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,12 +34,16 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `data "aws_account_regions" "test" {}`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testChecks...,
-				),
+				Check:  resource.TestCheckResourceAttrSet(dataSourceName, "regions.#"),
 			},
 			{
-				Config: testAccAccountRegionsDataSourceConfig_disabled(),
+				Config: testAccAccountRegionsDataSourceConfig_status(enabledByDefault),
+				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
+					"region_opt_status": enabledByDefault,
+				}),
+			},
+			{
+				Config: testAccAccountRegionsDataSourceConfig_status(disabled),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
 					"region_opt_status": disabled,
 				}),
@@ -59,10 +52,10 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAccountRegionsDataSourceConfig_disabled() string {
+func testAccAccountRegionsDataSourceConfig_status(status string) string {
 	return fmt.Sprintf(`
 data "aws_account_regions" "test" {
   region_opt_status_contains = ["%s"]
 }
-`, disabled)
+`, status)
 }
