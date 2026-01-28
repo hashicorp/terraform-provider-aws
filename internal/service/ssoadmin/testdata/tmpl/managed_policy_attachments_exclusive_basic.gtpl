@@ -1,6 +1,4 @@
-data "aws_partition" "current" {
-{{- template "region" -}}
-}
+data "aws_partition" "current" {}
 
 data "aws_ssoadmin_instances" "test" {
 {{- template "region" -}}
