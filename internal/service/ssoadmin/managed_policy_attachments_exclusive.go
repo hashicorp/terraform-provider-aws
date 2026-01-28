@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -129,7 +129,7 @@ func (r *managedPolicyAttachmentsExclusiveResource) Read(ctx context.Context, re
 	}
 
 	out, err := findManagedPolicyAttachmentsByTwoPartKey(ctx, conn, state.PermissionSetARN.ValueString(), state.InstanceARN.ValueString())
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
