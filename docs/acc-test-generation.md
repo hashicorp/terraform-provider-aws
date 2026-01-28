@@ -73,11 +73,11 @@ Multiple `@Testing(preCheckWithRegion)` annotations are allowed.
 #### Required Environment Variables
 
 If a test should be skipped unless an environment variable is set, but the value is not used in the test,
-set the annotation `@Testing(requireEnvVar="<name>)`.
+set the annotation `@Testing(requireEnvVar="<name>")`.
 Multiple `@Testing(requireEnvVar)` annotations are allowed.
 
 If a test should be skipped unless an environment variable is set, and the value is used in the test,
-set the annotation `@Testing(requireEnvVarValue="<name>)`.
+set the annotation `@Testing(requireEnvVarValue="<name>")`.
 This will add a Terraform variable with the same name to the generated test configuration.
 Multiple `@Testing(requireEnvVarValue)` annotations are allowed.
 
