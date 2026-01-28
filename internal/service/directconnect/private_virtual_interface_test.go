@@ -19,6 +19,66 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccDirectConnectPrivateVirtualInterface_longASNFormats(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	var vif awstypes.VirtualInterface
+	resourceName := "aws_dx_private_virtual_interface.test"
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	vlan := sdkacctest.RandIntRange(2049, 4094)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateVirtualInterfaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrivateVirtualInterfaceConfig_longASNAsplain(connectionID, rName, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrivateVirtualInterfaceExists(ctx, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn_long", "4200000001"),
+					resource.TestCheckNoResourceAttr(resourceName, "bgp_asn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPrivateVirtualInterfaceConfig_longASNAsdot(connectionID, rName, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrivateVirtualInterfaceExists(ctx, resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn_long", "4200000001"),
+					resource.TestCheckNoResourceAttr(resourceName, "bgp_asn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDirectConnectPrivateVirtualInterface_longASNConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
+
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", sdkacctest.RandString(9))
+	vlan := sdkacctest.RandIntRange(2049, 4094)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPrivateVirtualInterfaceConfig_longASNConflict(connectionID, rName, vlan),
+				ExpectError: regexache.MustCompile(`"bgp_asn": conflicts with bgp_asn_long`),
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectPrivateVirtualInterface_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	connectionID := acctest.SkipIfEnvVarNotSet(t, "DX_CONNECTION_ID")
@@ -297,6 +357,52 @@ resource "aws_vpn_gateway" "test" {
     Name = %[1]q
   }
 }`, rName)
+}
+
+func testAccPrivateVirtualInterfaceConfig_longASNAsplain(cid, rName string, vlan int) string {
+	return acctest.ConfigCompose(testAccPrivateVirtualInterfaceConfig_vpnGateway(rName), fmt.Sprintf(`
+resource "aws_dx_private_virtual_interface" "test" {
+  address_family   = "ipv4"
+  bgp_asn_long     = "4200000001"
+  connection_id    = %[1]q
+  name             = %[2]q
+  vlan             = %[3]d
+  customer_address = "192.168.1.1/30"
+  amazon_address   = "192.168.1.2/30"
+  vpn_gateway_id   = aws_vpn_gateway.test.id
+}
+`, cid, rName, vlan))
+}
+
+func testAccPrivateVirtualInterfaceConfig_longASNAsdot(cid, rName string, vlan int) string {
+	return acctest.ConfigCompose(testAccPrivateVirtualInterfaceConfig_vpnGateway(rName), fmt.Sprintf(`
+resource "aws_dx_private_virtual_interface" "test" {
+  address_family   = "ipv4"
+  bgp_asn_long     = "64086.59905"
+  connection_id    = %[1]q
+  name             = %[2]q
+  vlan             = %[3]d
+  customer_address = "192.168.1.1/30"
+  amazon_address   = "192.168.1.2/30"
+  vpn_gateway_id   = aws_vpn_gateway.test.id
+}
+`, cid, rName, vlan))
+}
+
+func testAccPrivateVirtualInterfaceConfig_longASNConflict(cid, rName string, vlan int) string {
+	return acctest.ConfigCompose(testAccPrivateVirtualInterfaceConfig_vpnGateway(rName), fmt.Sprintf(`
+resource "aws_dx_private_virtual_interface" "test" {
+  address_family   = "ipv4"
+  bgp_asn          = 65000
+  bgp_asn_long     = "4200000001"
+  connection_id    = %[1]q
+  name             = %[2]q
+  vlan             = %[3]d
+  customer_address = "192.168.1.1/30"
+  amazon_address   = "192.168.1.2/30"
+  vpn_gateway_id   = aws_vpn_gateway.test.id
+}
+`, cid, rName, vlan))
 }
 
 func testAccPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {

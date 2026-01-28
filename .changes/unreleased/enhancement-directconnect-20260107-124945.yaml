@@ -1,0 +1,10 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+kind: enhancement
+body: Add support for 4-byte ASNs in DirectConnect virtual interfaces via new `bgp_asn_long` attribute
+time: 2026-01-07T12:49:45-08:00
+custom:
+  Issue: ""
+  Type: enhancement
+  Service: directconnect
