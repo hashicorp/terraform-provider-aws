@@ -172,7 +172,7 @@ type managedPolicyAttachmentsExclusiveImportID struct{}
 func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]string, error) {
 	instanceARN, permissionSetARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
-		return "", nil, fmt.Errorf("id \"%s\" should be in the format <instance-arn>"+intflex.ResourceIdSeparator+"<permission-set-arn>", id)
+		return "", nil, smarterr.NewError(fmt.Errorf("id \"%s\" should be in the format <instance-arn>"+intflex.ResourceIdSeparator+"<permission-set-arn>", id))
 	}
 
 	result := map[string]string{
