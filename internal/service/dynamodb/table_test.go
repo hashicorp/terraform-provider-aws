@@ -890,6 +890,70 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 		New             []any
 		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
 	}{
+		"plan omits warm_throughput - should not update": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  12000,
+							"write_units_per_second": 17194,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					// "warm_throughput" omitted
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+		"plan has empty warm_throughput - should not update": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  12000,
+							"write_units_per_second": 17194,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{}, // explicitly empty
+				},
+			},
+			ExpectedUpdates: nil,
+		},
 		"no changes": { // No-op => no changes
 			Old: []any{
 				map[string]any{

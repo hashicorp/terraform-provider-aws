@@ -2160,8 +2160,16 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 					}
 					ops = append(ops, update)
 				}
-				// Separating the WarmThroughput updates from the others
-				if warmThroughputChanged {
+				// Only update WarmThroughput if the user has set it in the new config (not omitted or empty)
+				newWarmThroughputOmitted := true
+				if v, ok := newMap["warm_throughput"]; ok {
+					if arr, ok := v.([]any); ok {
+						if len(arr) > 0 && arr[0] != nil {
+							newWarmThroughputOmitted = false
+						}
+					}
+				}
+				if warmThroughputChanged && !newWarmThroughputOmitted {
 					update := awstypes.GlobalSecondaryIndexUpdate{
 						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 							IndexName:      aws.String(idxName),
@@ -3592,6 +3600,17 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 				if p.LengthInt() == 0 && s.LengthInt() > 0 {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "warm_throughput":
+				// AWS automatically sets warm_throughput
+				// values for on-demand tables, but these should not cause diffs when
+				// the user hasn't explicitly configured warm_throughput.
+				if p.IsNull() || (p.IsKnown() && p.LengthInt() == 0) {
+					continue
 				}
 				if !ctyValueLegacyEquals(s, p) {
 					return nil
