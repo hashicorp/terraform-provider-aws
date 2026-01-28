@@ -38,7 +38,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())),
 				),
 			},
 			{
@@ -69,8 +69,8 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/PowerUserAccess"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())),
+					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", fmt.Sprintf("arn:%s:iam::aws:policy/PowerUserAccess", acctest.Partition())),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandRemoval(t *testin
 				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckManagedPolicyDetach(ctx, resourceName, "arn:aws:iam::aws:policy/ReadOnlyAccess"),
+					testAccCheckManagedPolicyDetach(ctx, resourceName, "ReadOnlyAccess"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +172,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandAddition(t *testi
 				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckManagedPolicyAttach(ctx, resourceName, "arn:aws:iam::aws:policy/PowerUserAccess"),
+					testAccCheckManagedPolicyAttach(ctx, resourceName, "PowerUserAccess"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -202,7 +202,7 @@ func testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n 
 	}
 }
 
-func testAccCheckManagedPolicyDetach(ctx context.Context, n, policyARN string) resource.TestCheckFunc {
+func testAccCheckManagedPolicyDetach(ctx context.Context, n, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -210,6 +210,8 @@ func testAccCheckManagedPolicyDetach(ctx context.Context, n, policyARN string) r
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		policyARN := fmt.Sprintf("arn:%s:iam::aws:policy/%s", acctest.Partition(), policyName)
+
 		_, err := conn.DetachManagedPolicyFromPermissionSet(ctx, &ssoadmin.DetachManagedPolicyFromPermissionSetInput{
 			InstanceArn:      aws.String(rs.Primary.Attributes["instance_arn"]),
 			PermissionSetArn: aws.String(rs.Primary.Attributes["permission_set_arn"]),
@@ -220,7 +222,7 @@ func testAccCheckManagedPolicyDetach(ctx context.Context, n, policyARN string) r
 	}
 }
 
-func testAccCheckManagedPolicyAttach(ctx context.Context, n, policyARN string) resource.TestCheckFunc {
+func testAccCheckManagedPolicyAttach(ctx context.Context, n, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -228,6 +230,8 @@ func testAccCheckManagedPolicyAttach(ctx context.Context, n, policyARN string) r
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		policyARN := fmt.Sprintf("arn:%s:iam::aws:policy/%s", acctest.Partition(), policyName)
+
 		_, err := conn.AttachManagedPolicyToPermissionSet(ctx, &ssoadmin.AttachManagedPolicyToPermissionSetInput{
 			InstanceArn:      aws.String(rs.Primary.Attributes["instance_arn"]),
 			PermissionSetArn: aws.String(rs.Primary.Attributes["permission_set_arn"]),
@@ -240,6 +244,8 @@ func testAccCheckManagedPolicyAttach(ctx context.Context, n, policyARN string) r
 
 func testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
@@ -252,7 +258,7 @@ resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 
   managed_policy_arns = [
-    "arn:aws:iam::aws:policy/ReadOnlyAccess",
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/ReadOnlyAccess",
   ]
 }
 `, rName)
@@ -260,6 +266,8 @@ resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
 
 func testAccManagedPolicyAttachmentsExclusiveConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
@@ -272,8 +280,8 @@ resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 
   managed_policy_arns = [
-    "arn:aws:iam::aws:policy/ReadOnlyAccess",
-    "arn:aws:iam::aws:policy/PowerUserAccess",
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/ReadOnlyAccess",
+    "arn:${data.aws_partition.current.partition}:iam::aws:policy/PowerUserAccess",
   ]
 }
 `, rName)
@@ -281,6 +289,8 @@ resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
 
 func testAccManagedPolicyAttachmentsExclusiveConfig_empty(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
