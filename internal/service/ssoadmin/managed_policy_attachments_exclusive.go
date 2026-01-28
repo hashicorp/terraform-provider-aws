@@ -5,6 +5,8 @@ package ssoadmin
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -27,10 +29,19 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_ssoadmin_managed_policy_attachments_exclusive", name="Managed Policy Attachments Exclusive")
+// @IdentityAttribute("instance_arn")
+// @IdentityAttribute("permission_set_arn")
+// @ImportIDHandler("managedPolicyAttachmentsExclusiveImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false)
+// @Testing(checkDestroyNoop=true)
+// @Testing(importStateIdFunc=testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc)
+// @Testing(importStateIdAttribute="instance_arn")
 func newManagedPolicyAttachmentsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &managedPolicyAttachmentsExclusiveResource{}
 
@@ -47,14 +58,13 @@ const (
 type managedPolicyAttachmentsExclusiveResource struct {
 	framework.ResourceWithModel[managedPolicyAttachmentsExclusiveResourceModel]
 	framework.WithNoOpDelete
-	framework.WithImportByID
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *managedPolicyAttachmentsExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"instance_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -104,13 +114,6 @@ func (r *managedPolicyAttachmentsExclusiveResource) Create(ctx context.Context, 
 		return
 	}
 
-	id, err := plan.setID()
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PermissionSetARN.ValueString())
-		return
-	}
-	plan.ID = types.StringValue(id)
-
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -120,11 +123,6 @@ func (r *managedPolicyAttachmentsExclusiveResource) Read(ctx context.Context, re
 	var state managedPolicyAttachmentsExclusiveResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if err := state.InitFromID(); err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
@@ -165,6 +163,24 @@ func (r *managedPolicyAttachmentsExclusiveResource) Update(ctx context.Context, 
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+}
+
+var _ inttypes.ImportIDParser = managedPolicyAttachmentsExclusiveImportID{}
+
+type managedPolicyAttachmentsExclusiveImportID struct{}
+
+func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]string, error) {
+	instanceARN, permissionSetARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <instance-arn>"+intflex.ResourceIdSeparator+"<permission-set-arn>", id)
+	}
+
+	result := map[string]string{
+		"instance_arn":       instanceARN,
+		"permission_set_arn": permissionSetARN,
+	}
+
+	return id, result, nil
 }
 
 func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.Context, instanceARN, permissionSetARN string, want []string, timeout time.Duration) error {
@@ -210,34 +226,12 @@ func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.
 	return nil
 }
 
-const (
-	managedPolicyAttachmentsExclusiveIDPartCount = 2
-)
-
-func (data *managedPolicyAttachmentsExclusiveResourceModel) InitFromID() error {
-	id := data.ID.ValueString()
-	parts, err := intflex.ExpandResourceId(id, managedPolicyAttachmentsExclusiveIDPartCount, false)
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	data.PermissionSetARN = types.StringValue(parts[0])
-	data.InstanceARN = types.StringValue(parts[1])
-
-	return nil
-}
-
-func (data *managedPolicyAttachmentsExclusiveResourceModel) setID() (string, error) {
-	parts := []string{
-		data.PermissionSetARN.ValueString(),
-		data.InstanceARN.ValueString(),
-	}
-
-	id, err := intflex.FlattenResourceId(parts, managedPolicyAttachmentsExclusiveIDPartCount, false)
-	if err != nil {
-		return "", smarterr.NewError(err)
-	}
-	return id, nil
+type managedPolicyAttachmentsExclusiveResourceModel struct {
+	framework.WithRegionModel
+	InstanceARN       types.String        `tfsdk:"instance_arn"`
+	PermissionSetARN  types.String        `tfsdk:"permission_set_arn"`
+	ManagedPolicyARNs fwtypes.SetOfString `tfsdk:"managed_policy_arns"`
+	Timeouts          timeouts.Value      `tfsdk:"timeouts"`
 }
 
 func findManagedPolicyAttachmentsByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) ([]string, error) {
@@ -268,13 +262,4 @@ func findManagedPolicyAttachmentsByTwoPartKey(ctx context.Context, conn *ssoadmi
 	}
 
 	return policyARNs, nil
-}
-
-type managedPolicyAttachmentsExclusiveResourceModel struct {
-	framework.WithRegionModel
-	ID                types.String        `tfsdk:"id"`
-	InstanceARN       types.String        `tfsdk:"instance_arn"`
-	PermissionSetARN  types.String        `tfsdk:"permission_set_arn"`
-	ManagedPolicyARNs fwtypes.SetOfString `tfsdk:"managed_policy_arns"`
-	Timeouts          timeouts.Value      `tfsdk:"timeouts"`
 }
