@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -37,6 +38,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const taskDefinitionPropagationTimeout = 2 * time.Minute
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
@@ -653,16 +656,43 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	if _, ok := d.GetOk("track_latest"); ok {
 		familyOrARN = d.Get(names.AttrFamily).(string)
 	}
-	taskDefinition, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
 
+	// Wrap the read in a retry that only triggers for brand-new resources.
+	type taskDefWithTags struct {
+		Task *awstypes.TaskDefinition
+		Tags []awstypes.Tag
+	}
+
+	output, err := tfresource.RetryWhenNewResourceNotFound(
+		ctx,
+		taskDefinitionPropagationTimeout,
+		func(ctx context.Context) (taskDefWithTags, error) {
+			td, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
+			if err != nil {
+				return taskDefWithTags{}, err
+			}
+			return taskDefWithTags{
+				Task: td,
+				Tags: tags,
+			}, nil
+		},
+		d.IsNewResource(),
+	)
+
+	// For existing resources: if it’s really gone, drop from state.
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
+	// Any other error (including exhausted retries for new resources) is fatal.
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
 	}
+
+	taskDefinition := output.Task
+	tags := output.Tags
 
 	d.SetId(aws.ToString(taskDefinition.Family))
 	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
