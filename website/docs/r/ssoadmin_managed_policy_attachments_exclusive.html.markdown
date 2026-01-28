@@ -76,18 +76,34 @@ This resource exports no additional attributes.
 * `create` - (Default `10m`)
 * `update` - (Default `10m`)
 
-## Identity Schema
+## Import
 
-### Required
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssoadmin_managed_policy_attachments_exclusive.example
+  identity = {
+    instance_arn       = "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+    permission_set_arn = "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-1234567890abcdef"
+  }
+}
+
+resource "aws_ssoadmin_managed_policy_attachments_exclusive" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
 
 * `instance_arn` (String) ARN of the SSO Instance.
 * `permission_set_arn` (String) ARN of the Permission Set.
 
-### Optional
+#### Optional
 
 * `region` (String) Region where this resource is managed.
-
-## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Managed Policy Attachments Exclusive using the `instance_arn` and `permission_set_arn` arguments, separated by a comma (`,`). For example:
 
