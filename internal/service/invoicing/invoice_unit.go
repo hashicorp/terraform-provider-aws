@@ -38,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_invoicing_invoice_unit", name="Invoice Unit")
 // @Tags(identifierAttribute="arn")
+// @Region(overrideDeprecated=true)
 // @Testing(tagsTest=false)
 func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &invoiceUnitResource{}
