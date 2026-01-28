@@ -599,6 +599,25 @@ func DataSetRefreshPropertiesSchema() *schema.Schema {
 						},
 					},
 				},
+				"failure_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"email_alert": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alert_status": stringEnumSchema[awstypes.RefreshFailureAlertStatus](attrOptional),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -1413,6 +1432,10 @@ func ExpandDataSetRefreshProperties(tfList []any) *awstypes.DataSetRefreshProper
 		apiObject.RefreshConfiguration = expandRefreshConfiguration(v)
 	}
 
+	if v, ok := tfMap["failure_configuration"].([]any); ok {
+		apiObject.FailureConfiguration = expandRefreshFailureConfiguration(v)
+	}
+
 	return apiObject
 }
 
@@ -1474,6 +1497,44 @@ func expandLookbackWindow(tfList []any) *awstypes.LookbackWindow {
 	}
 	if v, ok := tfMap["size_unit"].(string); ok {
 		apiObject.SizeUnit = awstypes.LookbackWindowSizeUnit(v)
+	}
+
+	return apiObject
+}
+
+func expandRefreshFailureConfiguration(tfList []any) *awstypes.RefreshFailureConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.RefreshFailureConfiguration{}
+
+	if v, ok := tfMap["email_alert"].([]any); ok {
+		apiObject.EmailAlert = expandRefreshFailureEmailAlertConfiguration(v)
+	}
+
+	return apiObject
+}
+
+func expandRefreshFailureEmailAlertConfiguration(tfList []any) *awstypes.RefreshFailureEmailAlert {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &awstypes.RefreshFailureEmailAlert{}
+
+	if v, ok := tfMap["alert_status"].(string); ok {
+		apiObject.AlertStatus = awstypes.RefreshFailureAlertStatus(v)
 	}
 
 	return apiObject
