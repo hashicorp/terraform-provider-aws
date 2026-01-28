@@ -18,6 +18,7 @@ import (
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -82,6 +83,7 @@ func TestAccODBCloudAutonomousVmCluster_variables(t *testing.T) {
 	}
 
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterResourceTestEntity.autonomousVmClusterDisplayNamePrefix)
+	resourceName := "oci_database_cloud_autonomous_vm_cluster.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -611,12 +613,12 @@ func (autonomousVMClusterResourceTest) autonomousVmClusterByARN() (string, strin
 %s
 
 data "aws_odb_db_servers" "test" {
-  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.arn
 }
 
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.id
-  odb_network_id                        = aws_odb_network.test.id
+  cloud_exadata_infrastructure_arn      = aws_odb_cloud_exadata_infrastructure.test.arn
+  odb_network_arn                       = aws_odb_network.test.arn
   display_name                          = %[3]q
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
@@ -643,8 +645,8 @@ data "aws_odb_db_servers" "test" {
 }
 
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.id
-  odb_network_id                        = aws_odb_network.test.id
+  cloud_exadata_infrastructure_arn      = aws_odb_cloud_exadata_infrastructure.test.arn
+  odb_network_arn                       = aws_odb_network.test.arn
   display_name                          = %[3]q
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
