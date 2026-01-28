@@ -1,5 +1,9 @@
 ## 6.30.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_ssoadmin_managed_policy_attachments_exclusive` ([#46176](https://github.com/hashicorp/terraform-provider-aws/issues/46176))
+
 ## 6.29.0 (January 28, 2026)
 
 NOTES:
