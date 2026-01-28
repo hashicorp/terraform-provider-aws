@@ -148,6 +148,7 @@ const (
 type {{ .ResourceLowerCamel }}Resource struct {
 	framework.ResourceWithModel[{{ .ResourceLowerCamel }}ResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 {{ if .IncludeComments }}
@@ -572,16 +573,19 @@ func (r *{{ .ResourceLowerCamel }}Resource) Delete(ctx context.Context, req reso
 }
 {{ if .IncludeComments }}
 // TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
+// The built-in import function, and Import ID Handler, if any, should handle populating the required
+// attributes from the Import ID or Resource Identity.
+// In some cases, additional attributes must be set when importing.
+// Adding a custom ImportState function can handle those.
 //
 // See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
+// https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
 {{- end }}
-func (r *{{ .ResourceLowerCamel }}Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+// func (r *{{ .ResourceLowerCamel }}Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	r.WithImportByIdentity.ImportState(ctx, req, resp)
+// 
+// 	// Set needed attribute values here
+// }
 
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
