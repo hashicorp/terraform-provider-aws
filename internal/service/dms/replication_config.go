@@ -303,6 +303,10 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Config (%s): %s", d.Id(), err)
 		}
 
+		if err := waitReplicationStopped(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for modifying DMS Serverless Replication (%s) stop: %s", d.Id(), err)
+		}
+
 		if d.Get("start_replication").(bool) {
 			if err := startReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
