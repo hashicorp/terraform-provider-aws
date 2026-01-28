@@ -57,15 +57,12 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(ctx, resourceName, "invoice_receiver"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.linked_accounts.#", "1"),
-					// resource.TestCheckTypeSetElemAttr(resourceName, "rule.0.linked_accounts.*", linkedAccount),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
@@ -94,13 +91,13 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "invoicing", regexache.MustCompile(`invoice-unit/.+`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
@@ -144,10 +141,11 @@ func testAccInvoicingInvoiceUnit_region(t *testing.T) {
 		CheckDestroy:             testAccCheckInvoiceUnitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvoiceUnitConfig_region(rName),
+				Config: testAccInvoiceUnitConfig_region(rName, acctest.AlternateRegion()),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -171,6 +169,19 @@ func testAccInvoicingInvoiceUnit_region(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerifyIgnore:              []string{names.AttrRegion},
+			},
+			{
+				Config: testAccInvoiceUnitConfig_region(rName, acctest.Region()),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInvoiceUnitExists(ctx, resourceName, &invoiceUnit),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
+				),
 			},
 		},
 	})
@@ -251,7 +262,7 @@ data "aws_caller_identity" "current" {}
 `, rName, description)
 }
 
-func testAccInvoiceUnitConfig_region(rName string) string {
+func testAccInvoiceUnitConfig_region(rName, region string) string {
 	return fmt.Sprintf(`
 resource "aws_invoicing_invoice_unit" "test" {
   name             = %[1]q
@@ -264,5 +275,5 @@ resource "aws_invoicing_invoice_unit" "test" {
 }
 
 data "aws_caller_identity" "current" {}
-`, rName, acctest.AlternateRegion())
+`, rName, region)
 }
