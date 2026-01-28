@@ -37,7 +37,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_basic(t *testing.T
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(t, rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
@@ -135,7 +135,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandRemoval(t
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(t, rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					testAccCheckCustomerManagedPolicyDetach(ctx, resourceName, rName, "/"),
@@ -143,7 +143,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandRemoval(t
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(t, rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
@@ -168,7 +168,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(t, rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					testAccCheckCustomerManagedPolicyAttach(ctx, resourceName, fmt.Sprintf("%s-2", rName), "/"),
@@ -176,7 +176,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(t, rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
@@ -263,8 +263,30 @@ func testAccCheckCustomerManagedPolicyAttach(ctx context.Context, n, policyName,
 	}
 }
 
-func testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccCustomerManagedPolicyAttachmentsExclusiveConfigBase(t), `
+func testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:ListBucket"
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_ssoadmin_permission_set" "test" {
+  name         = %[1]q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+
 resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "test" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
@@ -273,7 +295,7 @@ resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "test" {
     name = aws_iam_policy.test.name
   }
 }
-`)
+`, rName)
 }
 
 func testAccCustomerManagedPolicyAttachmentsExclusiveConfig_multiple(rName string) string {
@@ -344,30 +366,4 @@ resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "test" {
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 }
 `, rName)
-}
-
-func testAccCustomerManagedPolicyAttachmentsExclusiveConfigBase(t *testing.T) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-data "aws_partition" "current" {}
-
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_iam_policy" "test" {
-  name = var.rName
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action   = "s3:ListBucket"
-      Effect   = "Allow"
-      Resource = "*"
-    }]
-  })
-}
-
-resource "aws_ssoadmin_permission_set" "test" {
-  name         = var.rName
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-}
-`)
 }

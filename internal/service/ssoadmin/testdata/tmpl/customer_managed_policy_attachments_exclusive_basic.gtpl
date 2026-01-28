@@ -1,13 +1,10 @@
-data "aws_partition" "current" {
-{{- template "region" -}}
-}
+data "aws_partition" "current" {}
 
 data "aws_ssoadmin_instances" "test" {
 {{- template "region" -}}
 }
 
 resource "aws_iam_policy" "test" {
-{{- template "region" }}
   name = var.rName
 
   policy = jsonencode({

@@ -30,7 +30,10 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_Basic(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -121,7 +124,10 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_RegionOve
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
