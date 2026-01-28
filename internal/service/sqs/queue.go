@@ -227,7 +227,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	name := queueName(d)
+	name := queueName(ctx, d)
 	input := &sqs.CreateQueueInput{
 		QueueName: aws.String(name),
 		Tags:      getTagsIn(ctx),
@@ -380,14 +380,14 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+func resourceQueueCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoQueue := diff.Get("fifo_queue").(bool)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 	sqsManagedSSEEnabled := diff.Get("sqs_managed_sse_enabled").(bool)
 
 	if diff.Id() == "" {
 		// Create.
-		name := queueName(diff)
+		name := queueName(ctx, diff)
 		var re *regexp.Regexp
 
 		if fifoQueue {
@@ -422,12 +422,12 @@ func resourceQueueCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func queueName(d sdkv2.ResourceDiffer) string {
+func queueName(ctx context.Context, d sdkv2.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_queue").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoQueueNameSuffix))
 	}
-	return create.NewNameGenerator(optFns...).Generate()
+	return create.NewNameGenerator(optFns...).Generate(ctx)
 }
 
 // queueNameFromURL returns the SQS queue name from the specified URL.

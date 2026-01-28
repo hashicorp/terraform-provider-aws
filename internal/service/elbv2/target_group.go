@@ -433,7 +433,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	exist, err := findTargetGroupByName(ctx, conn, name)
 
 	if err != nil && !retry.NotFound(err) {

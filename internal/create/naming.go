@@ -13,7 +13,7 @@ import (
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
 func Name(ctx context.Context, name string, namePrefix string) string {
-	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate()
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate(ctx)
 }
 
 // hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
@@ -106,7 +106,7 @@ func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
 }
 
 // Generate generates a new name.
-func (g *nameGenerator) Generate() string {
+func (g *nameGenerator) Generate(ctx context.Context) string {
 	if g.configuredName != "" {
 		return g.configuredName
 	}
