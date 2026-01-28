@@ -58,8 +58,12 @@ resource "aws_ssoadmin_managed_policy_attachments_exclusive" "example" {
 The following arguments are required:
 
 * `instance_arn` - (Required) ARN of the SSO Instance.
-* `permission_set_arn` - (Required) ARN of the Permission Set.
 * `managed_policy_arns` - (Required) Set of ARNs of IAM managed policies to attach to the Permission Set.
+* `permission_set_arn` - (Required) ARN of the Permission Set.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
