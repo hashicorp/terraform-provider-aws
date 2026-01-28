@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_task_definition: Fix perpetual diff for `container_definitions` when `mountPoints`, `volumesFrom`, or `systemControls` are empty arrays
+```
+
+```release-note:bug
+resource/aws_ecs_task_definition: Fix perpetual diff for `volume.configure_at_launch` showing `false` vs `null`
+```
