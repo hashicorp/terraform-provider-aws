@@ -1,4 +1,4 @@
-## 6.29.0 (Unreleased)
+## 6.29.0 (January 28, 2026)
 
 NOTES:
 
