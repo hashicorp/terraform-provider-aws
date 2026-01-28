@@ -70,6 +70,10 @@ func (r *environmentBlueprintConfigurationResource) Schema(ctx context.Context, 
 				CustomType: fwtypes.MapOfMapOfStringType,
 				Optional:   true,
 			},
+			"global_parameters": schema.MapAttribute{
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
+			},
 		},
 	}
 }
@@ -243,4 +247,5 @@ type environmentBlueprintConfigurationResourceModel struct {
 	ManageAccessRoleARN            fwtypes.ARN              `tfsdk:"manage_access_role_arn"`
 	ProvisioningRoleARN            fwtypes.ARN              `tfsdk:"provisioning_role_arn"`
 	RegionalParameters             fwtypes.MapOfMapOfString `tfsdk:"regional_parameters"`
+	GlobalParameters               fwtypes.MapOfString      `tfsdk:"global_parameters"`
 }
