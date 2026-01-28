@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fixed, ability to update engine and engine_version of aws_elasticache_replication_group after removing /disassociating it from aws_elasticache_global_replication_group .
+Previously, aws_elasticache_replication_group was ignoring any changes to engine or engine version if it had ever been part of aws_elasticache_global_replication_group / Global Datastore.
+```
