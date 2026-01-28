@@ -29,11 +29,7 @@ const (
 )
 
 type dataSourceRegions struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *dataSourceRegions) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_account_regions"
+	framework.DataSourceWithModel[dataSourceRegionsModel]
 }
 
 func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
