@@ -1528,11 +1528,14 @@ func flattenSpotOptions(apiObject *awstypes.SpotOptions) map[string]any {
 		tfMap["instance_interruption_behavior"] = v
 	}
 
-	if v := apiObject.InstancePoolsToUseCount; v != nil {
-		tfMap["instance_pools_to_use_count"] = aws.ToInt32(v)
-	} else if apiObject.AllocationStrategy == awstypes.SpotAllocationStrategyDiversified {
-		// API will omit InstancePoolsToUseCount if AllocationStrategy is diversified, which breaks our Default: 1
-		// Here we just reset it to 1 to prevent removing the Default and setting up a special DiffSuppressFunc.
+	if apiObject.AllocationStrategy == awstypes.SpotAllocationStrategy(spotAllocationStrategyLowestPrice) {
+		// InstancePoolsToUseCount is only valid for lowestPrice allocation strategy
+		if v := apiObject.InstancePoolsToUseCount; v != nil {
+			tfMap["instance_pools_to_use_count"] = aws.ToInt32(v)
+		}
+		// If AWS doesn't return the value for lowestPrice strategy, we don't set it and let the schema default apply
+	} else {
+		// For all other strategies, we always set it to 1 to not cause drift
 		tfMap["instance_pools_to_use_count"] = 1
 	}
 
