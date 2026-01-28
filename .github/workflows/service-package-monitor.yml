@@ -1,0 +1,135 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+name: Service Package Monitor
+
+on:
+  pull_request:
+    paths:
+      - 'internal/service/**/service_package_gen.go'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  check-service-additions:
+    name: Check for Resource/Data Source Additions
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+      
+      - name: Get changed files
+        id: changed-files
+        run: |
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | grep 'internal/service/.*/service_package_gen.go' >> $GITHUB_OUTPUT || true
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Check for resource/data source additions
+        id: check-additions
+        run: |
+          COMMENT=""
+          
+          while IFS= read -r file; do
+            if [ -z "$file" ]; then
+              continue
+            fi
+            
+            SERVICE=$(echo "$file" | sed -n 's|internal/service/\([^/]*\)/.*|\1|p')
+            
+            # Get the diff for this file
+            DIFF=$(git diff origin/${{ github.base_ref }}...HEAD -- "$file")
+            
+            # Extract only complete new struct blocks (all lines between { and } are additions)
+            # This ensures we only catch new additions, not modifications
+            
+            # For Resources: Look for new complete struct blocks
+            RESOURCE_BLOCK=$(echo "$DIFF" | awk '
+              /func.*SDKResources/,/^func/ {
+                if (/^\+[[:space:]]*\{[[:space:]]*$/) { in_struct=1; block=$0 }
+                else if (in_struct) {
+                  if (/^\+/) { block=block"\n"$0 }
+                  else if (/^-/) { in_struct=0; block="" }
+                  else if (/^[[:space:]]/ && !/^[\+\-]/) { in_struct=0; block="" }
+                  if (/^\+[[:space:]]*\}/) { 
+                    if (block != "") print block
+                    in_struct=0
+                    block=""
+                  }
+                }
+              }
+            ')
+            
+            # For Data Sources: Look for new complete struct blocks
+            DATA_SOURCE_BLOCK=$(echo "$DIFF" | awk '
+              /func.*SDKDataSources/,/^func/ {
+                if (/^\+[[:space:]]*\{[[:space:]]*$/) { in_struct=1; block=$0 }
+                else if (in_struct) {
+                  if (/^\+/) { block=block"\n"$0 }
+                  else if (/^-/) { in_struct=0; block="" }
+                  else if (/^[[:space:]]/ && !/^[\+\-]/) { in_struct=0; block="" }
+                  if (/^\+[[:space:]]*\}/) { 
+                    if (block != "") print block
+                    in_struct=0
+                    block=""
+                  }
+                }
+              }
+            ')
+            
+            # Count new entries by counting opening braces in the blocks
+            NEW_RESOURCES=0
+            NEW_DATA_SOURCES=0
+            
+            if [ -n "$RESOURCE_BLOCK" ]; then
+              NEW_RESOURCES=$(echo "$RESOURCE_BLOCK" | grep -c "^\+.*{" || echo "0")
+            fi
+            
+            if [ -n "$DATA_SOURCE_BLOCK" ]; then
+              NEW_DATA_SOURCES=$(echo "$DATA_SOURCE_BLOCK" | grep -c "^\+.*{" || echo "0")
+            fi
+            
+            if [ "$NEW_RESOURCES" -gt 0 ] || [ "$NEW_DATA_SOURCES" -gt 0 ]; then
+              COMMENT="${COMMENT}\n\n### Changes detected in \`${SERVICE}\` service\n"
+              COMMENT="${COMMENT}\n**File:** \`${file}\`\n"
+              
+              if [ "$NEW_RESOURCES" -gt 0 ]; then
+                COMMENT="${COMMENT}\n#### New Resources Added ($NEW_RESOURCES)\n"
+                COMMENT="${COMMENT}\n\`\`\`diff\n${RESOURCE_BLOCK}\n\`\`\`\n"
+              fi
+              
+              if [ "$NEW_DATA_SOURCES" -gt 0 ]; then
+                COMMENT="${COMMENT}\n#### New Data Sources Added ($NEW_DATA_SOURCES)\n"
+                COMMENT="${COMMENT}\n\`\`\`diff\n${DATA_SOURCE_BLOCK}\n\`\`\`\n"
+              fi
+              
+              COMMENT="${COMMENT}\n**Net-new Data Sources/Resources need to be implemented using terraform-plugin-framework:**\n"
+            fi
+          done <<< "${{ steps.changed-files.outputs.files }}"
+          
+          if [ -n "$COMMENT" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "comment<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$COMMENT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Comment on PR
+        if: steps.check-additions.outputs.has_changes == 'true'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 Service Package Changes Detected\n\n${{ steps.check-additions.outputs.comment }}`
+            })
