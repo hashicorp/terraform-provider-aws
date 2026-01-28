@@ -180,6 +180,10 @@ func resourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						names.AttrParameterGroupName: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -724,6 +728,21 @@ func resourceInstance() *schema.Resource {
 				source := d.Get("replicate_source_db").(string)
 				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
+				}
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				if !d.Get("blue_green_update.0.enabled").(bool) {
+					return nil
+				}
+
+				// If allow_major_version_upgrade is true and engine_version is changing,
+				// then parameter_group_name is required in blue_green_update
+				if d.Get(names.AttrAllowMajorVersionUpgrade).(bool) && d.HasChange(names.AttrEngineVersion) {
+					paramGroupName := d.Get("blue_green_update.0.parameter_group_name").(string)
+					if paramGroupName == "" {
+						return errors.New(`"blue_green_update.parameter_group_name" is required when performing a major version upgrade with blue/green deployment`)
+					}
 				}
 				return nil
 			},

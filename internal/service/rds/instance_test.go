@@ -7292,6 +7292,69 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_BlueGreenDeployment_majorVersionUpgradeRequiresParameterGroupName(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// All RDS Instance tests should skip for testing.Short() except the 20 shortest running tests.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_majorVersionUpgrade(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
+				),
+			},
+			{
+				// This should fail because parameter_group_name is missing in blue_green_update
+				Config:      testAccInstanceConfig_BlueGreenDeployment_majorVersionUpgrade(rName, true, false),
+				ExpectError: regexache.MustCompile(`"blue_green_update.parameter_group_name" is required when performing a major version upgrade`),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_majorVersionUpgrade(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.update", names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "blue_green_update.0.parameter_group_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"blue_green_update",
+					"latest_restorable_time",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -14575,6 +14638,85 @@ resource "aws_db_instance" "test" {
   }
 }
 `, rName, password))
+}
+
+func testAccInstanceConfig_BlueGreenDeployment_majorVersionUpgrade(rName string, upgrade, withParameterGroupName bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+data "aws_rds_engine_version" "initial" {
+  engine = %[2]q
+  latest                    = true
+  preferred_upgrade_targets = [data.aws_rds_engine_version.update.version_actual]
+}
+
+data "aws_rds_engine_version" "update" {
+  engine = %[2]q
+}
+
+locals {
+  engine_version = %[3]t ? data.aws_rds_engine_version.update : data.aws_rds_engine_version.initial
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = local.engine_version.engine
+  engine_version = local.engine_version.version
+  license_model  = "general-public-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = [%[4]s]
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = data.aws_rds_engine_version.update.parameter_group_family
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+}
+
+resource "aws_db_instance" "test" {
+  identifier                  = %[1]q
+  allocated_storage           = 10
+  backup_retention_period     = 1
+  engine                      = data.aws_rds_orderable_db_instance.test.engine
+  engine_version              = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                     = "test"
+  db_subnet_group_name        = aws_db_subnet_group.test.name
+  parameter_group_name        = %[5]s
+  skip_final_snapshot         = true
+  password_wo                 = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version         = 1
+  username                    = "tfacctest"
+  allow_major_version_upgrade = %[3]t
+
+  blue_green_update {
+    enabled = true
+    %[6]s
+  }
+}
+`, rName, tfrds.InstanceEngineMySQL, upgrade, mainInstanceClasses,
+			func() string {
+				if withParameterGroupName {
+					return "aws_db_parameter_group.test.name"
+				}
+				return `"default.${local.engine_version.parameter_group_family}"`
+			}(),
+			func() string {
+				if withParameterGroupName {
+					return "parameter_group_name = aws_db_parameter_group.test.name"
+				}
+				return ""
+			}()))
 }
 
 func testAccInstanceConfig_engineVersion(rName string, update bool) string {
