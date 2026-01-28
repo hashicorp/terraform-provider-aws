@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -468,6 +469,11 @@ func resourceInstance() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"multi_tenant": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -1801,6 +1807,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("multi_tenant"); ok {
+			input.MultiTenant = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("nchar_character_set_name"); ok {
 			input.NcharCharacterSetName = aws.String(v.(string))
 		}
@@ -1976,7 +1986,33 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 	d.Set("database_insights_mode", v.DatabaseInsightsMode)
-	d.Set("db_name", v.DBName)
+
+	if v.MultiTenant != nil && *v.MultiTenant {
+		// Note: The value passed as db_name for a CDB multi-tenant instance is used to create its first tenant database.
+		// As a result, AWS API doesn't return DBName for Multi-tenant instances,
+		// which causes a drift when the value provided for db_name is non-null.
+		// To avoid this, retrieve the name of the first created tenant DB and set it as db_name
+		input := &rds.DescribeTenantDatabasesInput{
+			DBInstanceIdentifier: v.DBInstanceIdentifier,
+		}
+		output, err := findTenantDatabases(ctx, conn, input, tfslices.PredicateTrue[*rds.TenantDatabase]())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "retrieving tenant databases: %s", err)
+		}
+
+		sort.Slice(output, func(i, j int) bool {
+			return output[i].TenantDatabaseCreateTime.Before(*output[j].TenantDatabaseCreateTime)
+		})
+		first_value, err := tfresource.AssertFirstValueResult(output)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "retrieving tenant database: %s", err)
+		}
+		db := *first_value
+		d.Set("db_name", db.TenantDBName)
+	} else {
+		d.Set("db_name", v.DBName)
+	}
+
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -2037,6 +2073,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)
+	d.Set("multi_tenant", v.MultiTenant)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("network_type", v.NetworkType)
 	if len(v.OptionGroupMemberships) > 0 {
@@ -2616,6 +2653,11 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 	if d.HasChange("multi_az") {
 		needsModify = true
 		input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+	}
+
+	if d.HasChange("multi_tenant") {
+		needsModify = true
+		input.MultiTenant = aws.Bool(d.Get("multi_tenant").(bool))
 	}
 
 	if d.HasChange("network_type") {
