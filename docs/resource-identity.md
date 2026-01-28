@@ -269,10 +269,6 @@ Specify this with the annotation parameter `identityDuplicateAttributes="<attr>[
 For example, the resource type `aws_ssoadmin_application` has both an `id` attribute and a deprecated alternate ARN attribute `application_arn`.
 The annotation is `@ArnIdentity(identityDuplicateAttributes="id;application_arn")`.
 
-## Updating Resource Identity Schema
-
-TODO
-
 ## Acceptance Testing
 
 Acceptance tests for Resource Identity are generated, as they follow the same pattern but have some subtleties.
@@ -306,3 +302,54 @@ Add the annotation `@Testing(identityTest=false)` and add a comment above the an
 If there are missing configuration or configuration variable annotations, consider creating a GitHub issue indicating what is missing.
 
 If not using the generated tests, rename the test file to remove `gen` from the name to indicate that it is not generated.
+
+## Updating Resource Identity Schema
+
+In some rare cases, it will be necessary to change the Resource Identity schema.
+This may be due to changes in the AWS API,
+but also may be due to implementation issues.
+It should be avoided.
+
+Resource Identity schemas are versioned starting from 0, so the first updated schema version will be version 1.
+The current version of the Resource Identity schema is indicated by the annotation `@IdentityVersion(<version number>)`.
+
+When updating the Resource Identity schema version, new acceptance tests are generated to ensure that existing resources can update their Resource Identity.
+This is specified by adding one `@Testing(identityVersion="<identity-schema-version>;<provider-version>")` annotation per Resource Identity schema version.
+See the [acceptance test generation documentation](acc-test-generation.md#adding-a-new-resource-identity-schema-version) for more details.
+
+If a Resource Identity attribute is being added or renamed, the resource type will also need an Identity Upgrader.
+Removing an attribute does not require an Identity Upgrader.
+
+### Plugin Framework Upgrader
+
+Identity Upgraders are currently not implemented for Plugin-Framework-based resource types, as there has not been need for it.
+It is tracked by [GitHub Issue #44863](https://github.com/hashicorp/terraform-provider-aws/issues/44863).
+
+### Plugin SDK Upgrader
+
+In the Plugin SDK, each schema version defines a `schema.IdentityUpgrader` which upgrades the Resource Identity from a given version to the next.
+The upgrade function has the signature `func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error)`.
+By convention, the upgrader name is `<resource name>IdentityUpgradeV<source version>`.
+
+For the version which is the target of the upgrader, add the parameter `sdkV2IdentityUpgraders="<function name>"` to the `@IdentityVersion` annotation.
+
+For example, the Resource Identity for the resource type `aws_ec2_image_block_public_access` was updated to add the attribute `region` in version 6.21.0 of the provider.
+The annotations are
+
+```go
+// @IdentityVersion(1, sdkV2IdentityUpgraders="imageBlockPublicAccessIdentityUpgradeV0")
+// @Testing(identityVersion="0;v6.0.0")
+// @Testing(identityVersion="1;v6.21.0")
+```
+
+The upgrader is
+
+```go
+var imageBlockPublicAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
+	Version: 0,
+	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
+		return rawState, nil
+	},
+}
+```
