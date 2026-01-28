@@ -79,7 +79,7 @@ data "aws_cognito_user_pool_client" "test" {
 }
 
 func testAccUserPoolClientDataSourceConfig_refreshTokenRotation(rName string, retryGracePeriodSeconds int32) string {
-	return acctest.ConfigCompose(testAccUserPoolClientConfig_refreshTokenRotation(rName, retryGracePeriodSeconds), `
+	return acctest.ConfigCompose(testAccUserPoolClientConfig_refreshTokenRotation(rName, string(awstypes.FeatureTypeEnabled), retryGracePeriodSeconds), `
 data "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
   client_id    = aws_cognito_user_pool_client.test.id

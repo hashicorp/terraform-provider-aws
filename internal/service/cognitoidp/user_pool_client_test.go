@@ -1308,7 +1308,7 @@ func TestAccCognitoIDPUserPoolClient_refreshTokenRotation(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolClientConfig_refreshTokenRotation(rName, 10),
+				Config: testAccUserPoolClientConfig_refreshTokenRotation(rName, string(awstypes.FeatureTypeEnabled), 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1322,14 +1322,14 @@ func TestAccCognitoIDPUserPoolClient_refreshTokenRotation(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
 					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
-					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", string(awstypes.FeatureTypeEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.retry_grace_period_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 				),
 			},
 			{
-				Config: testAccUserPoolClientConfig_refreshTokenRotation(rName, 20),
+				Config: testAccUserPoolClientConfig_refreshTokenRotation(rName, string(awstypes.FeatureTypeEnabled), 20),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -1343,7 +1343,7 @@ func TestAccCognitoIDPUserPoolClient_refreshTokenRotation(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
 					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
-					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", string(awstypes.FeatureTypeEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.retry_grace_period_seconds", "20"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
@@ -1354,6 +1354,70 @@ func TestAccCognitoIDPUserPoolClient_refreshTokenRotation(t *testing.T) {
 				ImportStateIdFunc: testAccUserPoolClientImportStateIDFunc(ctx, resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				// Disabling refresh token rotation without retry grace period seconds
+				Config: testAccUserPoolClientConfig_refreshTokenRotationWithoutRetryGracePeriodSeconds(rName, string(awstypes.FeatureTypeDisabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClientSecret, ""),
+					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", string(awstypes.FeatureTypeDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
+				),
+			},
+			{
+				// Enabling refresh token rotation again
+				Config: testAccUserPoolClientConfig_refreshTokenRotation(rName, string(awstypes.FeatureTypeEnabled), 20),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClientSecret, ""),
+					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", string(awstypes.FeatureTypeEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.retry_grace_period_seconds", "20"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
+				),
+			},
+			{
+				// Disabling refresh token rotation while retaining retry grace period seconds
+				Config: testAccUserPoolClientConfig_refreshTokenRotation(rName, string(awstypes.FeatureTypeDisabled), 20),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClientSecret, ""),
+					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", string(awstypes.FeatureTypeDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
+				),
 			},
 		},
 	})
@@ -1968,7 +2032,7 @@ resource "aws_cognito_user_pool_client" "test" {
 `, rName, defaultRedirectUri, logoutUrl))
 }
 
-func testAccUserPoolClientConfig_refreshTokenRotation(rName string, retryGracePeriodSeconds int32) string {
+func testAccUserPoolClientConfig_refreshTokenRotation(rName, feature string, retryGracePeriodSeconds int32) string {
 	return acctest.ConfigCompose(
 		testAccUserPoolClientConfig_base(rName),
 		fmt.Sprintf(`
@@ -1978,9 +2042,25 @@ resource "aws_cognito_user_pool_client" "test" {
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
 
   refresh_token_rotation {
-    feature                    = "ENABLED"
-    retry_grace_period_seconds = %[2]d
+    feature                    = %[2]q
+    retry_grace_period_seconds = %[3]d
   }
 }
-`, rName, retryGracePeriodSeconds))
+`, rName, feature, retryGracePeriodSeconds))
+}
+
+func testAccUserPoolClientConfig_refreshTokenRotationWithoutRetryGracePeriodSeconds(rName, feature string) string {
+	return acctest.ConfigCompose(
+		testAccUserPoolClientConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name                = %[1]q
+  user_pool_id        = aws_cognito_user_pool.test.id
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+
+  refresh_token_rotation {
+    feature = %[2]q
+  }
+}
+`, rName, feature))
 }
