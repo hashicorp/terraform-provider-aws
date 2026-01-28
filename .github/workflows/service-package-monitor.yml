@@ -33,7 +33,11 @@ jobs:
       - name: Check for resource/data source additions
         id: check-additions
         run: |
-          COMMENT=""
+          HAS_CHANGES="false"
+          
+          echo "### :robot: Service Package Changes Detected" > note.md
+          echo "---" >> note.md
+          echo "" >> note.md
           
           while IFS= read -r file; do
             if [ -z "$file" ]; then
@@ -44,9 +48,6 @@ jobs:
             
             # Get the diff for this file
             DIFF=$(git diff origin/${{ github.base_ref }}...HEAD -- "$file")
-            
-            # Extract only complete new struct blocks (all lines between { and } are additions)
-            # This ensures we only catch new additions, not modifications
             
             # For Resources: Look for new complete struct blocks
             RESOURCE_BLOCK=$(echo "$DIFF" | awk '
@@ -82,7 +83,7 @@ jobs:
               }
             ')
             
-            # Count new entries by counting opening braces in the blocks
+            # Count new entries
             NEW_RESOURCES=0
             NEW_DATA_SOURCES=0
             
@@ -95,41 +96,52 @@ jobs:
             fi
             
             if [ "$NEW_RESOURCES" -gt 0 ] || [ "$NEW_DATA_SOURCES" -gt 0 ]; then
-              COMMENT="${COMMENT}\n\n### Changes detected in \`${SERVICE}\` service\n"
-              COMMENT="${COMMENT}\n**File:** \`${file}\`\n"
+              HAS_CHANGES="true"
+              
+              echo "#### Changes detected in \`${SERVICE}\` service" >> note.md
+              echo "" >> note.md
+              echo "**File:** \`${file}\`" >> note.md
+              echo "" >> note.md
               
               if [ "$NEW_RESOURCES" -gt 0 ]; then
-                COMMENT="${COMMENT}\n#### New Resources Added ($NEW_RESOURCES)\n"
-                COMMENT="${COMMENT}\n\`\`\`diff\n${RESOURCE_BLOCK}\n\`\`\`\n"
+                echo "**New Resources Added ($NEW_RESOURCES)**" >> note.md
+                echo "" >> note.md
+                echo '```diff' >> note.md
+                echo "$RESOURCE_BLOCK" >> note.md
+                echo '```' >> note.md
+                echo "" >> note.md
               fi
               
               if [ "$NEW_DATA_SOURCES" -gt 0 ]; then
-                COMMENT="${COMMENT}\n#### New Data Sources Added ($NEW_DATA_SOURCES)\n"
-                COMMENT="${COMMENT}\n\`\`\`diff\n${DATA_SOURCE_BLOCK}\n\`\`\`\n"
+                echo "**New Data Sources Added ($NEW_DATA_SOURCES)**" >> note.md
+                echo "" >> note.md
+                echo '```diff' >> note.md
+                echo "$DATA_SOURCE_BLOCK" >> note.md
+                echo '```' >> note.md
+                echo "" >> note.md
               fi
-              
-              COMMENT="${COMMENT}\n**Net-new Data Sources/Resources need to be implemented using terraform-plugin-framework:**\n"
             fi
           done <<< "${{ steps.changed-files.outputs.files }}"
           
-          if [ -n "$COMMENT" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "comment<<EOF" >> $GITHUB_OUTPUT
-            echo -e "$COMMENT" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+          if [ "$HAS_CHANGES" == "true" ]; then
+            echo "" >> note.md
+            echo "---" >> note.md
+            echo ":information_source: **Net-new resources and data sources should be implemented using [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).**" >> note.md
           fi
+          
+          echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
+      
+      - name: Upload note.md for debugging
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: note-md
+          path: note.md
+          retention-days: 1
       
       - name: Comment on PR
         if: steps.check-additions.outputs.has_changes == 'true'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## 🤖 Service Package Changes Detected\n\n${{ steps.check-additions.outputs.comment }}`
-            })
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: note.md
