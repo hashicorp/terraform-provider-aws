@@ -79,8 +79,14 @@ func resourceDataSet() *schema.Resource {
 				"row_level_permission_data_set":          quicksightschema.DataSetRowLevelPermissionDataSetSchema(),
 				"row_level_permission_tag_configuration": quicksightschema.DataSetRowLevelPermissionTagConfigurationSchema(),
 				"refresh_properties":                     quicksightschema.DataSetRefreshPropertiesSchema(),
-				names.AttrTags:                           tftags.TagsSchema(),
-				names.AttrTagsAll:                        tftags.TagsSchemaComputed(),
+				"use_as": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataSetUseAs](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
 
@@ -145,6 +151,10 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("row_level_permission_tag_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.RowLevelPermissionTagConfiguration = quicksightschema.ExpandRowLevelPermissionTagConfiguration(v.([]any))
+	}
+
+	if v, ok := d.GetOk("use_as"); ok {
+		input.UseAs = awstypes.DataSetUseAs(v.(string))
 	}
 
 	_, err := conn.CreateDataSet(ctx, input)
