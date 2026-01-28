@@ -6,6 +6,7 @@ package logs_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
@@ -421,4 +422,54 @@ resource "aws_cloudwatch_log_delivery" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDelivery_updateRecordFields_noS3(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Delivery
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryConfig_recordFields_noS3(rName, []string{"event_timestamp", "event"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccDeliveryConfig_recordFields_noS3(rName, []string{"event_timestamp", "event", "c-ip"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccDeliveryConfig_recordFields_noS3(rName string, recordFields []string) string {
+	return acctest.ConfigCompose(testAccDeliverySourceConfig_basic(rName), testAccDeliveryDestinationConfig_basic(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery" "test" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.test.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.test.arn
+  record_fields            = %[1]s
+}
+`, strings.Join(recordFields, "\", \"")))
 }

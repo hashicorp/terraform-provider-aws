@@ -286,6 +286,10 @@ func (r *deliveryResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
+		if new.S3DeliveryConfiguration.IsNull() {
+			input.S3DeliveryConfiguration = nil
+		}
+
 		_, err := conn.UpdateDeliveryConfiguration(ctx, &input)
 
 		if err != nil {
