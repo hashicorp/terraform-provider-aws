@@ -16,7 +16,8 @@ import (
 
 func TestAccSSMParameterDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "data.aws_ssm_parameter.test"
+	dataSourceName := "data.aws_ssm_parameter.test"
+	resourceName := "aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,22 +28,28 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccParameterDataSourceConfig_basic(name, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
-					resource.TestCheckResourceAttr(resourceName, "with_decryption", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "data_type", resourceName, "data_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tier", resourceName, "tier"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttr(dataSourceName, "with_decryption", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 				),
 			},
 			{
 				Config: testAccParameterDataSourceConfig_basic(name, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
-					resource.TestCheckResourceAttr(resourceName, "with_decryption", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "data_type", resourceName, "data_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tier", resourceName, "tier"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttr(dataSourceName, "with_decryption", acctest.CtTrue),
 				),
 			},
 		},
@@ -51,7 +58,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 
 func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "data.aws_ssm_parameter.test"
+	dataSourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,11 +69,11 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 			{
 				Config: testAccParameterDataSourceConfig_basic(name, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
-					resource.TestCheckResourceAttr(resourceName, "with_decryption", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttr(dataSourceName, "with_decryption", acctest.CtFalse),
 				),
 			},
 		},
@@ -97,12 +104,41 @@ func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameterDataSource_secureString(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ssm_parameter.test"
+	resourceName := "aws_ssm_parameter.test"
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterDataSourceConfig_secureString(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKeyID, resourceName, names.AttrKeyID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "SecureString"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttr(dataSourceName, "with_decryption", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
+				),
+			},
+		},
+	})
+}
+
 func testAccParameterDataSourceConfig_basic(name string, withDecryption bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
   name  = %[1]q
   type  = "String"
   value = "TestValue"
+
+  description = "Test parameter"
 }
 
 data "aws_ssm_parameter" "test" {
@@ -124,4 +160,19 @@ data "aws_ssm_parameter" "test" {
   name = aws_ssm_parameter.test.name
 }
 `, rName, pType)
+}
+
+func testAccParameterDataSourceConfig_secureString(name string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = "SecureString"
+  value = "TestValue"
+}
+
+data "aws_ssm_parameter" "test" {
+  name            = aws_ssm_parameter.test.name
+  with_decryption = true
+}
+`, name)
 }

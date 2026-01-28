@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ssm_parameter: Add `data_type`, `description`, `key_id`, and `tier` attributes. This functionality requires the `ssm:DescribeParameters` permission.
+```
