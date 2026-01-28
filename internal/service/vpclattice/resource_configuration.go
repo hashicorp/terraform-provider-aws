@@ -262,6 +262,11 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 
 	conn := r.Meta().VPCLatticeClient(ctx)
 
+	resourceType := awstypes.ResourceConfigurationTypeSingle
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		resourceType = data.Type.ValueEnum()
+	}
+
 	var input vpclattice.CreateResourceConfigurationInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -274,6 +279,16 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)
 	input.Tags = getTagsIn(ctx)
+
+	// Handle domain name based on resource type:
+	// - GROUP type: custom_domain_name maps to GroupDomain in API
+	// - Other types: custom_domain_name maps to CustomDomainName in API
+	if resourceType == awstypes.ResourceConfigurationTypeGroup {
+		input.GroupDomain = fwflex.StringFromFramework(ctx, data.CustomDomainName)
+		input.CustomDomainName = nil
+	} else {
+		input.GroupDomain = nil
+	}
 
 	outputCRC, err := conn.CreateResourceConfiguration(ctx, &input)
 
@@ -298,6 +313,10 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGRC, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if resourceType == awstypes.ResourceConfigurationTypeGroup && outputGRC.GroupDomain != nil {
+		data.CustomDomainName = fwflex.StringToFramework(ctx, outputGRC.GroupDomain)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -331,6 +350,15 @@ func (r *resourceConfigurationResource) Read(ctx context.Context, request resour
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	resourceType := awstypes.ResourceConfigurationTypeSingle
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		resourceType = data.Type.ValueEnum()
+	}
+
+	if resourceType == awstypes.ResourceConfigurationTypeGroup && output.GroupDomain != nil {
+		data.CustomDomainName = fwflex.StringToFramework(ctx, output.GroupDomain)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

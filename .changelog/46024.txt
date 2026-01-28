@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpclattice_resource_configuration: Fix `custom_domain_name` support for GROUP type resource configurations
+```
