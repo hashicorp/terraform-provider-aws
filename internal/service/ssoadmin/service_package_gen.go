@@ -93,6 +93,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newCustomerManagedPolicyAttachmentsExclusiveResource,
+			TypeName: "aws_ssoadmin_customer_managed_policy_attachments_exclusive",
+			Name:     "Customer Managed Policy Attachments Exclusive",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("instance_arn", true),
+				inttypes.StringIdentityAttribute("permission_set_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      customerManagedPolicyAttachmentsExclusiveImportID{},
+			},
+		},
+		{
 			Factory:  newTrustedTokenIssuerResource,
 			TypeName: "aws_ssoadmin_trusted_token_issuer",
 			Name:     "Trusted Token Issuer",
