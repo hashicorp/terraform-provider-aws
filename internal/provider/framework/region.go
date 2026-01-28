@@ -168,21 +168,29 @@ func ephemeralResourceValidateRegion() ephemeralResourceORCInterceptor {
 	return &ephemeralResourceValidateRegionInterceptor{}
 }
 
-type resourceInjectRegionAttributeInterceptor struct{}
+type resourceInjectRegionAttributeInterceptor struct {
+	isDeprecated bool
+}
 
 func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) {
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			if r.isDeprecated {
+				response.Schema.Attributes[names.AttrRegion] = resourceattribute.RegionDeprecated()
+			} else {
+				response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			}
 		}
 	}
 }
 
 // resourceInjectRegionAttribute injects a top-level "region" attribute into a resource's schema.
-func resourceInjectRegionAttribute() resourceSchemaInterceptor {
-	return &resourceInjectRegionAttributeInterceptor{}
+func resourceInjectRegionAttribute(isDeprecated bool) resourceSchemaInterceptor {
+	return &resourceInjectRegionAttributeInterceptor{
+		isDeprecated: isDeprecated,
+	}
 }
 
 type resourceValidateRegionInterceptor struct{}
