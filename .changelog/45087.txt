@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_serverless_cache: Fixed, upgrading valkey major version and changing engine from valkey 7 to redis 7 . Earlier it was forced replacement now it will be in-place update.
+```
