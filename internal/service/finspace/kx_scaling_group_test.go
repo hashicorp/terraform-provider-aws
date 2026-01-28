@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,22 +26,22 @@ func TestAccFinSpaceKxScalingGroup_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var scalingGroup finspace.GetKxScalingGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_scaling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxScalingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKxScalingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxScalingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, t, resourceName, &scalingGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxScalingGroupStatusActive)),
 				),
@@ -64,22 +62,22 @@ func TestAccFinSpaceKxScalingGroup_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var scalingGroup finspace.GetKxScalingGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_scaling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxScalingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKxScalingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxScalingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, t, resourceName, &scalingGroup),
 					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxScalingGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,22 +93,22 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var scalingGroup finspace.GetKxScalingGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_scaling_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxScalingGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKxScalingGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxScalingGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, t, resourceName, &scalingGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -124,7 +122,7 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 			{
 				Config: testAccKxScalingGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, t, resourceName, &scalingGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -134,7 +132,7 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 			{
 				Config: testAccKxScalingGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxScalingGroupExists(ctx, resourceName, &scalingGroup),
+					testAccCheckKxScalingGroupExists(ctx, t, resourceName, &scalingGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -144,9 +142,9 @@ func TestAccFinSpaceKxScalingGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKxScalingGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKxScalingGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_scaling_group" {
@@ -169,7 +167,7 @@ func testAccCheckKxScalingGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckKxScalingGroupExists(ctx context.Context, name string, scalingGroup *finspace.GetKxScalingGroupOutput) resource.TestCheckFunc {
+func testAccCheckKxScalingGroupExists(ctx context.Context, t *testing.T, name string, scalingGroup *finspace.GetKxScalingGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -180,7 +178,7 @@ func testAccCheckKxScalingGroupExists(ctx context.Context, name string, scalingG
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxScalingGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 
 		resp, err := tffinspace.FindKxScalingGroupById(ctx, conn, rs.Primary.ID)
 		if err != nil {

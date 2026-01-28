@@ -10,12 +10,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
@@ -26,22 +24,22 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
@@ -67,22 +65,22 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "MyCorp::User"),
@@ -114,22 +112,22 @@ func TestAccVerifiedPermissionsIdentitySource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourceIdentitySource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -142,22 +140,22 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
@@ -172,7 +170,7 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_update(t *testing.T) {
 			{
 				Config: testAccIdentitySourceConfig_Cognito_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -203,22 +201,22 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var identitySource verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
@@ -236,7 +234,7 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_update(t *testing.T) {
 			{
 				Config: testAccIdentitySourceConfig_updateOpenIDConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
@@ -267,7 +265,7 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_update(t *testing.T) {
 			{
 				Config: testAccIdentitySourceConfig_updateOpenIDConfigurationTokenSelection(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", "1"),
@@ -305,22 +303,22 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_convertToOpenID(t *testing
 	ctx := acctest.Context(t)
 
 	var identitySource1, identitySource2 verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
@@ -335,7 +333,7 @@ func TestAccVerifiedPermissionsIdentitySource_Cognito_convertToOpenID(t *testing
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource2),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "MyCorp::User"),
@@ -374,22 +372,22 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_convertToCognito(t *testing
 	ctx := acctest.Context(t)
 
 	var identitySource1, identitySource2 verifiedpermissions.GetIdentitySourceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_identity_source.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentitySourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentitySourceConfig_OpenID_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource1),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "MyCorp::User"),
@@ -410,7 +408,7 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_convertToCognito(t *testing
 			{
 				Config: testAccIdentitySourceConfig_Cognito_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIdentitySourceExists(ctx, resourceName, &identitySource2),
+					testAccCheckIdentitySourceExists(ctx, t, resourceName, &identitySource2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_store_id", "aws_verifiedpermissions_policy_store.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "principal_entity_type", "AWS::Cognito"),
@@ -432,9 +430,9 @@ func TestAccVerifiedPermissionsIdentitySource_OpenID_convertToCognito(t *testing
 	})
 }
 
-func testAccCheckIdentitySourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIdentitySourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedpermissions_identity_source" {
@@ -458,7 +456,7 @@ func testAccCheckIdentitySourceDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckIdentitySourceExists(ctx context.Context, name string, identitySource *verifiedpermissions.GetIdentitySourceOutput) resource.TestCheckFunc {
+func testAccCheckIdentitySourceExists(ctx context.Context, t *testing.T, name string, identitySource *verifiedpermissions.GetIdentitySourceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -469,7 +467,7 @@ func testAccCheckIdentitySourceExists(ctx context.Context, name string, identity
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNameIdentitySource, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 		resp, err := tfverifiedpermissions.FindIdentitySourceByIDAndPolicyStoreID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["policy_store_id"])
 
 		if err != nil {
