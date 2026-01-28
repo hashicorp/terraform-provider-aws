@@ -67,9 +67,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Permission Set ARN and SSO Instance ARN, separated by a comma (`,`).
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -78,19 +76,30 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `10m`)
 * `update` - (Default `10m`)
 
+## Identity Schema
+
+### Required
+
+* `instance_arn` (String) ARN of the SSO Instance.
+* `permission_set_arn` (String) ARN of the Permission Set.
+
+### Optional
+
+* `region` (String) Region where this resource is managed.
+
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Managed Policy Attachments Exclusive using the `permission_set_arn,instance_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Managed Policy Attachments Exclusive using the `instance_arn` and `permission_set_arn` arguments, separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_ssoadmin_managed_policy_attachments_exclusive.example
-  id = "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-1234567890abcdef,arn:aws:sso:::instance/ssoins-1234567890abcdef"
+  id = "arn:aws:sso:::instance/ssoins-1234567890abcdef,arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-1234567890abcdef"
 }
 ```
 
-Using `terraform import`, import SSO Admin Managed Policy Attachments Exclusive using the `permission_set_arn,instance_arn`. For example:
+Using `terraform import`, import SSO Admin Managed Policy Attachments Exclusive using the `instance_arn` and `permission_set_arn` arguments, separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_ssoadmin_managed_policy_attachments_exclusive.example arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-1234567890abcdef,arn:aws:sso:::instance/ssoins-1234567890abcdef
+% terraform import aws_ssoadmin_managed_policy_attachments_exclusive.example arn:aws:sso:::instance/ssoins-1234567890abcdef,arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-1234567890abcdef
 ```
