@@ -119,10 +119,11 @@ import (
 // https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
 //
 // Some common annotations are included below:
+{{- end }}
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }};{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="...;...")
-{{- end }}
+// @Testing(hasNoPreExistingResource=true)
 func new{{ .Resource }}Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &{{ .ResourceLowerCamel }}Resource{}
 
@@ -752,6 +753,38 @@ type {{ .ResourceLowerCamel }}ResourceModel struct {
 type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== IMPORT ID HANDLER ====
+// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
+// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
+//
+// The parser takes the string value of the Import ID and returns:
+// * A string value that is typically ignored. See documentation for more details.
+// * A map of the resource attributes derived from the Import ID.
+// * An error value if there are parsing errors.
+//
+// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
+{{- end }}
+var (
+	_ inttypes.ImportIDParser = {{ .ResourceLowerCamel }}ImportID{}
+)
+
+type {{ .ResourceLowerCamel }}ImportID struct{}
+
+func ({{ .ResourceLowerCamel }}ImportID) Parse(id string) (string, map[string]string, error) {
+	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
+	}
+
+	result := map[string]string{
+		"some-value":    someValue,
+		"another-value": anotherValue,
+	}
+
+	return id, result, nil
 }
 
 {{ if .IncludeComments }}
