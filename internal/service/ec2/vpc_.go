@@ -416,8 +416,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	identitySpec := importer.IdentitySpec(ctx)
-	if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
 
