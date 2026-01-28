@@ -245,6 +245,116 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_microsoftTenantID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_microsoftWithTenantID(rName, "12345678-1234-1234-1234-123456789012"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.client_secret",
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.client_id",
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.tenant_id",
+				},
+			},
+			{
+				Config: testAccOAuth2CredentialProviderConfig_microsoftWithTenantID(rName, "87654321-4321-4321-4321-210987654321"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreOAuth2CredentialProvider_microsoftTenantIDWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckOAuth2CredentialProviders(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOAuth2CredentialProviderConfig_microsoftWithTenantIDWO(rName, "12345678-1234-1234-1234-123456789012", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore: []string{
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.client_secret_wo",
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.client_id_wo",
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.tenant_id_wo",
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.client_credentials_wo_version",
+					"oauth2_provider_config.0.microsoft_oauth2_provider_config.0.tenant_id_wo_version",
+				},
+			},
+			{
+				Config: testAccOAuth2CredentialProviderConfig_microsoftWithTenantIDWO(rName, "87654321-4321-4321-4321-210987654321", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
@@ -392,4 +502,40 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
   }
 }
 `, rName)
+}
+
+func testAccOAuth2CredentialProviderConfig_microsoftWithTenantID(rName, tenantID string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "MicrosoftOauth2"
+  oauth2_provider_config {
+    microsoft_oauth2_provider_config {
+      client_id     = "test-client-id"
+      client_secret = "test-client-secret"
+      tenant_id     = %[2]q
+    }
+  }
+}
+`, rName, tenantID)
+}
+
+func testAccOAuth2CredentialProviderConfig_microsoftWithTenantIDWO(rName, tenantID string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_bedrockagentcore_oauth2_credential_provider" "test" {
+  name = %[1]q
+
+  credential_provider_vendor = "MicrosoftOauth2"
+  oauth2_provider_config {
+    microsoft_oauth2_provider_config {
+      client_id_wo                  = "test-client-id-wo"
+      client_secret_wo              = "test-client-secret-wo"
+      client_credentials_wo_version = %[3]d
+      tenant_id_wo                  = %[2]q
+      tenant_id_wo_version          = %[3]d
+    }
+  }
+}
+`, rName, tenantID, version)
 }
