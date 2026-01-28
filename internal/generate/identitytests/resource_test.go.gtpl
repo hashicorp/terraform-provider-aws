@@ -152,7 +152,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
 		{{ end -}}
-		{{ if not .IsGlobal -}}
+		{{ if .HasRegionAttribute -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 		{{ end -}}
 	},
@@ -194,7 +194,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
 		{{ end -}}
-		{{ if not .IsGlobal -}}
+		{{ if .HasRegionAttribute -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 		{{ end -}}
 	},
@@ -289,7 +289,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ else if .HasIDAttrDuplicates -}}
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
-					{{ if not .IsGlobal -}}
+					{{ if .HasRegionAttribute -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ end -}}
 					{{ if .HasInherentRegionIdentity -}}
@@ -515,23 +515,25 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						{{ end -}}
 					},
 				{{ end }}
-				// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
-				{
-					{{ if .UseAlternateAccount -}}
-						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-					{{ end -}}
-					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-					ConfigVariables: config.Variables{ {{ if .Generator }}
-						acctest.CtRName: config.StringVariable(rName),{{ end }}
-						{{ template "AdditionalTfVars" . -}}
-						"region": config.StringVariable(acctest.AlternateRegion()),
+				{{ if not .RegionOverrideDeprecated }}
+					// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
+					{
+						{{ if .UseAlternateAccount -}}
+							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+						{{ end -}}
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigVariables: config.Variables{ {{ if .Generator }}
+							acctest.CtRName: config.StringVariable(rName),{{ end }}
+							{{ template "AdditionalTfVars" . -}}
+							"region": config.StringVariable(acctest.AlternateRegion()),
+						},
+						{{- template "ImportBlockWithResourceIdentityBody" . -}}
+						{{ template "PlannableImportCrossRegionPlanChecks" . }}
+						{{ if ne .PlannableResourceAction "NoOp" -}}
+							ExpectNonEmptyPlan: true,
+						{{ end -}}
 					},
-					{{- template "ImportBlockWithResourceIdentityBody" . -}}
-					{{ template "PlannableImportCrossRegionPlanChecks" . }}
-					{{ if ne .PlannableResourceAction "NoOp" -}}
-						ExpectNonEmptyPlan: true,
-					{{ end -}}
-				},
+				{{ end }}
 			{{- end }}
 		},
 	})

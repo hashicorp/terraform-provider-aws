@@ -9,6 +9,7 @@ Cost Optimization Hub
 Cost and Usage Report
 Global Accelerator
 IAM (Identity & Access Management)
+Invoicing
 Network Manager
 Organizations
 Pricing Calculator

@@ -350,16 +350,17 @@ func (sr serviceRecords) ARNNamespace() string {
 }
 
 type ResourceDatum struct {
-	service               *serviceRecords
-	FileName              string
-	idAttrDuplicates      string // TODO: Remove. Still needed for Parameterized Identity
-	GenerateConfig        bool
-	ARNFormat             string
-	arnAttribute          string
-	isARNFormatGlobal     common.TriBoolean
-	IsGlobal              bool
-	HasRegionOverrideTest bool
-	IDAttrFormat          string
+	service                  *serviceRecords
+	FileName                 string
+	idAttrDuplicates         string // TODO: Remove. Still needed for Parameterized Identity
+	GenerateConfig           bool
+	ARNFormat                string
+	arnAttribute             string
+	isARNFormatGlobal        common.TriBoolean
+	IsGlobal                 bool
+	RegionOverrideDeprecated bool
+	HasRegionOverrideTest    bool
+	IDAttrFormat             string
 	tests.CommonArgs
 	common.ResourceIdentity
 }
@@ -405,22 +406,26 @@ func (d ResourceDatum) IsRegionalSingleton() bool {
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
-	return !d.IsGlobal && d.HasRegionOverrideTest
+	return d.HasRegionAttribute() && d.HasRegionOverrideTest
 }
 
 func (d ResourceDatum) HasInherentRegionImportID() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()
+	return (d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()) && !d.RegionOverrideDeprecated
 }
 
-func (r ResourceDatum) IsARNFormatGlobal() bool {
-	return r.isARNFormatGlobal == common.TriBooleanTrue
+func (d ResourceDatum) IsARNFormatGlobal() bool {
+	return d.isARNFormatGlobal == common.TriBooleanTrue
 }
 
-func (r ResourceDatum) LatestIdentityVersion() int64 {
-	if len(r.IdentityVersions) == 0 {
+func (d ResourceDatum) LatestIdentityVersion() int64 {
+	if len(d.IdentityVersions) == 0 {
 		return 0
 	}
-	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
+	return slices.Max(slices.Collect(maps.Keys(d.IdentityVersions)))
+}
+
+func (d ResourceDatum) HasRegionAttribute() bool {
+	return !d.IsGlobal || d.RegionOverrideDeprecated
 }
 
 type commonConfig struct {
@@ -587,6 +592,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.IsGlobal = global
 					}
 				}
+				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+					if deprecated, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideDeprecated = deprecated
+					}
+				}
 
 			case "NoImport":
 				d.NoImport = true
@@ -697,7 +709,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsGlobal {
+	if d.IsGlobal && !d.RegionOverrideDeprecated {
 		d.HasRegionOverrideTest = false
 	}
 

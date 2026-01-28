@@ -7,26 +7,28 @@ package ssoadmin
 var (
 	ResourceAccountAssignment                         = resourceAccountAssignment
 	ResourceApplication                               = newApplicationResource
+	ResourceApplicationAccessScope                    = newApplicationAccessScopeResource
 	ResourceApplicationAssignment                     = newApplicationAssignmentResource
 	ResourceApplicationAssignmentConfiguration        = newApplicationAssignmentConfigurationResource
-	ResourceApplicationAccessScope                    = newApplicationAccessScopeResource
 	ResourceCustomerManagedPolicyAttachment           = resourceCustomerManagedPolicyAttachment
 	ResourceCustomerManagedPolicyAttachmentsExclusive = newCustomerManagedPolicyAttachmentsExclusiveResource
 	ResourceInstanceAccessControlAttributes           = resourceInstanceAccessControlAttributes
 	ResourceManagedPolicyAttachment                   = resourceManagedPolicyAttachment
+	ResourceManagedPolicyAttachmentsExclusive         = newManagedPolicyAttachmentsExclusiveResource
 	ResourcePermissionsBoundaryAttachment             = resourcePermissionsBoundaryAttachment
 	ResourcePermissionSet                             = resourcePermissionSet
 	ResourcePermissionSetInlinePolicy                 = resourcePermissionSetInlinePolicy
 	ResourceTrustedTokenIssuer                        = newTrustedTokenIssuerResource
 
 	FindAccountAssignmentByFivePartKey               = findAccountAssignmentByFivePartKey
-	FindApplicationByID                              = findApplicationByID
+	FindApplicationAccessScopeByID                   = findApplicationAccessScopeByID
 	FindApplicationAssignmentByID                    = findApplicationAssignmentByID
 	FindApplicationAssignmentConfigurationByID       = findApplicationAssignmentConfigurationByID
-	FindApplicationAccessScopeByID                   = findApplicationAccessScopeByID
-	FindCustomerManagedPolicyByFourPartKey           = findCustomerManagedPolicyByFourPartKey
+	FindApplicationByID                              = findApplicationByID
 	FindCustomerManagedPolicyAttachmentsByTwoPartKey = findCustomerManagedPolicyAttachmentsByTwoPartKey
+	FindCustomerManagedPolicyByFourPartKey           = findCustomerManagedPolicyByFourPartKey
 	FindInstanceAttributeControlAttributesByARN      = findInstanceAttributeControlAttributesByARN
+	FindManagedPolicyAttachmentsByTwoPartKey         = findManagedPolicyAttachmentsByTwoPartKey
 	FindManagedPolicyByThreePartKey                  = findManagedPolicyByThreePartKey
 	FindPermissionsBoundaryByTwoPartKey              = findPermissionsBoundaryByTwoPartKey
 	FindPermissionSetByTwoPartKey                    = findPermissionSetByTwoPartKey
