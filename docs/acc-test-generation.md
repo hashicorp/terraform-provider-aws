@@ -236,7 +236,7 @@ add the annotation `@Testing(hasNoPreExistingResource=true)`.
 
 In some circumstances, a resource type requires an updated Resource Identity schema version.
 This requires additional testing to ensure that the Resource Identity can be correctly updated to the new schema.
-THis is specified by adding one `@Testing(identityVersion="<identity-schema-version>;<provider-version>")` annotation per Resource Identity schema version.
+This is specified by adding one `@Testing(identityVersion="<identity-schema-version>;<provider-version>")` annotation per Resource Identity schema version.
 Schema versions are zero-indexed.
 Note that, unlike the `@Testing(preIdentityVersion)` annotation, `identityVersion` uses the **actual** provider version.
 For example, Resource Identity was added to the resource type `aws_sqs_queue` in provider version 6.10.0 and the schema was updated in provider version 6.19.0. The annotations are:
