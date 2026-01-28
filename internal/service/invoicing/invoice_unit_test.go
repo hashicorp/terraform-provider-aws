@@ -31,7 +31,8 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccInvoicingInvoiceUnit_basic,
 		// acctest.CtDisappears: testAccInvoicingInvoiceUnit_disappears,
-		names.AttrRegion: testAccInvoicingInvoiceUnit_region,
+		"region":   testAccInvoicingInvoiceUnit_region,
+		"Identity": testAccInvoicingInvoiceUnit_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

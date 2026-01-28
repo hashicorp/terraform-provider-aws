@@ -34,6 +34,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
+			Identity: inttypes.GlobalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
 }

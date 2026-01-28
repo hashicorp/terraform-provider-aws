@@ -39,7 +39,13 @@ import (
 // @FrameworkResource("aws_invoicing_invoice_unit", name="Invoice Unit")
 // @Tags(identifierAttribute="arn")
 // @Region(overrideDeprecated=true)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/invoicing;invoicing.GetInvoiceUnitOutput")
+// @Testing(requireEnvVar="INVOICING_INVOICE_TESTS_ENABLED")
+// @Testing(preIdentityVersion="6.28.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Testing(tagsTest=false)
+// @Testing(serialize=true)
 func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &invoiceUnitResource{}
 
@@ -52,7 +58,7 @@ func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type invoiceUnitResource struct {
 	framework.ResourceWithModel[invoiceUnitResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
