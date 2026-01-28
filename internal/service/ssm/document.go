@@ -119,6 +119,11 @@ func resourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"hash": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -179,6 +184,34 @@ func resourceDocument() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"requires": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.:/]{3,128}$`), "must be a valid document name"),
+						},
+						"require_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ssm.DocumentType_Values(), false),
+						},
+						"version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[1-9][0-9]*$|[$]LATEST|[$]DEFAULT`), "must be numeric, '$LATEST', or '$DEFAULT'"),
+						},
+						"version_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{1,128}$`), "must be a valid version name"),
+						},
+					},
+				},
 			},
 			"schema_version": {
 				Type:     schema.TypeString,
@@ -267,6 +300,10 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]any)) > 0 {
 		input.Attachments = expandAttachmentsSources(v.([]any))
+	}
+
+	if v, ok := d.GetOk("requires"); ok && len(v.([]interface{})) > 0 {
+		input.Requires = expandDocumentRequiresList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
@@ -386,6 +423,12 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta any)
 		} else {
 			d.Set(names.AttrPermissions, nil)
 		}
+	}
+
+	if v, ok := d.GetOk("force_destroy"); ok {
+		d.Set("force_destroy", v.(bool))
+	} else {
+		d.Set("force_destroy", false)
 	}
 
 	setTagsOut(ctx, doc.Tags)
@@ -525,9 +568,16 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	log.Printf("[INFO] Deleting SSM Document: %s", d.Id())
-	_, err := conn.DeleteDocument(ctx, &ssm.DeleteDocumentInput{
+
+	input := &ssm.DeleteDocumentInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
-	})
+	}
+
+	if v, ok := d.GetOk("force_destroy"); ok {
+		input.Force = aws.Bool(v.(bool))
+	}
+
+	_, err := conn.DeleteDocument(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidDocument](err, "does not exist") {
 		return diags
@@ -713,6 +763,58 @@ func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []any {
 	}
 
 	return tfList
+}
+
+func expandDocumentRequiresList(tfList []interface{}) []*ssm.DocumentRequires {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var requiredDocuments []*ssm.DocumentRequires
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		requiredDocument := expandDocumentRequires(tfMap)
+
+		if requiredDocument == nil {
+			continue
+		}
+
+		requiredDocuments = append(requiredDocuments, requiredDocument)
+	}
+
+	return requiredDocuments
+}
+
+func expandDocumentRequires(tfMap map[string]interface{}) *ssm.DocumentRequires {
+	if tfMap == nil {
+		return nil
+	}
+
+	documentRequires := &ssm.DocumentRequires{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		documentRequires.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["require_type"].(string); ok && v != "" {
+		documentRequires.RequireType = aws.String(v)
+	}
+
+	if v, ok := tfMap["version"].(string); ok && v != "" {
+		documentRequires.Version = aws.String(v)
+	}
+
+	if v, ok := tfMap["version_name"].(string); ok && v != "" {
+		documentRequires.VersionName = aws.String(v)
+	}
+
+	return documentRequires
 }
 
 func documentARN(ctx context.Context, c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
