@@ -82,6 +82,38 @@ func resourceThingType() *schema.Resource {
 								ValidateFunc: validThingTypeSearchableAttribute,
 							},
 						},
+						"mqtt5_configuration": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"propagating_attributes": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"connection_attribute": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validThingTypeMqttPropagatingConnectionAttribute,
+												},
+												"thing_attribute": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validThingTypeMqttPropagatingThingAttribute,
+												},
+												"user_property_key": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validThingTypeMqttPropagatingUserPropertyKey,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
