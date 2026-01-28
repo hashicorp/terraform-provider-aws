@@ -112,7 +112,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(5, 60),
+							ValidateFunc: validation.IntBetween(1, 60),
 						},
 					},
 				},
