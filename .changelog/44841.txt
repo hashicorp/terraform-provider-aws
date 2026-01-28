@@ -1,0 +1,3 @@
+```release-note:new-action
+action/aws_bedrockagent_agent_prepare: New action for preparing Amazon Bedrock Agents
+```
