@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
@@ -19,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -86,96 +87,84 @@ func (r *managedPolicyAttachmentsExclusiveResource) Schema(ctx context.Context, 
 
 func (r *managedPolicyAttachmentsExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan managedPolicyAttachmentsExclusiveResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var policyARNs []string
-	resp.Diagnostics.Append(plan.ManagedPolicyARNs.ElementsAs(ctx, &policyARNs, false)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, plan.ManagedPolicyARNs.ElementsAs(ctx, &policyARNs, false))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	err := r.syncAttachments(ctx, plan.InstanceARN.ValueString(), plan.PermissionSetARN.ValueString(), policyARNs, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameManagedPolicyAttachmentsExclusive, plan.PermissionSetARN.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PermissionSetARN.ValueString())
 		return
 	}
 
 	id, err := plan.setID()
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionCreating, ResNameManagedPolicyAttachmentsExclusive, plan.PermissionSetARN.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PermissionSetARN.ValueString())
 		return
 	}
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *managedPolicyAttachmentsExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
 	var state managedPolicyAttachmentsExclusiveResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if err := state.InitFromID(); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
 	out, err := findManagedPolicyAttachmentsByTwoPartKey(ctx, conn, state.PermissionSetARN.ValueString(), state.InstanceARN.ValueString())
-	if retry.NotFound(err) {
+	if intretry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionReading, ResNameManagedPolicyAttachmentsExclusive, state.PermissionSetARN.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.PermissionSetARN.ValueString())
 		return
 	}
 
 	state.ManagedPolicyARNs = flex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, out)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *managedPolicyAttachmentsExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state managedPolicyAttachmentsExclusiveResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if !plan.ManagedPolicyARNs.Equal(state.ManagedPolicyARNs) {
 		var policyARNs []string
-		resp.Diagnostics.Append(plan.ManagedPolicyARNs.ElementsAs(ctx, &policyARNs, false)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, plan.ManagedPolicyARNs.ElementsAs(ctx, &policyARNs, false))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		err := r.syncAttachments(ctx, plan.InstanceARN.ValueString(), plan.PermissionSetARN.ValueString(), policyARNs, r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SSOAdmin, create.ErrActionUpdating, ResNameManagedPolicyAttachmentsExclusive, plan.PermissionSetARN.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.PermissionSetARN.ValueString())
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.Context, instanceARN, permissionSetARN string, want []string, timeout time.Duration) error {
@@ -183,7 +172,7 @@ func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.
 
 	have, err := findManagedPolicyAttachmentsByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	create, remove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
@@ -196,7 +185,7 @@ func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.
 		}
 		_, err := conn.AttachManagedPolicyToPermissionSet(ctx, input)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -208,13 +197,13 @@ func (r *managedPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.
 		}
 		_, err := conn.DetachManagedPolicyFromPermissionSet(ctx, input)
 		if err != nil && !errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return err
+			return smarterr.NewError(err)
 		}
 	}
 
 	if len(create) > 0 || len(remove) > 0 {
 		if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, timeout); err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -229,7 +218,7 @@ func (data *managedPolicyAttachmentsExclusiveResourceModel) InitFromID() error {
 	id := data.ID.ValueString()
 	parts, err := intflex.ExpandResourceId(id, managedPolicyAttachmentsExclusiveIDPartCount, false)
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	data.PermissionSetARN = types.StringValue(parts[0])
@@ -244,7 +233,11 @@ func (data *managedPolicyAttachmentsExclusiveResourceModel) setID() (string, err
 		data.InstanceARN.ValueString(),
 	}
 
-	return intflex.FlattenResourceId(parts, managedPolicyAttachmentsExclusiveIDPartCount, false)
+	id, err := intflex.FlattenResourceId(parts, managedPolicyAttachmentsExclusiveIDPartCount, false)
+	if err != nil {
+		return "", smarterr.NewError(err)
+	}
+	return id, nil
 }
 
 func findManagedPolicyAttachmentsByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) ([]string, error) {
@@ -259,12 +252,12 @@ func findManagedPolicyAttachmentsByTwoPartKey(ctx context.Context, conn *ssoadmi
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil, &sdkretry.NotFoundError{
+				return nil, smarterr.NewError(&sdkretry.NotFoundError{
 					LastError:   err,
 					LastRequest: input,
-				}
+				})
 			}
-			return policyARNs, err
+			return policyARNs, smarterr.NewError(err)
 		}
 
 		for _, p := range page.AttachedManagedPolicies {
