@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func testAccTransitGatewayRegistration_disappears(t *testing.T) {
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +97,7 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,7 +148,7 @@ func testAccCheckTransitGatewayRegistrationDestroy(ctx context.Context) resource
 
 			_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(ctx, conn, globalNetworkID, transitGatewayARN)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

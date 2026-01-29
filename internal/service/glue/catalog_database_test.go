@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -290,7 +290,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 				Config: testAccCatalogDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -314,7 +314,7 @@ func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

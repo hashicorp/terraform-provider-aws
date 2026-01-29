@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearchserverless_collection: Add resource identity support
+```

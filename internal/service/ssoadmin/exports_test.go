@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -13,6 +13,7 @@ var (
 	ResourceCustomerManagedPolicyAttachment    = resourceCustomerManagedPolicyAttachment
 	ResourceInstanceAccessControlAttributes    = resourceInstanceAccessControlAttributes
 	ResourceManagedPolicyAttachment            = resourceManagedPolicyAttachment
+	ResourceManagedPolicyAttachmentsExclusive  = newManagedPolicyAttachmentsExclusiveResource
 	ResourcePermissionsBoundaryAttachment      = resourcePermissionsBoundaryAttachment
 	ResourcePermissionSet                      = resourcePermissionSet
 	ResourcePermissionSetInlinePolicy          = resourcePermissionSetInlinePolicy
@@ -25,6 +26,7 @@ var (
 	FindApplicationAccessScopeByID              = findApplicationAccessScopeByID
 	FindCustomerManagedPolicyByFourPartKey      = findCustomerManagedPolicyByFourPartKey
 	FindInstanceAttributeControlAttributesByARN = findInstanceAttributeControlAttributesByARN
+	FindManagedPolicyAttachmentsByTwoPartKey    = findManagedPolicyAttachmentsByTwoPartKey
 	FindManagedPolicyByThreePartKey             = findManagedPolicyByThreePartKey
 	FindPermissionsBoundaryByTwoPartKey         = findPermissionsBoundaryByTwoPartKey
 	FindPermissionSetByTwoPartKey               = findPermissionSetByTwoPartKey

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +66,7 @@ func TestAccSyntheticsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -155,7 +155,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsynthetics.FindGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

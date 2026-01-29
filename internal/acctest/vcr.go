@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -10,7 +10,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"net/http"
 	"os"
 	"path/filepath"
@@ -446,4 +446,21 @@ func RandomWithPrefix(t *testing.T, prefix string) string {
 	t.Helper()
 
 	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
+}
+
+// RandIntRange is a VCR-friendly replacement for acctest.RandIntRange
+func RandIntRange(t *testing.T, minInt int, maxInt int) int {
+	t.Helper()
+
+	if !vcr.IsEnabled() {
+		return sdkacctest.RandIntRange(minInt, maxInt)
+	}
+
+	s, err := vcrRandomnessSource(t)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return rand.New(s.source).Intn(maxInt-minInt) + minInt
 }

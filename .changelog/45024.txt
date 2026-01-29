@@ -1,0 +1,23 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `java25` `runtime` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `nodejs24.x` `runtime` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add support for `python3.14` `runtime` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `java25` `compatible_runtimes` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `nodejs24.x` `compatible_runtimes` value
+```
+
+```release-note:enhancement
+resource/aws_lambda_layer_version: Add support for `python3.14` `compatible_runtimes` value
+```

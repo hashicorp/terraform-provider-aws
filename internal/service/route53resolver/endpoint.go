@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -16,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -119,8 +122,18 @@ func resourceEndpoint() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 				},
 			},
+			"rni_enhanced_metrics_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_name_server_metrics_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -155,6 +168,14 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.ResolverEndpointType = awstypes.ResolverEndpointType(v.(string))
 	}
 
+	if v, ok := d.GetOk("rni_enhanced_metrics_enabled"); ok {
+		input.RniEnhancedMetricsEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("target_name_server_metrics_enabled"); ok {
+		input.TargetNameServerMetricsEnabled = aws.Bool(v.(bool))
+	}
+
 	output, err := conn.CreateResolverEndpoint(ctx, input)
 
 	if err != nil {
@@ -176,7 +197,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findResolverEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -192,7 +213,9 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrName, output.Name)
 	d.Set("protocols", flex.FlattenStringyValueSet[awstypes.Protocol](output.Protocols))
 	d.Set("resolver_endpoint_type", output.ResolverEndpointType)
+	d.Set("rni_enhanced_metrics_enabled", output.RniEnhancedMetricsEnabled)
 	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
+	d.Set("target_name_server_metrics_enabled", output.TargetNameServerMetricsEnabled)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
@@ -211,7 +234,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	if d.HasChanges(names.AttrName, "protocols", "resolver_endpoint_type") {
+	if d.HasChanges(names.AttrName, "protocols", "resolver_endpoint_type", "rni_enhanced_metrics_enabled", "target_name_server_metrics_enabled") {
 		input := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
 		}
@@ -226,6 +249,14 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if d.HasChange("resolver_endpoint_type") {
 			input.ResolverEndpointType = awstypes.ResolverEndpointType(d.Get("resolver_endpoint_type").(string))
+		}
+
+		if d.HasChange("rni_enhanced_metrics_enabled") {
+			input.RniEnhancedMetricsEnabled = aws.Bool(d.Get("rni_enhanced_metrics_enabled").(bool))
+		}
+
+		if d.HasChange("target_name_server_metrics_enabled") {
+			input.TargetNameServerMetricsEnabled = aws.Bool(d.Get("target_name_server_metrics_enabled").(bool))
 		}
 
 		_, err := conn.UpdateResolverEndpoint(ctx, input)
@@ -317,7 +348,7 @@ func findResolverEndpointByID(ctx context.Context, conn *route53resolver.Client,
 	output, err := conn.GetResolverEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -328,7 +359,7 @@ func findResolverEndpointByID(ctx context.Context, conn *route53resolver.Client,
 	}
 
 	if output == nil || output.ResolverEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverEndpoint, nil
@@ -354,11 +385,11 @@ func findResolverEndpointIPAddressesByID(ctx context.Context, conn *route53resol
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findResolverEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -371,7 +402,7 @@ func statusEndpoint(ctx context.Context, conn *route53resolver.Client, id string
 }
 
 func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusCreating),
 		Target:     enum.Slice(awstypes.ResolverEndpointStatusOperational),
 		Refresh:    statusEndpoint(ctx, conn, id),
@@ -383,7 +414,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -392,7 +423,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id s
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusUpdating),
 		Target:     enum.Slice(awstypes.ResolverEndpointStatusOperational),
 		Refresh:    statusEndpoint(ctx, conn, id),
@@ -404,7 +435,7 @@ func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -413,7 +444,7 @@ func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id s
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusEndpoint(ctx, conn, id),
@@ -425,7 +456,7 @@ func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

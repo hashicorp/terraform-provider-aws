@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -153,6 +153,13 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "25"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
 				),
 			},
 		},
@@ -324,7 +331,7 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceWorkgroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshiftserverless.ResourceWorkgroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -396,7 +403,7 @@ func testAccCheckWorkgroupDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 			_, err := tfredshiftserverless.FindWorkgroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -117,7 +117,7 @@ This resource supports the following arguments:
 #### Identity Token Only
 
 * `client_ids` - (Optional) The ID token audience, or client ID, claim values that you want to accept in your policy store from an OIDC identity provider.
-* `group_entity_type` - (Optional) The claim that determines the principal in OIDC access tokens.
+* `principal_id_claim` - (Optional) The claim that determines the principal in OIDC identity tokens.
 
 #### Open ID Group Configuration
 

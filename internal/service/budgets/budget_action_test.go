@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package budgets_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -216,7 +216,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), "100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbudgets.ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -224,34 +224,22 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	})
 }
 
-func testAccBudgetActionExists(ctx context.Context, resourceName string, config *awstypes.Action) resource.TestCheckFunc {
+func testAccBudgetActionExists(ctx context.Context, n string, v *awstypes.Action) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Budget Action ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
 
-		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
+		output, err := tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["action_id"], rs.Primary.Attributes["budget_name"])
 
 		if err != nil {
 			return err
 		}
 
-		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-			return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-		})
-
-		if err != nil {
-			return err
-		}
-
-		*config = *output
+		*v = *output
 
 		return nil
 	}
@@ -266,17 +254,9 @@ func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
+			_, err := tfbudgets.FindBudgetActionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["action_id"], rs.Primary.Attributes["budget_name"])
 
-			if err != nil {
-				return err
-			}
-
-			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
-				return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-			})
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

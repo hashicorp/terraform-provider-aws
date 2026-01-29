@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package smithy
@@ -8,16 +8,15 @@ import (
 
 	smithydocument "github.com/aws/smithy-go/document"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // DocumentFromJSONString converts a JSON string to a [Smithy document](https://smithy.io/2.0/spec/simple-types.html#document).
 func DocumentFromJSONString[T any](s string, f func(any) T) (T, error) {
 	var v any
 
-	err := tfjson.DecodeFromString(s, &v)
-	if err != nil {
-		var zero T
-		return zero, err
+	if err := tfjson.DecodeFromString(s, &v); err != nil {
+		return inttypes.Zero[T](), err
 	}
 
 	return f(v), nil

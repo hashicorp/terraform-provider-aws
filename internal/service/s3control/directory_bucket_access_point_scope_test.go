@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func TestAccS3ControlDirectoryBucketAccessPointScope_disappears(t *testing.T) {
 				Config: testAccAccessPointScopeConfig_basic(accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointForDirectoryBucketScopeExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceDirectoryBucketAccessPointScope, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceDirectoryBucketAccessPointScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +172,7 @@ func testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx context.Context) res
 
 			_, err := tfs3control.FindDirectoryAccessPointScopeByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -188,7 +188,7 @@ func testAccCheckDirectoryBucketAccessPointScopeDestroy(ctx context.Context) res
 }
 
 func testAccAccessPointScopeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucket(rName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucketBasic(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3control_directory_bucket_access_point_scope" "test" {
@@ -204,7 +204,7 @@ resource "aws_s3control_directory_bucket_access_point_scope" "test" {
 }
 
 func testAccAccessPointScopeConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucket(rName), `
+	return acctest.ConfigCompose(testAccAccessPointConfig_directoryBucketBasic(rName), `
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3control_directory_bucket_access_point_scope" "test" {
