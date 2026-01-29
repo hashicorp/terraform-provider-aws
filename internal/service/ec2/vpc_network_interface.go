@@ -1095,9 +1095,9 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 		if retry.NotFound(err) {
 			return diags
 		}
-		
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting EC2 Network Interface (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		if output != nil && output.Attachment != nil {
