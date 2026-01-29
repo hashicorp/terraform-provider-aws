@@ -37,7 +37,7 @@ type dataSourceRegions struct {
 func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"account_id": schema.StringAttribute{
+			 names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -66,14 +66,15 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 
 	regionOpts := *(*[]awstypes.RegionOptStatus)(unsafe.Pointer(&regionOptsString))
 
-	input := &account.ListRegionsInput{
+	input := account.ListRegionsInput{
 		AccountId:               accountID,
 		RegionOptStatusContains: regionOpts,
 	}
+	inputPtr := &input
 
 	output := &account.ListRegionsOutput{}
 	for {
-		page, err := conn.ListRegions(ctx, input)
+		page, err := conn.ListRegions(ctx, inputPtr)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Account, create.ErrActionReading, DSNameRegions, data.AccountID.String(), err),
