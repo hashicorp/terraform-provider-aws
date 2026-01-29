@@ -83,6 +83,14 @@ func resourceUser() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// AWS uses different values for input and output of the auth type, ignore equivalent values
+								if old == string(awstypes.AuthenticationTypeNoPassword) &&
+									new == string(awstypes.InputAuthenticationTypeNoPassword) {
+									return true
+								}
+								return false
+							},
 						},
 					},
 				},
