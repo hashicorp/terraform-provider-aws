@@ -32,7 +32,7 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthChecksDataSourceConfig_basic(rName, zoneName.String(), recordName.String()),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "plan_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "health_checks.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
