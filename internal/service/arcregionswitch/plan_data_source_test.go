@@ -32,7 +32,7 @@ func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
 				Config: testAccPlanDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtName, resourceName, acctest.CtName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role", resourceName, "execution_role"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "recovery_approach", resourceName, "recovery_approach"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "regions", resourceName, "regions"),

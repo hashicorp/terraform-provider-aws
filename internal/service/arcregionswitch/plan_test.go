@@ -39,7 +39,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "primary_region", acctest.Region()),
@@ -266,7 +266,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -311,7 +311,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -333,55 +333,55 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 					// Verify CustomActionLambda execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "CustomActionLambda",
-						acctest.CtName:         "custom-lambda-step",
+						names.AttrName:         "custom-lambda-step",
 					}),
 
 					// Verify ManualApproval execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "ManualApproval",
-						acctest.CtName:         "manual-approval-step",
+						names.AttrName:         "manual-approval-step",
 					}),
 
 					// Verify AuroraGlobalDatabase execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "AuroraGlobalDatabase",
-						acctest.CtName:         "aurora-global-step",
+						names.AttrName:         "aurora-global-step",
 					}),
 
 					// Verify EC2AutoScaling execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "EC2AutoScaling",
-						acctest.CtName:         "ec2-asg-step",
+						names.AttrName:         "ec2-asg-step",
 					}),
 
 					// Verify ECSServiceScaling execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "ECSServiceScaling",
-						acctest.CtName:         "ecs-scaling-step",
+						names.AttrName:         "ecs-scaling-step",
 					}),
 
 					// Verify EKSResourceScaling execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "EKSResourceScaling",
-						acctest.CtName:         "eks-scaling-step",
+						names.AttrName:         "eks-scaling-step",
 					}),
 
 					// Verify Route53HealthCheck execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "Route53HealthCheck",
-						acctest.CtName:         "route53-health-check-step-activate",
+						names.AttrName:         "route53-health-check-step-activate",
 					}),
 
 					// Verify Parallel execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "Parallel",
-						acctest.CtName:         "parallel-step",
+						names.AttrName:         "parallel-step",
 					}),
 
 					// Verify ARCRoutingControl execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "ARCRoutingControl",
-						acctest.CtName:         "arc-routing-control-step",
+						names.AttrName:         "arc-routing-control-step",
 					}),
 
 					// Verify specific configuration values are stored correctly
