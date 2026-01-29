@@ -1,5 +1,13 @@
 ## 6.31.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_odb_cloud_autonomous_vm_cluster: autonomous vm cluster creation using odb network ARN and exadata infrastructure ARN for resource sharing model. ([#45583](https://github.com/hashicorp/terraform-provider-aws/issues/45583))
+
+BUG FIXES:
+
+* resource/aws_network_interface: Fix `UnauthorizedOperation` error when detaching resource that does not have an attachment ([#46211](https://github.com/hashicorp/terraform-provider-aws/issues/46211))
+
 ## 6.30.0 (January 28, 2026)
 
 FEATURES:
