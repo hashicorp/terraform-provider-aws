@@ -1,0 +1,4 @@
+```release-note:new-resource
+aws_mpa_approval_team
+```
+
