@@ -1,0 +1,3 @@
+```release-note:enhancement
+datasource/aws_ecr_image: Add `image_tag_regex` option for use with `most_recent`
+```
