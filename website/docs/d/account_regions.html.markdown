@@ -20,7 +20,6 @@ data "aws_account_regions" "example" {}
 
 ## Argument Reference
 
-
 The following arguments are optional:
 
 * `account_id` - (Optional) AWS account ID. Must be a member account in the same organization.
@@ -36,4 +35,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `region_name` - The Region code of a given Region
 * `region_opt_status` - One of potential statuses a Region can undergo (Enabled, Enabling, Disabled, Disabling, Enabled_By_Default).
-
