@@ -62,12 +62,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  dataSourceVideo,
-			TypeName: "aws_workspaces_video",
-			Name:     "Video",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		},
-		{
 			Factory:  dataSourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
