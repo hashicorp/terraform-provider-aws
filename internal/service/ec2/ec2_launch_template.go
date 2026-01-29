@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -23,9 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -82,9 +84,13 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidKMSKeyID,
+										Type:     schema.TypeString,
+										Optional: true,
+										// Allow empty string for backwards compatibility with verify.ValidARN.
+										ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+											validation.StringIsEmpty,
+											verify.ValidKMSKeyID,
+										),
 									},
 									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
@@ -94,7 +100,7 @@ func resourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									"volume_initialization_rate": {
 										Type:         schema.TypeInt,
@@ -882,6 +888,20 @@ func resourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"network_performance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bandwidth_weighting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
+						},
+					},
+				},
+			},
 			"placement": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1077,7 +1097,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 
 	lt, err := findLaunchTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Launch Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1136,6 +1156,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"metadata_options",
 		"monitoring",
 		"network_interfaces",
+		"network_performance_options",
 		"placement",
 		"private_dns_name_options",
 		"ram_disk_id",
@@ -1332,6 +1353,10 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 
 	if v, ok := d.GetOk("network_interfaces"); ok && len(v.([]any)) > 0 {
 		apiObject.NetworkInterfaces = expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(v.([]any))
+	}
+
+	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -2045,6 +2070,20 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []
 	return apiObjects
 }
 
+func expandLaunchTemplateNetworkPerformanceOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateNetworkPerformanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LaunchTemplateNetworkPerformanceOptionsRequest{}
+
+	if v, ok := tfMap["bandwidth_weighting"].(string); ok && v != "" {
+		apiObject.BandwidthWeighting = awstypes.InstanceBandwidthWeighting(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.LaunchTemplatePlacementRequest {
 	if tfMap == nil {
 		return nil
@@ -2261,6 +2300,13 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	}
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("setting network_interfaces: %w", err)
+	}
+	if apiObject.NetworkPerformanceOptions != nil {
+		if err := d.Set("network_performance_options", []any{flattenLaunchTemplateNetworkPerformanceOptions(apiObject.NetworkPerformanceOptions)}); err != nil {
+			return fmt.Errorf("setting network_performance_options: %w", err)
+		}
+	} else {
+		d.Set("network_performance_options", nil)
 	}
 	if apiObject.Placement != nil {
 		if err := d.Set("placement", []any{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
@@ -2951,6 +2997,20 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []aw
 	}
 
 	return tfList
+}
+
+func flattenLaunchTemplateNetworkPerformanceOptions(apiObject *awstypes.LaunchTemplateNetworkPerformanceOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.BandwidthWeighting; v != "" {
+		tfMap["bandwidth_weighting"] = v
+	}
+
+	return tfMap
 }
 
 func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement) map[string]any {

@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -63,19 +62,19 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
 					}),
 				},
 			},
@@ -131,19 +130,19 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id3)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id3),
 					}),
 				},
 			},
@@ -194,13 +193,13 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id1)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
 					}),
 
 					querycheck.ExpectIdentity("aws_instance.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
 						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrID:        knownvalue.StringFunc(checker(&id2)),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 				},
 			},
@@ -255,16 +254,6 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 func getter(s *string) resource.CheckResourceAttrWithFunc {
 	return func(v string) error {
 		*s = v
-		return nil
-	}
-}
-
-// TODO: Temporary until there is more testing support
-func checker(s *string) func(string) error {
-	return func(v string) error {
-		if v != *s {
-			return fmt.Errorf("expected %q, got %q", *s, v)
-		}
 		return nil
 	}
 }

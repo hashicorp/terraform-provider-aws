@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -298,7 +298,7 @@ func TestAccGlueSchema_disappears(t *testing.T) {
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceSchema(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -323,7 +323,7 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

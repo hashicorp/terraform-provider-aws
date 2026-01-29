@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -870,7 +870,7 @@ func TestAccNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceLoggingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkfirewall.ResourceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -889,7 +889,7 @@ func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfnetworkfirewall.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

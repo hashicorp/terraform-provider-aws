@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -121,7 +121,7 @@ func testAccEnabler_disappears(t *testing.T) {
 				Config: testAccEnablerConfig_basic(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -403,7 +403,7 @@ func testAccEnabler_memberAccount_disappearsMemberAssociation(t *testing.T) {
 				Config: testAccEnablerConfig_MemberAccount(resourceTypes),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceMemberAssociation(), "aws_inspector2_member_association.member"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceMemberAssociation(), "aws_inspector2_member_association.member"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -601,7 +601,7 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			st, err := tfinspector2.AccountStatuses(ctx, conn, accountIDs)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {

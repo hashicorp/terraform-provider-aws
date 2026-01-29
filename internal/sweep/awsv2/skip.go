@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package awsv2
@@ -104,6 +104,10 @@ func SkipSweepError(err error) bool {
 	}
 	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
+		return true
+	}
+	// Example (athena): InvalidRequestException: Not authorized to make this request.
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "Not authorized to make this request") {
 		return true
 	}
 	// Example (GovCloud): InvalidSignatureException: Credential should be scoped to a valid region

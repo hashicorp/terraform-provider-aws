@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -15,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -180,7 +183,7 @@ func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.Reso
 
 	pack, err := findOrganizationConformancePackByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Organization Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -302,14 +305,14 @@ func findOrganizationConformancePacks(ctx context.Context, conn *configservice.C
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -337,7 +340,7 @@ func findOrganizationConformancePackStatusByName(ctx context.Context, conn *conf
 	}
 
 	if status := output.Status; status == types.OrganizationResourceStatusDeleteSuccessful {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -369,7 +372,7 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 		})
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -404,14 +407,14 @@ func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -427,11 +430,11 @@ func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *
 	return output, nil
 }
 
-func statusOrganizationConformancePack(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
+func statusOrganizationConformancePack(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findOrganizationConformancePackStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -444,7 +447,7 @@ func statusOrganizationConformancePack(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConformancePackCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationResourceStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationResourceStatusCreateSuccessful),
 		Refresh:        statusOrganizationConformancePack(ctx, conn, name),
@@ -456,7 +459,7 @@ func waitOrganizationConformancePackCreated(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -465,7 +468,7 @@ func waitOrganizationConformancePackCreated(ctx context.Context, conn *configser
 }
 
 func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationResourceStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationResourceStatusUpdateSuccessful),
 		Refresh: statusOrganizationConformancePack(ctx, conn, name),
@@ -476,7 +479,7 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -485,7 +488,7 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 }
 
 func waitOrganizationConformancePackDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationResourceStatusDeleteInProgress),
 		Target:                    []string{},
 		Refresh:                   statusOrganizationConformancePack(ctx, conn, name),
@@ -497,7 +500,7 @@ func waitOrganizationConformancePackDeleted(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}

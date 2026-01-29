@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,6 +87,14 @@ func TestRuleParseResourceID(t *testing.T) {
 			InputID: tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
 			//lintignore:AWSAT003,AWSAT005
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName: "ARN event bus for EU cloud",
+			//lintignore:AWSAT003,AWSAT005
+			InputID: tfevents.RuleCreateResourceID("arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/default", "TestRule"),
+			//lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/default",
 			ExpectedPart1: "TestRule",
 		},
 		{
@@ -973,7 +981,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `agent_runtime_artifact.code_configuration` block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Make `agent_runtime_artifact.container_configuration` block optional
+```

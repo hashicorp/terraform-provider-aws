@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_quicksight_account_subscription: Add `admin_pro_group`, `author_pro_group`, and `reader_pro_group` arguments
+```
+
+```release-note:note
+resource/aws_quicksight_account_subscription: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing
+```

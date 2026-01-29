@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_codebuild_start_build
 
-~> **Note:** `aws_codebuild_start_build` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Starts a CodeBuild project build. This action will initiate a build and wait for it to complete, providing progress updates during execution.
 
 For information about AWS CodeBuild, see the [AWS CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/). For specific information about starting builds, see the [StartBuild](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_StartBuild.html) page in the AWS CodeBuild API Reference.

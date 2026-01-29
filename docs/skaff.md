@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Provider Scaffolding (skaff)
 
 `skaff` is a Terraform AWS Provider scaffolding command line tool.
@@ -104,7 +107,6 @@ Flags:
   -h, --help               help for datasource
   -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
-  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
 ```
 
@@ -151,6 +153,5 @@ Flags:
   -h, --help               help for resource
   -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
-  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
 ```

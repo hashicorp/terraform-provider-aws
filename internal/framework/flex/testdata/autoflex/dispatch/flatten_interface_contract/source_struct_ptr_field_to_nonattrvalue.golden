@@ -1,0 +1,48 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimePointer",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimePointer",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue",
+    "source_type": "flex.awsRFC3339TimePointer"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimePointer",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "CreationDateTime",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimePointer",
+    "autoflex.target.fieldname": "CreationDateTime",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsRFC3339TimeValue"
+  },
+  {
+    "@level": "error",
+    "@message": "Target does not implement attr.Value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "CreationDateTime",
+    "autoflex.source.type": "*time.Time",
+    "autoflex.target.path": "CreationDateTime",
+    "autoflex.target.type": "time.Time"
+  }
+]

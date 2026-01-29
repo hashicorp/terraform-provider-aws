@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoverycontrolconfig
@@ -9,8 +9,8 @@ import (
 
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -22,7 +22,7 @@ func waitClusterCreated(ctx context.Context, conn *r53rcc.Client, clusterArn str
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusCluster(ctx, conn, clusterArn),
+		Refresh:    statusCluster(conn, clusterArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -40,7 +40,7 @@ func waitClusterUpdated(ctx context.Context, conn *r53rcc.Client, clusterArn str
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusCluster(ctx, conn, clusterArn),
+		Refresh:    statusCluster(conn, clusterArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -58,7 +58,7 @@ func waitClusterDeleted(ctx context.Context, conn *r53rcc.Client, clusterArn str
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusCluster(ctx, conn, clusterArn),
+		Refresh:        statusCluster(conn, clusterArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,
@@ -77,7 +77,7 @@ func waitRoutingControlCreated(ctx context.Context, conn *r53rcc.Client, routing
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusRoutingControl(ctx, conn, routingControlArn),
+		Refresh:    statusRoutingControl(conn, routingControlArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -95,7 +95,7 @@ func waitRoutingControlDeleted(ctx context.Context, conn *r53rcc.Client, routing
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusRoutingControl(ctx, conn, routingControlArn),
+		Refresh:        statusRoutingControl(conn, routingControlArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,
@@ -114,7 +114,7 @@ func waitControlPanelCreated(ctx context.Context, conn *r53rcc.Client, controlPa
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusControlPanel(ctx, conn, controlPanelArn),
+		Refresh:    statusControlPanel(conn, controlPanelArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -132,7 +132,7 @@ func waitControlPanelDeleted(ctx context.Context, conn *r53rcc.Client, controlPa
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusControlPanel(ctx, conn, controlPanelArn),
+		Refresh:        statusControlPanel(conn, controlPanelArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,
@@ -151,7 +151,7 @@ func waitSafetyRuleCreated(ctx context.Context, conn *r53rcc.Client, safetyRuleA
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusPending),
 		Target:     enum.Slice(awstypes.StatusDeployed),
-		Refresh:    statusSafetyRule(ctx, conn, safetyRuleArn),
+		Refresh:    statusSafetyRule(conn, safetyRuleArn),
 		Timeout:    timeout,
 		MinTimeout: minTimeout,
 	}
@@ -169,7 +169,7 @@ func waitSafetyRuleDeleted(ctx context.Context, conn *r53rcc.Client, safetyRuleA
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StatusPendingDeletion),
 		Target:         []string{},
-		Refresh:        statusSafetyRule(ctx, conn, safetyRuleArn),
+		Refresh:        statusSafetyRule(conn, safetyRuleArn),
 		Timeout:        timeout,
 		Delay:          minTimeout,
 		NotFoundChecks: 1,

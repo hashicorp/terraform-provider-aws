@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -14,12 +16,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
@@ -95,7 +98,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("certificate_id", out.CertificateIdentifier)
 	d.Set("certificate_pem", out.CertificatePem)
 	if len(out.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", itypes.Base64EncodeOnce(out.CertificateWallet))
+		d.Set("certificate_wallet", inttypes.Base64EncodeOnce(out.CertificateWallet))
 	}
 	d.Set("key_length", out.KeyLength)
 	d.Set("signing_algorithm", out.SigningAlgorithm)

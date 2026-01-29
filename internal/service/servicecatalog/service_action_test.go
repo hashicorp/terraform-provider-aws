@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -72,7 +72,7 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 				Config: testAccServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceActionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceServiceAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceServiceAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

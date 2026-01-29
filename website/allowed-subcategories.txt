@@ -4,6 +4,8 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
+ARC (Application Recovery Controller) Region Switch
+ARC (Application Recovery Controller) Zonal Shift
 Account Management
 Amazon Q Business
 Amplify
@@ -17,7 +19,6 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
-Application Resilience Controller Region Switch
 Application Signals
 Athena
 Audit Manager
@@ -51,7 +52,9 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -159,9 +162,9 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
@@ -169,6 +172,7 @@ Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
 MemoryDB
 Meta Data Sources
+Multi-party Approval
 Neptune
 Neptune Analytics
 Network Firewall
@@ -190,6 +194,7 @@ QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data
@@ -226,6 +231,7 @@ SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
 SageMaker AI
+Savings Plans
 Secrets Manager
 Security Hub
 Security Lake

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -12,11 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,7 +78,7 @@ func TestAccECSCapacityProvider_disappears(t *testing.T) {
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceCapacityProvider(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceCapacityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -293,6 +294,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_basic(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "managed_instances_provider.0.infrastructure_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttrPair(resourceName, "managed_instances_provider.0.instance_launch_template.0.ec2_instance_profile_arn", "aws_iam_instance_profile.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.network_configuration.0.subnets.#", "2"),
@@ -329,6 +331,7 @@ func TestAccECSCapacityProvider_createManagedInstancesProvider_withInstanceRequi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "SPOT"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.0.vcpu_count.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_requirements.0.vcpu_count.0.min", "2"),
@@ -416,6 +419,89 @@ func TestAccECSCapacityProvider_updateManagedInstancesProvider(t *testing.T) {
 	})
 }
 
+func TestAccECSCapacityProvider_createManagedInstancesProvider_withInfrastructureOptimization(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "300"),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "0"),
+				),
+			},
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName, -1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.infrastructure_optimization.0.scale_in_after", "-1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_managedInstancesProvider_capacityOptionTypeReplacement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, "ON_DEMAND"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "ON_DEMAND"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, "SPOT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.capacity_option_type", "SPOT"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
@@ -427,7 +513,7 @@ func testAccCheckCapacityProviderDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfecs.FindCapacityProviderByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {
@@ -705,6 +791,22 @@ resource "aws_subnet" "test" {
   }
 }
 
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -771,7 +873,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
     }
   }
@@ -790,10 +893,12 @@ resource "aws_ecs_capacity_provider" "test" {
     propagate_tags          = "NONE"
 
     instance_launch_template {
+      capacity_option_type     = "SPOT"
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
 
       instance_requirements {
@@ -831,7 +936,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
 
       storage_configuration {
@@ -867,7 +973,8 @@ resource "aws_ecs_capacity_provider" "test" {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
 
       network_configuration {
-        subnets = aws_subnet.test[*].id
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
       }
 
       instance_requirements {
@@ -883,4 +990,78 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_withInfrastructureOptimization(rName string, scaleInAfter int) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+    propagate_tags          = "NONE"
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+        }
+
+        memory_mib {
+          min = 1024
+        }
+      }
+    }
+
+    infrastructure_optimization {
+      scale_in_after = %[2]d
+    }
+  }
+}
+`, rName, scaleInAfter))
+}
+
+func testAccCapacityProviderConfig_managedInstancesProvider_capacityOptionType(rName, capacityOptionType string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_managedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  name    = %[2]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      capacity_option_type     = %[2]q
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+        }
+
+        memory_mib {
+          min = 1024
+        }
+      }
+    }
+  }
+}
+`, rName, capacityOptionType))
 }

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -14,13 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +36,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;types.MaintenanceWindowTarget")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(importStateIdFunc="testAccMaintenanceWindowTargetImportStateIdFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTargetCreate,
@@ -136,7 +140,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 	windowID := d.Get("window_id").(string)
 	target, err := findMaintenanceWindowTargetByTwoPartKey(ctx, conn, windowID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Target %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -242,7 +246,7 @@ func findMaintenanceWindowTargets(ctx context.Context, conn *ssm.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DoesNotExistException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
