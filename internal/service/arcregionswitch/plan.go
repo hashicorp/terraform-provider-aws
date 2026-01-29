@@ -730,7 +730,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	// Use custom Expand method for resourcePlanModel
+	// TODO: Wrong pattern - should call fwflex.Expand(ctx, plan, &input) directly after refactoring
 	expanded, diags := plan.Expand(ctx)
 	if diags.HasError() {
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
@@ -757,6 +757,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	// TODO: Wrong pattern - should call fwflex.Flatten(ctx, planOutput, &plan) directly after refactoring
 	diags = plan.Flatten(ctx, planOutput)
 	if diags.HasError() {
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
@@ -787,7 +788,7 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Use custom Flatten method for resourcePlanModel
+	// TODO: Wrong pattern - should call fwflex.Flatten(ctx, plan, &state) directly after refactoring
 	diags := state.Flatten(ctx, plan)
 	if diags.HasError() {
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
@@ -818,7 +819,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	// Use custom expand logic (similar to Create)
+	// TODO: Wrong pattern - should call fwflex.Expand(ctx, plan, &input) directly after refactoring
 	apiObject, diags := plan.Expand(ctx)
 	if diags.HasError() {
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
@@ -858,6 +859,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// TODO: Wrong pattern - should call fwflex.Flatten(ctx, planOutput, &plan) directly after refactoring
 	diags = plan.Flatten(ctx, planOutput)
 	if diags.HasError() {
 		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
@@ -918,10 +920,9 @@ func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schem
 }
 
 // Expand converts the Terraform resource model to AWS API input.
-// TODO: Investigate using AutoFlex for the full expansion. Current manual implementation handles:
-// 1. Union Type Handling: ExecutionBlockConfiguration uses AWS SDK union types
-// 2. Complex Nested Transformations: ScalingResources (list→map[string]map[string]) and RegionAndRoutingControls (list→map[string][])
-// 3. Conditional Logic: Different execution block types with different field mappings and validations
+// TODO: Refactor to use AutoFlex pattern - remove this method and implement fwflex.Expander interface on nested models
+// that need custom handling (union types, list↔map transformations, conditional logic), then call fwflex.Expand directly.
+// See: https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#overriding-default-behavior
 func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag.Diagnostics) {
 	var apiObject arcregionswitch.CreatePlanInput
 
@@ -948,6 +949,7 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 	return apiObject, diags
 }
 
+// TODO: Refactor - implement fwflex.Expander on workflowModel instead of this helper
 func (m resourcePlanModel) expandWorkflow(ctx context.Context, apiObject *arcregionswitch.CreatePlanInput, diags *fwdiag.Diagnostics) error {
 	if m.Workflows.IsNull() || m.Workflows.IsUnknown() {
 		return nil
@@ -975,6 +977,7 @@ func (m resourcePlanModel) expandWorkflow(ctx context.Context, apiObject *arcreg
 	return nil
 }
 
+// TODO: Refactor - implement fwflex.Expander on stepModel instead of this helper
 func (m resourcePlanModel) expandWorkflowSteps(ctx context.Context, workflow workflowModel, apiWorkflow *awstypes.Workflow, diags *fwdiag.Diagnostics) error {
 	if workflow.Steps.IsNull() || workflow.Steps.IsUnknown() {
 		return nil
@@ -1002,6 +1005,7 @@ func (m resourcePlanModel) expandWorkflowSteps(ctx context.Context, workflow wor
 	return nil
 }
 
+// TODO: Refactor - handle union types via fwflex.Expander on appropriate models
 func (m resourcePlanModel) expandStepExecutionBlockConfiguration(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	switch {
 	case !step.ArcRoutingControlConfig.IsNull():
@@ -1030,6 +1034,7 @@ func (m resourcePlanModel) expandStepExecutionBlockConfiguration(ctx context.Con
 	return nil
 }
 
+// TODO: Refactor - implement fwflex.Expander on arcRoutingControlConfigModel instead of this helper
 func (m resourcePlanModel) expandArcRoutingControlConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	data, d := step.ArcRoutingControlConfig.ToPtr(ctx)
 	diags.Append(d...)
@@ -1063,7 +1068,7 @@ func expandSimpleConfig[T any](ctx context.Context, field fwtypes.ListNestedObje
 	return nil
 }
 
-// General handler for simple AutoFlex configs
+// TODO: Refactor - implement fwflex.Expander on config models instead of this helper
 func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	switch {
 	case !step.CustomActionLambdaConfig.IsNull():
@@ -1117,6 +1122,8 @@ func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, step
 	}
 	return nil
 }
+
+// TODO: Refactor - implement fwflex.Expander on regionAndRoutingControlsModel for list→map transformation
 func (m resourcePlanModel) expandArcRegionAndRoutingControls(ctx context.Context, data *arcRoutingControlConfigModel, apiArcConfig *awstypes.ArcRoutingControlConfiguration, diags *fwdiag.Diagnostics) error {
 	if data.RegionAndRoutingControls.IsNull() || data.RegionAndRoutingControls.IsUnknown() {
 		return nil
@@ -1153,7 +1160,7 @@ func (m resourcePlanModel) expandArcRegionAndRoutingControls(ctx context.Context
 	return nil
 }
 
-// Execution block configuration handlers
+// TODO: Refactor - implement fwflex.Expander on eksResourceScalingConfigModel instead of this helper
 func (m resourcePlanModel) expandEKSConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	data, d := step.EKSResourceScalingConfig.ToPtr(ctx)
 	diags.Append(d...)
@@ -1179,6 +1186,7 @@ func (m resourcePlanModel) expandEKSConfig(ctx context.Context, step stepModel, 
 	return nil
 }
 
+// TODO: Refactor - implement fwflex.Expander on scalingResourcesModel for list→map[string]map[string] transformation
 func (m resourcePlanModel) expandEKSScalingResources(ctx context.Context, data *eksResourceScalingConfigModel, apiEKSConfig *awstypes.EksResourceScalingConfiguration, diags *fwdiag.Diagnostics) error {
 	if data.ScalingResources.IsNull() || data.ScalingResources.IsUnknown() {
 		return nil
@@ -1216,6 +1224,7 @@ func (m resourcePlanModel) expandEKSScalingResources(ctx context.Context, data *
 	return nil
 }
 
+// TODO: Refactor - implement fwflex.Expander on parallelConfigModel instead of this helper
 func (m resourcePlanModel) expandParallelConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	data, d := step.ParallelConfig.ToPtr(ctx)
 	diags.Append(d...)
@@ -1234,6 +1243,7 @@ func (m resourcePlanModel) expandParallelConfig(ctx context.Context, step stepMo
 	return nil
 }
 
+// TODO: Refactor - implement fwflex.Expander on parallelStepModel instead of this helper
 func (m resourcePlanModel) expandParallelSteps(ctx context.Context, data *parallelConfigModel, apiParallelConfig *awstypes.ParallelExecutionBlockConfiguration, diags *fwdiag.Diagnostics) error {
 	if data.Step.IsNull() || data.Step.IsUnknown() {
 		return nil
@@ -1261,6 +1271,7 @@ func (m resourcePlanModel) expandParallelSteps(ctx context.Context, data *parall
 	return nil
 }
 
+// TODO: Refactor - handle union types via fwflex.Expander on appropriate models
 func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Context, pStep parallelStepModel, apiParallelStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	switch {
 	case !pStep.ArcRoutingControlConfig.IsNull():
@@ -1365,6 +1376,7 @@ func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Co
 	return nil
 }
 
+// TODO: Refactor - implement fwflex.Expander on triggerModel instead of this helper
 func (m resourcePlanModel) expandTriggers(ctx context.Context, apiObject *arcregionswitch.CreatePlanInput, diags *fwdiag.Diagnostics) error {
 	if m.Triggers.IsNull() || m.Triggers.IsUnknown() {
 		return nil
@@ -1384,11 +1396,9 @@ func (m resourcePlanModel) expandTriggers(ctx context.Context, apiObject *arcreg
 }
 
 // Flatten converts the AWS API response to Terraform resource model.
-// AutoFlex didn't work out of the box, but likely doable in a more elegant way. Current manual implementation handles:
-// 1. Union Type Handling: ExecutionBlockConfiguration union types with manual type switching and field extraction
-// 2. Reverse Complex Transformations: Converting AWS API maps back to Terraform list structures for ScalingResources and RegionAndRoutingControls
-// 3. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
-// 4. Nested Parallel Steps: Parallel execution block configurations with recursive flattening
+// TODO: Refactor to use AutoFlex pattern - remove this method and implement fwflex.Flattener interface on nested models
+// that need custom handling (union types, map→list transformations, workflow ordering, nested parallel steps), then call fwflex.Flatten directly.
+// See: https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#overriding-default-behavior
 func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Diagnostics) {
 	plan, ok := v.(*awstypes.Plan)
 	if !ok {
