@@ -546,12 +546,12 @@ func (oracleDBNwkPeeringResourceTest) addPeeredNetworkCidrConfig(vpcName, odbNet
 
 %[1]s
 
-
+%[2]s
 
 resource "aws_odb_network_peering_connection" "test" {
   display_name    = %[3]q
   depends_on = [aws_ec2_transit_gateway_vpc_attachment.test]
-  odb_network_id  = "odbnet_6aa50p4x4s"
+  odb_network_id  = aws_odb_network.test.id
   peer_network_id = aws_vpc.test.id
 }
 `, oracleDBNwkPeeringTestResource.vpcConfigForAddRemoveCidr(vpcName), oracleDBNwkPeeringTestResource.odbNetworkConfig(odbNetName), odbPeeringName)
@@ -562,10 +562,11 @@ resource "aws_odb_network_peering_connection" "test" {
 
 %[1]s
 
+%[2]s
 
 resource "aws_odb_network_peering_connection" "test" {
   display_name    = %[3]q
-  odb_network_id  = "odbnet_6aa50p4x4s"
+  odb_network_id  = aws_odb_network.test.id
 depends_on = [aws_ec2_transit_gateway_vpc_attachment.test]
   peer_network_id = aws_vpc.test.id
   peer_network_cidrs = ["13.0.0.0/16"]	
@@ -579,10 +580,11 @@ depends_on = [aws_ec2_transit_gateway_vpc_attachment.test]
 
 %[1]s
 
+%[2]s
 
 resource "aws_odb_network_peering_connection" "test" {
   display_name    = %[3]q
-  odb_network_id  = "odbnet_6aa50p4x4s"
+  odb_network_id  = aws_odb_network.test.id
 depends_on = [aws_ec2_transit_gateway_vpc_attachment.test]
   peer_network_id = aws_vpc.test.id
   peer_network_cidrs = ["13.0.0.0/16","16.1.0.0/16"]	
@@ -649,58 +651,4 @@ resource "aws_odb_network" "test" {
 		zero_etl_access      = "DISABLED"
 	}
 `, displayName)
-}
-
-func (oracleDBNwkPeeringResourceTest) foo(vpcName string) string {
-	return fmt.Sprintf(
-		`
-resource "aws_vpc" "test" {
-  cidr_block = "13.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_vpc_ipv4_cidr_block_association" "secondary" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "16.1.0.0/16"
-}
-resource "aws_vpc_ipv4_cidr_block_association" "tertiary" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "19.1.0.0/16"
-}
-
-# Subnets in primary CIDR
-resource "aws_subnet" "secondary_a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "16.1.1.0/24"
-  availability_zone = "us-east-1d"
-
-  tags = {
-    Name = "secondary_a"
-  }
-}
-
-resource "aws_subnet" "tertiary_a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "19.1.1.0/24"
-  availability_zone = "us-east-1d"
-
-  tags = {
-    Name = "tertiary_a"
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test" {
-}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
-  vpc_id             = aws_vpc.test.id
-  subnet_ids         = [aws_subnet.secondary_a.id, aws_subnet.tertiary_a.id]
-}
-
-
-`, vpcName)
-
 }
