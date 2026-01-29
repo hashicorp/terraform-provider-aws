@@ -32,6 +32,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Custom Domain Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newResourceSnapshotCopyConfiguration,
+			TypeName: "aws_redshiftserverless_snapshot_copy_configuration",
+			Name:     "Snapshot Copy Configuration",
+		},
 	}
 }
 
