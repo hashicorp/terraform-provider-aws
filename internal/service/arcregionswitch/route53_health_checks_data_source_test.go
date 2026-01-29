@@ -46,21 +46,8 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 
 func testAccRoute53HealthChecksDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
+data "aws_arcregionswitch_route53_health_checks" "test" {
+  plan_arn = aws_arcregionswitch_plan.test.arn
 }
 
 resource "aws_arcregionswitch_plan" "test" {
@@ -119,8 +106,21 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 
-data "aws_arcregionswitch_route53_health_checks" "test" {
-  plan_arn = aws_arcregionswitch_plan.test.arn
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 `, rName, acctest.AlternateRegion(), acctest.Region())
 }
