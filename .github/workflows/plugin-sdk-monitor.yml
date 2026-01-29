@@ -1,7 +1,7 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-name: Service Package Monitor
+name: Plugin SDK Monitor
 
 on:
   pull_request:
@@ -35,7 +35,7 @@ jobs:
         run: |
           HAS_CHANGES="false"
           
-          echo "### :robot: Service Package Changes Detected" > note.md
+          echo "### Plugin SDK Usage Detected" > note.md
           echo "---" >> note.md
           echo "" >> note.md
           
@@ -83,7 +83,6 @@ jobs:
               }
             ')
             
-            # Count new entries
             NEW_RESOURCES=0
             NEW_DATA_SOURCES=0
             
@@ -126,18 +125,10 @@ jobs:
           if [ "$HAS_CHANGES" == "true" ]; then
             echo "" >> note.md
             echo "---" >> note.md
-            echo ":information_source: **Net-new resources and data sources should be implemented using [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).**" >> note.md
+            echo ":information_source: **Net-new resources and data sources should be implemented using [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework). Please use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) for implementation.**" >> note.md
           fi
           
           echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
-      
-      - name: Upload note.md for debugging
-        if: always()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
-        with:
-          name: note-md
-          path: note.md
-          retention-days: 1
       
       - name: Comment on PR
         if: steps.check-additions.outputs.has_changes == 'true'
