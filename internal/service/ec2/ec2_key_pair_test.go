@@ -58,6 +58,44 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2KeyPair_writeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var keyPair awstypes.KeyPairInfo
+	resourceName := "aws_key_pair.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPairConfig_writeOnly(rName, publicKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", fmt.Sprintf("key-pair/%s", rName)),
+					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
+					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "public_key_wo_version", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
+			},
+		},
+	})
+}
+
 func TestAccEC2KeyPair_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var keyPair awstypes.KeyPairInfo
@@ -259,6 +297,16 @@ func testAccKeyPairConfig_basic(rName, publicKey string) string {
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
+}
+`, rName, publicKey)
+}
+
+func testAccKeyPairConfig_writeOnly(rName, publicKey string) string {
+	return fmt.Sprintf(`
+resource "aws_key_pair" "test" {
+  key_name      = %[1]q
+  public_key_wo = %[2]q
+  public_key_wo_version = 1
 }
 `, rName, publicKey)
 }
