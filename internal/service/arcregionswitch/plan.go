@@ -1383,10 +1383,8 @@ func (m resourcePlanModel) expandTriggers(ctx context.Context, apiObject *arcreg
 	return nil
 }
 
-// Flatten converts AWS API output to Terraform resource model.
-// Custom flattening is required because:
 // Flatten converts the AWS API response to Terraform resource model.
-// TODO: Investigate using AutoFlex for the full flattening. Current manual implementation handles:
+// AutoFlex didn't work out of the box, but likely doable in a more elegant way. Current manual implementation handles:
 // 1. Union Type Handling: ExecutionBlockConfiguration union types with manual type switching and field extraction
 // 2. Reverse Complex Transformations: Converting AWS API maps back to Terraform list structures for ScalingResources and RegionAndRoutingControls
 // 3. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
