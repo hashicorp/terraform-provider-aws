@@ -78,11 +78,22 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"cloud_exadata_infrastructure_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Exadata infrastructure id. Changing this will force terraform to create new resource.",
+			},
+			"cloud_exadata_infrastructure_arn": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The unique identifier of the Exadata infrastructure for this VM cluster. Changing this will create a new resource.",
 			},
 			"autonomous_data_storage_percentage": schema.Float32Attribute{
 				Computed: true,
@@ -298,11 +309,22 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Description: "The Oracle Cloud Identifier (OCID) of the Autonomous VM cluster.",
 			},
 			"odb_network_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The unique identifier of the ODB network associated with this Autonomous VM Cluster. Changing this will force terraform to create new resource.",
+			},
+			"odb_network_arn": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The unique identifier of the ODB network for the VM cluster. This member is required. Changing this will create a new resource.",
 			},
 			"percent_progress": schema.Float32Attribute{
 				Computed: true,
@@ -489,6 +511,51 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 	}
 }
 
+func (r *resourceCloudAutonomousVmCluster) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data cloudAutonomousVmClusterResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	//Neither is present
+	if !data.isNetworkARNAndExadataInfraARNPresent() && !data.isNetworkIdAndExadataInfraIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. Neither is present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	//Both are present
+	if data.isNetworkARNAndExadataInfraARNPresent() && data.isNetworkIdAndExadataInfraIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. Both are present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	// both exadata infra id and ARN present
+	if data.isExadataInfraARNAndIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. exadata infrastructure ID and ARN present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	// both odb network infra and ARN present
+	if data.isNetworkARNAndIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. ODB network ID and ARN present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
 func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var plan cloudAutonomousVmClusterResourceModel
@@ -496,10 +563,20 @@ func (r *resourceCloudAutonomousVmCluster) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	input := odb.CreateCloudAutonomousVmClusterInput{
 		Tags: getTagsIn(ctx),
 	}
+	// Handle fallback logic before AutoFlex
+	odbNetwork := plan.OdbNetworkId
+	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
+		odbNetwork = plan.OdbNetworkArn
+	}
+	plan.OdbNetworkId = odbNetwork
+	cloudExadataInfra := plan.CloudExadataInfrastructureId
+	if cloudExadataInfra.IsNull() || cloudExadataInfra.IsUnknown() {
+		cloudExadataInfra = plan.CloudExadataInfrastructureArn
+	}
+	plan.CloudExadataInfrastructureId = cloudExadataInfra
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -558,6 +635,7 @@ func (r *resourceCloudAutonomousVmCluster) Read(ctx context.Context, req resourc
 		)
 		return
 	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -676,6 +754,7 @@ type cloudAutonomousVmClusterResourceModel struct {
 	CloudAutonomousVmClusterArn                  types.String                                                                            `tfsdk:"arn"`
 	CloudAutonomousVmClusterId                   types.String                                                                            `tfsdk:"id"`
 	CloudExadataInfrastructureId                 types.String                                                                            `tfsdk:"cloud_exadata_infrastructure_id"`
+	CloudExadataInfrastructureArn                types.String                                                                            `tfsdk:"cloud_exadata_infrastructure_arn"`
 	AutonomousDataStoragePercentage              types.Float32                                                                           `tfsdk:"autonomous_data_storage_percentage"`
 	AutonomousDataStorageSizeInTBs               types.Float64                                                                           `tfsdk:"autonomous_data_storage_size_in_tbs"`
 	AvailableAutonomousDataStorageSizeInTBs      types.Float64                                                                           `tfsdk:"available_autonomous_data_storage_size_in_tbs"`
@@ -706,6 +785,7 @@ type cloudAutonomousVmClusterResourceModel struct {
 	OciUrl                                       types.String                                                                            `tfsdk:"oci_url"`
 	Ocid                                         types.String                                                                            `tfsdk:"ocid"`
 	OdbNetworkId                                 types.String                                                                            `tfsdk:"odb_network_id"`
+	OdbNetworkArn                                types.String                                                                            `tfsdk:"odb_network_arn"`
 	PercentProgress                              types.Float32                                                                           `tfsdk:"percent_progress"`
 	ProvisionableAutonomousContainerDatabases    types.Int32                                                                             `tfsdk:"provisionable_autonomous_container_databases"`
 	ProvisionedAutonomousContainerDatabases      types.Int32                                                                             `tfsdk:"provisioned_autonomous_container_databases"`
@@ -742,4 +822,20 @@ type dayWeekNameAutonomousVmClusterMaintenanceWindowResourceModel struct {
 
 type monthNameAutonomousVmClusterMaintenanceWindowResourceModel struct {
 	Name fwtypes.StringEnum[odbtypes.MonthName] `tfsdk:"name"`
+}
+
+func (r cloudAutonomousVmClusterResourceModel) isNetworkIdAndExadataInfraIdPresent() bool {
+	return !r.OdbNetworkId.IsNull() && !r.CloudExadataInfrastructureId.IsNull()
+}
+
+func (r cloudAutonomousVmClusterResourceModel) isNetworkARNAndExadataInfraARNPresent() bool {
+	return !r.OdbNetworkArn.IsNull() && !r.CloudExadataInfrastructureArn.IsNull()
+}
+
+func (r cloudAutonomousVmClusterResourceModel) isNetworkARNAndIdPresent() bool {
+	return !r.OdbNetworkId.IsNull() && !r.OdbNetworkArn.IsNull()
+}
+
+func (r cloudAutonomousVmClusterResourceModel) isExadataInfraARNAndIdPresent() bool {
+	return !r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureArn.IsNull()
 }
