@@ -74,7 +74,7 @@ import {
 }
 ```
 
-Using `terraform import`, import monitoring schedules using the `model_card_name`. For example:
+Using `terraform import`, import model cards using the `model_card_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_model_card.example my-model-card

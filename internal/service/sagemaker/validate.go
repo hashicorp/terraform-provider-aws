@@ -49,9 +49,12 @@ func validImage(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validHTTPSOrS3URI = validation.All(
-	validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`), "must be HTTPS or Amazon S3 URI"),
-	validation.StringLenBetween(0, 1024),
+var (
+	httpsOrS3URIRegexp = regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`)
+	validHTTPSOrS3URI  = validation.All(
+		validation.StringMatch(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+		validation.StringLenBetween(0, 1024),
+	)
 )
 
 func validName(v any, k string) (ws []string, errors []error) {

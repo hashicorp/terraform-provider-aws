@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -648,6 +649,57 @@ func TestAccAPIGatewayDomainName_ipAddressType(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayDomainName_routingMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainName apigateway.GetDomainNameOutput
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_routingMode(rName, key, certificate, types.RoutingModeRoutingRuleOnly),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, t, resourceName, &domainName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("routing_mode"), tfknownvalue.StringExact(types.RoutingModeRoutingRuleOnly)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainNameConfig_routingMode(rName, key, certificate, types.RoutingModeRoutingRuleThenBasePathMapping),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, t, resourceName, &domainName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("routing_mode"), tfknownvalue.StringExact(types.RoutingModeRoutingRuleThenBasePathMapping)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDomainNameExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetDomainNameOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1020,4 +1072,24 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), ipAddressType)
+}
+
+func testAccDomainNameConfig_routingMode(domainName, key, certificate string, routingMode types.RoutingMode) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name     = %[1]q
+  certificate_arn = aws_acm_certificate.test.arn
+
+  endpoint_configuration {
+    types = ["PRIVATE"]
+  }
+
+  routing_mode = %[4]q
+}
+`, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), routingMode)
 }

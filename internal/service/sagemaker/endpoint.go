@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sagemaker
 
 import (
@@ -271,10 +273,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
 		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
-			r := resourceEndpoint()
-			d := r.Data(nil)
+			d := resourceEndpoint().Data(nil)
 			d.SetId(name)
-			if diags := r.DeleteWithoutTimeout(ctx, d, meta); diags.HasError() { // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
+			if diags := resourceEndpointDelete(ctx, d, meta); diags.HasError() {
 				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
 			}
 

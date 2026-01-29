@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +27,7 @@ func testAccAWSLogSource_basic(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -37,12 +35,12 @@ func testAccAWSLogSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLogSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "source.0.accounts.#"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "source.0.accounts.0"),
@@ -81,7 +79,7 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -89,12 +87,12 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLogSourceConfig_sourceVersion("1.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
@@ -111,7 +109,7 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 			{
 				Config: testAccAWSLogSourceConfig_sourceVersion("2.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
@@ -132,14 +130,14 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 func testAccAWSLogSource_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_aws_log_source.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var logSource types.AwsLogSourceConfiguration
 
 	t.Cleanup(func() {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region(), acctest.AlternateRegion())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -148,12 +146,12 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLogSourceConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "2"),
@@ -179,7 +177,7 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -187,12 +185,12 @@ func testAccAWSLogSource_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLogSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName, &logSource),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceAWSLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -211,7 +209,7 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -219,13 +217,13 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLogSourceConfig_multiple(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					testAccCheckAWSLogSourceExists(ctx, resourceName2, &logSource2),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName, &logSource),
+					testAccCheckAWSLogSourceExists(ctx, t, resourceName2, &logSource2),
 
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
@@ -245,9 +243,9 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSLogSourceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAWSLogSourceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityLakeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securitylake_aws_log_source" {
@@ -271,14 +269,14 @@ func testAccCheckAWSLogSourceDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckAWSLogSourceExists(ctx context.Context, n string, v *types.AwsLogSourceConfiguration) resource.TestCheckFunc {
+func testAccCheckAWSLogSourceExists(ctx context.Context, t *testing.T, n string, v *types.AwsLogSourceConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityLakeClient(ctx)
 
 		output, err := tfsecuritylake.FindAWSLogSourceBySourceName(ctx, conn, types.AwsLogSourceName(rs.Primary.ID))
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -35,6 +37,7 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(name="BlockPublicAccessExclusion")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcBlockPublicAccessExclusionResource{}
 

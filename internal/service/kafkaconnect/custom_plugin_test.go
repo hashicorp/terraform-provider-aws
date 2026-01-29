@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,19 +19,19 @@ import (
 
 func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafkaconnect", regexache.MustCompile(`custom-plugin/`+rName+`/`+kafkaConnectUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -59,19 +57,19 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 
 func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,19 +80,19 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 
 func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
 				),
 			},
@@ -109,19 +107,19 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 
 func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -134,7 +132,7 @@ func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 			{
 				Config: testAccCustomPluginConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -143,7 +141,7 @@ func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 			{
 				Config: testAccCustomPluginConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -154,19 +152,19 @@ func TestAccKafkaConnectCustomPlugin_tags(t *testing.T) {
 
 func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_objectVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(ctx, resourceName),
+					testAccCheckCustomPluginExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.object_version"),
 				),
 			},
@@ -179,14 +177,14 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomPluginExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckCustomPluginExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaConnectClient(ctx)
 
 		_, err := tfkafkaconnect.FindCustomPluginByARN(ctx, conn, rs.Primary.ID)
 
@@ -194,9 +192,9 @@ func testAccCheckCustomPluginExists(ctx context.Context, name string) resource.T
 	}
 }
 
-func testAccCheckCustomPluginDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomPluginDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mskconnect_custom_plugin" {

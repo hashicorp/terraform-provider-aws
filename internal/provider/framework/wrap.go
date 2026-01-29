@@ -544,7 +544,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, resourceInjectRegionAttribute())
+		interceptors = append(interceptors, resourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, resourceValidateRegion())
 		}
