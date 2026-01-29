@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_glue_federated_catalog
+```
+
+```release-note:new-data-source
+aws_glue_federated_catalog
+```
