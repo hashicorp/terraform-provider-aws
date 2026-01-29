@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceAutoManagement,
+			TypeName: "aws_servicequotas_auto_management",
+			Name:     "Auto Management",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newTemplateResource,
 			TypeName: "aws_servicequotas_template",
 			Name:     "Template",
