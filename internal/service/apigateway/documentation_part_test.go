@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -14,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,16 +28,16 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "documentation_part_id"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
@@ -54,7 +53,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 			{
 				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProperties, uProperties),
@@ -74,16 +73,16 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationPartConfig_method(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "METHOD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -100,7 +99,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 			{
 				Config: testAccDocumentationPartConfig_method(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "METHOD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -122,16 +121,16 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationPartConfig_responseHeader(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "RESPONSE_HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -150,7 +149,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 			{
 				Config: testAccDocumentationPartConfig_responseHeader(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "RESPONSE_HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
@@ -173,17 +172,17 @@ func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	properties := `{"description":"Terraform Acceptance Test"}`
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentationPartDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDocumentationPart(), resourceName),
+					testAccCheckDocumentationPartExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,14 +190,14 @@ func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentationPartExists(ctx context.Context, n string, v *apigateway.GetDocumentationPartOutput) resource.TestCheckFunc {
+func testAccCheckDocumentationPartExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetDocumentationPartOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["documentation_part_id"])
 
@@ -212,9 +211,9 @@ func testAccCheckDocumentationPartExists(ctx context.Context, n string, v *apiga
 	}
 }
 
-func testAccCheckDocumentationPartDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDocumentationPartDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_documentation_part" {
@@ -223,7 +222,7 @@ func testAccCheckDocumentationPartDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["documentation_part_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

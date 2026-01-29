@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -894,7 +894,7 @@ func TestAccStorageGatewaySMBFileShare_disappears(t *testing.T) {
 				Config: testAccSMBFileShareConfig_authenticationGuestAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceSMBFileShare(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceSMBFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -956,7 +956,7 @@ func testAccCheckSMBFileShareDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfstoragegateway.FindSMBFileShareByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

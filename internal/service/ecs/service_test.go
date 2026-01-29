@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs_test
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -291,7 +292,7 @@ func TestAccECSService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3202,7 +3203,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -3235,7 +3236,7 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 			var err error
 			output, err = tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return tfresource.RetryableError(err)
 			}
 

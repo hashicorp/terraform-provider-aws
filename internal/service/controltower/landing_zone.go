@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package controltower
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/controltower/document"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -133,7 +135,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	landingZone, err := findLandingZoneByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ControlTower Landing Zone (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -238,8 +240,7 @@ func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id stri
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -248,7 +249,7 @@ func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id stri
 	}
 
 	if output == nil || output.LandingZone == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LandingZone, nil
@@ -263,8 +264,7 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -273,17 +273,17 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 	}
 
 	if output == nil || output.OperationDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OperationDetails, nil
 }
 
-func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLandingZoneOperation(conn *controltower.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLandingZoneOperationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -299,7 +299,7 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LandingZoneOperationStatusInProgress),
 		Target:  enum.Slice(types.LandingZoneOperationStatusSucceeded),
-		Refresh: statusLandingZoneOperation(ctx, conn, id),
+		Refresh: statusLandingZoneOperation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -307,7 +307,7 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 
 	if output, ok := outputRaw.(*types.LandingZoneOperationDetail); ok {
 		if status := output.Status; status == types.LandingZoneOperationStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

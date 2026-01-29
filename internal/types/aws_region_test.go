@@ -1,28 +1,59 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
 
-import "testing"
+import (
+	"testing"
 
-func TestIsAWSRegion(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	"github.com/YakDriver/regexache"
+)
+
+func TestCanonicalRegionPatterns(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		id    string
-		valid bool
+	testCases := []struct {
+		region string
+		valid  bool
 	}{
+		// Standard regions
 		{"us-east-1", true},
-		{"jp-711", false},
-		{"ap-southeast-7", true},
-		{"", false},
-		{"eu-isoe-west-1", true},
-		{"mars", false},
+		{"eu-west-1", true},
+		{"ap-southeast-1", true},
+
+		// Government regions
+		{"us-gov-west-1", true},
+		{"us-gov-east-1", true},
+
+		// ISO regions
+		{"us-iso-east-1", true},
+		{"us-isob-east-1", true},
+
+		// ESC regions
 		{"eusc-de-east-1", true},
-	} {
-		ok := IsAWSRegion(tc.id)
-		if got, want := ok, tc.valid; got != want {
-			t.Errorf("IsAWSRegion(%q) = %v, want %v", tc.id, got, want)
-		}
+
+		// Invalid regions
+		{"invalid-region", false},
+		{"us-east", false},
+		{"1-east-1", false},
+		{"us-east-1a", false},
+
+		// S3-compatible storage regions (non-standard)
+		{"ceph-objectstore:region-premium", false},
+		{"ceph:custom-region", false},
+		{"US-EAST-1", false},
+		{"us_east_1", false},
+	}
+
+	regex := regexache.MustCompile(CanonicalRegionPattern)
+
+	for _, tc := range testCases {
+		t.Run(tc.region, func(t *testing.T) {
+			t.Parallel()
+			result := regex.MatchString(tc.region)
+			if result != tc.valid {
+				t.Errorf("region %s: expected %t, got %t", tc.region, tc.valid, result)
+			}
+		})
 	}
 }

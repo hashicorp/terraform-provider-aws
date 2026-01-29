@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: go-no-smerr-enrichappend-deprecated
     languages: [go]
@@ -8,6 +11,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -21,6 +25,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -35,6 +40,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -47,6 +53,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -63,6 +70,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -75,6 +83,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -89,6 +98,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -101,6 +111,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -113,6 +124,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -128,6 +140,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -154,6 +167,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -182,24 +196,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
-        - "/internal/service/bedrockagentcore/"
-        - "/internal/service/cloudwatch/"
-        - "/internal/service/invoicing/"
-      exclude:
-        - "*_test.go"
-
-  - id: go-no-tfresource-notfound
-    languages: [go]
-    message: Use intretry.NotFound instead of tfresource.NotFound (migrate to smarterr).
-    severity: ERROR
-    patterns:
-      - pattern: |
-          tfresource.NotFound($ERR)
-      - pattern-not-inside: |
-          intretry.NotFound(...)
-    paths:
-      include:
-        - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -217,6 +214,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -232,6 +230,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -252,6 +251,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -270,6 +270,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -288,6 +289,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"
@@ -305,6 +307,7 @@ rules:
     paths:
       include:
         - "/internal/service/appsync/"
+        - "/internal/service/arcregionswitch/"
         - "/internal/service/bedrockagentcore/"
         - "/internal/service/cloudwatch/"
         - "/internal/service/invoicing/"

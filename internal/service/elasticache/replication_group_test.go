@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -472,7 +472,7 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -3024,7 +3024,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 				Config: testAccReplicationGroupConfig_globalIDBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

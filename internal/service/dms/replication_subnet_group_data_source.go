@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -21,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
 // @Tags(identifierAttribute="replication_subnet_group_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSubnetGroupRead,

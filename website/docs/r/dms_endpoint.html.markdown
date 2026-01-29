@@ -137,7 +137,7 @@ The following arguments are optional:
 
 ### mysql_settings
 
--> Additional information can be found in the [Using MongoDB as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html).
+-> Additional information can be found in the [Using MySQL as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html).
 
 * `after_connect_script` - (Optional) Script to run immediately after AWS DMS connects to the endpoint.
 * `authentication_method` - (Optional) Authentication method to use. Valid values: `password`, `iam`.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudwatch
 
@@ -18,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -28,6 +30,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_composite_alarm", name="Composite Alarm")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCompositeAlarmCreate,
@@ -171,7 +174,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 
 	alarm, err := findCompositeAlarmByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && intretry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
@@ -250,7 +253,7 @@ func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.CompositeAlarms))

@@ -1,5 +1,5 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
 
 service "accessanalyzer" {
   sdk {
@@ -655,20 +655,17 @@ service "arcregionswitch" {
   }
 
   sdk {
-    id             = "ARC Region Switch"
-    arn_namespace  = "arcregionswitch"
+    id            = "ARC Region Switch"
+    arn_namespace = "arcregionswitch"
   }
 
   names {
     provider_name_upper = "ARCRegionSwitch"
-    human_friendly      = "Application Resilience Controller Region Switch"
+    human_friendly      = "ARC (Application Recovery Controller) Region Switch"
   }
 
   endpoint_info {
     endpoint_api_call = "ListPlans"
-    endpoint_region_overrides = {
-      "aws" = "us-east-1"
-    }
   }
 
   resource_prefix {
@@ -677,7 +674,36 @@ service "arcregionswitch" {
 
   provider_package_correct = "arcregionswitch"
   doc_prefix               = ["arcregionswitch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
+}
+
+service "arczonalshift" {
+  cli_v2_command {
+    aws_cli_v2_command           = "arc-zonal-shift"
+    aws_cli_v2_command_no_dashes = "arczonalshift"
+  }
+
+  sdk {
+    id            = "ARC Zonal Shift"
+    arn_namespace = "arczonalswitch"
+  }
+
+  names {
+    provider_name_upper = "ARCZonalShift"
+    human_friendly      = "ARC (Application Recovery Controller) Zonal Shift"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListZonalShifts"
+  }
+
+  resource_prefix {
+    correct = "aws_arczonalshift_"
+  }
+
+  provider_package_correct = "arczonalshift"
+  doc_prefix               = ["arczonalshift_"]
+  brand                    = "Amazon"
 }
 
 service "athena" {
@@ -908,36 +934,36 @@ service "bedrockagent" {
 }
 
 service "bedrockagentcore" {
-   cli_v2_command {
-     aws_cli_v2_command           = "bedrock-agentcore-control"
-     aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
-   }
+  cli_v2_command {
+    aws_cli_v2_command           = "bedrock-agentcore-control"
+    aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
+  }
 
-   go_packages {
-     v2_package = "bedrockagentcorecontrol"
-   }
+  go_packages {
+    v2_package = "bedrockagentcorecontrol"
+  }
 
-   sdk {
-     id            = "Bedrock AgentCore Control"
-     arn_namespace = "bedrock-agentcore"
-   }
+  sdk {
+    id            = "Bedrock AgentCore Control"
+    arn_namespace = "bedrock-agentcore"
+  }
 
-   names {
-     provider_name_upper = "BedrockAgentCore"
-     human_friendly      = "Bedrock AgentCore"
-   }
+  names {
+    provider_name_upper = "BedrockAgentCore"
+    human_friendly      = "Bedrock AgentCore"
+  }
 
-   endpoint_info {
-     endpoint_api_call = "ListAgentRuntimes"
-   }
+  endpoint_info {
+    endpoint_api_call = "ListAgentRuntimes"
+  }
 
-   resource_prefix {
-     correct = "aws_bedrockagentcore_"
-   }
+  resource_prefix {
+    correct = "aws_bedrockagentcore_"
+  }
 
-   provider_package_correct = "bedrockagentcore"
-   doc_prefix               = ["bedrockagentcore_"]
-   brand                    = "Amazon"
+  provider_package_correct = "bedrockagentcore"
+  doc_prefix               = ["bedrockagentcore_"]
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {
@@ -3413,6 +3439,8 @@ service "invoicing" {
   provider_package_correct = "invoicing"
   doc_prefix               = ["invoicing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "mediaconnect" {
@@ -5292,6 +5320,7 @@ service "lookoutmetrics" {
   provider_package_correct = "lookoutmetrics"
   doc_prefix               = ["lookoutmetrics_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "lookoutvision" {
@@ -5792,6 +5821,33 @@ service "mobile" {
   not_implemented          = true
 }
 
+service "mpa" {
+  sdk {
+    id            = "MPA"
+    arn_namespace = "mpa"
+  }
+
+  names {
+    provider_name_upper = "MPA"
+    human_friendly      = "Multi-party Approval"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApprovalTeams"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_mpa_"
+  }
+
+  provider_package_correct = "mpa"
+  doc_prefix               = ["mpa_"]
+  brand                    = "AWS"
+}
+
 service "mq" {
   sdk {
     id            = "mq"
@@ -5858,6 +5914,30 @@ service "mwaa" {
 
   provider_package_correct = "mwaa"
   doc_prefix               = ["mwaa_"]
+  brand                    = "AWS"
+}
+
+service "mwaaserverless" {
+  sdk {
+    id            = "MWAA Serverless"
+    arn_namespace = "airflow-serverless"
+  }
+
+  names {
+    provider_name_upper = "MWAAServerless"
+    human_friendly      = "MWAA (Managed Workflows for Apache Airflow) Serverless"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListWorkflows"
+  }
+
+  resource_prefix {
+    correct = "aws_mwaaserverless_"
+  }
+
+  provider_package_correct = "mwaaserverless"
+  doc_prefix               = ["mwaaserverless_"]
   brand                    = "AWS"
 }
 
@@ -6862,6 +6942,11 @@ service "rdsdata" {
     arn_namespace = "rdsdata"
   }
 
+  endpoint_info {
+    endpoint_api_call   = "ExecuteStatement"
+    endpoint_api_params = "ResourceArn: aws.String(\"arn:\" + acctest.Partition() + \":rds:\" + acctest.Region() + \":\" + acctest.Ct12Digit + \":cluster:test\"),\n\t\tSecretArn: aws.String(\"arn:\" + acctest.Partition() + \":secretsmanager:\" + acctest.Region() + \":\" + acctest.Ct12Digit + \":secret:test\"),\n\t\tSql: aws.String(\"SELECT 1\")"
+  }
+
   names {
     aliases             = ["rdsdataservice"]
     provider_name_upper = "RDSData"
@@ -6875,7 +6960,6 @@ service "rdsdata" {
   provider_package_correct = "rdsdata"
   doc_prefix               = ["rdsdata_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "pi" {
@@ -7707,6 +7791,10 @@ service "savingsplans" {
     human_friendly      = "Savings Plans"
   }
 
+  endpoint_info {
+    endpoint_api_call = "DescribeSavingsPlans"
+  }
+
   resource_prefix {
     correct = "aws_savingsplans_"
   }
@@ -7714,7 +7802,8 @@ service "savingsplans" {
   provider_package_correct = "savingsplans"
   doc_prefix               = ["savingsplans_"]
   brand                    = "AWS"
-  not_implemented          = true
+
+  is_global = true
 }
 
 service "simpledb" {
@@ -9443,7 +9532,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_", "vpc_route_server"]
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_encryption_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_", "vpc_route_server"]
     brand               = "Amazon"
     exclude             = true
     allowed_subcategory = true

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53profiles
 
@@ -17,13 +19,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -162,7 +164,7 @@ func (r *profileResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	out, err := findProfileByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -222,7 +224,7 @@ func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
-		Refresh:                   statusProfile(ctx, conn, id),
+		Refresh:                   statusProfile(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -240,7 +242,7 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusProfile(ctx, conn, id),
+		Refresh: statusProfile(conn, id),
 		Timeout: timeout,
 	}
 
@@ -252,10 +254,10 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 	return nil, err
 }
 
-func statusProfile(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProfile(conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findProfileByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -276,8 +278,7 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -285,7 +286,7 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	}
 
 	if out == nil || out.Profile == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Profile, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -6,18 +6,21 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,6 +42,8 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAssociationID),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeZonal)),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_address.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -74,7 +79,7 @@ func TestAccVPCNATGateway_disappears(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNATGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNATGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -574,6 +579,449 @@ func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 	})
 }
 
+func TestAccVPCNATGateway_availabilityModeRegionalAuto(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalAuto(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", names.AttrEnabled),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_availabilityModeRegionalManual_AddAndRemove(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// key: Availability Zone index
+	// value: Elastic IP indexes
+	testSets := []map[int][]int{
+		{
+			0: {0},
+			1: {1, 2},
+		},
+		// Add one more EIP
+		{
+			0: {0, 3},
+			1: {1, 2},
+		},
+		// Remove one EIP each from different AZs simultaneously
+		{
+			0: {0},
+			1: {1},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 4, testSets[0]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[0]),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"availability_zone_address.0.availability_zone_id",
+					"availability_zone_address.1.availability_zone_id",
+				},
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 4, testSets[1]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[1]),
+				),
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 4, testSets[2]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[2]),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_availabilityModeRegionalManual_ReplaceAndRemove(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// key: Availability Zone index
+	// value: Elastic IP indexes
+	testSets := []map[int][]int{
+		{
+			0: {0},
+			1: {1},
+		},
+		// Replace EIP in one AZ
+		{
+			0: {2},
+			1: {1},
+		},
+		// Remove EIP in one AZ
+		{
+			0: {2},
+		},
+	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 3, testSets[0]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[0]),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"availability_zone_address.0.availability_zone_id",
+					"availability_zone_address.1.availability_zone_id",
+				},
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 3, testSets[1]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[1]),
+				),
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 3, testSets[2]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[2]),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_availabilityModeRegionalManual_AZNameToAZID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// key: Availability Zone index
+	// value: Elastic IP indexes
+	testSets := []map[int][]int{
+		{
+			0: {0},
+		},
+		// Add one EIP in a new AZ and remove one in the existing AZ
+		// availability_zone_id is used instead of availability_zone
+		{
+			1: {1},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Create with availability_zone specified
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 2, testSets[0]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[0]),
+				),
+			},
+			{
+				// Update with availability_zone_id specified
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManualByAZID(rName, 2, testSets[1]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+				),
+			},
+			{
+				// Refresh state to store availability_zone in state
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[1]),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"availability_zone_address.0.availability_zone",
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_availabilityModeRegionalManual_AZIDToAZName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// key: Availability Zone index
+	// value: Elastic IP indexes
+	testSets := []map[int][]int{
+		// availability_zone_id is used
+		{
+			0: {0},
+		},
+		// Add one EIP in a new AZ and remove one in the existing AZ.
+		// availability_zone is used instead of availability_zone_id
+		{
+			1: {1},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Create a resource with availability_zone_id specified
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManualByAZID(rName, 2, testSets[0]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+				),
+			},
+			{
+				// Refresh state to store availability_zone in state
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[0]),
+				),
+			},
+			{
+				// Update the resource with availability_zone specified instead of availability_zone_id
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 2, testSets[1]),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSets[1]),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"availability_zone_address.0.availability_zone_id",
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCNATGateway_availabilityModeRegionalSwitchMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var natGateway awstypes.NatGateway
+	resourceName := "aws_nat_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// key: Availability Zone index
+	// value: Elastic IP indexes
+	testSet := map[int][]int{
+		0: {0},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Create a resource in auto mode
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalAuto(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", names.AttrEnabled),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+				),
+			},
+			{
+				// Switch to manual mode
+				// Resource recreation is expected
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName, 1, testSet),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", "disabled"),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+					testAccCheckNATGatewayRegionalManualModeWithConfig(ctx, resourceName, testSet),
+				),
+			},
+			{
+				// Switch back to auto mode
+				// Resource recreation is expected
+				Config: testAccVPCNATGatewayConfig_availabilityModeRegionalAuto(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "availability_mode", string(awstypes.AvailabilityModeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "auto_provision_zones", names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_ips", names.AttrEnabled),
+					resource.TestCheckResourceAttrSet(resourceName, "route_table_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -585,7 +1033,7 @@ func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindNATGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -617,6 +1065,125 @@ func testAccCheckNATGatewayExists(ctx context.Context, n string, v *awstypes.Nat
 
 		*v = *output
 
+		return nil
+	}
+}
+
+func testAccCheckNATGatewayRegionalManualModeWithConfig(_ context.Context, n string, expectedConfig map[int][]int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		// Get availability zone data source
+		azData, ok := s.RootModule().Resources["data.aws_availability_zones.available"]
+		if !ok {
+			return fmt.Errorf("availability zones data source not found")
+		}
+
+		// Build expected AZ to EIP Allocation ID mapping
+		azToAllocationIDs := make(map[string][]string)
+		expectedRegionalNATGatewayAddressCount := 0
+		for azIndex, eipIndexes := range expectedConfig {
+			azName := azData.Primary.Attributes[fmt.Sprintf("names.%d", azIndex)]
+			var allocationIDs []string
+			for _, eipIndex := range eipIndexes {
+				eipResource, ok := s.RootModule().Resources[fmt.Sprintf("aws_eip.test.%d", eipIndex)]
+				if !ok {
+					return fmt.Errorf("eip resource aws_eip.test.%d not found", eipIndex)
+				}
+				allocationIDs = append(allocationIDs, eipResource.Primary.ID)
+				expectedRegionalNATGatewayAddressCount++
+			}
+			azToAllocationIDs[azName] = allocationIDs
+		}
+
+		// Validate availability_zone_address blocks
+		availableZoneAddressCountStr, exists := rs.Primary.Attributes["availability_zone_address.#"]
+		if !exists {
+			return fmt.Errorf("availability_zone_address block not found")
+		}
+		availableZoneAddressCount, err := strconv.Atoi(availableZoneAddressCountStr)
+		if err != nil {
+			return fmt.Errorf("invalid availability_zone_address count: %s", availableZoneAddressCountStr)
+		}
+		if availableZoneAddressCount != len(expectedConfig) {
+			return fmt.Errorf("expected %d availability_zone_address blocks, got %d", len(expectedConfig), availableZoneAddressCount)
+		}
+		for i := range availableZoneAddressCount {
+			az, azExists := rs.Primary.Attributes[fmt.Sprintf("availability_zone_address.%d.availability_zone", i)]
+			allocationIDsCountStr, allocationIDsExists := rs.Primary.Attributes[fmt.Sprintf("availability_zone_address.%d.allocation_ids.#", i)]
+
+			if !azExists || !allocationIDsExists {
+				return fmt.Errorf("incomplete availability_zone_address block at index %d", i)
+			}
+
+			allocationIDsCount, err := strconv.Atoi(allocationIDsCountStr)
+			if err != nil {
+				return fmt.Errorf("invalid allocation count: %s", allocationIDsCountStr)
+			}
+
+			expectedAllocationIDs, hasExpected := azToAllocationIDs[az]
+			if !hasExpected {
+				return fmt.Errorf("unexpected AZ %s found in availability_zone_address", az)
+			}
+			actualAllocationIDs := make([]string, 0, allocationIDsCount)
+			for j := range allocationIDsCount {
+				allocationID := rs.Primary.Attributes[fmt.Sprintf("availability_zone_address.%d.allocation_ids.%d", i, j)]
+				actualAllocationIDs = append(actualAllocationIDs, allocationID)
+			}
+			slices.Sort(actualAllocationIDs)
+			slices.Sort(expectedAllocationIDs)
+			if !cmp.Equal(expectedAllocationIDs, actualAllocationIDs) {
+				return fmt.Errorf("allocation IDs mismatch in AZ %s. Expected: %v, Actual: %v, Index: %d", az, expectedAllocationIDs, actualAllocationIDs, i)
+			}
+		}
+
+		// Validate regional_nat_gateway_address blocks
+		regionalNATGatewayAddressCountStr, exists := rs.Primary.Attributes["regional_nat_gateway_address.#"]
+		if !exists {
+			return fmt.Errorf("regional_nat_gateway_address block not found")
+		}
+		regionalNATGatewayAddressCount, err := strconv.Atoi(regionalNATGatewayAddressCountStr)
+		if err != nil {
+			return fmt.Errorf("invalid regional_nat_gateway_address count: %s", regionalNATGatewayAddressCountStr)
+		}
+		if regionalNATGatewayAddressCount != expectedRegionalNATGatewayAddressCount {
+			return fmt.Errorf("expected %d regional_nat_gateway_address blocks, got %d", expectedRegionalNATGatewayAddressCount, regionalNATGatewayAddressCount)
+		}
+		for i := range regionalNATGatewayAddressCount {
+			az, azExists := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.availability_zone", i)]
+
+			if !azExists {
+				return fmt.Errorf("incomplete regional_nat_gateway_address block at index %d", i)
+			}
+
+			expectedAllocationIDs, hasExpected := azToAllocationIDs[az]
+
+			if !hasExpected {
+				return fmt.Errorf("unexpected AZ %s found in regional_nat_gateway_address", az)
+			}
+
+			actualAllocationID := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.allocation_id", i)]
+
+			if !slices.Contains(expectedAllocationIDs, actualAllocationID) {
+				return fmt.Errorf("expected allocation ID %s not found in AZ %s", actualAllocationID, az)
+			}
+
+			if v, ok := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.availability_zone_id", i)]; !ok || v == "" {
+				return fmt.Errorf("availability_zone_id not set for regional_nat_gateway_address in AZ %s", az)
+			}
+			if v, ok := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.association_id", i)]; !ok || v == "" {
+				return fmt.Errorf("association_id not set for regional_nat_gateway_address in AZ %s", az)
+			}
+			if v, ok := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.public_ip", i)]; !ok || v == "" {
+				return fmt.Errorf("public_ip not set for regional_nat_gateway_address in AZ %s", az)
+			}
+			if v, ok := rs.Primary.Attributes[fmt.Sprintf("regional_nat_gateway_address.%d.status", i)]; !ok || v != "succeeded" {
+				return fmt.Errorf("status not set to succeeded for regional_nat_gateway_address in AZ %s", az)
+			}
+		}
 		return nil
 	}
 }
@@ -817,4 +1384,119 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 `, rName, n))
+}
+
+func testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName string, eipCount int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  count  = %[2]d
+  domain = "vpc"
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+`, rName, eipCount))
+}
+
+func testAccVPCNATGatewayConfig_availabilityModeRegionalAuto(rName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, 0),
+		fmt.Sprintf(`
+resource "aws_nat_gateway" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_mode = "regional"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+`, rName))
+}
+
+func testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName string, eipCount int, config map[int][]int) string {
+	var localsStr strings.Builder
+	localsStr.WriteString("locals {\n  config = [\n")
+	for azIndex, eipIndexes := range config {
+		fmt.Fprintf(&localsStr, "    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
+	}
+	localsStr.WriteString("  ]\n}\n\n")
+
+	return acctest.ConfigCompose(
+		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, eipCount),
+		fmt.Sprintf(`
+%[2]s
+resource "aws_nat_gateway" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_mode = "regional"
+
+  dynamic "availability_zone_address" {
+    for_each = local.config
+    content {
+      allocation_ids    = [for i in availability_zone_address.value.eip : aws_eip.test[i].id]
+      availability_zone = data.aws_availability_zones.available.names[availability_zone_address.value.az]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+`, rName, localsStr.String()))
+}
+
+func testAccVPCNATGatewayConfig_availabilityModeRegionalManualByAZID(rName string, eipCount int, config map[int][]int) string {
+	var localsStr strings.Builder
+	localsStr.WriteString("locals {\n  config = [\n")
+	for azIndex, eipIndexes := range config {
+		fmt.Fprintf(&localsStr, "    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.ReplaceAll(fmt.Sprint(eipIndexes), " ", ", "), "[]"))
+	}
+	localsStr.WriteString("  ]\n}\n\n")
+
+	return acctest.ConfigCompose(
+		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, eipCount),
+		fmt.Sprintf(`
+%[2]s
+resource "aws_nat_gateway" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_mode = "regional"
+
+  dynamic "availability_zone_address" {
+    for_each = local.config
+    content {
+      allocation_ids       = [for i in availability_zone_address.value.eip : aws_eip.test[i].id]
+      availability_zone_id = data.aws_availability_zones.available.zone_ids[availability_zone_address.value.az]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+`, rName, localsStr.String()))
 }

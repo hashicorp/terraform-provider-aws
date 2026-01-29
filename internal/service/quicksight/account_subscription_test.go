@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func testAccAccountSubscription_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSubscriptionDisableTerminationProtection(ctx, resourceName), // Workaround to remove termination protection
 					testAccCheckAccountSubscriptionExists(ctx, resourceName, &accountsubscription),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceAccountSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceAccountSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -99,7 +99,7 @@ func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfquicksight.FindAccountSubscriptionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

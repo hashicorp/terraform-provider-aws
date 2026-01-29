@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,7 +89,7 @@ func testAccHostKey_disappears(t *testing.T) {
 				Config: testAccHostKeyConfig_basic(privateKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostKeyExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceHostKey, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tftransfer.ResourceHostKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -403,7 +403,7 @@ func testAccCheckHostKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tftransfer.FindHostKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["host_key_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
