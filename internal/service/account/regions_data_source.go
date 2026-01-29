@@ -7,7 +7,6 @@ package account
 
 import (
 	"context"
-	"unsafe"
 
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -44,7 +43,7 @@ func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaReq
 			"region_opt_status_contains": schema.ListAttribute{
 				Optional:    true,
 				Computed:    true,
-				CustomType:  fwtypes.ListOfStringType,
+				CustomType:  fwtypes.ListOfStringEnumType[awstypes.RegionOptStatus](),
 				ElementType: types.StringType,
 			},
 			"regions": framework.DataSourceComputedListOfObjectAttribute[regionsModel](ctx),
@@ -61,20 +60,14 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	accountID := flex.StringFromFramework(ctx, data.AccountID)
-	regionOptsString := flex.ExpandFrameworkStringValueList(ctx, data.RegionOptStatusContains)
-
-	regionOpts := *(*[]awstypes.RegionOptStatus)(unsafe.Pointer(&regionOptsString))
-
-	input := account.ListRegionsInput{
-		AccountId:               accountID,
-		RegionOptStatusContains: regionOpts,
-	}
+	var input account.ListRegionsInput
+	flex.Expand(ctx, &data, &input)
 	inputPtr := &input
 
 	output := &account.ListRegionsOutput{}
-	for {
-		page, err := conn.ListRegions(ctx, inputPtr)
+	paginator := account.NewListRegionsPaginator(conn, inputPtr)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Account, create.ErrActionReading, DSNameRegions, data.AccountID.String(), err),
@@ -85,18 +78,12 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 		if page == nil {
 			break
 		}
-
 		if len(page.Regions) > 0 {
 			output.Regions = append(output.Regions, page.Regions...)
 		}
-
-		input.NextToken = page.NextToken
-		if page.NextToken == nil {
-			break
-		}
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data, flex.WithFieldNamePrefix("Regions"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -105,9 +92,9 @@ func (d *dataSourceRegions) Read(ctx context.Context, req datasource.ReadRequest
 }
 
 type dataSourceRegionsModel struct {
-	AccountID               types.String                                  `tfsdk:"account_id"`
-	RegionOptStatusContains fwtypes.ListOfString                          `tfsdk:"region_opt_status_contains"`
-	Regions                 fwtypes.ListNestedObjectValueOf[regionsModel] `tfsdk:"regions"`
+	AccountID               types.String                                       `tfsdk:"account_id"`
+	RegionOptStatusContains fwtypes.ListOfStringEnum[awstypes.RegionOptStatus] `tfsdk:"region_opt_status_contains"`
+	Regions                 fwtypes.ListNestedObjectValueOf[regionsModel]      `tfsdk:"regions"`
 }
 
 type regionsModel struct {

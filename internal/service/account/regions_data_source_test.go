@@ -9,14 +9,15 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	enabledByDefault = "ENABLED_BY_DEFAULT"
-	disabled         = "DISABLED"
+	enabledByDefault = string(awstypes.RegionOptStatusEnabledByDefault)
+	disabled         = string(awstypes.RegionOptStatusDisabled)
 )
 
 func TestAccAccountRegionsDataSource_basic(t *testing.T) {
