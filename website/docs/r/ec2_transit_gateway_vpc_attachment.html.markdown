@@ -40,6 +40,7 @@ This resource supports the following arguments:
 
 
 ~> **NOTE:** Setting this argument to `false` will cause Terraform to remove the default association if it exists. This argument does not simply “ignore” the association; it actively manages (adds or removes) the association in AWS to match the value in your configuration. Do not attempt to manage the same association with both this resource and `aws_ec2_transit_gateway_route_table_association`, as this will cause perpetual diffs and resource churn. Use conditional logic to ensure only one resource manages the association at a time.
+
 * `transit_gateway_default_route_table_propagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
 
 
