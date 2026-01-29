@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.0
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.19
@@ -76,11 +76,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.35.9
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.31.17
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.33.18
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.57.19
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/connect v1.158.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.159.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
@@ -105,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.54.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.283.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.284.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
@@ -157,7 +157,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.5
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.87.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.10
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.3
@@ -166,8 +166,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.9
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.10
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.9
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.46.5
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.86.1
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.90.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.17
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.2
@@ -226,8 +226,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.26.17
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.95.1
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.67.3
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.2
