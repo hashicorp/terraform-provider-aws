@@ -39,6 +39,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
@@ -49,7 +50,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workflow.1.step.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.1.step.0.execution_block_type", "ManualApproval"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
