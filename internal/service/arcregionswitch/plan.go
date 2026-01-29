@@ -917,13 +917,11 @@ func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schem
 	return diags
 }
 
-// Custom expand to handle complex nested transformations
 // Expand converts the Terraform resource model to AWS API input.
-// Custom expansion is required because:
-// 1. Union Type Handling: ExecutionBlockConfiguration uses AWS SDK union types that AutoFlex cannot handle automatically
-// 2. Complex Nested Transformations: ScalingResources (list→map[string]map[string]) and RegionAndRoutingControls (list→map[string][]) require manual conversion
-// 3. Conditional Logic: Different execution block types require different field mappings and validations
-// AutoFlex works well for simple field mappings but cannot handle these complex structural transformations.
+// TODO: Investigate using AutoFlex for the full expansion. Current manual implementation handles:
+// 1. Union Type Handling: ExecutionBlockConfiguration uses AWS SDK union types
+// 2. Complex Nested Transformations: ScalingResources (list→map[string]map[string]) and RegionAndRoutingControls (list→map[string][])
+// 3. Conditional Logic: Different execution block types with different field mappings and validations
 func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag.Diagnostics) {
 	var apiObject arcregionswitch.CreatePlanInput
 
@@ -1387,11 +1385,12 @@ func (m resourcePlanModel) expandTriggers(ctx context.Context, apiObject *arcreg
 
 // Flatten converts AWS API output to Terraform resource model.
 // Custom flattening is required because:
-// 1. Union Type Handling: ExecutionBlockConfiguration union types need manual type switching and field extraction
+// Flatten converts the AWS API response to Terraform resource model.
+// TODO: Investigate using AutoFlex for the full flattening. Current manual implementation handles:
+// 1. Union Type Handling: ExecutionBlockConfiguration union types with manual type switching and field extraction
 // 2. Reverse Complex Transformations: Converting AWS API maps back to Terraform list structures for ScalingResources and RegionAndRoutingControls
 // 3. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
-// 4. Nested Parallel Steps: Parallel execution block configurations require recursive flattening with proper initialization
-// AutoFlex cannot handle these reverse transformations and complex nested structures automatically.
+// 4. Nested Parallel Steps: Parallel execution block configurations with recursive flattening
 func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Diagnostics) {
 	plan, ok := v.(*awstypes.Plan)
 	if !ok {
@@ -1411,7 +1410,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 	}
 
 	// Handle simple fields with AutoFlex
-	// Attempting to Flatten the entire structure results in Autoflex errors for parts it can't handle
+	// TODO: Investigate flattening the entire structure with AutoFlex instead of field-by-field
 	diags.Append(flex.Flatten(ctx, plan.Name, &m.Name)...)
 	diags.Append(flex.Flatten(ctx, plan.ExecutionRole, &m.ExecutionRole)...)
 	diags.Append(flex.Flatten(ctx, plan.RecoveryApproach, &m.RecoveryApproach)...)
