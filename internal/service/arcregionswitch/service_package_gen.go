@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newRoute53HealthChecksDataSource,
 			TypeName: "aws_arcregionswitch_route53_health_checks",
 			Name:     "Route53 Health Checks",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
 		},
 	}
 }
