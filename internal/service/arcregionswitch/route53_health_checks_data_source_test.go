@@ -18,6 +18,9 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -28,15 +31,15 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53HealthChecksDataSourceConfig_basic(rName),
+				Config: testAccRoute53HealthChecksDataSourceConfig_basic(rName, zoneName.String(), recordName.String()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "plan_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "health_checks.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.0.hosted_zone_id", "Z123456789012345678"),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.0.record_name", "test.example.com"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.record_name", "aws_route53_record.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.region"),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.1.hosted_zone_id", "Z123456789012345678"),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.1.record_name", "test.example.com"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.record_name", "aws_route53_record.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.region"),
 				),
 			},
@@ -44,7 +47,7 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRoute53HealthChecksDataSourceConfig_basic(rName string) string {
+func testAccRoute53HealthChecksDataSourceConfig_basic(rName, zoneName, recordName string) string {
 	return fmt.Sprintf(`
 data "aws_arcregionswitch_route53_health_checks" "test" {
   plan_arn = aws_arcregionswitch_plan.test.arn
@@ -65,8 +68,8 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "route53-health-check-step"
       execution_block_type = "Route53HealthCheck"
       route53_health_check_config {
-        hosted_zone_id  = "Z123456789012345678"
-        record_name     = "test.example.com"
+        hosted_zone_id  = aws_route53_zone.test.zone_id
+        record_name     = aws_route53_record.test.name
         timeout_minutes = 10
 
         record_set {
@@ -89,8 +92,8 @@ resource "aws_arcregionswitch_plan" "test" {
       name                 = "route53-health-check-step-primary"
       execution_block_type = "Route53HealthCheck"
       route53_health_check_config {
-        hosted_zone_id  = "Z123456789012345678"
-        record_name     = "test.example.com"
+        hosted_zone_id  = aws_route53_zone.test.zone_id
+        record_name     = aws_route53_record.test.name
         timeout_minutes = 10
 
         record_set {
@@ -104,6 +107,18 @@ resource "aws_arcregionswitch_plan" "test" {
       }
     }
   }
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[5]q
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1", "127.0.0.27"]
+}
+
+resource "aws_route53_zone" "test" {
+  name = %[4]q
 }
 
 resource "aws_iam_role" "test" {
@@ -122,5 +137,5 @@ resource "aws_iam_role" "test" {
     ]
   })
 }
-`, rName, acctest.AlternateRegion(), acctest.Region())
+`, rName, acctest.AlternateRegion(), acctest.Region(), zoneName, recordName)
 }
