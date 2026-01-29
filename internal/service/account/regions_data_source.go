@@ -37,7 +37,7 @@ type dataSourceRegions struct {
 func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			 names.AttrAccountID: schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

@@ -37,13 +37,13 @@ func TestAccAccountRegionsDataSource_basic(t *testing.T) {
 				Check:  resource.TestCheckResourceAttrSet(dataSourceName, "regions.#"),
 			},
 			{
-				   Config: testAccRegionsDataSourceConfig_status(enabledByDefault),
+				Config: testAccRegionsDataSourceConfig_status(enabledByDefault),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
 					"region_opt_status": enabledByDefault,
 				}),
 			},
 			{
-				   Config: testAccRegionsDataSourceConfig_status(disabled),
+				Config: testAccRegionsDataSourceConfig_status(disabled),
 				Check: resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "regions.*", map[string]string{
 					"region_opt_status": disabled,
 				}),
