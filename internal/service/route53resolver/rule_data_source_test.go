@@ -213,6 +213,49 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverRuleDataSource_delegationRecord(t *testing.T) {
+	ctx := acctest.Context(t)
+	delegationRecord := acctest.RandomDomainName()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_resolver_rule.test"
+	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
+	ds2ResourceName := "data.aws_route53_resolver_rule.by_name_and_rule_type"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleDataSourceConfig_delegatationRecord(rName, delegationRecord),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "delegation_record", resourceName, "delegation_record"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "resolver_rule_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "share_status", resourceName, "share_status"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "delegation_record", resourceName, "delegation_record"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "resolver_endpoint_id", resourceName, "resolver_endpoint_id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "resolver_rule_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "rule_type", resourceName, "rule_type"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "share_status", resourceName, "share_status"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+				),
+			},
+		},
+	})
+}
+
 func testAccRuleDataSourceConfig_basic(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {
@@ -234,6 +277,26 @@ data "aws_route53_resolver_rule" "by_name_and_rule_type" {
   rule_type = aws_route53_resolver_rule.test.rule_type
 }
 `, rName, domainName)
+}
+
+func testAccRuleDataSourceConfig_delegatationRecord(rName, delegationRecord string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  delegation_record    = %[2]q
+  rule_type            = "DELEGATE"
+  name                 = %[1]q
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
+}
+
+data "aws_route53_resolver_rule" "by_resolver_rule_id" {
+  resolver_rule_id = aws_route53_resolver_rule.test.id
+}
+
+data "aws_route53_resolver_rule" "by_name_and_rule_type" {
+  name      = aws_route53_resolver_rule.test.name
+  rule_type = aws_route53_resolver_rule.test.rule_type
+}
+`, rName, delegationRecord))
 }
 
 func testAccRuleDataSourceConfig_resolverEndpointIDTags(rName, domainName string) string {
