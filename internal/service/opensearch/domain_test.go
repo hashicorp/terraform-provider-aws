@@ -4630,10 +4630,10 @@ resource "aws_opensearch_domain" "test" {
     s3_vectors_engine {
       enabled = %[3]t
     }
-	
-	serverless_vector_acceleration {
-		enabled = %[4]t
-	}
+
+    serverless_vector_acceleration {
+      enabled = %[4]t
+    }
   }
 }
 `, rName, desiredState, S3VecotrsEnabled, serverlessVectorAccelerationEnabled)
