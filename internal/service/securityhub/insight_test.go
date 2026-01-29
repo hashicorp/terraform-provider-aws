@@ -499,7 +499,7 @@ func testAccCheckInsightARN(ctx context.Context, resourceName string) resource.T
 	return func(s *terraform.State) error {
 		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, acctest.Region(), acctest.AccountID(ctx), acctest.AccountID(ctx))
 		//lintignore:AWSAT001
-		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s)
+		return resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(expectedArn))(s) // nosemgrep:ci.semgrep.acctest.checks.arn-matchresourceattr
 	}
 }
 
