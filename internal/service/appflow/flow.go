@@ -818,6 +818,31 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
 												},
+												"data_transfer_api": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+																ValidateFunc: validation.All(
+																	validation.StringLenBetween(0, 64),
+																	validation.StringMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
+																),
+															},
+															"type": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.DataTransferApiType](),
+															},
+														},
+													},
+												},
 											},
 										},
 									},
@@ -2232,6 +2257,24 @@ func expandAmplitudeSourceProperties(tfMap map[string]any) *types.AmplitudeSourc
 	return a
 }
 
+func expandDataTransferApi(tfMap map[string]any) *types.DataTransferApi {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.DataTransferApi{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		a.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		a.Type = types.DataTransferApiType(v)
+	}
+
+	return a
+}
+
 func expandCustomConnectorSourceProperties(tfMap map[string]any) *types.CustomConnectorSourceProperties {
 	if tfMap == nil {
 		return nil
@@ -2245,6 +2288,10 @@ func expandCustomConnectorSourceProperties(tfMap map[string]any) *types.CustomCo
 
 	if v, ok := tfMap["entity_name"].(string); ok && v != "" {
 		a.EntityName = aws.String(v)
+	}
+
+	if v, ok := tfMap["data_transfer_api"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.DataTransferApi = expandDataTransferApi(v[0].(map[string]interface{}))
 	}
 
 	return a
@@ -3418,6 +3465,19 @@ func flattenAmplitudeSourceProperties(amplitudeSourceProperties *types.Amplitude
 	return m
 }
 
+func flattenDataTransferApi(dataTransferApi *types.DataTransferApi) map[string]any {
+	if dataTransferApi == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	m["name"] = dataTransferApi.Name
+	m["type"] = dataTransferApi.Type
+
+	return m
+}
+
 func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *types.CustomConnectorSourceProperties) map[string]any {
 	if customConnectorSourceProperties == nil {
 		return nil
@@ -3431,6 +3491,10 @@ func flattenCustomConnectorSourceProperties(customConnectorSourceProperties *typ
 
 	if v := customConnectorSourceProperties.EntityName; v != nil {
 		m["entity_name"] = aws.ToString(v)
+	}
+
+	if v := customConnectorSourceProperties.DataTransferApi; v != nil {
+		m["data_transfer_api"] = []interface{}{flattenDataTransferApi(v)}
 	}
 
 	return m
