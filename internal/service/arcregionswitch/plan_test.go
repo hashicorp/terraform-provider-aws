@@ -11,7 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
-	sdktypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +22,7 @@ import (
 
 func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -65,7 +65,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -92,7 +92,7 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -139,7 +139,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -167,7 +167,7 @@ func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -199,7 +199,7 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 
 func TestAccARCRegionSwitchPlan_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -247,7 +247,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
@@ -294,7 +294,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var plan sdktypes.Plan
+	var plan awstypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
@@ -499,7 +499,7 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPlanExists(ctx context.Context, n string, v *sdktypes.Plan) resource.TestCheckFunc {
+func testAccCheckPlanExists(ctx context.Context, n string, v *awstypes.Plan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
