@@ -400,6 +400,14 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.CallAs = awstypes.CallAs(v.(string))
 		}
 
+		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			dt := expandDeploymentTargets(v.([]interface{}))
+			// For instances associated with stack sets that use a self-managed permission model,
+			// the organizational unit must be provided;
+			input.Accounts = nil
+			input.DeploymentTargets = dt
+		}
+
 		if v, ok := d.GetOk("parameter_overrides"); ok {
 			input.ParameterOverrides = expandParameters(v.(map[string]any))
 		}
