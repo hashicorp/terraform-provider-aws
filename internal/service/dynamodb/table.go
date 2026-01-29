@@ -3288,6 +3288,9 @@ func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateReso
 		return
 	}
 
+	if !gsis.IsKnown() || gsis.IsNull() {
+		return
+	}
 	for i, gsiElem := range tfcty.ValueElements(gsis) {
 		gsiElemPath := gsisPath.Index(i)
 		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
@@ -3330,6 +3333,10 @@ func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath ct
 func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
 	var hashCount, rangeCount int
 	var lastKeyType awstypes.KeyType
+
+	if !keySchema.IsKnown() || keySchema.IsNull() {
+		return
+	}
 	for i, gsi := range tfcty.ValueElements(keySchema) {
 		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
 		switch keyType {
