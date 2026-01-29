@@ -4585,7 +4585,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName, option)
 }
 
-func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VecotrsEnabled bool, serverlessVectorAccelerationEnabled bool) string {
+func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VectorsEnabled bool, serverlessVectorAccelerationEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -4636,7 +4636,7 @@ resource "aws_opensearch_domain" "test" {
     }
   }
 }
-`, rName, desiredState, S3VecotrsEnabled, serverlessVectorAccelerationEnabled)
+`, rName, desiredState, S3VectorsEnabled, serverlessVectorAccelerationEnabled)
 }
 
 func testAccDomainConfig_identityCenterOptionsFull(rName string, enableAPIAccess bool, rolesKey, subjectKey string) string {
