@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,12 +37,17 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "plan_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "health_checks.#", "2"),
+					resource.TestMatchResourceAttr(dataSourceName, "health_checks.0.health_check_id", regexache.MustCompile("^"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.record_name", "aws_route53_record.test", names.AttrName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.region"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_checks.0.region", acctest.Region()),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.status"),
+
+					resource.TestMatchResourceAttr(dataSourceName, "health_checks.1.health_check_id", regexache.MustCompile("^"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.record_name", "aws_route53_record.test", names.AttrName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.region"),
+					resource.TestCheckResourceAttr(dataSourceName, "health_checks.1.region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.status"),
 				),
 			},
 		},
@@ -137,5 +144,5 @@ resource "aws_iam_role" "test" {
     ]
   })
 }
-`, rName, acctest.AlternateRegion(), acctest.Region(), zoneName, recordName)
+`, rName, acctest.Region(), acctest.AlternateRegion(), zoneName, recordName)
 }
