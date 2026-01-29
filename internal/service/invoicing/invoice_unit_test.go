@@ -31,8 +31,8 @@ func TestAccInvoicingInvoiceUnit_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccInvoicingInvoiceUnit_basic,
 		// acctest.CtDisappears: testAccInvoicingInvoiceUnit_disappears,
-		"region":   testAccInvoicingInvoiceUnit_region,
-		"Identity": testAccInvoicingInvoiceUnit_IdentitySerial,
+		"regionOverride": testAccInvoicingInvoiceUnit_regionOverride,
+		"Identity":       testAccInvoicingInvoiceUnit_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -126,7 +126,7 @@ func testAccInvoicingInvoiceUnit_basic(t *testing.T) {
 	})
 }
 
-func testAccInvoicingInvoiceUnit_region(t *testing.T) {
+func testAccInvoicingInvoiceUnit_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.SkipIfEnvVarNotSet(t, "INVOICING_INVOICE_TESTS_ENABLED")
