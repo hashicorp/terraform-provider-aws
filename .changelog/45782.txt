@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_timestreaminfluxdb_db_cluster: Fix validation incorrectly requiring InfluxDB V2 fields (allocated_storage, bucket, organization, password, username) when the parameter group type cannot be determined from the API. Validation now skips when the parameter group type cannot be queried and only applies V2 requirements when the parameter group type is confirmed to be V2.
+```
