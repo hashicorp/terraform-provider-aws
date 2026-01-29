@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -188,20 +187,55 @@ func (r *approvalTeamResource) Create(ctx context.Context, req resource.CreateRe
 		Tags:        getTagsIn(ctx),
 	}
 
-	resp.Diagnostics.Append(expandApprovalStrategy(ctx, plan.ApprovalStrategy, &input.ApprovalStrategy)...)
+	// Handle ApprovalStrategy (union type)
+	strategyData, d := plan.ApprovalStrategy.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+	if strategyData != nil {
+		mofnData, d := strategyData.MofN.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if mofnData != nil {
+			input.ApprovalStrategy = &awstypes.ApprovalStrategyMemberMofN{
+				Value: awstypes.MofNApprovalStrategy{
+					MinApprovalsRequired: aws.Int32(int32(mofnData.MinApprovalsRequired.ValueInt64())),
+				},
+			}
+		}
 	}
 
-	resp.Diagnostics.Append(expandApprovers(ctx, plan.Approvers, &input.Approvers)...)
+	// Handle Approvers
+	approversData, d := plan.Approvers.ToSlice(ctx)
+	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	approvers := make([]awstypes.ApprovalTeamRequestApprover, 0, len(approversData))
+	for _, item := range approversData {
+		approvers = append(approvers, awstypes.ApprovalTeamRequestApprover{
+			PrimaryIdentityId:        fwflex.StringFromFramework(ctx, item.PrimaryIdentityID),
+			PrimaryIdentitySourceArn: item.PrimaryIdentitySourceARN.ValueStringPointer(),
+		})
+	}
+	input.Approvers = approvers
 
-	resp.Diagnostics.Append(expandPolicies(ctx, plan.Policies, &input.Policies)...)
+	// Handle Policies
+	policiesData, d := plan.Policies.ToSlice(ctx)
+	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	policies := make([]awstypes.PolicyReference, 0, len(policiesData))
+	for _, item := range policiesData {
+		policies = append(policies, awstypes.PolicyReference{
+			PolicyArn: item.PolicyARN.ValueStringPointer(),
+		})
+	}
+	input.Policies = policies
 
 	output, err := conn.CreateApprovalTeam(ctx, &input)
 	if err != nil {
@@ -221,7 +255,7 @@ func (r *approvalTeamResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	flattenApprovalTeamResponse(ctx, team, &plan)
+	setApprovalTeamResourceModel(ctx, team, &plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -246,7 +280,7 @@ func (r *approvalTeamResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	flattenApprovalTeamResponse(ctx, team, &state)
+	setApprovalTeamResourceModel(ctx, team, &state)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -269,15 +303,41 @@ func (r *approvalTeamResource) Update(ctx context.Context, req resource.UpdateRe
 			Description: fwflex.StringFromFramework(ctx, plan.Description),
 		}
 
-		resp.Diagnostics.Append(expandApprovalStrategy(ctx, plan.ApprovalStrategy, &input.ApprovalStrategy)...)
+		// Handle ApprovalStrategy (union type)
+		strategyData, d := plan.ApprovalStrategy.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
 			return
+		}
+		if strategyData != nil {
+			mofnData, d := strategyData.MofN.ToPtr(ctx)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			if mofnData != nil {
+				input.ApprovalStrategy = &awstypes.ApprovalStrategyMemberMofN{
+					Value: awstypes.MofNApprovalStrategy{
+						MinApprovalsRequired: aws.Int32(int32(mofnData.MinApprovalsRequired.ValueInt64())),
+					},
+				}
+			}
 		}
 
-		resp.Diagnostics.Append(expandApprovers(ctx, plan.Approvers, &input.Approvers)...)
+		// Handle Approvers
+		approversData, d := plan.Approvers.ToSlice(ctx)
+		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		approvers := make([]awstypes.ApprovalTeamRequestApprover, 0, len(approversData))
+		for _, item := range approversData {
+			approvers = append(approvers, awstypes.ApprovalTeamRequestApprover{
+				PrimaryIdentityId:        fwflex.StringFromFramework(ctx, item.PrimaryIdentityID),
+				PrimaryIdentitySourceArn: item.PrimaryIdentitySourceARN.ValueStringPointer(),
+			})
+		}
+		input.Approvers = approvers
 
 		_, err := conn.UpdateApprovalTeam(ctx, &input)
 		if err != nil {
@@ -292,7 +352,7 @@ func (r *approvalTeamResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	flattenApprovalTeamResponse(ctx, team, &plan)
+	setApprovalTeamResourceModel(ctx, team, &plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -394,80 +454,7 @@ func findApprovalTeamByARN(ctx context.Context, conn *mpa.Client, arn string) (*
 	return output, nil
 }
 
-func expandApprovalStrategy(ctx context.Context, tfList fwtypes.ListNestedObjectValueOf[approvalStrategyModel], apiObject *awstypes.ApprovalStrategy) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	data, d := tfList.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	if data == nil {
-		return diags
-	}
-
-	if !data.MofN.IsNull() && !data.MofN.IsUnknown() {
-		mofnData, d := data.MofN.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		if mofnData != nil {
-			*apiObject = &awstypes.ApprovalStrategyMemberMofN{
-				Value: awstypes.MofNApprovalStrategy{
-					MinApprovalsRequired: aws.Int32(int32(mofnData.MinApprovalsRequired.ValueInt64())),
-				},
-			}
-		}
-	}
-
-	return diags
-}
-
-func expandApprovers(ctx context.Context, tfList fwtypes.ListNestedObjectValueOf[approverModel], apiObject *[]awstypes.ApprovalTeamRequestApprover) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	data, d := tfList.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	result := make([]awstypes.ApprovalTeamRequestApprover, 0, len(data))
-	for _, item := range data {
-		result = append(result, awstypes.ApprovalTeamRequestApprover{
-			PrimaryIdentityId:        fwflex.StringFromFramework(ctx, item.PrimaryIdentityID),
-			PrimaryIdentitySourceArn: item.PrimaryIdentitySourceARN.ValueStringPointer(),
-		})
-	}
-
-	*apiObject = result
-	return diags
-}
-
-func expandPolicies(ctx context.Context, tfList fwtypes.ListNestedObjectValueOf[policyReferenceModel], apiObject *[]awstypes.PolicyReference) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	data, d := tfList.ToSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	result := make([]awstypes.PolicyReference, 0, len(data))
-	for _, item := range data {
-		result = append(result, awstypes.PolicyReference{
-			PolicyArn: item.PolicyARN.ValueStringPointer(),
-		})
-	}
-
-	*apiObject = result
-	return diags
-}
-
-func flattenApprovalTeamResponse(ctx context.Context, apiObject *mpa.GetApprovalTeamOutput, data *approvalTeamResourceModel) {
+func setApprovalTeamResourceModel(ctx context.Context, apiObject *mpa.GetApprovalTeamOutput, data *approvalTeamResourceModel) {
 	data.ARN = fwflex.StringToFramework(ctx, apiObject.Arn)
 	data.ID = fwflex.StringToFramework(ctx, apiObject.Arn)
 	data.Name = fwflex.StringToFramework(ctx, apiObject.Name)
@@ -480,13 +467,8 @@ func flattenApprovalTeamResponse(ctx context.Context, apiObject *mpa.GetApproval
 	data.StatusMessage = fwflex.StringToFramework(ctx, apiObject.StatusMessage)
 	data.VersionID = fwflex.StringToFramework(ctx, apiObject.VersionId)
 
-	flattenApprovalStrategyResponse(ctx, apiObject.ApprovalStrategy, &data.ApprovalStrategy)
-	flattenApproversResponse(ctx, apiObject.Approvers, &data.Approvers)
-	flattenPoliciesResponse(ctx, apiObject.Policies, &data.Policies)
-}
-
-func flattenApprovalStrategyResponse(ctx context.Context, apiObject awstypes.ApprovalStrategyResponse, tfObject *fwtypes.ListNestedObjectValueOf[approvalStrategyModel]) {
-	switch v := apiObject.(type) {
+	// Handle ApprovalStrategy (union type)
+	switch v := apiObject.ApprovalStrategy.(type) {
 	case *awstypes.ApprovalStrategyResponseMemberMofN:
 		mofnModel := mofNApprovalStrategyModel{
 			MinApprovalsRequired: fwflex.Int32ToFrameworkInt64(ctx, v.Value.MinApprovalsRequired),
@@ -494,31 +476,25 @@ func flattenApprovalStrategyResponse(ctx context.Context, apiObject awstypes.App
 		strategyModel := approvalStrategyModel{
 			MofN: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &mofnModel),
 		}
-		*tfObject = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &strategyModel)
+		data.ApprovalStrategy = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &strategyModel)
 	}
-}
 
-func flattenApproversResponse(ctx context.Context, apiObject []awstypes.GetApprovalTeamResponseApprover, tfObject *fwtypes.ListNestedObjectValueOf[approverModel]) {
-	result := make([]*approverModel, 0, len(apiObject))
-	for _, item := range apiObject {
-		model := &approverModel{
+	// Handle Approvers
+	approvers := make([]*approverModel, 0, len(apiObject.Approvers))
+	for _, item := range apiObject.Approvers {
+		approvers = append(approvers, &approverModel{
 			PrimaryIdentityID:        fwflex.StringToFramework(ctx, item.PrimaryIdentityId),
 			PrimaryIdentitySourceARN: fwtypes.ARNValue(aws.ToString(item.PrimaryIdentitySourceArn)),
-		}
-		result = append(result, model)
+		})
 	}
+	data.Approvers = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, approvers)
 
-	*tfObject = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, result)
-}
-
-func flattenPoliciesResponse(ctx context.Context, apiObject []awstypes.PolicyReference, tfObject *fwtypes.ListNestedObjectValueOf[policyReferenceModel]) {
-	result := make([]*policyReferenceModel, 0, len(apiObject))
-	for _, item := range apiObject {
-		model := &policyReferenceModel{
+	// Handle Policies
+	policies := make([]*policyReferenceModel, 0, len(apiObject.Policies))
+	for _, item := range apiObject.Policies {
+		policies = append(policies, &policyReferenceModel{
 			PolicyARN: fwtypes.ARNValue(aws.ToString(item.PolicyArn)),
-		}
-		result = append(result, model)
+		})
 	}
-
-	*tfObject = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, result)
+	data.Policies = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, policies)
 }
