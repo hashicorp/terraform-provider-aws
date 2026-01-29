@@ -22,6 +22,7 @@ import (
 
 // @FrameworkDataSource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
+// @Region(overrideDeprecated=true)
 // Generating tags tests does not work because alternate region isn't working and tests require 2 regions
 // @Testing(tagsTest=false)
 func newPlanDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {

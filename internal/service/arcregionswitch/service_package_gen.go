@@ -29,7 +29,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
 		},
 		{
 			Factory:  newRoute53HealthChecksDataSource,
