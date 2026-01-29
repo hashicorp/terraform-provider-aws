@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmpa "github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
@@ -142,7 +141,7 @@ func TestAccMPAApprovalTeam_update(t *testing.T) {
 
 func testAccCheckApprovalTeamDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MPAClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MPAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mpa_approval_team" {
@@ -175,7 +174,7 @@ func testAccCheckApprovalTeamExists(ctx context.Context, t *testing.T, name stri
 			return create.Error(names.MPA, create.ErrActionCheckingExistence, ResNameApprovalTeam, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MPAClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MPAClient(ctx)
 
 		resp, err := tfmpa.FindApprovalTeamByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -189,7 +188,7 @@ func testAccCheckApprovalTeamExists(ctx context.Context, t *testing.T, name stri
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MPAClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).MPAClient(ctx)
 
 	var input mpa.ListApprovalTeamsInput
 
