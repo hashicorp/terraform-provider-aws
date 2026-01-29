@@ -48,7 +48,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.execution_block_type", "ManualApproval"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.1.step.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.1.step.0.execution_block_type", "ManualApproval"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:aws:arc-region-switch:.*:.*:plan/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
 				),
 			},
@@ -328,7 +328,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Complex test plan with multiple execution block types"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:aws:arc-region-switch:.*:.*:plan/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "arc-region-switch", regexache.MustCompile(`plan/.+$`)),
 
 					// Verify CustomActionLambda execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
