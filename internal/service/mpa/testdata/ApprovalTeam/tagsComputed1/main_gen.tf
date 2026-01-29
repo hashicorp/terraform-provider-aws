@@ -11,7 +11,7 @@ resource "aws_mpa_approval_team" "test" {
   description = "Test approval team"
 
   approval_strategy {
-    mof_n {
+    m_of_n {
       min_approvals_required = 1
     }
   }

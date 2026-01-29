@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmpa "github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,8 +51,8 @@ func TestAccMPAApprovalTeam_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "approval_strategy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.mof_n.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.mof_n.0.min_approvals_required", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.m_of_n.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.m_of_n.0.min_approvals_required", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approver.#", "1"),
 				),
 			},
@@ -119,7 +119,7 @@ func TestAccMPAApprovalTeam_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApprovalTeamExists(ctx, t, resourceName, &approvalteam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test approval team"),
-					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.mof_n.0.min_approvals_required", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.m_of_n.0.min_approvals_required", "1"),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccMPAApprovalTeam_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApprovalTeamExists(ctx, t, resourceName, &approvalteam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated approval team"),
-					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.mof_n.0.min_approvals_required", "2"),
+					resource.TestCheckResourceAttr(resourceName, "approval_strategy.0.m_of_n.0.min_approvals_required", "2"),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func testAccCheckApprovalTeamDestroy(ctx context.Context, t *testing.T) resource
 			}
 
 			_, err := tfmpa.FindApprovalTeamByARN(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -212,7 +212,7 @@ resource "aws_mpa_approval_team" "test" {
   description = "Test approval team"
 
   approval_strategy {
-    mof_n {
+    m_of_n {
       min_approvals_required = 1
     }
   }
@@ -239,7 +239,7 @@ resource "aws_mpa_approval_team" "test" {
   description = "Updated approval team"
 
   approval_strategy {
-    mof_n {
+    m_of_n {
       min_approvals_required = 2
     }
   }

@@ -23,7 +23,7 @@ resource "aws_mpa_approval_team" "example" {
   description = "Example approval team for multi-party approval"
 
   approval_strategy {
-    mof_n {
+    m_of_n {
       min_approvals_required = 2
     }
   }
@@ -64,9 +64,9 @@ The following arguments are optional:
 
 ### approval_strategy
 
-* `mof_n` - (Required) M-of-N approval strategy configuration block. See [mof_n](#mof_n) below.
+* `m_of_n` - (Required) M-of-N approval strategy configuration block. See [m_of_n](#m_of_n) below.
 
-### mof_n
+### m_of_n
 
 * `min_approvals_required` - (Required) Minimum number of approvals required. Must be at least 1.
 

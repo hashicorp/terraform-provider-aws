@@ -107,7 +107,7 @@ func (r *approvalTeamResource) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"mof_n": schema.ListNestedBlock{
+						"m_of_n": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[mofNApprovalStrategyModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -239,7 +239,7 @@ func (r *approvalTeamResource) Read(ctx context.Context, req resource.ReadReques
 	conn := r.Meta().MPAClient(ctx)
 
 	team, err := findApprovalTeamByARN(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -316,7 +316,7 @@ func (r *approvalTeamResource) Delete(ctx context.Context, req resource.DeleteRe
 	conn := r.Meta().MPAClient(ctx)
 
 	team, err := findApprovalTeamByARN(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {
@@ -366,7 +366,7 @@ type approvalTeamResourceModel struct {
 }
 
 type approvalStrategyModel struct {
-	MofN fwtypes.ListNestedObjectValueOf[mofNApprovalStrategyModel] `tfsdk:"mof_n"`
+	MofN fwtypes.ListNestedObjectValueOf[mofNApprovalStrategyModel] `tfsdk:"m_of_n"`
 }
 
 type mofNApprovalStrategyModel struct {
