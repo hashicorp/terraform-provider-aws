@@ -1490,3 +1490,253 @@ resource "aws_glue_catalog_table" "test" {
 }
 `, rName, columnComment)
 }
+
+func TestAccGlueCatalogTable_viewDefinition_spark(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test_spark"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinition_spark(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "SPARK"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "arn:aws:iam::123456789012:role/test_definer"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.refresh_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.last_refresh_type", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_token", "view_version_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogTable_viewDefinition_athena(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test_athena"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinition_athena(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "ATHENA"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_expanded_text", "view_expanded_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "arn:aws:iam::123456789012:role/test_definer"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.refresh_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.last_refresh_type", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_token", "view_version_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueCatalogTable_viewDefinition_redshift(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test_redshift"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCatalogTableConfig_viewDefinition_redshift(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect", "REDSHIFT"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.dialect_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.validation_connection", "test-connection"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.representations.0.view_original_text", "view_original_text"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.is_protected", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.definer", "arn:aws:iam::123456789012:role/test_definer"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.0", "object_1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_objects.1", "object_2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.refresh_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.last_refresh_type", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.sub_object_version_ids.1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.0.view_version_token", "view_version_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCatalogTableConfig_viewDefinition_spark(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+	create_table_default_permission {
+  }
+}
+
+resource "aws_glue_catalog_table" "test_spark" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+	storage_descriptor {
+    parameters = {
+      param1 = "param1_val"
+    }
+
+    columns {
+      name    = "my_column_1"
+      type    = "int"
+      comment = "my_column1_comment"
+    }
+
+    columns {
+      name    = "my_column_2"
+      type    = "string"
+      comment = "my_column2_comment"
+    }
+
+    ser_de_info { }
+  }
+
+  view_definition {
+    representations {
+      dialect               = "SPARK"
+      dialect_version       = "1.0"
+			view_original_text    = "view_original_text"
+			view_expanded_text    = "view_expanded_text"
+    }
+    last_refresh_type = "FULL"
+		refresh_seconds   = 3600
+    is_protected = true
+    definer      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/test_definer"
+		sub_objects  = ["arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/my_database/my_table", "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/analytics_db/customer_data"]
+		sub_object_version_ids = [1, 2]
+		view_version_id 			 = 1
+		view_version_token		 = "view_version_token"
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinition_athena(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test_athena" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  view_definition {
+    representations {
+      dialect               = "ATHENA"
+      dialect_version       = "3"
+      validation_connection = "test-connection"
+			view_original_text    = "view_original_text"
+    }
+    last_refresh_type = "FULL"
+		refresh_seconds   = 3600
+    is_protected = true
+    definer      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/test_definer"
+		view_version_id 			 = 1
+		view_version_token		 = "view_version_token"
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_viewDefinition_redshift(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test_redshift" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  view_definition {
+    representations {
+      dialect               = "REDSHIFT"
+      dialect_version       = "1.0"
+      validation_connection = "test-connection"
+			view_original_text    = "view_original_text"
+    }
+		last_refresh_type = "FULL"
+		refresh_seconds   = 3600
+    is_protected = true
+		definer      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/test_definer"
+		view_version_id 			 = 1
+		view_version_token		 = "view_version_token"
+  }
+}
+`, rName)
+}
