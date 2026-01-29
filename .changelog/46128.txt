@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Add `grant_type`and `default_return_url`arguments to `oauth` credential provider configuration block to properly support Oauth authorization code grant (3LO) and client credentials grant (2LO) flows

@@ -273,6 +273,15 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.MapOfStringType,
 										Optional:   true,
 									},
+									"default_return_url": schema.StringAttribute{
+										Optional:    true,
+										Description: "The URL where the end user's browser is redirected after obtaining the authorization code. Required when grant_type is AUTHORIZATION_CODE.",
+									},
+									"grant_type": schema.StringAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.StringEnumType[awstypes.OAuthGrantType](),
+										Description: "The OAuth grant type. Valid values are AUTHORIZATION_CODE and CLIENT_CREDENTIALS.",
+									},
 									"provider_arn": schema.StringAttribute{
 										Required: true,
 									},
@@ -1078,9 +1087,11 @@ type apiKeyCredentialProviderModel struct {
 }
 
 type oauthCredentialProviderModel struct {
-	CustomParameters fwtypes.MapOfString `tfsdk:"custom_parameters"`
-	ProviderARN      fwtypes.ARN         `tfsdk:"provider_arn"`
-	Scopes           fwtypes.SetOfString `tfsdk:"scopes"`
+	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
+	DefaultReturnUrl types.String                                `tfsdk:"default_return_url"`
+	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
+	ProviderARN      fwtypes.ARN                                 `tfsdk:"provider_arn"`
+	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
 }
 
 type gatewayIAMRoleProviderModel struct {

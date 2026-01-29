@@ -188,9 +188,11 @@ resource "aws_bedrockagentcore_gateway_target" "oauth_example" {
     oauth {
       provider_arn = "arn:aws:iam::123456789012:oidc-provider/oauth.example.com"
       scopes       = ["read", "write"]
+      grant_type  = "authorization_code"
+      default_return_url = "https://myapp.example.com/callback"
       custom_parameters = {
         "client_type" = "confidential"
-        "grant_type"  = "authorization_code"
+        
       }
     }
   }
@@ -323,7 +325,9 @@ The `api_key` block supports the following:
 
 The `oauth` block supports the following:
 
-* `provider_arn` - (Required) ARN of the OIDC provider for OAuth authentication.
+* `provider_arn` - (Required) ARN of the Oauth credential provider for OAuth authentication.
+* `grant_type` - (Optional) The OAuth grant type. Valid values: `CLIENT_CREDENTIALS` (machine-to-machine authentication), `AUTHORIZATION_CODE` (user-delegated access)
+* `default_return_url` - (Optional) The URL where the end user's browser is redirected after obtaining the authorization code. Required when `grant_type` is `AUTHORIZATION_CODE`
 * `scopes` - (Optional) Set of OAuth scopes to request.
 * `custom_parameters` - (Optional) Map of custom parameters to include in OAuth requests.
 
