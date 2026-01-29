@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -130,7 +131,6 @@ func resourceDomain() *schema.Resource {
 			"advanced_security_options": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -167,6 +167,19 @@ func resourceDomain() *schema.Resource {
 										Type:      schema.TypeString,
 										Optional:  true,
 										Sensitive: true,
+									},
+									"master_user_password_wo": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										Sensitive:     true,
+										WriteOnly:     true,
+										ConflictsWith: []string{"advanced_security_options.0.master_user_options.0.master_user_password"},
+										RequiredWith:  []string{"advanced_security_options.0.master_user_options.0.master_user_password_wo_version"},
+									},
+									"master_user_password_wo_version": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										RequiredWith: []string{"advanced_security_options.0.master_user_options.0.master_user_password_wo"},
 									},
 								},
 							},
@@ -798,7 +811,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any))
+		// get write-only value from configuration
+		masterUserPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("advanced_security_options").IndexInt(0).GetAttr("master_user_options").IndexInt(0).GetAttr("master_user_password_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any), masterUserPasswordWO)
 	}
 
 	if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1160,7 +1179,20 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		if d.HasChange("advanced_security_options") {
-			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
+			masterUserPasswordWO := ""
+			if v, ok := d.Get("advanced_security_options").([]any); ok && len(v) > 0 && v[0] != nil {
+				if v, ok := v[0].(map[string]any)["master_user_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+					if d.HasChange("advanced_security_options.0.master_user_options.0.master_user_password_wo_version") {
+						var di diag.Diagnostics
+						masterUserPasswordWO, di = flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("advanced_security_options").IndexInt(0).GetAttr("master_user_options").IndexInt(0).GetAttr("master_user_password_wo"))
+						diags = append(diags, di...)
+						if diags.HasError() {
+							return diags
+						}
+					}
+				}
+			}
+			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any), masterUserPasswordWO)
 		}
 
 		if d.HasChange("aiml_options") {

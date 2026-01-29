@@ -990,6 +990,77 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDBWithMasterUserPasswordWO(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain awstypes.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsUserDBWithMasterUserPasswordWO(rName, "Testpassword1!", "1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectSensitiveValue(
+							resourceName,
+							tfjsonpath.New("advanced_security_options").AtSliceIndex(0).AtMapKey("master_user_options").AtSliceIndex(0).AtMapKey("master_user_password_wo"),
+						),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsUserDBWithMasterUserPasswordWO(rName, "Testpassword2!", "1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsUserDBWithMasterUserPasswordWO(rName, "Testpassword2!", "2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectSensitiveValue(
+							resourceName,
+							tfjsonpath.New("advanced_security_options").AtSliceIndex(0).AtMapKey("master_user_options").AtSliceIndex(0).AtMapKey("master_user_password_wo"),
+						),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_AdvancedSecurityOptions_anonymousAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4073,6 +4144,47 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_advancedSecurityOptionsUserDBWithMasterUserPasswordWO(rName, password, passwordVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name                = "testmasteruser"
+      master_user_password_wo         = %[2]q
+      master_user_password_wo_version = %[3]q
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, password, passwordVersion)
 }
 
 func testAccDomainConfig_advancedSecurityOptionsAnonymousAuth(rName string, enabled bool) string {

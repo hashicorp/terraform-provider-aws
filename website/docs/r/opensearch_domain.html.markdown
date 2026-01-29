@@ -355,7 +355,9 @@ The following arguments are optional:
 
 * `master_user_arn` - (Optional) ARN for the main user. Only specify if `internal_user_database_enabled` is not set or set to `false`.
 * `master_user_name` - (Optional) Main user's username, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
-* `master_user_password` - (Optional) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
+* `master_user_password` - (Optional) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`. Conflict with `master_user_password_wo`.
+* `master_user_password_wo` - (Optional, Write-Only) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. It will not be stored in the state file. Only specify if `internal_user_database_enabled` is set to `true`. Conflict with `master_user_password`.
+* `master_user_password_wo_version` - (Optional, required when `master_user_password_wo` is specified) Used together with `master_user_password_wo` to trigger an update. Increment this value when an update to the `master_user_password_wo` is required.
 
 ### aiml_options
 
