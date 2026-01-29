@@ -52,6 +52,7 @@ func resourceInsight() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrAWSAccountID:                        stringFilterSchema(),
+							"aws_account_name":                            stringFilterSchema(),
 							"company_name":                                stringFilterSchema(),
 							"compliance_status":                           stringFilterSchema(),
 							"confidence":                                  numberFilterSchema(),
@@ -519,6 +520,10 @@ func expandSecurityFindingFilters(l []any) *types.AwsSecurityFindingFilters {
 
 	if v, ok := tfMap[names.AttrAWSAccountID].(*schema.Set); ok && v.Len() > 0 {
 		filters.AwsAccountId = expandStringFilters(v.List())
+	}
+
+	if v, ok := tfMap["aws_account_name"].(*schema.Set); ok && v.Len() > 0 {
+		filters.AwsAccountName = expandStringFilters(v.List())
 	}
 
 	if v, ok := tfMap["company_name"].(*schema.Set); ok && v.Len() > 0 {
@@ -1147,6 +1152,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []a
 
 	m := map[string]any{
 		names.AttrAWSAccountID:                        flattenStringFilters(filters.AwsAccountId),
+		"aws_account_name":                            flattenStringFilters(filters.AwsAccountName),
 		"company_name":                                flattenStringFilters(filters.CompanyName),
 		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
 		"confidence":                                  flattenNumberFilters(filters.Confidence),
