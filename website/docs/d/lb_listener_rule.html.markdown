@@ -48,10 +48,12 @@ This data source supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the Listener Rule.
   Either `arn` or `listener_arn` must be set.
+* `is_default` - (Optional) Indicates whether the default rule for the listener is returned. This argument should only be specified when set to `true`.
+  If `listener_arn` is set, exactly one of `is_default` or `priority` must be set.
 * `listener_arn` - (Optional) ARN of the associated Listener.
   Either `arn` or `listener_arn` must be set.
 * `priority` - (Optional) Priority of the Listener Rule within the Listener.
-  Must be set if `listener_arn` is set, otherwise must not be set.
+  If `listener_arn` is set, exactly one of `is_default` or `priority` must be set.
 
 ## Attribute Reference
 
