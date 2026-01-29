@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mpa
@@ -88,7 +88,7 @@ func (r *approvalTeamResource) Schema(ctx context.Context, req resource.SchemaRe
 			names.AttrStatusCode: schema.StringAttribute{
 				Computed: true,
 			},
-			"status_message": schema.StringAttribute{
+			names.AttrStatusMessage: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -144,7 +144,7 @@ func (r *approvalTeamResource) Schema(ctx context.Context, req resource.SchemaRe
 					},
 				},
 			},
-			"policy": schema.ListNestedBlock{
+			names.AttrPolicy: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[policyReferenceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -221,10 +221,7 @@ func (r *approvalTeamResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	resp.Diagnostics.Append(flattenApprovalTeamResponse(ctx, team, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	flattenApprovalTeamResponse(ctx, team, &plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -249,10 +246,7 @@ func (r *approvalTeamResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	resp.Diagnostics.Append(flattenApprovalTeamResponse(ctx, team, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	flattenApprovalTeamResponse(ctx, team, &state)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -298,10 +292,7 @@ func (r *approvalTeamResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	resp.Diagnostics.Append(flattenApprovalTeamResponse(ctx, team, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	flattenApprovalTeamResponse(ctx, team, &plan)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -339,13 +330,11 @@ func (r *approvalTeamResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *approvalTeamResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 // Resource model types
 
 type approvalTeamResourceModel struct {
+	framework.WithRegionModel
+
 	ApprovalStrategy  fwtypes.ListNestedObjectValueOf[approvalStrategyModel] `tfsdk:"approval_strategy"`
 	Approvers         fwtypes.ListNestedObjectValueOf[approverModel]         `tfsdk:"approver"`
 	ARN               types.String                                           `tfsdk:"arn"`
@@ -478,9 +467,7 @@ func expandPolicies(ctx context.Context, tfList fwtypes.ListNestedObjectValueOf[
 	return diags
 }
 
-func flattenApprovalTeamResponse(ctx context.Context, apiObject *mpa.GetApprovalTeamOutput, data *approvalTeamResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func flattenApprovalTeamResponse(ctx context.Context, apiObject *mpa.GetApprovalTeamOutput, data *approvalTeamResourceModel) {
 	data.ARN = fwflex.StringToFramework(ctx, apiObject.Arn)
 	data.ID = fwflex.StringToFramework(ctx, apiObject.Arn)
 	data.Name = fwflex.StringToFramework(ctx, apiObject.Name)
@@ -493,27 +480,12 @@ func flattenApprovalTeamResponse(ctx context.Context, apiObject *mpa.GetApproval
 	data.StatusMessage = fwflex.StringToFramework(ctx, apiObject.StatusMessage)
 	data.VersionID = fwflex.StringToFramework(ctx, apiObject.VersionId)
 
-	diags.Append(flattenApprovalStrategyResponse(ctx, apiObject.ApprovalStrategy, &data.ApprovalStrategy)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	diags.Append(flattenApproversResponse(ctx, apiObject.Approvers, &data.Approvers)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	diags.Append(flattenPoliciesResponse(ctx, apiObject.Policies, &data.Policies)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	return diags
+	flattenApprovalStrategyResponse(ctx, apiObject.ApprovalStrategy, &data.ApprovalStrategy)
+	flattenApproversResponse(ctx, apiObject.Approvers, &data.Approvers)
+	flattenPoliciesResponse(ctx, apiObject.Policies, &data.Policies)
 }
 
-func flattenApprovalStrategyResponse(ctx context.Context, apiObject awstypes.ApprovalStrategyResponse, tfObject *fwtypes.ListNestedObjectValueOf[approvalStrategyModel]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func flattenApprovalStrategyResponse(ctx context.Context, apiObject awstypes.ApprovalStrategyResponse, tfObject *fwtypes.ListNestedObjectValueOf[approvalStrategyModel]) {
 	switch v := apiObject.(type) {
 	case *awstypes.ApprovalStrategyResponseMemberMofN:
 		mofnModel := mofNApprovalStrategyModel{
@@ -524,13 +496,9 @@ func flattenApprovalStrategyResponse(ctx context.Context, apiObject awstypes.App
 		}
 		*tfObject = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &strategyModel)
 	}
-
-	return diags
 }
 
-func flattenApproversResponse(ctx context.Context, apiObject []awstypes.GetApprovalTeamResponseApprover, tfObject *fwtypes.ListNestedObjectValueOf[approverModel]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func flattenApproversResponse(ctx context.Context, apiObject []awstypes.GetApprovalTeamResponseApprover, tfObject *fwtypes.ListNestedObjectValueOf[approverModel]) {
 	result := make([]*approverModel, 0, len(apiObject))
 	for _, item := range apiObject {
 		model := &approverModel{
@@ -541,12 +509,9 @@ func flattenApproversResponse(ctx context.Context, apiObject []awstypes.GetAppro
 	}
 
 	*tfObject = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, result)
-	return diags
 }
 
-func flattenPoliciesResponse(ctx context.Context, apiObject []awstypes.PolicyReference, tfObject *fwtypes.ListNestedObjectValueOf[policyReferenceModel]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func flattenPoliciesResponse(ctx context.Context, apiObject []awstypes.PolicyReference, tfObject *fwtypes.ListNestedObjectValueOf[policyReferenceModel]) {
 	result := make([]*policyReferenceModel, 0, len(apiObject))
 	for _, item := range apiObject {
 		model := &policyReferenceModel{
@@ -556,5 +521,4 @@ func flattenPoliciesResponse(ctx context.Context, apiObject []awstypes.PolicyRef
 	}
 
 	*tfObject = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, result)
-	return diags
 }

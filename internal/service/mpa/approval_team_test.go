@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mpa_test
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/mpa"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -16,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfmpa "github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfmpa "github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,7 +48,7 @@ func TestAccMPAApprovalTeam_basic(t *testing.T) {
 					testAccCheckApprovalTeamExists(ctx, t, resourceName, &approvalteam),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test approval team"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mpa", regexache.MustCompile(`approval-team/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "approval_strategy.#", "1"),
@@ -190,9 +191,9 @@ func testAccCheckApprovalTeamExists(ctx context.Context, t *testing.T, name stri
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MPAClient(ctx)
 
-	input := &mpa.ListApprovalTeamsInput{}
+	var input mpa.ListApprovalTeamsInput
 
-	_, err := conn.ListApprovalTeams(ctx, input)
+	_, err := conn.ListApprovalTeams(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -205,6 +206,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccApprovalTeamConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_mpa_approval_team" "test" {
@@ -219,11 +221,11 @@ resource "aws_mpa_approval_team" "test" {
 
   approver {
     primary_identity_id         = data.aws_caller_identity.current.user_id
-    primary_identity_source_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    primary_identity_source_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
   }
 
   policy {
-    policy_arn = "arn:aws:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:policy/example"
+    policy_arn = "arn:${data.aws_partition.current.partition}:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:policy/example"
   }
 }
 `, rName)
@@ -232,6 +234,7 @@ resource "aws_mpa_approval_team" "test" {
 func testAccApprovalTeamConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_mpa_approval_team" "test" {
@@ -246,16 +249,16 @@ resource "aws_mpa_approval_team" "test" {
 
   approver {
     primary_identity_id         = data.aws_caller_identity.current.user_id
-    primary_identity_source_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    primary_identity_source_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
   }
 
   approver {
     primary_identity_id         = "second-approver"
-    primary_identity_source_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    primary_identity_source_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
   }
 
   policy {
-    policy_arn = "arn:aws:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:policy/example"
+    policy_arn = "arn:${data.aws_partition.current.partition}:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:policy/example"
   }
 }
 `, rName)
