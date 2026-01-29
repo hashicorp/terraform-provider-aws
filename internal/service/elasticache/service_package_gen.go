@@ -69,6 +69,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  dataSourceClusters,
+			TypeName: "aws_elasticache_clusters",
+			Name:     "Clusters",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  dataSourceReplicationGroup,
 			TypeName: "aws_elasticache_replication_group",
 			Name:     "Replication Group",
