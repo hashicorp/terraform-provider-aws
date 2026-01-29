@@ -6,7 +6,6 @@ package ssoadmin_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,7 +47,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_basic(t *testing.T
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "instance_arn",
 			},
@@ -80,7 +79,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_multiple(t *testin
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "instance_arn",
 			},
@@ -112,7 +111,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_empty(t *testing.T
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "instance_arn",
 			},
@@ -184,24 +183,6 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(
 			},
 		},
 	})
-}
-
-func testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		instanceARN := rs.Primary.Attributes["instance_arn"]
-		permissionSetARN := rs.Primary.Attributes["permission_set_arn"]
-
-		if instanceARN == "" || permissionSetARN == "" {
-			return "", fmt.Errorf("instance_arn or permission_set_arn is empty")
-		}
-
-		return strings.Join([]string{instanceARN, permissionSetARN}, intflex.ResourceIdSeparator), nil
-	}
 }
 
 func testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {

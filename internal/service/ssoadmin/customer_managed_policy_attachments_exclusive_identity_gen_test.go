@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +68,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_Basic(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -83,7 +84,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_Basic(t *
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),
@@ -160,7 +161,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_RegionOve
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
-				ImportStateIdFunc:                    acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc),
+				ImportStateIdFunc:                    acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
@@ -177,7 +178,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_RegionOve
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccCustomerManagedPolicyAttachmentsExclusiveImportStateIDFunc),
+				ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("instance_arn"), knownvalue.NotNull()),
