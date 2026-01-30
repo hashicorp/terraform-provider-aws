@@ -61,7 +61,7 @@ func resourceResolver() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"caching_keys": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -454,7 +454,7 @@ func expandResolverCachingConfig(tfList []any) *awstypes.CachingConfig {
 
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CachingConfig{
-		CachingKeys: flex.ExpandStringValueSet(tfMap["caching_keys"].(*schema.Set)),
+		CachingKeys: flex.ExpandStringValueList(tfMap["caching_keys"].([]any)),
 	}
 
 	if v, ok := tfMap["ttl"].(int); ok && v != 0 {

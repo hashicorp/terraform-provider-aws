@@ -347,6 +347,8 @@ func testAccResolver_caching(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver),
 					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.0", "$context.identity.sub"),
+					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.1", "$context.arguments.id"),
 					resource.TestCheckResourceAttr(resourceName, "caching_config.0.ttl", "60"),
 				),
 			},
