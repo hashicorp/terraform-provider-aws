@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -39,8 +38,14 @@ import (
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
 // @Region(overrideDeprecated=true)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
 // Generating tags tests does not work because alternate region isn't working and tests require 2 regions
 // @Testing(tagsTest=false)
+// @Testing(altRegionTfVars=true)
+// @Testing(preIdentityVersion="6.30.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(preCheck="testAccPreCheck")
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
 
@@ -52,8 +57,8 @@ func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type resourcePlan struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByARN
+	framework.ResourceWithModel[resourcePlanModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -535,9 +540,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.OneOf("activeActive", "activePassive"),
-				},
 			},
 			"regions": fwschema.ListAttribute{
 				Required:   true,
@@ -569,9 +571,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"alarm_type": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AlarmType](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("applicationHealth", "trigger"),
-							},
 						},
 						"resource_identifier": fwschema.StringAttribute{
 							Required: true,
@@ -592,9 +591,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						names.AttrAction: fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
 						},
 						names.AttrDescription: fwschema.StringAttribute{
 							Optional: true,
@@ -617,9 +613,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									names.AttrCondition: fwschema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
 										Required:   true,
-										Validators: []validator.String{
-											stringvalidator.OneOf("red", "green"),
-										},
 									},
 								},
 							},
@@ -637,9 +630,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"workflow_target_action": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
 						},
 						"workflow_target_region": fwschema.StringAttribute{
 							Optional: true,
@@ -911,12 +901,6 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
-}
-
-func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schema) fwdiag.Diagnostics {
-	var diags fwdiag.Diagnostics
-	// Basic validation is handled by the schema validators
-	return diags
 }
 
 // Custom expand to handle complex nested transformations
@@ -1937,10 +1921,6 @@ type triggerModel struct {
 type conditionModel struct {
 	AssociatedAlarmName types.String                                `tfsdk:"associated_alarm_name"`
 	Condition           fwtypes.StringEnum[awstypes.AlarmCondition] `tfsdk:"condition"`
-}
-
-func (r *resourcePlan) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	// Basic validation is handled by the schema validators
 }
 
 func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn string, timeout time.Duration) (*awstypes.Plan, error) {

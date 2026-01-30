@@ -53,6 +53,7 @@ type CommonArgs struct {
 
 	UseAlternateAccount     bool
 	AlternateRegionProvider bool
+	AlternateRegionTfVars   bool
 
 	Generator     string
 	generatorSeen bool
@@ -347,6 +348,22 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			return err
 		} else {
 			stuff.AlternateRegionProvider = b
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: "acctest.PreCheckMultipleRegion(t, 2)",
+			})
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				},
+			)
+		}
+	}
+
+	if attr, ok := args.Keyword["altRegionTfVars"]; ok {
+		if b, err := common.ParseBoolAttr("altRegionTfVars", attr); err != nil {
+			return err
+		} else {
+			stuff.AlternateRegionTfVars = b
 			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
 				Code: "acctest.PreCheckMultipleRegion(t, 2)",
 			})
