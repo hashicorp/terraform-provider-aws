@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOSISPipelineResourcePolicy_basic(t *testing.T) {
+func TestAccOpenSearchIngestionPipelineResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	pipelineName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline_resource_policy.test"
@@ -27,7 +27,7 @@ func TestAccOSISPipelineResourcePolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +35,8 @@ func TestAccOSISPipelineResourcePolicy_basic(t *testing.T) {
 				Config: testAccPipelineResourcePolicyConfig_basic(pipelineName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -48,7 +48,7 @@ func TestAccOSISPipelineResourcePolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccOSISPipelineResourcePolicy_disappears(t *testing.T) {
+func TestAccOpenSearchIngestionPipelineResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceArn := "aws_osis_pipeline_resource_policy.test"
@@ -75,7 +75,7 @@ func TestAccOSISPipelineResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccOSISPipelineResourcePolicy_update(t *testing.T) {
+func TestAccOpenSearchIngestionPipelineResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_osis_pipeline_resource_policy.test"
@@ -115,9 +115,10 @@ func testAccCheckPipelineResourcePolicyDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			output, err := conn.GetResourcePolicy(ctx, &osis.GetResourcePolicyInput{
+			input := osis.GetResourcePolicyInput{
 				ResourceArn: &rs.Primary.ID,
-			})
+			}
+			output, err := conn.GetResourcePolicy(ctx, &input)
 			if *output.Policy != "{}" {
 				return fmt.Errorf("OpenSearch Ingestion Pipeline Resource Policy (%s) still exists", rs.Primary.ID)
 			}
@@ -140,9 +141,10 @@ func testAccCheckPipelineResourcePolicyExists(ctx context.Context, n string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
 
-		_, err := conn.GetResourcePolicy(ctx, &osis.GetResourcePolicyInput{
+		input := osis.GetResourcePolicyInput{
 			ResourceArn: &rs.Primary.ID,
-		})
+		}
+		_, err := conn.GetResourcePolicy(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("Error reading OpenSearch Ingestion Pipeline Resource Policy (%s): %w", rs.Primary.ID, err)
 		}
