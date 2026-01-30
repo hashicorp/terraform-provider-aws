@@ -80,7 +80,7 @@ resource "<resource-name>" "example" {
 
 #### Required
 
-- `arn` (String) <description here>.
+* `arn` (String) <description here>.
 ````
 
 - The instructions for importing by `identity`, including the identity schema, should appear before instructions for import blocks with an `id` argument or importing via the CLI.

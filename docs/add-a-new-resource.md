@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <!-- markdownlint-configure-file { "code-block-style": false } -->
-# Adding a New Resource
+# Adding a New Resource Type
 
 New resources are required when AWS adds a new service, or adds new features within an existing service which would require a new resource to manage in Terraform. Typically anything with a new set of CRUD API endpoints is a great candidate for a new resource.
 
@@ -26,7 +26,7 @@ Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and
 
 ### Fill out the Resource Schema
 
-In the `internal/service/<service>/<service>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, choose the correct data type and supply the correct [Schema Behaviors](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors) to ensure Terraform knows how to correctly handle the value.
+In the `internal/service/<service>/<resource>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, choose the correct data type and supply the correct [Schema Behaviors](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors) to ensure Terraform knows how to correctly handle the value.
 
 Typically you will add arguments to represent the values that are under control by Terraform, and attributes to supply read-only values as references for Terraform. These are distinguished by Schema Behavior.
 
@@ -35,6 +35,11 @@ Attribute names are to be specified in `snake_case` as opposed to the AWS API wh
 ### Implement CRUD handlers
 
 These will map the planned Terraform state to the AWS API call, or an AWS API response to an applied Terraform state. You will also need to handle different response types (including errors correctly). For complex attributes, you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
+
+### Implement Resource Identity
+
+This will identify which of the resource type's attributes make up the resource's globally-unique identity.
+The [Resource Identity Reference](resource-identity.md) provides more detail on enabling Resource Identity on a resource type.
 
 ### Register Resource to the provider
 
