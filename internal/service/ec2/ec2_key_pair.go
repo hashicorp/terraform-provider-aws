@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -79,9 +81,10 @@ func resourceKeyPair() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{names.AttrPublicKey, "public_key_wo"},
 				StateFunc: func(v any) string {
 					switch v := v.(type) {
 					case string:
@@ -90,6 +93,19 @@ func resourceKeyPair() *schema.Resource {
 						return ""
 					}
 				},
+			},
+			"public_key_wo": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				WriteOnly:    true,
+				ExactlyOneOf: []string{names.AttrPublicKey, "public_key_wo"},
+				RequiredWith: []string{"public_key_wo_version"},
+			},
+			"public_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"public_key_wo"},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -102,9 +118,22 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
+	publicKeyWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("public_key_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	var publicKey string
+	if publicKeyWO != "" {
+		publicKey = publicKeyWO
+	} else {
+		publicKey = d.Get(names.AttrPublicKey).(string)
+	}
+
 	input := ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
-		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
+		PublicKeyMaterial: []byte(publicKey),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeKeyPair),
 	}
 
