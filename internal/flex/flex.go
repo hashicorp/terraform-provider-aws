@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -16,7 +16,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/shopspring/decimal"
 )
 
@@ -310,18 +310,29 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 
 // BoolToStringValue converts a bool pointer to a Go string value.
 func BoolToStringValue(v *bool) string {
-	return strconv.FormatBool(aws.ToBool(v))
+	return BoolValueToStringValue(aws.ToBool(v))
 }
 
 // BoolValueToString converts a Go bool value to a string pointer.
 func BoolValueToString(v bool) *string {
-	return aws.String(strconv.FormatBool(v))
+	return aws.String(BoolValueToStringValue(v))
+}
+
+// BoolValueToStringValue converts a Go bool value to a string value.
+func BoolValueToStringValue(v bool) string {
+	return strconv.FormatBool(v)
 }
 
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
-	return aws.ToString(v) == strconv.FormatBool(true)
+	return StringValueToBoolValue(aws.ToString(v))
+}
+
+// StringValueToBoolValue converts a string value to a Go bool value.
+// Only the string "true" is converted to true, all other values return false.
+func StringValueToBoolValue(v string) bool {
+	return v == strconv.FormatBool(true)
 }
 
 // Float32ValueToFloat64Value converts a float32 value to a Go float64 value.
@@ -389,7 +400,7 @@ func StringToInt32Value(v *string) int32 {
 
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
-	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+	return aws.String(inttypes.Base64EncodeOnce([]byte(v)))
 }
 
 // StringValueToInt64 converts a string to a Go int32 pointer.

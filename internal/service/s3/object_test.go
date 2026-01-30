@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,9 +34,9 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -197,7 +198,7 @@ func TestAccS3Object_disappears(t *testing.T) {
 				Config: testAccObjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -221,7 +222,7 @@ func TestAccS3Object_Disappears_bucket(t *testing.T) {
 				Config: testAccObjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1845,7 +1846,7 @@ func TestAccS3Object_DirectoryBucket_disappears(t *testing.T) { // nosemgrep:ci.
 				Config: testAccObjectConfig_directoryBucket(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceObject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceObject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2221,7 +2222,12 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"], optFns...)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
+				continue
+			}
+
+			// only seems to affect directory buckets on post-delete checks
+			if strings.Contains(err.Error(), "NoSuchBucket") {
 				continue
 			}
 

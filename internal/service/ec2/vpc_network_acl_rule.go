@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -140,7 +143,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	switch {
 	case err == nil:
 		return sdkdiag.AppendFromErr(diags, networkACLEntryAlreadyExistsError(naclID, egress, ruleNumber))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		break
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule: %s", err)
@@ -199,7 +202,7 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 		return findNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Network ACL Rule %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

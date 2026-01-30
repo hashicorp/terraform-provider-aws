@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkflowmonitor
 
@@ -24,13 +26,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -170,7 +173,7 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 	monitorName := fwflex.StringValueFromFramework(ctx, data.MonitorName)
 	output, err := findMonitorByName(ctx, conn, monitorName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -311,7 +314,7 @@ func findMonitor(ctx context.Context, conn *networkflowmonitor.Client, input *ne
 	output, err := conn.GetMonitor(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -322,17 +325,17 @@ func findMonitor(ctx context.Context, conn *networkflowmonitor.Client, input *ne
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusMonitor(ctx context.Context, conn *networkflowmonitor.Client, name string) retry.StateRefreshFunc {
+func statusMonitor(ctx context.Context, conn *networkflowmonitor.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -345,7 +348,7 @@ func statusMonitor(ctx context.Context, conn *networkflowmonitor.Client, name st
 }
 
 func waitMonitorCreated(ctx context.Context, conn *networkflowmonitor.Client, name string, timeout time.Duration) (*networkflowmonitor.GetMonitorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MonitorStatusPending),
 		Target:  enum.Slice(awstypes.MonitorStatusActive),
 		Refresh: statusMonitor(ctx, conn, name),
@@ -362,7 +365,7 @@ func waitMonitorCreated(ctx context.Context, conn *networkflowmonitor.Client, na
 }
 
 func waitMonitorUpdated(ctx context.Context, conn *networkflowmonitor.Client, name string, timeout time.Duration) (*networkflowmonitor.GetMonitorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MonitorStatusPending),
 		Target:  enum.Slice(awstypes.MonitorStatusActive),
 		Refresh: statusMonitor(ctx, conn, name),
@@ -379,7 +382,7 @@ func waitMonitorUpdated(ctx context.Context, conn *networkflowmonitor.Client, na
 }
 
 func waitMonitorDeleted(ctx context.Context, conn *networkflowmonitor.Client, name string, timeout time.Duration) (*networkflowmonitor.GetMonitorOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MonitorStatusDeleting),
 		Target:  []string{},
 		Refresh: statusMonitor(ctx, conn, name),

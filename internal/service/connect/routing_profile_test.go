@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -95,7 +95,7 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceRoutingProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceRoutingProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -761,7 +761,7 @@ func testAccCheckRoutingProfileDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfconnect.FindRoutingProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["routing_profile_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

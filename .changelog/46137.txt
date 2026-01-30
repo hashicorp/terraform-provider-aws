@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Fix `ValidationException: Base capacity cannot be updated when PerformanceTarget is Enabled` error when updating `price_performance_target` and `base_capacity`
+```

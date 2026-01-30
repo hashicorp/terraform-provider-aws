@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -347,7 +347,7 @@ func testAccWorkteam_disappears(t *testing.T) {
 				Config: testAccWorkteamConfig_oidc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceWorkteam(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceWorkteam(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -366,7 +366,7 @@ func testAccCheckWorkteamDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindWorkteamByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -406,7 +406,7 @@ func testAccCheckWorkteamExists(ctx context.Context, n string, workteam *awstype
 	}
 }
 
-func testAccWorkteamCognitoBaseConfig(rName string) string {
+func testAccWorkteamConfig_baseCognito(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -440,7 +440,7 @@ resource "aws_sagemaker_workforce" "test" {
 }
 
 func testAccWorkteamConfig_cognito(rName string) string {
-	return acctest.ConfigCompose(testAccWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseCognito(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -495,7 +495,7 @@ resource "aws_sagemaker_workteam" "test" {
 }
 
 func testAccWorkteamConfig_cognitoUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccWorkteamCognitoBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseCognito(rName), fmt.Sprintf(`
 resource "aws_cognito_user_group" "test2" {
   name         = "%[1]s-2"
   user_pool_id = aws_cognito_user_pool.test.id
@@ -525,7 +525,7 @@ resource "aws_sagemaker_workteam" "test" {
 `, rName))
 }
 
-func testAccWorkteamOIDCBaseConfig(rName string) string {
+func testAccWorkteamConfig_baseOIDC(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
@@ -545,7 +545,7 @@ resource "aws_sagemaker_workforce" "test" {
 }
 
 func testAccWorkteamConfig_oidc(rName string) string {
-	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseOIDC(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -561,7 +561,7 @@ resource "aws_sagemaker_workteam" "test" {
 }
 
 func testAccWorkteamConfig_oidc2(rName, group string) string {
-	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseOIDC(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -577,7 +577,7 @@ resource "aws_sagemaker_workteam" "test" {
 }
 
 func testAccWorkteamConfig_notification(rName string) string {
-	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseOIDC(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -623,7 +623,7 @@ resource "aws_sagemaker_workteam" "test" {
 }
 
 func testAccWorkteamConfig_workerAccessConfiguration(rName, status string) string {
-	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseOIDC(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -647,7 +647,7 @@ resource "aws_sagemaker_workteam" "test" {
 }
 
 func testAccWorkteamConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseOIDC(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id
@@ -667,7 +667,7 @@ resource "aws_sagemaker_workteam" "test" {
 }
 
 func testAccWorkteamConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccWorkteamOIDCBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkteamConfig_baseOIDC(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workteam" "test" {
   workteam_name  = %[1]q
   workforce_name = aws_sagemaker_workforce.test.id

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudwatch
 
@@ -16,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,6 +37,7 @@ import (
 // @Testing(importStateIdAttribute="rule_name")
 // @Testing(importIgnore="rule_definition;rule_state")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;types.InsightRule")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newContributorInsightRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &contributorInsightRuleResource{}
 
@@ -129,7 +132,7 @@ func (r *contributorInsightRuleResource) Read(ctx context.Context, req resource.
 	}
 
 	out, err := findContributorInsightRuleByName(ctx, conn, state.RuleName.ValueString())
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -233,7 +236,7 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			})

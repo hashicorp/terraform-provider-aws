@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +62,7 @@ func TestAccDSLogSubscription_disappears(t *testing.T) {
 				Config: testAccLogSubscriptionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogSubscriptionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceLogSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceLogSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,7 +81,7 @@ func testAccCheckLogSubscriptionDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfds.FindLogSubscriptionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

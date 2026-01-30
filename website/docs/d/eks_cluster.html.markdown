@@ -46,6 +46,8 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether the EKS Auto Mode compute capability is enabled or not.
     * `node_pools` - List of node pools for the EKS Auto Mode compute capability.
     * `node_role_arn` - The ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster.
+* `control_plane_scaling_config` - Configuration block for the control plane scaling tier. See [EKS Provisioned Control Plane](https://docs.aws.amazon.com/eks/latest/userguide/eks-provisioned-control-plane-getting-started.html) for more information.
+    * `tier` - The control plane scaling tier. Valid values are `standard`, `tier-xl`, `tier-2xl`, or `tier-4xl`.
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.

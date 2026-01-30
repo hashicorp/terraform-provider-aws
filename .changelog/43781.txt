@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_arcregionswitch_plan
+```
+
+```release-note:new-data-source
+aws_arcregionswitch_plan
+```
+
+```release-note:new-data-source
+aws_arcregionswitch_route53_health_checks
+```

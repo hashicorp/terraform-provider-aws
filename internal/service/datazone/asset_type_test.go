@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -93,7 +93,7 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 				Config: testAccAssetTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceAssetType, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceAssetType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
