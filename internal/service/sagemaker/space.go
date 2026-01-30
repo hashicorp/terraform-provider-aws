@@ -421,6 +421,12 @@ func resourceSpace() *schema.Resource {
 								},
 							},
 						},
+						"remote_access": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+						},
 					},
 				},
 			},
@@ -682,6 +688,10 @@ func expandSpaceSettings(l []any) *awstypes.SpaceSettings {
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
+	if v, ok := m["remote_access"].(string); ok {
+		config.RemoteAccess = awstypes.FeatureStatus(v)
+	}
+
 	if v, ok := m["space_storage_settings"].([]any); ok && len(v) > 0 {
 		config.SpaceStorageSettings = expandSpaceStorageSettings(v)
 	}
@@ -716,6 +726,10 @@ func flattenSpaceSettings(config *awstypes.SpaceSettings) []map[string]any {
 
 	if config.KernelGatewayAppSettings != nil {
 		m["kernel_gateway_app_settings"] = flattenDomainKernelGatewayAppSettings(config.KernelGatewayAppSettings)
+	}
+
+	if config.RemoteAccess != "" {
+		m["remote_access"] = config.RemoteAccess
 	}
 
 	if config.SpaceStorageSettings != nil {
