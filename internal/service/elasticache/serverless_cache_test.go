@@ -766,8 +766,8 @@ resource "aws_elasticache_serverless_cache" "test" {
 func testAccServerlessCacheConfig_majorEngineVersion(rName, engine, major_engine_version string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
-  name   = %[1]q
-  engine = %[2]q
+  name                 = %[1]q
+  engine               = %[2]q
   major_engine_version = %[3]q
 }
 `, rName, engine, major_engine_version)
