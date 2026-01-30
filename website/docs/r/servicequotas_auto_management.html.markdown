@@ -41,6 +41,7 @@ The following arguments are optional:
 
 * `exclusion_list` - (Optional) Map of AWS services excluded from Automatic Management. You will need to include the AWS service code and one or more Service Quotas codes.
 * `notification_arn` - (Optional) The AWS User Notifications ARN for Automatic Management notifications.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
