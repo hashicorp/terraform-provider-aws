@@ -79,6 +79,7 @@ func resourceWorkgroup() *schema.Resource {
 								// https://docs.aws.amazon.com/redshift/latest/dg/cm-c-wlm-query-monitoring-rules.html#cm-c-wlm-query-monitoring-metrics-serverless
 								"max_query_cpu_time",
 								"max_query_blocks_read",
+								"max_return_row_count",
 								"max_scan_row_count",
 								"max_query_execution_time",
 								"max_query_queue_time",
