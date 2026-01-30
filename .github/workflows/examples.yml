@@ -27,10 +27,10 @@ jobs:
   tflint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -41,7 +41,7 @@ jobs:
       - name: install tflint
         run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -64,10 +64,10 @@ jobs:
     env:
       TF_IN_AUTOMATION: "1"
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}

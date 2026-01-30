@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package elbv2
 
 import (
@@ -112,9 +114,12 @@ func resourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 1024),
-								verify.StringHasPrefix("/"),
+							ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+								validation.All(
+									validation.StringLenBetween(1, 1024),
+									verify.StringHasPrefix("/"),
+								),
+								validation.StringIsEmpty,
 							),
 						},
 						names.AttrPort: {

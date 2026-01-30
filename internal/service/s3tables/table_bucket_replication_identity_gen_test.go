@@ -36,7 +36,7 @@ func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
-		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccS3TablesTableBucketReplication_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketReplicationExists(ctx, resourceName, &v),
+					testAccCheckTableBucketReplicationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

@@ -4,6 +4,7 @@
 package s3_test
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -585,6 +587,65 @@ func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectDataSource_body_base64(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.test"
+	dataSourceName := "data.aws_s3_object.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+			{
+				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+
+					func(state *terraform.State) error {
+						base64String := base64.StdEncoding.EncodeToString([]byte("Hello World"))
+						return resource.TestCheckResourceAttr(dataSourceName, "body_base64", base64String)(state)
+					},
+
+					func(state *terraform.State) error {
+						bodyString := state.RootModule().Outputs["body_base64"].Value.(string)
+						return resource.TestCheckResourceAttr(resourceName, names.AttrContent, bodyString)(state)
+					},
+				),
+			},
+			{
+				// body and body_base64 should be unset
+				Config: testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+			{
+				// preserves legacy behavior with download_body unset/null with content_type as a downloadable type
+				Config: testAccObjectDataSourceConfig_bodyBase64_readable(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "body", "Hello World"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body_base64"),
+				),
+			},
+		},
+	})
+}
+
 func testAccObjectDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -1052,4 +1113,53 @@ data "aws_s3_object" "test" {
   key    = aws_s3_object.test.key
 }
 `, rName))
+}
+
+func testAccObjectDataSourceConfig_bodyBase64_downloadBody(rName string, downloadBody bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-key"
+  content = "Hello World"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+
+  download_body = %[2]t
+}
+
+output "body_base64" {
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
+}
+`, rName, downloadBody)
+}
+
+func testAccObjectDataSourceConfig_bodyBase64_readable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket       = aws_s3_bucket.test.bucket
+  key          = "%[1]s-key"
+  content      = "Hello World"
+  content_type = "text/plain"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+}
+
+output "body_base64" {
+  value = data.aws_s3_object.test.body_base64 != null ? base64decode(data.aws_s3_object.test.body_base64) : null
+}
+`, rName)
 }

@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodecommit "github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,21 +18,21 @@ import (
 
 func TestAccCodeCommitApprovalRuleTemplateAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_approval_rule_template_association.test"
 	repoResourceName := "aws_codecommit_repository.test"
 	templateResourceName := "aws_codecommit_approval_rule_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
+					testAccCheckApprovalRuleTemplateAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "approval_rule_template_name", templateResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRepositoryName, repoResourceName, names.AttrRepositoryName),
 				),
@@ -50,19 +48,19 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_basic(t *testing.T) {
 
 func TestAccCodeCommitApprovalRuleTemplateAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_approval_rule_template_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
+					testAccCheckApprovalRuleTemplateAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceApprovalRuleTemplateAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,20 +71,20 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_disappears(t *testing.T) {
 
 func TestAccCodeCommitApprovalRuleTemplateAssociation_Disappears_repository(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	repoResourceName := "aws_codecommit_repository.test"
 	resourceName := "aws_codecommit_approval_rule_template_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckApprovalRuleTemplateAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
+					testAccCheckApprovalRuleTemplateAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceRepository(), repoResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,14 +93,14 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_Disappears_repository(t *t
 	})
 }
 
-func testAccCheckApprovalRuleTemplateAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckApprovalRuleTemplateAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCommitClient(ctx)
 
 		_, err := tfcodecommit.FindApprovalRuleTemplateAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["approval_rule_template_name"], rs.Primary.Attributes[names.AttrRepositoryName])
 
@@ -110,9 +108,9 @@ func testAccCheckApprovalRuleTemplateAssociationExists(ctx context.Context, n st
 	}
 }
 
-func testAccCheckApprovalRuleTemplateAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApprovalRuleTemplateAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCommitClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecommit_approval_rule_template_association" {

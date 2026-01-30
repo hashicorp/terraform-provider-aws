@@ -5,6 +5,7 @@ package ram
 
 // Exports for use in tests only.
 var (
+	ResourcePermission                         = newPermissionResource
 	ResourcePrincipalAssociation               = resourcePrincipalAssociation
 	ResourceResourceAssociation                = resourceResourceAssociation
 	ResourceResourceShare                      = resourceResourceShare
@@ -13,6 +14,7 @@ var (
 	ResourceSharingWithOrganization            = resourceSharingWithOrganization
 
 	FindAssociationsForResourceShare         = findAssociationsForResourceShare
+	FindPermissionByARN                      = findPermissionByARN
 	FindPrincipalAssociationByTwoPartKey     = findPrincipalAssociationByTwoPartKey
 	FindResourceAssociationByTwoPartKey      = findResourceAssociationByTwoPartKey
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN

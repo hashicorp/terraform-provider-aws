@@ -55,6 +55,7 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_cidr_block")),
 				},
 			},
 
@@ -140,6 +141,7 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_cidr_block")),
 				},
 			},
 
@@ -250,6 +252,7 @@ func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_cidr_block")),
 				},
 			},
 		},

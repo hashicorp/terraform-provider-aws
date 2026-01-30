@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <!-- markdownlint-configure-file { "code-block-style": false } -->
-# Adding a New Ephemeral Resource
+# Adding a New Ephemeral Resource Type
 
 New ephemeral resources are required when AWS introduces a new service or adds features to an existing service that necessitate a new ephemeral resource. Ephemeral resources produce ephemeral values and are never stored in the state. Any resource that produces a sensitive value can be an ephemeral resource, though some are more useful than others.
 

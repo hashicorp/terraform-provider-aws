@@ -35,7 +35,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
-		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &v),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -260,7 +260,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
-		CheckDestroy: testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -269,7 +269,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &v),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -283,7 +283,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &v),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -339,7 +339,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource_NoRe
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
-		CheckDestroy: testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryAssociationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -353,7 +353,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource_NoRe
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &v),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -368,7 +368,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource_NoRe
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &v),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

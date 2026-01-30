@@ -169,7 +169,7 @@ func TestRegionalSingleton(t *testing.T) {
 				d = schema.TestResourceDataWithIdentityRaw(t, regionalSingletonSchema, identitySchema, identityAttrs)
 			}
 
-			err := importer.RegionalSingleton(ctx, d, &identitySpec, client)
+			err := importer.RegionalSingleton(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -304,7 +304,7 @@ func TestGlobalSingleton(t *testing.T) {
 				d = schema.TestResourceDataWithIdentityRaw(t, globalSingletonSchema, identitySchema, identityAttrs)
 			}
 
-			err := importer.GlobalSingleton(ctx, d, &identitySpec, client)
+			err := importer.GlobalSingleton(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

@@ -3,7 +3,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
   name                             = var.rName
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_imagebuilder_image_recipe" "test" {

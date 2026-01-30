@@ -29,7 +29,7 @@ jobs:
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
@@ -45,7 +45,7 @@ jobs:
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
@@ -61,7 +61,7 @@ jobs:
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/*.md
         with:
@@ -79,7 +79,7 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
@@ -89,11 +89,11 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -105,11 +105,11 @@ jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -121,13 +121,13 @@ jobs:
   tflint:
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -137,7 +137,7 @@ jobs:
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins

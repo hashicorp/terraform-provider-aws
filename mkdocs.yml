@@ -14,13 +14,14 @@ nav:
   - Contribute:
       - Development Environment: development-environment.md
       - Contribution Guides:
-          - Resource: add-a-new-resource.md
-          - Service: add-a-new-service.md
-          - Data source: add-a-new-datasource.md
-          - Ephemeral Resource: add-a-new-ephemeral-resource.md
-          - Function: add-a-new-function.md
-          - AWS Region: add-a-new-region.md
-          - Import Support: add-import-support.md
+          - Add a New AWS Service: add-a-new-service.md
+          - Add a New Resource Type: add-a-new-resource.md
+          - Add a New Data Source Type: add-a-new-datasource.md
+          - Add a New Ephemeral Resource Type: add-a-new-ephemeral-resource.md
+          - Add a New Function: add-a-new-function.md
+          - Add a New AWS Region: add-a-new-region.md
+          - Add Resource Identity Support: add-resource-identity-support.md
+          - Add Resource Import Support: add-import-support.md
           - Resource Filtering: resource-filtering.md
           - Resource Name Generation: resource-name-generation.md
           - Resource Tagging: resource-tagging.md
@@ -28,6 +29,7 @@ nav:
           - Bugs and Enhancements: bugs-and-enhancements.md
           - Documentation Changes: documentation-changes.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Generated Acceptance Tests: acc-test-generation.md
       - Unit Tests: unit-tests.md
       - Continuous Integration: continuous-integration.md
       - Changelog Process: changelog-process.md
@@ -38,6 +40,7 @@ nav:
       - AI Agents: ai-agents.md
       - AI Agent Guides:
           - Go-VCR: ai-agent-guides/go-vcr-migration.md
+          - List Resource: ai-agent-guides/list-resource.md
           - Resource Identity (ARN-based): ai-agent-guides/arn-based-resource-identity.md
           - Resource Identity (Parameterized): ai-agent-guides/parameterized-resource-identity.md
           - Smarterr: ai-agent-guides/smarterr.md
@@ -56,6 +59,7 @@ nav:
       - Provider Design: provider-design.md
       - Provider Scaffolding (skaff): skaff.md
       - Regular Expressions: regular-expressions.md
+      - Resource Identity: resource-identity.md
       - Retries and Waiters: retries-and-waiters.md
       - Terraform Plugin Development Packages: terraform-plugin-development-packages.md
       - Terraform Plugin Migrations: terraform-plugin-migrations.md

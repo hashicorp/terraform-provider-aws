@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package batch
 
 import (
@@ -50,10 +52,8 @@ func resourceJobDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				identity := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -190,6 +190,10 @@ func resourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"allow_privilege_escalation": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
 															"privileged": {
 																Type:     schema.TypeBool,
 																Optional: true,
@@ -328,6 +332,10 @@ func resourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"allow_privilege_escalation": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
 															"privileged": {
 																Type:     schema.TypeBool,
 																Optional: true,
@@ -1419,6 +1427,10 @@ func expandContainers(tfList []any) []awstypes.EksContainer {
 			securityContext := &awstypes.EksContainerSecurityContext{}
 			tfMap := v[0].(map[string]any)
 
+			if v, ok := tfMap["allow_privilege_escalation"]; ok {
+				securityContext.AllowPrivilegeEscalation = aws.Bool(v.(bool))
+			}
+
 			if v, ok := tfMap["privileged"]; ok {
 				securityContext.Privileged = aws.Bool(v.(bool))
 			}
@@ -1666,6 +1678,7 @@ func flattenEKSContainers(apiObjects []awstypes.EksContainer) []any {
 
 		if v := apiObject.SecurityContext; v != nil {
 			tfMap["security_context"] = []map[string]any{{
+				"allow_privilege_escalation": aws.ToBool(v.AllowPrivilegeEscalation),
 				"privileged":                 aws.ToBool(v.Privileged),
 				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
 				"run_as_group":               aws.ToInt64(v.RunAsGroup),

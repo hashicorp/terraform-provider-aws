@@ -155,6 +155,13 @@ func TestAccRedshiftServerlessWorkgroup_pricePerformanceTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "price_performance_target.0.level", "25"),
 				),
 			},
+			{
+				Config: testAccWorkgroupConfig_pricePerformanceTargetAndBaseCapacity(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0"),
+				),
+			},
 		},
 	})
 }

@@ -8,6 +8,10 @@ The Terraform AWS Provider is the work of thousands of contributors, and is main
 !!! tip
     This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
 
+!!! tip
+    New Resources and Data Sources need to be implemented using [aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) and [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).
+    Preferred tooling for the same would be our scaffolding tool, [skaff](skaff.md).
+
 ## Contribute
 
 Please follow the following steps to ensure your contribution goes smoothly.

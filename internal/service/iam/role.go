@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
@@ -62,9 +64,7 @@ func resourceRole() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.GlobalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 

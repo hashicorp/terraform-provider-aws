@@ -17,13 +17,13 @@ func TestAccAthenaNamedQueryDataSource_basic(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 	dataSourceName := "data.aws_athena_named_query.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedQueryDataSourceConfig_basic(),
+				Config: testAccNamedQueryDataSourceConfig_basic(t),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDatabase, resourceName, names.AttrDatabase),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -37,8 +37,8 @@ func TestAccAthenaNamedQueryDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNamedQueryDataSourceConfig_basic() string {
-	return acctest.ConfigCompose(testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)), `
+func testAccNamedQueryDataSourceConfig_basic(t *testing.T) string {
+	return acctest.ConfigCompose(testAccNamedQueryConfig_basic(acctest.RandInt(t), sdkacctest.RandString(5)), `
 data "aws_athena_named_query" "test" {
   name = aws_athena_named_query.test.name
 }

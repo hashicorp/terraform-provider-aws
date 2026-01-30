@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3tables
 
 import (
@@ -30,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -49,7 +50,6 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
@@ -664,7 +664,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	output, err := conn.GetTable(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -694,7 +694,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	output, err := conn.GetTableEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -724,7 +724,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	output, err := conn.GetTableMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
 	}
