@@ -5,7 +5,9 @@ package mpa
 
 // Exports for use in tests only.
 var (
-	ResourceApprovalTeam = newApprovalTeamResource
+	ResourceApprovalTeam   = newApprovalTeamResource
+	ResourceIdentitySource = newIdentitySourceResource
 
-	FindApprovalTeamByARN = findApprovalTeamByARN
+	FindApprovalTeamByARN  = findApprovalTeamByARN
+	FindIdentitySourceByID = findIdentitySourceByID
 )
