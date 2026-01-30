@@ -1287,7 +1287,6 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 
 			input.NodeGroupsToRemove = nodeGroupsToRemove
 		}
-
 	}
 
 	if _, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input); err != nil {
