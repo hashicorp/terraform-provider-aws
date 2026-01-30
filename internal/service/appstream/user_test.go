@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -74,7 +74,7 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &userOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

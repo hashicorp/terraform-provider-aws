@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -626,7 +626,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -783,7 +783,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -892,7 +892,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalMultipleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -985,7 +985,7 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

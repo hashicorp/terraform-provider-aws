@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -123,7 +123,7 @@ func TestAccVPCEndpointPrivateDNS_disappears_Endpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSEnabled(ctx, endpointResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), endpointResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), endpointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

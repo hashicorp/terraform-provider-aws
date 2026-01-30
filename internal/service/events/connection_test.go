@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -581,7 +581,7 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,10 +1,12 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -58,7 +60,7 @@ func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 				Config: testAccTargetGroupAttachmentConfig_idInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceTargetGroupAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceTargetGroupAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,6 +104,52 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 				Config: testAccTargetGroupAttachmentConfig_port(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroupAttachment_quic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupAttachmentConfig_quicServerID(rName, awstypes.ProtocolEnumQuic, quicServerID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroupAttachment_quicServerId_tcpQuic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group_attachment.test"
+	quicServerID := testAccTargetGroupAttachment_generateQUICServerID()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupAttachmentConfig_quicServerID(rName, awstypes.ProtocolEnumTcpQuic, quicServerID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "quic_server_id", quicServerID),
 				),
 			},
 		},
@@ -221,6 +269,14 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 	}
 }
 
+func testAccTargetGroupAttachment_generateQUICServerID() string {
+	s := make([]byte, 8)
+	if _, err := rand.Read(s); err != nil {
+		return ""
+	}
+	return "0x" + hex.EncodeToString(s)
+}
+
 func testAccTargetGroupAttachmentCongig_baseEC2Instance(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -266,6 +322,24 @@ resource "aws_lb_target_group_attachment" "test" {
   port             = 80
 }
 `, rName))
+}
+
+func testAccTargetGroupAttachmentConfig_quicServerID(rName string, protocol awstypes.ProtocolEnum, quicServerID string) string {
+	return acctest.ConfigCompose(testAccTargetGroupAttachmentCongig_baseEC2Instance(rName), fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = aws_lb_target_group.test.arn
+  target_id        = aws_instance.test.id
+  port             = 443
+  quic_server_id   = %[3]q
+}
+`, rName, protocol, quicServerID))
 }
 
 func testAccTargetGroupAttachmentConfig_backwardsCompatibility(rName string) string {

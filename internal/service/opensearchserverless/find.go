@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -33,7 +33,7 @@ func findAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 	}
 
 	if out == nil || out.AccessPolicyDetail == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.AccessPolicyDetail, nil
@@ -97,7 +97,7 @@ func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Clie
 	}
 
 	if out == nil || out.SecurityConfigDetail == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.SecurityConfigDetail, nil
@@ -122,7 +122,7 @@ func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	}
 
 	if out == nil || out.SecurityPolicyDetail == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.SecurityPolicyDetail, nil

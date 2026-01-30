@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ecs
 
@@ -35,6 +37,7 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("capacity-provider/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,
@@ -180,6 +183,13 @@ func resourceCapacityProvider() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"capacity_option_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityOptionType](),
+									},
 									"ec2_instance_profile_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -784,7 +794,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
 
 		return output, err
 	}
@@ -1005,6 +1015,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.InstanceLaunchTemplate{}
+
+	if v, ok := tfMap["capacity_option_type"].(string); ok && v != "" {
+		apiObject.CapacityOptionType = awstypes.CapacityOptionType(v)
+	}
 
 	if v, ok := tfMap["ec2_instance_profile_arn"].(string); ok && v != "" {
 		apiObject.Ec2InstanceProfileArn = aws.String(v)
@@ -1411,6 +1425,7 @@ func flattenInstanceLaunchTemplate(template *awstypes.InstanceLaunchTemplate) []
 	}
 
 	tfMap := map[string]any{
+		"capacity_option_type":     template.CapacityOptionType,
 		"ec2_instance_profile_arn": aws.ToString(template.Ec2InstanceProfileArn),
 		"monitoring":               template.Monitoring,
 	}

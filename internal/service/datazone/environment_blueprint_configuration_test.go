@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -75,7 +75,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_disappears(t *testing.T) {
 				Config: testAccEnvironmentBlueprintConfigurationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentBlueprintConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentBlueprintConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

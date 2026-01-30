@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appstream
 
@@ -148,7 +150,7 @@ func (d *imageDataSource) Read(ctx context.Context, request datasource.ReadReque
 
 	switch l := len(images); l {
 	case 0:
-		err = tfresource.NewEmptyResultError(input)
+		err = tfresource.NewEmptyResultError()
 	case 1:
 		// OK
 	default:

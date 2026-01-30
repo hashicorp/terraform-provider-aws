@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -64,7 +64,7 @@ func testAccDeliveryChannel_disappears(t *testing.T) {
 				Config: testAccDeliveryChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryChannelExists(ctx, resourceName, &dc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceDeliveryChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceDeliveryChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

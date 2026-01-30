@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Post Publish
 
 on:
@@ -13,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@2d714f03695734a5721d64f5856e40e260587766 # v0.16.0
+        uses: breathingdust/github-jira-tidy@25fc54d07fdd98ec9ad14c962fc2dfdc524c48f0 # v0.17.0
         with:
           jira_host: "hashicorp.atlassian.net"
           jira_username: "sdavis3@ibm.com"

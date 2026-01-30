@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package transfer
 
@@ -180,7 +182,7 @@ func findUserSSHKeyByThreePartKey(ctx context.Context, conn *transfer.Client, se
 	}
 
 	if aws.ToString(sshKey.SshPublicKeyBody) == "" {
-		return nil, nil, tfresource.NewEmptyResultError(nil)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return user, sshKey, nil

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -33,13 +35,14 @@ import (
 // @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
 // @IdentityAttribute("bucket")
 // @IdentityAttribute("expected_bucket_owner", optional="true")
-// @IdentityAttribute("acl", optional="true", testNotNull="true")
+// @IdentityAttribute("acl", optional="true")
 // @MutableIdentity
 // @ImportIDHandler("bucketACLImportID")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="access_control_policy.0.grant.0.grantee.0.display_name;access_control_policy.0.owner.0.display_name")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketACLCreate,
@@ -306,7 +309,7 @@ func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

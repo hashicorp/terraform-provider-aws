@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -78,7 +78,7 @@ func testAccOrganization_disappears(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceOrganization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourceOrganization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

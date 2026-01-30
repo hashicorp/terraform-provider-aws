@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package inspector2
 
@@ -122,7 +124,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any
 			return tfresource.NonRetryableError(err)
 		}
 		if out == nil {
-			return tfresource.RetryableError(tfresource.NewEmptyResultError(nil))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError())
 		}
 
 		if len(out.FailedAccounts) == 0 {
@@ -283,7 +285,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 
 			if out == nil {
-				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError())
 			}
 
 			if len(out.FailedAccounts) > 0 {
@@ -380,7 +382,7 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
 	if out == nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError())
 	}
 
 	var errs []error

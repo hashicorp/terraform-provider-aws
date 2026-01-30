@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sns
 
@@ -26,6 +28,7 @@ import (
 // @SDKResource("aws_sns_topic_policy", name="Topic Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,
@@ -84,7 +87,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 		policy = attributes[topicAttributeNamePolicy]
 
 		if policy == "" {
-			err = tfresource.NewEmptyResultError(d.Id())
+			err = tfresource.NewEmptyResultError()
 		}
 	}
 

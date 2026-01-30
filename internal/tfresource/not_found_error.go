@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -14,39 +14,43 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-type EmptyResultError struct {
+type emptyResultError struct {
 	LastRequest any
 }
 
-var ErrEmptyResult = &EmptyResultError{}
+var ErrEmptyResult = &emptyResultError{}
 
-func NewEmptyResultError(lastRequest any) error {
-	return &EmptyResultError{
-		LastRequest: lastRequest,
-	}
+func NewEmptyResultError() error {
+	return &emptyResultError{}
 }
 
-func (e *EmptyResultError) Error() string {
+func (e *emptyResultError) Error() string {
 	return "empty result"
 }
 
-func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError)
+func (e *emptyResultError) Is(err error) bool {
+	_, ok := err.(*emptyResultError)
 	return ok
 }
 
-func (e *EmptyResultError) As(target any) bool {
-	t, ok := target.(**sdkretry.NotFoundError)
-	if !ok {
+func (e *emptyResultError) As(target any) bool {
+	switch v := target.(type) {
+	case **sdkretry.NotFoundError:
+		*v = &sdkretry.NotFoundError{
+			Message:     e.Error(),
+			LastRequest: e.LastRequest,
+		}
+		return true
+
+	case **retry.NotFoundError:
+		*v = &retry.NotFoundError{
+			Message: e.Error(),
+		}
+		return true
+
+	default:
 		return false
 	}
-
-	*t = &sdkretry.NotFoundError{
-		Message:     e.Error(),
-		LastRequest: e.LastRequest,
-	}
-
-	return true
 }
 
 type TooManyResultsError struct {
@@ -118,14 +122,14 @@ func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
 // Returns a `NotFound` error otherwise.
 func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
 	} else {
 		v := &a[0]
 		for _, f := range fs {
 			if !f(v) {
-				return nil, NewEmptyResultError(nil)
+				return nil, NewEmptyResultError()
 			}
 		}
 		return v, nil
@@ -140,7 +144,7 @@ func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
 
 	v, err, ok := next()
 	if !ok {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -173,7 +177,7 @@ func AssertSingleValueResultIterErr[T any](i iter.Seq2[T, error]) (*T, error) {
 // Returns a `NotFound` error otherwise.
 func AssertFirstValueResult[T any](a []T) (*T, error) {
 	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
+		return nil, NewEmptyResultError()
 	}
 	return &a[0], nil
 }

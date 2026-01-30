@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -2032,7 +2032,7 @@ func testAccRoute_disappears(t *testing.T) {
 				Config: testAccRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

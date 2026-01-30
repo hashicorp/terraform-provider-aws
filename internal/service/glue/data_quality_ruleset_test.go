@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -267,7 +267,7 @@ func TestAccGlueDataQualityRuleset_disappears(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceDataQualityRuleset(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceDataQualityRuleset(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

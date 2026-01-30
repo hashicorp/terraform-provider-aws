@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm_test
@@ -149,8 +149,8 @@ func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,8 +180,8 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

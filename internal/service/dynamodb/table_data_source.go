@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dynamodb
 
@@ -64,6 +66,22 @@ func dataSourceTable() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
+							"key_schema": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attribute_name": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"key_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 							names.AttrName: {
 								Type:     schema.TypeString,
 								Computed: true,
@@ -73,22 +91,7 @@ func dataSourceTable() *schema.Resource {
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"on_demand_throughput": {
-								Type:     schema.TypeList,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"max_read_request_units": {
-											Type:     schema.TypeInt,
-											Computed: true,
-										},
-										"max_write_request_units": {
-											Type:     schema.TypeInt,
-											Computed: true,
-										},
-									},
-								},
-							},
+							"on_demand_throughput": sdkv2.ComputedOnlyFromSchema(onDemandThroughputSchema()),
 							"projection_type": {
 								Type:     schema.TypeString,
 								Computed: true,

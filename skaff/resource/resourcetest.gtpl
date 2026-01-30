@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}_test
@@ -33,7 +33,7 @@ import (
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .SDKPackage }}/types package. If so, you'll
+	// using the service/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}
@@ -235,7 +235,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 					// private function to the testing package, you may need to add a line like the following
 					// to exports_test.go:
 					//
-					//   var Resource{{ .Resource}} = newResource{{ .Resource }}
+					//   var Resource{{ .Resource}} = new{{ .Resource }}Resource
 					{{- end }}
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}, resourceName),
 				),

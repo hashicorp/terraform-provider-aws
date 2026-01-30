@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package {{ .ServicePackage }}
 
@@ -87,8 +89,45 @@ import (
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
-func newResource{{ .Resource }}(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resource{{ .Resource }}{}
+{{ if .IncludeComments }}
+// TIP: ==== RESOURCE IDENTITY ====
+// Identify which attributes can be used to uniquely identify the resource.
+// 
+// * If the AWS APIs for the resource take the ARN as an identifier, use
+// ARN Identity.
+// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
+// * Otherwise, use Parameterized Identity with one or more identity attributes.
+//
+// For more information about resource identity, see
+// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
+//
+// Keep one of the following sets of annotations as appropriate:
+//
+// * ARN Identity
+// @ArnIdentity
+// or
+// @ArnIdentity("arn_attribute")
+//
+// * Singleton Identity
+// @SingletonIdentity
+//
+// * Parameterized Identity
+// @IdentityAttribute("id_attribute")
+// // @IdentityAttribute("another_id_attribute")
+//
+// TIP: ==== GENERATED ACCEPTANCE TESTS ====
+// Resource Identity and tagging make use of automatically generated acceptance tests.
+// For more information about automatically generated acceptance tests, see
+// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
+//
+// Some common annotations are included below:
+{{- end }}
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }};{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importIgnore="...;...")
+// @Testing(hasNoPreExistingResource=true)
+func new{{ .Resource }}Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &{{ .ResourceLowerCamel }}Resource{}
 
 	{{ if .IncludeComments -}}
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
@@ -108,9 +147,10 @@ const (
 	ResName{{ .Resource }} = "{{ .HumanResourceName }}"
 )
 
-type resource{{ .Resource }} struct {
-	framework.ResourceWithModel[resource{{ .Resource }}Model]
+type {{ .ResourceLowerCamel }}Resource struct {
+	framework.ResourceWithModel[{{ .ResourceLowerCamel }}ResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 {{ if .IncludeComments }}
@@ -156,7 +196,7 @@ type resource{{ .Resource }} struct {
 // For more about schema options, visit
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 {{- end }}
-func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -240,7 +280,7 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE CREATE ====
 	// Generally, the Create function should do the following things. Make
@@ -264,7 +304,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	var plan resource{{ .Resource }}Model
+	var plan {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -325,7 +365,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
 	// Generally, the Read function should do the following things. Make
@@ -346,7 +386,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
-	var state resource{{ .Resource }}Model
+	var state {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -381,7 +421,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE UPDATE ====
 	// Not all resources have Update functions. There are a few reasons:
@@ -412,7 +452,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
-	var plan, state resource{{ .Resource }}Model
+	var plan, state {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -470,7 +510,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *{{ .ResourceLowerCamel }}Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE DELETE ====
 	// Most resources have Delete functions. There are rare situations
@@ -496,7 +536,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
-	var state resource{{ .Resource }}Model
+	var state {{ .ResourceLowerCamel }}ResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -535,16 +575,19 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 }
 {{ if .IncludeComments }}
 // TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
+// The built-in import function, and Import ID Handler, if any, should handle populating the required
+// attributes from the Import ID or Resource Identity.
+// In some cases, additional attributes must be set when importing.
+// Adding a custom ImportState function can handle those.
 //
 // See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
+// https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
 {{- end }}
-func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+// func (r *{{ .ResourceLowerCamel }}Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	r.WithImportByIdentity.ImportState(ctx, req, resp)
+// 
+// 	// Set needed attribute values here
+// }
 
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
@@ -679,7 +722,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 	}
 
 	if out == nil || out.{{ .ResourceAWS }} == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.{{ .ResourceAWS }}, nil
@@ -698,7 +741,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-type resource{{ .Resource }}Model struct {
+type {{ .ResourceLowerCamel }}ResourceModel struct {
 	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
@@ -716,6 +759,38 @@ type resource{{ .Resource }}Model struct {
 type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== IMPORT ID HANDLER ====
+// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
+// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
+//
+// The parser takes the string value of the Import ID and returns:
+// * A string value that is typically ignored. See documentation for more details.
+// * A map of the resource attributes derived from the Import ID.
+// * An error value if there are parsing errors.
+//
+// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
+{{- end }}
+var (
+	_ inttypes.ImportIDParser = {{ .ResourceLowerCamel }}ImportID{}
+)
+
+type {{ .ResourceLowerCamel }}ImportID struct{}
+
+func ({{ .ResourceLowerCamel }}ImportID) Parse(id string) (string, map[string]string, error) {
+	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
+	}
+
+	result := map[string]string{
+		"some-value":    someValue,
+		"another-value": anotherValue,
+	}
+
+	return id, result, nil
 }
 
 {{ if .IncludeComments }}
@@ -750,7 +825,7 @@ func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, v := range page.{{ .ResourceAWS }}s {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResource{{ .Resource }}, client,
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(new{{ .Resource }}Resource, client,
 				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .ResourceAWS }}Id))),
 			)
 		}

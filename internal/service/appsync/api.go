@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appsync
 
@@ -41,7 +43,7 @@ import (
 // @Tags(identifierAttribute="api_arn")
 // @Testing(importStateIdAttribute="api_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
-// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiResource{}
 
@@ -419,7 +421,7 @@ func findAPI(ctx context.Context, conn *appsync.Client, input *appsync.GetApiInp
 	}
 
 	if output == nil || output.Api == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.Api, nil

@@ -7,6 +7,16 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]"
   },
   {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSlice",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]",
+    "source_type": "flex.awsInterfaceSlice"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",
@@ -37,7 +47,7 @@
   },
   {
     "@level": "trace",
-    "@message": "Flattening with NullValue",
+    "@message": "Flattening with NullValue (for nested object collection)",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",

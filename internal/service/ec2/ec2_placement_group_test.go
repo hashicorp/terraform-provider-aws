@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -66,7 +66,7 @@ func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourcePlacementGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourcePlacementGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
