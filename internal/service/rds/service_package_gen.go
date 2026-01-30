@@ -250,6 +250,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  resourceProxyAuthItem,
+			TypeName: "aws_db_proxy_auth_item",
+			Name:     "DB Proxy Auth Item",
+		},
+		{
 			Factory:  resourceProxyDefaultTargetGroup,
 			TypeName: "aws_db_proxy_default_target_group",
 			Name:     "DB Proxy Default Target Group",
