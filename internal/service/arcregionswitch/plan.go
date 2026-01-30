@@ -58,7 +58,7 @@ func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type resourcePlan struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resourcePlanModel]
 	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
