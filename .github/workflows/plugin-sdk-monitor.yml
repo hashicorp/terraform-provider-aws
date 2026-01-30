@@ -49,37 +49,17 @@ jobs:
             # Get the diff for this file
             DIFF=$(git diff origin/${{ github.base_ref }}...HEAD -- "$file")
 
-            # For Resources: Look for new complete struct blocks
+            # Count new Factory entries in SDKResources function
             RESOURCE_BLOCK=$(echo "$DIFF" | awk '
-              /func.*SDKResources/,/^func/ {
-                if (/^\+[[:space:]]*\{[[:space:]]*$/) { in_struct=1; block=$0 }
-                else if (in_struct) {
-                  if (/^\+/) { block=block"\n"$0 }
-                  else if (/^-/) { in_struct=0; block="" }
-                  else if (/^[[:space:]]/ && !/^[\+\-]/) { in_struct=0; block="" }
-                  if (/^\+[[:space:]]*\}/) {
-                    if (block != "") print block
-                    in_struct=0
-                    block=""
-                  }
-                }
+              /func.*SDKResources/,/^func [^(]/ {
+                if (/^\+.*Factory:/) print
               }
             ')
 
-            # For Data Sources: Look for new complete struct blocks
+            # Count new Factory entries in SDKDataSources function
             DATA_SOURCE_BLOCK=$(echo "$DIFF" | awk '
-              /func.*SDKDataSources/,/^func/ {
-                if (/^\+[[:space:]]*\{[[:space:]]*$/) { in_struct=1; block=$0 }
-                else if (in_struct) {
-                  if (/^\+/) { block=block"\n"$0 }
-                  else if (/^-/) { in_struct=0; block="" }
-                  else if (/^[[:space:]]/ && !/^[\+\-]/) { in_struct=0; block="" }
-                  if (/^\+[[:space:]]*\}/) {
-                    if (block != "") print block
-                    in_struct=0
-                    block=""
-                  }
-                }
+              /func.*SDKDataSources/,/^func [^(]/ {
+                if (/^\+.*Factory:/) print
               }
             ')
 
@@ -87,11 +67,11 @@ jobs:
             NEW_DATA_SOURCES=0
 
             if [ -n "$RESOURCE_BLOCK" ]; then
-              NEW_RESOURCES=$(echo "$RESOURCE_BLOCK" | grep -c "^\+.*{" || echo "0")
+              NEW_RESOURCES=$(echo "$RESOURCE_BLOCK" | grep -c "Factory:" || echo "0")
             fi
 
             if [ -n "$DATA_SOURCE_BLOCK" ]; then
-              NEW_DATA_SOURCES=$(echo "$DATA_SOURCE_BLOCK" | grep -c "^\+.*{" || echo "0")
+              NEW_DATA_SOURCES=$(echo "$DATA_SOURCE_BLOCK" | grep -c "Factory:" || echo "0")
             fi
 
             if [ "$NEW_RESOURCES" -gt 0 ] || [ "$NEW_DATA_SOURCES" -gt 0 ]; then
@@ -103,7 +83,7 @@ jobs:
               echo "" >> note.md
 
               if [ "$NEW_RESOURCES" -gt 0 ]; then
-                echo "**New Resources Added ($NEW_RESOURCES)**" >> note.md
+                echo "**New Plugin SDK Resources ($NEW_RESOURCES):**" >> note.md
                 echo "" >> note.md
                 echo '```diff' >> note.md
                 echo "$RESOURCE_BLOCK" >> note.md
@@ -112,7 +92,7 @@ jobs:
               fi
 
               if [ "$NEW_DATA_SOURCES" -gt 0 ]; then
-                echo "**New Data Sources Added ($NEW_DATA_SOURCES)**" >> note.md
+                echo "**New Plugin SDK Data Sources ($NEW_DATA_SOURCES):**" >> note.md
                 echo "" >> note.md
                 echo '```diff' >> note.md
                 echo "$DATA_SOURCE_BLOCK" >> note.md
@@ -123,9 +103,11 @@ jobs:
           done <<< "${{ steps.changed-files.outputs.files }}"
 
           if [ "$HAS_CHANGES" == "true" ]; then
-            echo "" >> note.md
             echo "---" >> note.md
-            echo ":information_source: **Net-new resources and data sources should be implemented using [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework). Please use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) for implementation.**" >> note.md
+            echo "" >> note.md
+            echo ":warning: **New resources and data sources must use [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).**" >> note.md
+            echo "" >> note.md
+            echo "Rather than copying legacy resources, use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) to generate framework-based implementations." >> note.md
           fi
 
           echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
