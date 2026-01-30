@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -35,6 +37,7 @@ import (
 // @SDKResource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
 // @Testing(importIgnore="password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -930,7 +933,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -2485,7 +2488,7 @@ func statusEndpoint(conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2501,7 +2504,7 @@ func statusConnection(conn *dms.Client, endpointARN string) retry.StateRefreshFu
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByEndpointARN(ctx, conn, endpointARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2542,7 +2545,7 @@ func waitConnectionSucceeded(ctx context.Context, conn *dms.Client, endpointARN 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Connection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
 		return output, err
 	}
 

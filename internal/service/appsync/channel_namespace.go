@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appsync
 
@@ -20,14 +22,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,7 +42,7 @@ import (
 // @Testing(importStateIdAttribute="name")
 // @Testing(importStateIdFunc=testAccChannelNamespaceImportStateID)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.ChannelNamespace")
-// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newChannelNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelNamespaceResource{}
 
@@ -213,7 +215,7 @@ func (r *channelNamespaceResource) Read(ctx context.Context, request resource.Re
 	apiID, name := fwflex.StringValueFromFramework(ctx, data.ApiID), fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findChannelNamespaceByTwoPartKey(ctx, conn, apiID, name)
 
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -330,7 +332,7 @@ func findChannelNamespace(ctx context.Context, conn *appsync.Client, input *apps
 	output, err := conn.GetChannelNamespace(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&retry.NotFoundError{
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
 			LastError: err,
 		})
 	}
@@ -340,7 +342,7 @@ func findChannelNamespace(ctx context.Context, conn *appsync.Client, input *apps
 	}
 
 	if output == nil || output.ChannelNamespace == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ChannelNamespace, nil

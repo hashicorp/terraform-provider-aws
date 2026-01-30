@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dsql_test
@@ -22,7 +22,7 @@ func TestAccDSQLClusterPeering_basic(t *testing.T) {
 	resourceName1 := "aws_dsql_cluster_peering.test1"
 	resourceName2 := "aws_dsql_cluster_peering.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)

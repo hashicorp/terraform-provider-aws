@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeconnections_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodeconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func TestAccCodeConnectionsHost_disappears(t *testing.T) {
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcodeconnections.ResourceHost, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcodeconnections.ResourceHost, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,7 +167,7 @@ func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodeconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

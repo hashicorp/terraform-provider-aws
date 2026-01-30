@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -47,7 +47,7 @@ func testAccBootstrapBrokersDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

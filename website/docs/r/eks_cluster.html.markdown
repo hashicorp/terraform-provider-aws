@@ -347,6 +347,7 @@ The following arguments are optional:
 * `access_config` - (Optional) Configuration block for the access config associated with your cluster, see [Amazon EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html). [Detailed](#access_config) below.
 * `bootstrap_self_managed_addons` - (Optional) Install default unmanaged add-ons, such as `aws-cni`, `kube-proxy`, and CoreDNS during cluster creation. If `false`, you must manually install desired add-ons. Changing this value will force a new cluster to be created. Defaults to `true`.
 * `compute_config` - (Optional) Configuration block with compute configuration for EKS Auto Mode. [Detailed](#compute_config) below.
+* `control_plane_scaling_config` - (Optional) Configuration block for the control plane scaling tier. See [EKS Provisioned Control Plane](https://docs.aws.amazon.com/eks/latest/userguide/eks-provisioned-control-plane-getting-started.html) for more information. [Detailed](#control_plane_scaling_config) below.
 * `deletion_protection` - (Optional) Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled. Default: `false`.
 * `enabled_cluster_log_types` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
@@ -375,6 +376,12 @@ The `compute_config` configuration block supports the following arguments:
 * `enabled` - (Optional) Request to enable or disable the compute capability on your EKS Auto Mode cluster. If the compute capability is enabled, EKS Auto Mode will create and delete EC2 Managed Instances in your Amazon Web Services account.
 * `node_pools` - (Optional) Configuration for node pools that defines the compute resources for your EKS Auto Mode cluster. Valid options are `general-purpose` and `system`.
 * `node_role_arn` - (Optional) The ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster. This value cannot be changed after the compute capability of EKS Auto Mode is enabled..
+
+### control_plane_scaling_config
+
+The `control_plane_scaling_config` configuration block supports the following arguments:
+
+* `tier` - (Optional) The control plane scaling tier. Valid values are `standard`, `tier-xl`, `tier-2xl`, or `tier-4xl`. Defaults to `standard`. For more information about each tier, see [EKS Provisioned Control Plane](https://docs.aws.amazon.com/eks/latest/userguide/eks-provisioned-control-plane-getting-started.html).
 
 ### encryption_config
 

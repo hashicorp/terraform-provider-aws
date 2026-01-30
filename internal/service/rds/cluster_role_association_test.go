@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,7 +100,7 @@ func TestAccRDSClusterRoleAssociation_disappears(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterRoleAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -150,7 +150,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), roleResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -190,7 +190,7 @@ func testAccCheckClusterRoleAssociationDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfrds.FindDBClusterRoleByTwoPartKey(ctx, conn, rs.Primary.Attributes["db_cluster_identifier"], rs.Primary.Attributes[names.AttrRoleARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

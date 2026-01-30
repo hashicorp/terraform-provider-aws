@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkflowmonitor_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkflowmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -84,7 +84,7 @@ func testAccScope_disappears(t *testing.T) {
 				Config: testAccScopeConfig_basic(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkflowmonitor.ResourceScope, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkflowmonitor.ResourceScope, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -200,7 +200,7 @@ func testAccCheckScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnetworkflowmonitor.FindScopeByID(ctx, conn, rs.Primary.Attributes["scope_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

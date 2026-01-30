@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -162,7 +162,7 @@ func TestAccRDSClusterSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccClusterSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterSnapshotCopy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrds.ResourceClusterSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -252,7 +252,7 @@ func testAccCheckClusterSnapshotCopyDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

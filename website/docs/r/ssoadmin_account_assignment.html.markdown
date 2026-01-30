@@ -96,7 +96,7 @@ This resource supports the following arguments:
 * `principal_id` - (Required, Forces new resource) An identifier for an object in SSO, such as a user or group. PrincipalIds are GUIDs (For example, `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`).
 * `principal_type` - (Required, Forces new resource) The entity type for which the assignment will be created. Valid values: `USER`, `GROUP`.
 * `target_id` - (Required, Forces new resource) An AWS account identifier, typically a 10-12 digit string.
-* `target_type` - (Optional, Forces new resource) The entity type for which the assignment will be created. Valid values: `AWS_ACCOUNT`.
+* `target_type` - (Required, Forces new resource) The entity type for which the assignment will be created. Valid values: `AWS_ACCOUNT`.
 
 ## Attribute Reference
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -113,7 +113,7 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 				Config: testAccTopicConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -855,7 +855,7 @@ func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

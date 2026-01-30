@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -118,7 +118,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,7 +143,7 @@ func TestAccSecretsManagerSecretPolicy_Disappears_secret(t *testing.T) {
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecret(), secretResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecretsmanager.ResourceSecret(), secretResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -162,7 +162,7 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 
 			output, err := tfsecretsmanager.FindSecretPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -61,7 +61,7 @@ The following arguments are optional:
 
 The `local_resource` and `remote_resource` blocks support the following:
 
-* `type` - (Required) The type of the resource. Valid values are `AWS::EC2::VPC`, `AWS::EC2::Subnet`, `AWS::EC2::AvailabilityZone`, `AWS::EC2::Region`.
+* `type` - (Required) The type of the resource. Valid values are `AWS::EC2::VPC`, `AWS::EC2::Subnet`, `AWS::EC2::AvailabilityZone`, `AWS::EC2::Region`, and `AWS::EKS::Cluster`.
 * `identifier` - (Required) The identifier of the resource. For VPC resources, this is the VPC ARN.
 
 ## Attribute Reference

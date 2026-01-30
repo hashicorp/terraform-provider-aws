@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package batch
 
@@ -16,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,6 +43,7 @@ import (
 // @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
 // @Testing(preIdentityVersion="6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -48,10 +52,8 @@ func resourceJobDefinition() *schema.Resource {
 		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, rd *schema.ResourceData, _ any) ([]*schema.ResourceData, error) {
-				identity := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -188,6 +190,10 @@ func resourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"allow_privilege_escalation": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
 															"privileged": {
 																Type:     schema.TypeBool,
 																Optional: true,
@@ -326,6 +332,10 @@ func resourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"allow_privilege_escalation": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
 															"privileged": {
 																Type:     schema.TypeBool,
 																Optional: true,
@@ -846,7 +856,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	jobDefinition, err := findJobDefinitionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -963,7 +973,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				}
 
 				for _, node := range props.NodeRangeProperties {
-					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					if node.Container != nil {
+						diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					}
 				}
 				input.NodeProperties = props
 			}
@@ -1070,7 +1082,7 @@ func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string)
 	}
 
 	if status := aws.ToString(output.Status); status == jobDefinitionStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -1415,6 +1427,10 @@ func expandContainers(tfList []any) []awstypes.EksContainer {
 			securityContext := &awstypes.EksContainerSecurityContext{}
 			tfMap := v[0].(map[string]any)
 
+			if v, ok := tfMap["allow_privilege_escalation"]; ok {
+				securityContext.AllowPrivilegeEscalation = aws.Bool(v.(bool))
+			}
+
 			if v, ok := tfMap["privileged"]; ok {
 				securityContext.Privileged = aws.Bool(v.(bool))
 			}
@@ -1662,6 +1678,7 @@ func flattenEKSContainers(apiObjects []awstypes.EksContainer) []any {
 
 		if v := apiObject.SecurityContext; v != nil {
 			tfMap["security_context"] = []map[string]any{{
+				"allow_privilege_escalation": aws.ToBool(v.AllowPrivilegeEscalation),
 				"privileged":                 aws.ToBool(v.Privileged),
 				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
 				"run_as_group":               aws.ToInt64(v.RunAsGroup),

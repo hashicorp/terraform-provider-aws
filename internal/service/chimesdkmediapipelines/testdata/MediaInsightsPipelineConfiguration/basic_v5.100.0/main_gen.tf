@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "test" {
