@@ -391,18 +391,18 @@ func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resou
 			)
 			return
 		}
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		updatedNetworkPeeringConnections, err := waitNetworkPeeringConnectionUpdated(ctx, conn, state.OdbPeeringConnectionId.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, updatedNetworkPeeringConnections, &plan)...)
-		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	}
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	updatedNetworkPeeringConnections, err := waitNetworkPeeringConnectionUpdated(ctx, conn, state.OdbPeeringConnectionId.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForUpdate, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	resp.Diagnostics.Append(flex.Flatten(ctx, updatedNetworkPeeringConnections, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
