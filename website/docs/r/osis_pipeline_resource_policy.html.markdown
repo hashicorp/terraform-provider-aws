@@ -65,6 +65,10 @@ The following arguments are required:
 * `policy` - (Required) JSON-formatted resource policy to attach to the pipeline.
 * `resource_arn` - (Required) ARN of the pipeline to attach the resource policy to.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
