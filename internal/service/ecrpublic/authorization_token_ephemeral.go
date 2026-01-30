@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +70,7 @@ func (e *authorizationTokenEphemeralResource) Open(ctx context.Context, request 
 
 	authorizationData := output.AuthorizationData
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
-	authBytes, err := itypes.Base64Decode(authorizationToken)
+	authBytes, err := inttypes.Base64Decode(authorizationToken)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, fmt.Errorf("decoding ECR Public authorization token: %w", err))
 		return
