@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
@@ -356,7 +358,7 @@ func waitDBSnapshotCreated(ctx context.Context, conn *rds.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DBSnapshot); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%d%% progress", aws.ToInt32(output.PercentProgress)))
+		retry.SetLastError(err, fmt.Errorf("%d%% progress", aws.ToInt32(output.PercentProgress)))
 		return output, err
 	}
 
@@ -398,7 +400,7 @@ func findDBSnapshotAttributes(ctx context.Context, conn *rds.Client, input *rds.
 	}
 
 	if output == nil || output.DBSnapshotAttributesResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.DBSnapshotAttributesResult.DBSnapshotAttributes, tfslices.PredicateValue(filter)), nil

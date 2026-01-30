@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package elasticsearch
 
 import (
@@ -207,7 +209,7 @@ func findDomainSAMLOptionByDomainName(ctx context.Context, conn *elasticsearch.C
 	}
 
 	if output.AdvancedSecurityOptions == nil || output.AdvancedSecurityOptions.SAMLOptions == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AdvancedSecurityOptions.SAMLOptions, nil

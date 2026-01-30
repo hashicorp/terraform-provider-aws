@@ -133,6 +133,7 @@ resource "aws_iam_role" "for_sfn" {
 }
 EOF
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

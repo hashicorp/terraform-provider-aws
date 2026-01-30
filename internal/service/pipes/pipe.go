@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package pipes
 
 import (
@@ -15,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +31,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// smkOrARNPattern validates SMK URLs or ARNs for Pipes source configuration.
+// Original pattern (before ESC support): ^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2})?:(\d{12})?:(.+)$
+// Updated to use canonical region pattern to support ESC regions like eusc-de-east-1.
+var smkOrARNPattern = `^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):(` + inttypes.CanonicalRegionPatternNoAnchors + `)?:(\d{12})?:(.+)$`
 
 // @SDKResource("aws_pipes_pipe", name="Pipe")
 // @Tags(identifierAttribute="arn")
@@ -111,7 +117,7 @@ func resourcePipe() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.Any(
 						verify.ValidARN,
-						validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2})?:(\d{12})?:(.+)$`), ""),
+						validation.StringMatch(regexache.MustCompile(smkOrARNPattern), ""),
 					),
 				},
 				"source_parameters": sourceParametersSchema(),
@@ -342,9 +348,8 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	output, err := conn.DescribePipe(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -353,14 +358,14 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	}
 
 	if output == nil || output.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusPipe(ctx context.Context, conn *pipes.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPipe(conn *pipes.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPipeByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -376,10 +381,10 @@ func statusPipe(ctx context.Context, conn *pipes.Client, name string) sdkretry.S
 }
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateCreating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
-		Refresh:                   statusPipe(ctx, conn, id),
+		Refresh:                   statusPipe(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 1,
@@ -387,7 +392,7 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -396,10 +401,10 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateUpdating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
-		Refresh:                   statusPipe(ctx, conn, id),
+		Refresh:                   statusPipe(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 1,
@@ -407,7 +412,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -416,16 +421,16 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PipeStateDeleting),
 		Target:  []string{},
-		Refresh: statusPipe(ctx, conn, id),
+		Refresh: statusPipe(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

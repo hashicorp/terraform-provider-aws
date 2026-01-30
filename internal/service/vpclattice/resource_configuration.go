@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -45,6 +47,7 @@ import (
 // @FrameworkResource("aws_vpclattice_resource_configuration", name="Resource Configuration")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceConfigurationResource{}
 
@@ -444,7 +447,7 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -478,7 +481,7 @@ func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetResourceConfigurationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

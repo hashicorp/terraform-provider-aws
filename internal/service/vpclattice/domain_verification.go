@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -33,6 +35,7 @@ import (
 // @FrameworkResource("aws_vpclattice_domain_verification", name="Domain Verification")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetDomainVerificationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDomainVerificationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &domainVerificationResource{}, nil
 }
@@ -217,7 +220,7 @@ func findDomainVerificationByID(ctx context.Context, conn *vpclattice.Client, id
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

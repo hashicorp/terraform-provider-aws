@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package connect
 
 import (
@@ -28,6 +30,7 @@ import (
 
 // @SDKResource("aws_connect_quick_connect", name="Quick Connect")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuickConnectCreate,
@@ -327,7 +330,7 @@ func findQuickConnect(ctx context.Context, conn *connect.Client, input *connect.
 	}
 
 	if output == nil || output.QuickConnect == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QuickConnect, nil

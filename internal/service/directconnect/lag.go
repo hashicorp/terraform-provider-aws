@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package directconnect
 
 import (
@@ -29,6 +31,7 @@ import (
 
 // @SDKResource("aws_dx_lag", name="LAG")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLagCreate,
@@ -284,7 +287,7 @@ func findLags(ctx context.Context, conn *directconnect.Client, input *directconn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Lags, tfslices.PredicateValue(filter)), nil

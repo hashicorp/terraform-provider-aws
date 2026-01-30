@@ -17,3 +17,12 @@ var Region = sync.OnceValue(func() schema.Attribute {
 		Description: names.ResourceTopLevelRegionAttributeDescription,
 	}
 })
+
+var RegionDeprecated = sync.OnceValue(func() schema.Attribute {
+	return schema.StringAttribute{
+		Optional:           true,
+		Computed:           true,
+		Description:        names.ResourceTopLevelRegionAttributeDescription,
+		DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
+	}
+})

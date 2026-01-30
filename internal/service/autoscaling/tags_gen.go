@@ -50,7 +50,7 @@ func findTag(ctx context.Context, conn *autoscaling.Client, identifier, resource
 	listTags := keyValueTags(ctx, output.Tags, identifier, resourceType)
 
 	if !listTags.KeyExists(key) {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return listTags.KeyTagData(key), nil

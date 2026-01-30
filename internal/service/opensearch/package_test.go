@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,16 +23,16 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPackageDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageConfig_basic(pkgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPackageExists(ctx, resourceName),
+					testAccCheckPackageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_package_version", "v1"),
 					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
@@ -60,16 +59,16 @@ func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPackageDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageConfig_packageTypeZipPlugin(pkgName, "OpenSearch_2.17"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPackageExists(ctx, resourceName),
+					testAccCheckPackageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_package_version", "v1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "OpenSearch_2.17"),
 					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
@@ -102,16 +101,16 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPackageDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageConfig_basic(pkgName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackageExists(ctx, resourceName),
+					testAccCheckPackageExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,14 +119,14 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPackageExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPackageExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
 		_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 
@@ -135,14 +134,14 @@ func testAccCheckPackageExists(ctx context.Context, n string) resource.TestCheck
 	}
 }
 
-func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPackageDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearch_package" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
 			_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 

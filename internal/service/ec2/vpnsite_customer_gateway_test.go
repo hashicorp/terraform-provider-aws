@@ -239,8 +239,8 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 			{
 				Config: testAccCustomerGatewayConfig_cas(rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmRootCAResourceName, &caRoot),
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmSubordinateCAResourceName, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, t, acmRootCAResourceName, &caRoot),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, t, acmSubordinateCAResourceName, &caSubordinate),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &caRoot),
 					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx, &caRoot, &caSubordinate),
 				),

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lambda
 
 import (
@@ -45,6 +47,7 @@ import (
 // @Testing(importStateIdFunc=testAccCheckCapacityProviderImportStateID)
 // @Testing(preIdentityVersion="v6.25.0")
 // @Testing(preCheck="testAccCapacityProviderPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceCapacityProvider(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCapacityProvider{}
 
@@ -416,7 +419,7 @@ func findCapacityProviderByName(ctx context.Context, conn *lambda.Client, name s
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.CapacityProvider, nil

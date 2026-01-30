@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -34,6 +36,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
 // @Testing(importIgnore="force_destroy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
@@ -212,7 +215,7 @@ func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string
 	}
 
 	if output.VaultType != awstypes.VaultTypeBackupVault && output.VaultType != "" {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -247,7 +250,7 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -277,7 +280,7 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -310,7 +313,7 @@ func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeRecoveryPointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

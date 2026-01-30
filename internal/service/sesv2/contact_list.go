@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -30,6 +32,7 @@ import (
 // @SDKResource("aws_sesv2_contact_list", name="Contact List")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceContactList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactListCreate,
@@ -231,7 +234,7 @@ func findContactList(ctx context.Context, conn *sesv2.Client, input *sesv2.GetCo
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

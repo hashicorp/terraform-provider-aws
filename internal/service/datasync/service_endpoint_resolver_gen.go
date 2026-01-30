@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -58,9 +59,15 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params datasync.Endpoin
 		})
 
 		hostname := endpoint.URI.Hostname()
-		_, err = net.LookupHost(hostname)
+
+		// Use a short timeout for DNS lookup to avoid hanging in restricted network environments
+		lookupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+
+		resolver := &net.Resolver{}
+		_, err = resolver.LookupHost(lookupCtx, hostname)
 		if err != nil {
-			if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+			if dnsErr, ok := errs.As[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
 				tflog.Debug(ctx, "default endpoint host not found, disabling FIPS", map[string]any{
 					"tf_aws.hostname": hostname,
 				})

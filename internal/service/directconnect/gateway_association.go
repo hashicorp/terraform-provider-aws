@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package directconnect
 
 import (
@@ -422,7 +424,7 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -441,7 +443,7 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -460,7 +462,7 @@ func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}

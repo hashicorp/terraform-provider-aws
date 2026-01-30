@@ -916,7 +916,7 @@ func (flattener autoFlattener) slice(ctx context.Context, sourcePath path.Path, 
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework value.
-func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, _ fieldOpts) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, vFrom reflect.Value, targetPath path.Path, tTo attr.Type, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
@@ -1009,6 +1009,27 @@ func (flattener autoFlattener) map_(ctx context.Context, sourcePath path.Path, v
 					tflog.SubsystemTrace(ctx, subsystemName, "Flattening map", map[string]any{
 						logAttrKeySourceSize: len(from),
 					})
+
+					// Check for omitempty: if all inner maps are empty, return null
+					if fieldOpts.omitempty {
+						allEmpty := true
+						for _, innerMap := range from {
+							if len(innerMap) > 0 {
+								allEmpty = false
+								break
+							}
+						}
+						if allEmpty {
+							tflog.SubsystemTrace(ctx, subsystemName, "All inner maps empty with omitempty, returning null")
+							to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
+							diags.Append(d...)
+							if !diags.HasError() {
+								vTo.Set(reflect.ValueOf(to))
+							}
+							return diags
+						}
+					}
+
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
 						innerElements := make(map[string]attr.Value, len(v))

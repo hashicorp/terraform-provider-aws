@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -32,6 +34,7 @@ import (
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="rule.0.bucket_key_enabled")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
@@ -259,7 +262,7 @@ func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client,
 	}
 
 	if output == nil || output.ServerSideEncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServerSideEncryptionConfiguration, nil

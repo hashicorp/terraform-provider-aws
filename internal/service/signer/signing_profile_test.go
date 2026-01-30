@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,22 +22,22 @@ import (
 func TestAccSignerSigningProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf signer.GetSigningProfileOutput
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
 	resourceName := "aws_signer_signing_profile.test_sp"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "signer", "/signing-profiles/{name}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -68,22 +66,22 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 func TestAccSignerSigningProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf signer.GetSigningProfileOutput
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
 	resourceName := "aws_signer_signing_profile.test_sp"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsigner.ResourceSigningProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,19 +96,19 @@ func TestAccSignerSigningProfile_nameGenerated(t *testing.T) {
 
 	var conf signer.GetSigningProfileOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "terraform_"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform_"),
 				),
@@ -129,19 +127,19 @@ func TestAccSignerSigningProfile_namePrefix(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 	resourceName := "aws_signer_signing_profile.test_sp"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_namePrefix("tf_acc_test_prefix_"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf_acc_test_prefix_"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf_acc_test_prefix_"),
 				),
@@ -158,22 +156,22 @@ func TestAccSignerSigningProfile_namePrefix(t *testing.T) {
 func TestAccSignerSigningProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf signer.GetSigningProfileOutput
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
 	resourceName := "aws_signer_signing_profile.test_sp"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -186,7 +184,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 			{
 				Config: testAccSigningProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -195,7 +193,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 			{
 				Config: testAccSigningProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -207,22 +205,22 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf signer.GetSigningProfileOutput
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
 	resourceName := "aws_signer_signing_profile.test_sp"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_svp(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", "10"),
@@ -237,23 +235,23 @@ func TestAccSignerSigningProfile_signingParameters(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var conf signer.GetSigningProfileOutput
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
 	resourceName := "aws_signer_signing_profile.test_sp"
 	certificateName := "aws_acm_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AmazonFreeRTOS-Default")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_signingParameters(rName, rootDomain, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "signer", "/signing-profiles/{name}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -276,7 +274,7 @@ func TestAccSignerSigningProfile_signingParameters(t *testing.T) {
 }
 
 func testAccPreCheckSingerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).SignerClient(ctx)
 
 	input := &signer.ListSigningPlatformsInput{}
 
@@ -306,14 +304,14 @@ func testAccPreCheckSingerSigningProfile(ctx context.Context, t *testing.T, plat
 	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }
 
-func testAccCheckSigningProfileExists(ctx context.Context, n string, v *signer.GetSigningProfileOutput) resource.TestCheckFunc {
+func testAccCheckSigningProfileExists(ctx context.Context, t *testing.T, n string, v *signer.GetSigningProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SignerClient(ctx)
 
 		output, err := tfsigner.FindSigningProfileByName(ctx, conn, rs.Primary.ID)
 
@@ -327,9 +325,9 @@ func testAccCheckSigningProfileExists(ctx context.Context, n string, v *signer.G
 	}
 }
 
-func testAccCheckSigningProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSigningProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SignerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_signer_signing_profile" {

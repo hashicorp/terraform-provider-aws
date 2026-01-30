@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package organizations
 
 import (
@@ -92,11 +94,11 @@ func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schem
 }
 
 func findAccountsForParentByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.Account, error) {
-	input := &organizations.ListAccountsForParentInput{
+	input := organizations.ListAccountsForParentInput{
 		ParentId: aws.String(id),
 	}
 
-	return findAccountsForParent(ctx, conn, input)
+	return findAccountsForParent(ctx, conn, &input)
 }
 
 func findAccountsForParent(ctx context.Context, conn *organizations.Client, input *organizations.ListAccountsForParentInput) ([]awstypes.Account, error) {

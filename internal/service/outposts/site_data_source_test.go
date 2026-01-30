@@ -16,7 +16,7 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_site.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,7 +40,7 @@ func TestAccOutpostsSiteDataSource_name(t *testing.T) {
 	sourceDataSourceName := "data.aws_outposts_site.source"
 	dataSourceName := "data.aws_outposts_site.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

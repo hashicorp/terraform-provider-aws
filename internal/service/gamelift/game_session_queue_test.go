@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -55,7 +54,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 	}
 	uTimeoutInSeconds := int64(600)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -63,13 +62,13 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameSessionQueueDestroy(ctx),
+		CheckDestroy:             testAccCheckGameSessionQueueDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basic(queueName,
 					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
+					testAccCheckGameSessionQueueExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, queueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
@@ -90,7 +89,7 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 			{
 				Config: testAccGameSessionQueueConfig_basic(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
+					testAccCheckGameSessionQueueExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, uQueueName),
 					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
@@ -124,7 +123,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 	resourceName := "aws_gamelift_game_session_queue.test"
 	queueName := testAccGameSessionQueuePrefix + sdkacctest.RandString(8)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -132,12 +131,12 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameSessionQueueDestroy(ctx),
+		CheckDestroy:             testAccCheckGameSessionQueueDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
+					testAccCheckGameSessionQueueExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -150,7 +149,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 			{
 				Config: testAccGameSessionQueueConfig_basicTags2(queueName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
+					testAccCheckGameSessionQueueExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -159,7 +158,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 			{
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
+					testAccCheckGameSessionQueueExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -186,7 +185,7 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	}
 	timeoutInSeconds := int64(124)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -194,13 +193,13 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameSessionQueueDestroy(ctx),
+		CheckDestroy:             testAccCheckGameSessionQueueDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameSessionQueueConfig_basic(queueName,
 					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
+					testAccCheckGameSessionQueueExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceGameSessionQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -209,14 +208,14 @@ func TestAccGameLiftGameSessionQueue_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGameSessionQueueExists(ctx context.Context, n string, v *awstypes.GameSessionQueue) resource.TestCheckFunc {
+func testAccCheckGameSessionQueueExists(ctx context.Context, t *testing.T, n string, v *awstypes.GameSessionQueue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GameLiftClient(ctx)
 
 		output, err := tfgamelift.FindGameSessionQueueByName(ctx, conn, rs.Primary.ID)
 
@@ -230,9 +229,9 @@ func testAccCheckGameSessionQueueExists(ctx context.Context, n string, v *awstyp
 	}
 }
 
-func testAccCheckGameSessionQueueDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGameSessionQueueDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_game_session_queue" {

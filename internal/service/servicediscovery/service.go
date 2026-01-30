@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package servicediscovery
 
 import (
@@ -400,7 +402,7 @@ func findServiceByID(ctx context.Context, conn *servicediscovery.Client, id stri
 	}
 
 	if output == nil || output.Service == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Service, nil

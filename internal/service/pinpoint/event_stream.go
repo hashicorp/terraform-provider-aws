@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package pinpoint
 
 import (
@@ -144,7 +146,7 @@ func findEventStreamByApplicationId(ctx context.Context, conn *pinpoint.Client, 
 	}
 
 	if output == nil || output.EventStream == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EventStream, nil

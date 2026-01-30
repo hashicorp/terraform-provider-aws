@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -60,6 +62,7 @@ var routeValidTargets = []string{
 // @Testing(importStateIdFunc="testAccRouteImportStateIdFunc")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Route")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,

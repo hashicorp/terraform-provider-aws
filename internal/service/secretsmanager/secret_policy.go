@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package secretsmanager
 
 import (
@@ -28,6 +30,7 @@ import (
 // @ArnIdentity("secret_arn")
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.GetResourcePolicyOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretPolicyCreate,
@@ -209,7 +212,7 @@ func findSecretPolicyByID(ctx context.Context, conn *secretsmanager.Client, id s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

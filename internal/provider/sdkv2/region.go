@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -126,7 +127,7 @@ func importRegion() importInterceptor {
 			switch why {
 			case Import:
 				// Import ID optionally ends with "@<region>".
-				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+				if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
 					d.SetId(matches[1])
 					d.Set(names.AttrRegion, matches[2])
 				} else {
@@ -157,7 +158,7 @@ func importRegionNoDefault() importInterceptor {
 			switch why {
 			case Import:
 				// Import ID optionally ends with "@<region>".
-				if matches := regexache.MustCompile(`^(.+)@([a-z]{2}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
+				if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(d.Id()); len(matches) == 3 {
 					d.SetId(matches[1])
 					d.Set(names.AttrRegion, matches[2])
 				}

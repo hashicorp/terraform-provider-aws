@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ses
 
 import (
@@ -141,7 +143,7 @@ func findIdentityMailFromDomainAttributes(ctx context.Context, conn *ses.Client,
 	}
 
 	if output == nil || output.MailFromDomainAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MailFromDomainAttributes, nil

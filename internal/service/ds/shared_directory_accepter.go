@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ds
 
 import (
@@ -148,7 +150,7 @@ func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice
 	}
 
 	if output.OwnerDirectoryDescription == nil {
-		return nil, tfresource.NewEmptyResultError(id)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

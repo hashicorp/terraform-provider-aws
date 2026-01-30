@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package chimesdkmediapipelines
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,6 +47,7 @@ var (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types;awstypes;awstypes.MediaInsightsPipelineConfiguration")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 
@@ -634,9 +636,8 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	}
 	out, err := conn.GetMediaInsightsPipelineConfiguration(ctx, in)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -645,7 +646,7 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	}
 
 	if out == nil || out.MediaInsightsPipelineConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.MediaInsightsPipelineConfiguration, nil

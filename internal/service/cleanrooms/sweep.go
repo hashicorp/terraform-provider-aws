@@ -4,12 +4,12 @@
 package cleanrooms
 
 import (
-	"fmt"
-	"log"
+	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -18,27 +18,12 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_cleanrooms_collaboration", &resource.Sweeper{
-		Name: "aws_cleanrooms_collaboration",
-		F:    sweepCollaborations,
-	})
-	resource.AddTestSweepers("aaws_cleanrooms_configured_table", &resource.Sweeper{
-		Name: "aws_cleanrooms_configured_table",
-		F:    sweepConfiguredTables,
-	})
-	resource.AddTestSweepers("aaws_cleanrooms_membership", &resource.Sweeper{
-		Name: "aws_cleanrooms_membership",
-		F:    sweepMemberships,
-	})
+	awsv2.Register("aws_cleanrooms_collaboration", sweepCollaborations)
+	awsv2.Register("aws_cleanrooms_configured_table", sweepConfiguredTables)
+	awsv2.Register("aws_cleanrooms_membership", sweepMemberships)
 }
 
-func sweepCollaborations(region string) error {
-	ctx := sweep.Context(region)
-
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepCollaborations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.CleanRoomsClient(ctx)
 	input := &cleanrooms.ListCollaborationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -47,109 +32,68 @@ func sweepCollaborations(region string) error {
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Cleanrooms Collaborations sweep for %s: %s", region, err)
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("error retrieving Cleanrooms Collaborations: %w", err)
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, c := range page.CollaborationList {
 			id := aws.ToString(c.Id)
-			r := ResourceCollaboration()
+			r := resourceCollaboration()
 			d := r.Data(nil)
 			d.SetId(id)
 
-			log.Printf("[INFO] Deleting Cleanrooms Collaboration: %s", id)
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping Cleanrooms Collaborations for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepConfiguredTables(region string) error {
-	ctx := sweep.Context(region)
-
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepConfiguredTables(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.CleanRoomsClient(ctx)
 	input := &cleanrooms.ListConfiguredTablesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := cleanrooms.NewListConfiguredTablesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Cleanrooms Configured Tables sweep for %s: %s", region, err)
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("error retrieving Cleanrooms Configured Tables: %w", err)
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, c := range page.ConfiguredTableSummaries {
 			id := aws.ToString(c.Id)
-			r := ResourceConfiguredTable()
+			r := resourceConfiguredTable()
 			d := r.Data(nil)
 			d.SetId(id)
 
-			log.Printf("[INFO] Deleting Cleanrooms Configured Table: %s", id)
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping Cleanrooms Configured Tables for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
-func sweepMemberships(region string) error {
-	ctx := sweep.Context(region)
-
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
+func sweepMemberships(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.CleanRoomsClient(ctx)
 	input := &cleanrooms.ListMembershipsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := cleanrooms.NewListMembershipsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Cleanrooms Memberships sweep for %s: %s", region, err)
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("error retrieving Cleanrooms Memberships: %w", err)
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, c := range page.MembershipSummaries {
 			id := aws.ToString(c.Id)
 
-			log.Printf("[INFO] Deleting Cleanrooms Membership: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMembershipResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		return fmt.Errorf("error sweeping Cleanrooms Memberships for %s: %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

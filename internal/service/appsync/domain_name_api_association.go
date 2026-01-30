@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appsync
 
 import (
@@ -162,7 +164,7 @@ func findDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client,
 	}
 
 	if output == nil || output.ApiAssociation == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ApiAssociation, nil
@@ -198,7 +200,7 @@ func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
 		return output, smarterr.NewError(err)
 	}
 
@@ -219,7 +221,7 @@ func waitDomainNameAPIDisassociation(ctx context.Context, conn *appsync.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ApiAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DeploymentDetail)))
 		return output, smarterr.NewError(err)
 	}
 

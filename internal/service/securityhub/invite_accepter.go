@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package securityhub
 
 import (
@@ -133,7 +135,7 @@ func findMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.In
 	}
 
 	if output == nil || output.Master == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Master, nil

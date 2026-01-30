@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -23,9 +23,8 @@ func FindFeatureWithProjectNameorARN(ctx context.Context, conn *evidently.Client
 	output, err := conn.GetFeature(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -34,7 +33,7 @@ func FindFeatureWithProjectNameorARN(ctx context.Context, conn *evidently.Client
 	}
 
 	if output == nil || output.Feature == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Feature, nil
@@ -49,9 +48,8 @@ func FindLaunchWithProjectNameorARN(ctx context.Context, conn *evidently.Client,
 	output, err := conn.GetLaunch(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -60,7 +58,7 @@ func FindLaunchWithProjectNameorARN(ctx context.Context, conn *evidently.Client,
 	}
 
 	if output == nil || output.Launch == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Launch, nil
@@ -74,9 +72,8 @@ func FindProjectByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	output, err := conn.GetProject(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -85,7 +82,7 @@ func FindProjectByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	}
 
 	if output == nil || output.Project == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Project, nil
@@ -99,9 +96,8 @@ func FindSegmentByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	output, err := conn.GetSegment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -110,7 +106,7 @@ func FindSegmentByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	}
 
 	if output == nil || output.Segment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Segment, nil

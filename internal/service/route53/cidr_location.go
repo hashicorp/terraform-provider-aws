@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -322,7 +324,7 @@ func findCIDRLocationByTwoPartKey(ctx context.Context, conn *route53.Client, col
 	output, err := findCIDRBlocks(ctx, conn, input)
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

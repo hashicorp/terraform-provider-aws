@@ -253,7 +253,8 @@ service "rds" {
 }
 
 service "redshift" {
-  vpc_lock = true
+  vpc_lock    = true
+  parallelism = 10 # Max Snapshot Copy Grants
 }
 
 service "resiliencehub" {

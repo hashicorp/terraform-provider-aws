@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package transfer
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
@@ -402,7 +404,7 @@ func findWebApp(ctx context.Context, conn *transfer.Client, input *transfer.Desc
 	}
 
 	if out == nil || out.WebApp == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.WebApp, nil

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package transfer
 
 import (
@@ -229,7 +231,7 @@ func findWebAppCustomization(ctx context.Context, conn *transfer.Client, input *
 	}
 
 	if out == nil || out.WebAppCustomization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.WebAppCustomization, nil

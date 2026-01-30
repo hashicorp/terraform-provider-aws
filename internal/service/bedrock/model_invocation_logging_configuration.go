@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrock
 
 import (
@@ -29,6 +31,7 @@ import (
 // @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &modelInvocationLoggingConfigurationResource{}, nil
 }
@@ -263,7 +266,7 @@ func findModelInvocationLoggingConfiguration(ctx context.Context, conn *bedrock.
 	}
 
 	if output == nil || output.LoggingConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

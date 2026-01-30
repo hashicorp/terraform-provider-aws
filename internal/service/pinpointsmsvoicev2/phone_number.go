@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package pinpointsmsvoicev2
 
 import (
@@ -27,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -412,9 +413,8 @@ func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, i
 	}
 
 	if status := output.Status; status == awstypes.NumberStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -439,9 +439,8 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -455,8 +454,8 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 	return output, nil
 }
 
-func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPhoneNumber(conn *pinpointsmsvoicev2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -472,10 +471,10 @@ func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id 
 }
 
 func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusPending, awstypes.NumberStatusAssociating),
 		Target:  enum.Slice(awstypes.NumberStatusActive),
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -489,10 +488,10 @@ func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusPhoneNumber(ctx, conn, id),
+		Refresh: statusPhoneNumber(conn, id),
 		Timeout: timeout,
 	}
 

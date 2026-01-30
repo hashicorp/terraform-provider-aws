@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53resolver
 
 import (
@@ -140,7 +142,7 @@ func findResolverQueryLogConfigAssociationByID(ctx context.Context, conn *route5
 	}
 
 	if output == nil || output.ResolverQueryLogConfigAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverQueryLogConfigAssociation, nil
@@ -179,7 +181,7 @@ func waitQueryLogConfigAssociationCreated(ctx context.Context, conn *route53reso
 
 	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfigAssociation); ok {
 		if status := output.Status; status == awstypes.ResolverQueryLogConfigAssociationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -200,7 +202,7 @@ func waitQueryLogConfigAssociationDeleted(ctx context.Context, conn *route53reso
 
 	if output, ok := outputRaw.(*awstypes.ResolverQueryLogConfigAssociation); ok {
 		if status := output.Status; status == awstypes.ResolverQueryLogConfigAssociationStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.Error), aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err

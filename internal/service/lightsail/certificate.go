@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lightsail
 
 import (
@@ -285,7 +287,7 @@ func FindCertificateById(ctx context.Context, conn *lightsail.Client, name strin
 	}
 
 	if out == nil || len(out.Certificates) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Certificates[0].CertificateDetail, nil

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package servicecatalogappregistry
 
 import (
@@ -30,6 +32,7 @@ import (
 
 // @FrameworkResource("aws_servicecatalogappregistry_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationResource{}, nil
 }
@@ -221,7 +224,7 @@ func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Cl
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

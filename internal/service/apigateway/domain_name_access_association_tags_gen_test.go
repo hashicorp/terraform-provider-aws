@@ -35,7 +35,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +49,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -97,7 +97,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -149,7 +149,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -194,7 +194,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -239,7 +239,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -253,7 +253,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_null(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -311,7 +311,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -323,7 +323,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyMap(t *testing.T) {
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -371,7 +371,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_AddOnUpdate(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -383,7 +383,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_AddOnUpdate(t *testing.T)
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -408,7 +408,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_AddOnUpdate(t *testing.T)
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -463,7 +463,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnCreate(t *test
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -477,7 +477,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnCreate(t *test
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -522,7 +522,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnCreate(t *test
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -567,7 +567,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -581,7 +581,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -615,7 +615,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -667,7 +667,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Add(t *
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -722,7 +722,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Replace
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -736,7 +736,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Replace
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -769,7 +769,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_EmptyTag_OnUpdate_Replace
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -824,7 +824,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -839,7 +839,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -887,7 +887,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -937,7 +937,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -981,7 +981,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_providerOnly(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1027,7 +1027,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlappin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1044,7 +1044,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlappin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1102,7 +1102,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlappin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1159,7 +1159,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nonOverlappin
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1205,7 +1205,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1222,7 +1222,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1279,7 +1279,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1340,7 +1340,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_overlapping(t
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1399,7 +1399,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToProvi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1413,7 +1413,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToProvi
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1448,7 +1448,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToProvi
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1501,7 +1501,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToResou
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1516,7 +1516,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToResou
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1546,7 +1546,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_updateToResou
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1602,7 +1602,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyResource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1619,7 +1619,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyResource
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1678,7 +1678,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyProvider
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1693,7 +1693,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_emptyProvider
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1746,7 +1746,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullOverlappi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1763,7 +1763,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullOverlappi
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1825,7 +1825,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullNonOverla
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1842,7 +1842,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_DefaultTags_nullNonOverla
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1906,7 +1906,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnCreate(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1918,7 +1918,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnCreate(t *t
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1971,7 +1971,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Add(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1985,7 +1985,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Add(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2019,7 +2019,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Add(
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2080,7 +2080,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Repl
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2094,7 +2094,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Repl
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2126,7 +2126,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_ComputedTag_OnUpdate_Repl
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2179,7 +2179,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Defaul
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2200,7 +2200,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Defaul
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2251,7 +2251,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Defaul
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2302,7 +2302,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Defaul
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2353,7 +2353,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Resour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckDomainNameAccessAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2372,7 +2372,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Resour
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2432,7 +2432,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Resour
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2491,7 +2491,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_tags_IgnoreTags_Overlap_Resour
 					acctest.CtPrivateKeyPEM:  config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
+					testAccCheckDomainNameAccessAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

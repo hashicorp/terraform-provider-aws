@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkeyspaces "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,16 +28,16 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -60,16 +59,16 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_replicationSpecification(rName, string(types.RsSingleRegion)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -79,7 +78,7 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 			{
 				Config: testAccKeyspaceConfig_multiReplicationSpecification(rName, string(types.RsMultiRegion), region1, region2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -96,16 +95,16 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkeyspaces.ResourceKeyspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -119,16 +118,16 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyspaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -141,7 +140,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 			{
 				Config: testAccKeyspaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -150,7 +149,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 			{
 				Config: testAccKeyspaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyspaceExists(ctx, resourceName),
+					testAccCheckKeyspaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -159,9 +158,9 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyspaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyspaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KeyspacesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_keyspaces_keyspace" {
@@ -185,7 +184,7 @@ func testAccCheckKeyspaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyspaceExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckKeyspaceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -196,7 +195,7 @@ func testAccCheckKeyspaceExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No Keyspaces Keyspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KeyspacesClient(ctx)
 
 		_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

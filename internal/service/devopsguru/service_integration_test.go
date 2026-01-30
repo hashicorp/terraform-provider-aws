@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdevopsguru "github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -117,7 +116,7 @@ func testAccCheckServiceIntegrationDestroy(ctx context.Context) resource.TestChe
 			}
 
 			out, err := tfdevopsguru.FindServiceIntegration(ctx, conn)
-			if errs.IsA[*tfresource.EmptyResultError](err) {
+			if errors.Is(err, tfresource.ErrEmptyResult) {
 				return nil
 			}
 			if err != nil {

@@ -7,6 +7,8 @@ package s3
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +24,18 @@ type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newBucketObjectLockConfigurationDataSource,
+			TypeName: "aws_s3_bucket_object_lock_configuration",
+			Name:     "Bucket Object Lock Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceBucketReplicationConfiguration,
+			TypeName: "aws_s3_bucket_replication_configuration",
+			Name:     "Bucket Replication Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 		{
 			Factory:  newDirectoryBucketsDataSource,
 			TypeName: "aws_s3_directory_buckets",
@@ -359,6 +373,36 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newBucketResourceAsListResource,
+			TypeName: "aws_s3_bucket",
+			Name:     "Bucket",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrBucket,
+				ResourceType:        "Bucket",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
+			Factory:  newObjectResourceAsListResource,
+			TypeName: "aws_s3_object",
+			Name:     "Object",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "Object",
+			}),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.StringIdentityAttribute(names.AttrKey, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

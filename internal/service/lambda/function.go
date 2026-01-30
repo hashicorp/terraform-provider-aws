@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lambda
 
 import (
@@ -49,6 +51,7 @@ const (
 // @Testing(idAttrDuplicates="function_name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @CustomImport
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -64,8 +67,7 @@ func resourceFunction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-				if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 				d.Set("function_name", d.Id())
@@ -363,7 +365,7 @@ func resourceFunction() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      128,
-				ValidateFunc: validation.IntBetween(128, 10240),
+				ValidateFunc: validation.IntBetween(128, 32768),
 			},
 			"package_type": {
 				Type:             schema.TypeString,
@@ -1342,7 +1344,7 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1405,7 +1407,7 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	}
 
 	if output == nil || output.Code == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1437,7 +1439,7 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1465,7 +1467,7 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1494,7 +1496,7 @@ func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *la
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1628,7 +1630,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -1648,7 +1650,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
@@ -1668,7 +1670,7 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetFunctionConfigurationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}

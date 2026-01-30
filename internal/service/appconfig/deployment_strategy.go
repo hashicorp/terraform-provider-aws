@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appconfig
 
 import (
@@ -26,6 +28,7 @@ import (
 
 // @SDKResource("aws_appconfig_deployment_strategy", name="Deployment Strategy")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentStrategyCreate,
@@ -230,7 +233,7 @@ func findDeploymentStrategy(ctx context.Context, conn *appconfig.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

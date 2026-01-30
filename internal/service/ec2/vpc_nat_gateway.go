@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -603,6 +605,11 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	// Eventual consistency wait for any attached appliances to be detached before deleting the NAT Gateway
+	if _, err := waitNATGatewayAttachedAppliancesDetached(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) attached appliances to detach: %s", d.Id(), err)
+	}
 
 	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
 	input := ec2.DeleteNatGatewayInput{

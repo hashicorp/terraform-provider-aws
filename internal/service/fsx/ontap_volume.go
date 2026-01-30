@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package fsx
 
 import (
@@ -606,7 +608,7 @@ func findONTAPVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*aws
 	}
 
 	if output.OntapConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -698,7 +700,7 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		if output.Lifecycle == awstypes.VolumeLifecycleFailed && output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -732,12 +734,12 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 
 			if reason := output.LifecycleTransitionReason; reason != nil {
 				if message := aws.ToString(reason.Message); administrativeActionsError != nil {
-					tfresource.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
+					retry.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
 				} else {
-					tfresource.SetLastError(err, errors.New(message))
+					retry.SetLastError(err, errors.New(message))
 				}
 			} else {
-				tfresource.SetLastError(err, administrativeActionsError)
+				retry.SetLastError(err, administrativeActionsError)
 			}
 		}
 
@@ -761,7 +763,7 @@ func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		if output.Lifecycle == awstypes.VolumeLifecycleFailed && output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -816,7 +818,7 @@ func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Clie
 
 	if output, ok := outputRaw.(*awstypes.AdministrativeAction); ok {
 		if output.Status == awstypes.StatusFailed && output.FailureDetails != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

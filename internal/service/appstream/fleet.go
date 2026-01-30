@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appstream
 
 import (
@@ -633,7 +635,7 @@ func waitFleetRunning(ctx context.Context, conn *appstream.Client, id string) (*
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}
@@ -655,7 +657,7 @@ func waitFleetStopped(ctx context.Context, conn *appstream.Client, id string) (*
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Fleet); ok {
-		tfresource.SetLastError(err, fleetsError(output.FleetErrors))
+		retry.SetLastError(err, fleetsError(output.FleetErrors))
 
 		return output, err
 	}

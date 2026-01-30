@@ -5,7 +5,6 @@ package scheduler_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -18,13 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfscheduler "github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestResourceScheduleIDFromARN(t *testing.T) {
+func TestScheduleResourceIDFromARN(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -73,7 +71,7 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 		t.Run(tc.ARN, func(t *testing.T) {
 			t.Parallel()
 
-			id, err := tfscheduler.ResourceScheduleIDFromARN(tc.ARN)
+			id, err := tfscheduler.ScheduleResourceIDFromARN(tc.ARN)
 
 			if tc.Fails {
 				if err == nil {
@@ -92,7 +90,7 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 	}
 }
 
-func TestResourceScheduleParseID(t *testing.T) {
+func TestScheduleParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -155,7 +153,7 @@ func TestResourceScheduleParseID(t *testing.T) {
 		t.Run(tc.ID, func(t *testing.T) {
 			t.Parallel()
 
-			groupName, scheduleName, err := tfscheduler.ResourceScheduleParseID(tc.ID)
+			groupName, scheduleName, err := tfscheduler.ScheduleParseResourceID(tc.ID)
 
 			if tc.Fails {
 				if err == nil {
@@ -180,10 +178,6 @@ func TestResourceScheduleParseID(t *testing.T) {
 
 func TestAccSchedulerSchedule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -240,10 +234,6 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 
 func TestAccSchedulerSchedule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -277,10 +267,6 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 
 func TestAccSchedulerSchedule_actionAfterCompletion(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -322,10 +308,6 @@ func TestAccSchedulerSchedule_actionAfterCompletion(t *testing.T) {
 
 func TestAccSchedulerSchedule_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -382,10 +364,6 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 
 func TestAccSchedulerSchedule_endDate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -442,10 +420,6 @@ func TestAccSchedulerSchedule_endDate(t *testing.T) {
 
 func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -505,10 +479,6 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 
 func TestAccSchedulerSchedule_groupName(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -541,10 +511,6 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 
 func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -601,10 +567,6 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 
 func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	resourceName := "aws_scheduler_schedule.test"
 
@@ -637,10 +599,6 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 
 func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	resourceName := "aws_scheduler_schedule.test"
 
@@ -673,10 +631,6 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 
 func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -721,10 +675,6 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 
 func TestAccSchedulerSchedule_scheduleExpressionTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -781,10 +731,6 @@ func TestAccSchedulerSchedule_scheduleExpressionTimezone(t *testing.T) {
 
 func TestAccSchedulerSchedule_startDate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -841,10 +787,6 @@ func TestAccSchedulerSchedule_startDate(t *testing.T) {
 
 func TestAccSchedulerSchedule_state(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -901,10 +843,6 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -949,10 +887,6 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1009,10 +943,6 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1184,10 +1114,6 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	scheduleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	eventBusName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1247,10 +1173,6 @@ func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1312,10 +1234,6 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	scheduleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1373,10 +1291,6 @@ func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1436,10 +1350,6 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1484,10 +1394,6 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1580,10 +1486,6 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 
 func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var schedule scheduler.GetScheduleOutput
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
@@ -1647,13 +1549,7 @@ func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.Tes
 				continue
 			}
 
-			groupName, scheduleName, err := tfscheduler.ResourceScheduleParseID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
+			_, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrGroupName], rs.Primary.Attributes[names.AttrName])
 
 			if retry.NotFound(err) {
 				continue
@@ -1663,33 +1559,23 @@ func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.Tes
 				return err
 			}
 
-			return fmt.Errorf("%s %s %s still exists", names.Scheduler, tfscheduler.ResNameSchedule, rs.Primary.ID)
+			return fmt.Errorf("EventBridge Scheduler Schedule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckScheduleExists(ctx context.Context, t *testing.T, name string, v *scheduler.GetScheduleOutput) resource.TestCheckFunc {
+func testAccCheckScheduleExists(ctx context.Context, t *testing.T, n string, v *scheduler.GetScheduleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Scheduler, create.ErrActionCheckingExistence, tfscheduler.ResNameSchedule, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Scheduler, create.ErrActionCheckingExistence, tfscheduler.ResNameSchedule, name, errors.New("not set"))
-		}
-
-		groupName, scheduleName, err := tfscheduler.ResourceScheduleParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).SchedulerClient(ctx)
 
-		output, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
+		output, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrGroupName], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

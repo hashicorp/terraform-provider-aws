@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package fsx
 
 import (
@@ -254,7 +256,7 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -276,7 +278,7 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -298,7 +300,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err

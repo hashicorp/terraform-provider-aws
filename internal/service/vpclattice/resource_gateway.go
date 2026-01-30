@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -40,6 +42,7 @@ import (
 // @FrameworkResource("aws_vpclattice_resource_gateway", name="Resource Gateway")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceGatewayOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceGatewayResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGatewayResource{}
 
@@ -315,7 +318,7 @@ func findResourceGatewayByID(ctx context.Context, conn *vpclattice.Client, id st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
