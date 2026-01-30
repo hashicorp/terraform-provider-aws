@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,19 +24,19 @@ func testAccMember_basic(t *testing.T) {
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMemberDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
+					testAccCheckMemberExists(ctx, t, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -62,19 +61,19 @@ func testAccMember_disappears(t *testing.T) {
 	resourceName := "aws_detective_member.test"
 	email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMemberDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
+					testAccCheckMemberExists(ctx, t, resourceName, &detectiveOutput),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdetective.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,19 +89,19 @@ func testAccMember_message(t *testing.T) {
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := testAccMemberFromEnv(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invitationMessage(email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
+					testAccCheckMemberExists(ctx, t, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
@@ -125,19 +124,19 @@ func testAccMember_Organization_basic(t *testing.T) {
 	var member awstypes.MemberDetail
 	resourceName := "aws_detective_member.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMemberDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_Organization_autoEnable(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemberExists(ctx, resourceName, &member),
+					testAccCheckMemberExists(ctx, t, resourceName, &member),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_organizations_organization.test", "non_master_accounts.0.id"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "email_address", "data.aws_organizations_organization.test", "non_master_accounts.0.email"),
@@ -167,19 +166,19 @@ func testAccMember_Organization_AutoEnable(t *testing.T) {
 	var member awstypes.MemberDetail
 	resourceName := "aws_detective_member.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMemberDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_Organization_autoEnable(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemberExists(ctx, resourceName, &member),
+					testAccCheckMemberExists(ctx, t, resourceName, &member),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_organizations_organization.test", "non_master_accounts.0.id"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "email_address", "data.aws_organizations_organization.test", "non_master_accounts.0.email"),
@@ -204,14 +203,14 @@ func testAccMember_Organization_AutoEnable(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberExists(ctx context.Context, n string, v *awstypes.MemberDetail) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, t *testing.T, n string, v *awstypes.MemberDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
 		graphARN, accountID, err := tfdetective.MemberParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -230,9 +229,9 @@ func testAccCheckMemberExists(ctx context.Context, n string, v *awstypes.MemberD
 	}
 }
 
-func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMemberDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DetectiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_member" {

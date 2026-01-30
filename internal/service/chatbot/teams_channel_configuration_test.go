@@ -11,11 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchatbot "github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
@@ -45,7 +43,7 @@ func testAccTeamsChannelConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var teamschannelconfiguration types.TeamsChannelConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	// The teams workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
 	// Once it is created, export the name of the workspace in the env variable for this test
@@ -53,19 +51,19 @@ func testAccTeamsChannelConfiguration_basic(t *testing.T) {
 	channelID := acctest.SkipIfEnvVarNotSet(t, envTeamsChannelID)
 	tenantID := acctest.SkipIfEnvVarNotSet(t, envTeamsTenantID)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTeamsChannelConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTeamsChannelConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTeamsChannelConfigurationConfig_basic(rName, channelID, teamID, tenantID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTeamsChannelConfigurationExists(ctx, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
+					testAccCheckTeamsChannelConfigurationExists(ctx, t, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceTeamsChannelConfiguration, "configuration_name", rName),
 					acctest.MatchResourceAttrGlobalARN(ctx, testResourceTeamsChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/.*/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceTeamsChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -90,7 +88,7 @@ func testAccTeamsChannelConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var teamschannelconfiguration types.TeamsChannelConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	// The teams workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
 	// Once it is created, export the name of the workspace in the env variable for this test
@@ -98,19 +96,19 @@ func testAccTeamsChannelConfiguration_disappears(t *testing.T) {
 	channelID := acctest.SkipIfEnvVarNotSet(t, envTeamsChannelID)
 	tenantID := acctest.SkipIfEnvVarNotSet(t, envTeamsTenantID)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTeamsChannelConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTeamsChannelConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTeamsChannelConfigurationConfig_basic(rName, channelID, teamID, tenantID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTeamsChannelConfigurationExists(ctx, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
+					testAccCheckTeamsChannelConfigurationExists(ctx, t, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceTeamsChannelConfiguration, testResourceTeamsChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
@@ -119,9 +117,9 @@ func testAccTeamsChannelConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTeamsChannelConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTeamsChannelConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChatbotClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chatbot_teams_channel_configuration" {
@@ -145,14 +143,14 @@ func testAccCheckTeamsChannelConfigurationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckTeamsChannelConfigurationExists(ctx context.Context, name string, teamschannelconfiguration *types.TeamsChannelConfiguration) resource.TestCheckFunc {
+func testAccCheckTeamsChannelConfigurationExists(ctx context.Context, t *testing.T, name string, teamschannelconfiguration *types.TeamsChannelConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.Chatbot, create.ErrActionCheckingExistence, tfchatbot.ResNameTeamsChannelConfiguration, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChatbotClient(ctx)
 
 		output, err := tfchatbot.FindTeamsChannelConfigurationByTeamID(ctx, conn, rs.Primary.Attributes["team_id"])
 

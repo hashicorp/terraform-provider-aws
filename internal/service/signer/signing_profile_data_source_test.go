@@ -21,7 +21,7 @@ func TestAccSignerSigningProfileDataSource_basic(t *testing.T) {
 	rString := sdkacctest.RandString(48)
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
@@ -51,11 +51,11 @@ func TestAccSignerSigningProfileDataSource_signingParameters(t *testing.T) {
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
 	var conf signer.GetSigningProfileOutput
-	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tf_acc_test_%d", acctest.RandInt(t))
 	dataSourceName := "data.aws_signer_signing_profile.test"
 	resourceName := "aws_signer_signing_profile.test_sp"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AmazonFreeRTOS-Default")
@@ -66,7 +66,7 @@ func TestAccSignerSigningProfileDataSource_signingParameters(t *testing.T) {
 			{
 				Config: testAccSigningProfileDataSourceConfig_signingParameters(rName, rootDomain, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					testAccCheckSigningProfileExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform_id", resourceName, "platform_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_material.#", resourceName, "signing_material.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_material.0.certificate_arn", resourceName, "signing_material.0.certificate_arn"),

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appconfig
 
 import (
@@ -25,6 +27,7 @@ import (
 
 // @SDKResource("aws_appconfig_extension", name="Extension")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,

@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,23 +22,23 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/feature/%s", rName, rName2)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", "Variation1"),
@@ -74,25 +72,25 @@ func TestAccEvidentlyFeature_updateDefaultVariation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	variationName1 := "Variation1"
 	variationName2 := "Variation2"
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_defaultVariation(rName, rName2, variationName1, variationName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName1),
 				),
 			},
@@ -104,7 +102,7 @@ func TestAccEvidentlyFeature_updateDefaultVariation(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_defaultVariation(rName, rName2, variationName1, variationName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2),
 				),
 			},
@@ -116,25 +114,25 @@ func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_description(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
@@ -146,7 +144,7 @@ func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_description(rName, rName2, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
@@ -158,25 +156,25 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	variationName1 := "Variation1"
 	variationName2 := "Variation2"
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_entityOverrides1(rName, rName2, variationName1, variationName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
@@ -199,7 +197,7 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_entityOverrides2(rName, rName2, variationName1, variationName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName2),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test2", variationName1),
@@ -223,25 +221,25 @@ func TestAccEvidentlyFeature_updateEvaluationStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalEvaluationStategy := string(awstypes.FeatureEvaluationStrategyAllRules)
 	updatedEvaluationStategy := string(awstypes.FeatureEvaluationStrategyDefaultVariation)
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_evaluationStrategy(rName, rName2, originalEvaluationStategy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", originalEvaluationStategy),
 				),
 			},
@@ -253,7 +251,7 @@ func TestAccEvidentlyFeature_updateEvaluationStrategy(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_evaluationStrategy(rName, rName2, updatedEvaluationStategy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", updatedEvaluationStategy),
 				),
 			},
@@ -265,8 +263,8 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalVariationName1 := "Variation1Original"
 	updatedVariationName1 := "Variation1Updated"
 	originalVariationBoolVal1 := true
@@ -275,19 +273,19 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 	variationBoolVal2 := true
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_variationsBoolValue1(rName, rName2, originalVariationName1, originalVariationBoolVal1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", originalVariationName1),
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeBoolean)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
@@ -306,7 +304,7 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_variationsBoolValue2(rName, rName2, updatedVariationName1, updatedVariationBoolVal1, variationName2, variationBoolVal2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeBoolean)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
@@ -330,8 +328,8 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalVariationName1 := "Variation1Original"
 	updatedVariationName1 := "Variation1Updated"
 	originalVariationDoubleVal1 := 0.0
@@ -340,19 +338,19 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 	variationDoubleVal2 := 3
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_variationsDoubleValue1(rName, rName2, originalVariationName1, originalVariationDoubleVal1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", originalVariationName1),
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeDouble)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
@@ -371,7 +369,7 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_variationsDoubleValue2(rName, rName2, updatedVariationName1, updatedVariationDoubleVal1, variationName2, float64(variationDoubleVal2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeDouble)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
@@ -395,8 +393,8 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalVariationName1 := "Variation1Original"
 	updatedVariationName1 := "Variation1Updated"
 	originalVariationLongVal1 := 0
@@ -405,19 +403,19 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 	variationLongVal2 := 3
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_variationsLongValue1(rName, rName2, originalVariationName1, originalVariationLongVal1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", originalVariationName1),
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeLong)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
@@ -436,7 +434,7 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_variationsLongValue2(rName, rName2, updatedVariationName1, updatedVariationLongVal1, variationName2, variationLongVal2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeLong)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
@@ -460,8 +458,8 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalVariationName1 := "Variation1Original"
 	updatedVariationName1 := "Variation1Updated"
 	originalVariationStringVal1 := "Variation1StringValOriginal"
@@ -471,19 +469,19 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 	updatedVariationStringVal2 := ""
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_variationsStringValue1(rName, rName2, originalVariationName1, originalVariationStringVal1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", originalVariationName1),
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
@@ -502,7 +500,7 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_variationsStringValue2(rName, rName2, updatedVariationName1, updatedVariationStringVal1, variationName2, variationStringVal2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
@@ -521,7 +519,7 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_variationsStringValue2(rName, rName2, updatedVariationName1, updatedVariationStringVal1, variationName2, updatedVariationStringVal2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
@@ -545,23 +543,23 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_tags1(rName, rName2, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -574,7 +572,7 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_tags2(rName, rName2, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -583,7 +581,7 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 			{
 				Config: testAccFeatureConfig_tags1(rName, rName2, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -596,20 +594,20 @@ func TestAccEvidentlyFeature_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var feature awstypes.Feature
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_evidently_feature.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
+		CheckDestroy:             testAccCheckFeatureDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFeatureConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureExists(ctx, resourceName, &feature),
+					testAccCheckFeatureExists(ctx, t, resourceName, &feature),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchevidently.ResourceFeature(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -618,9 +616,9 @@ func TestAccEvidentlyFeature_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFeatureDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFeatureDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EvidentlyClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_evidently_feature" {
 				continue
@@ -649,7 +647,7 @@ func testAccCheckFeatureDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFeatureExists(ctx context.Context, n string, v *awstypes.Feature) resource.TestCheckFunc {
+func testAccCheckFeatureExists(ctx context.Context, t *testing.T, n string, v *awstypes.Feature) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -667,7 +665,7 @@ func testAccCheckFeatureExists(ctx context.Context, n string, v *awstypes.Featur
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EvidentlyClient(ctx)
 
 		output, err := tfcloudwatchevidently.FindFeatureWithProjectNameorARN(ctx, conn, featureName, projectNameOrARN)
 

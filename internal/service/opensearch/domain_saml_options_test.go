@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,24 +21,24 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
 
-	rName := sdkacctest.RandomWithPrefix("acc-test")
-	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
+	rName := acctest.RandomWithPrefix(t, "acc-test")
+	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, esDomainResourceName, &domain),
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckDomainExists(ctx, t, esDomainResourceName, &domain),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", "1"),
@@ -58,23 +56,23 @@ func TestAccOpenSearchDomainSAMLOptions_basic(t *testing.T) {
 
 func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("acc-test")
-	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
+	rName := acctest.RandomWithPrefix(t, "acc-test")
+	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomainSAMLOptions(), resourceName),
 				),
 			},
@@ -84,23 +82,23 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 
 func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("acc-test")
-	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
+	rName := acctest.RandomWithPrefix(t, "acc-test")
+	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -111,25 +109,25 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 
 func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("acc-test")
-	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
+	rName := acctest.RandomWithPrefix(t, "acc-test")
+	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 				),
 			},
 			{
@@ -137,7 +135,7 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 				),
 			},
 		},
@@ -146,25 +144,25 @@ func TestAccOpenSearchDomainSAMLOptions_Update(t *testing.T) {
 
 func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("acc-test")
-	rUserName := sdkacctest.RandomWithPrefix("opensearch-master-user")
+	rName := acctest.RandomWithPrefix(t, "acc-test")
+	rUserName := acctest.RandomWithPrefix(t, "opensearch-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 
 	resourceName := "aws_opensearch_domain_saml_options.test"
 	esDomainResourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx),
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 				),
 			},
 			{
@@ -172,21 +170,21 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
-					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
+					testAccCheckESDomainSAMLOptions(ctx, t, esDomainResourceName, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearch_domain_saml_options" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if retry.NotFound(err) {
@@ -204,7 +202,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, samlOptionsResource string) resource.TestCheckFunc {
+func testAccCheckESDomainSAMLOptions(ctx context.Context, t *testing.T, esResource string, samlOptionsResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[esResource]
 		if !ok {
@@ -220,7 +218,7 @@ func testAccCheckESDomainSAMLOptions(ctx context.Context, esResource string, sam
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 		_, err := tfopensearch.FindDomainByName(ctx, conn, options.Primary.Attributes[names.AttrDomainName])
 
 		return err

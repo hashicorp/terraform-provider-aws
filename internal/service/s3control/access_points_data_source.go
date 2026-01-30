@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3control
 
 import (
@@ -25,10 +27,6 @@ import (
 func newDataSourceAccessPoints(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAccessPoints{}, nil
 }
-
-const (
-	DSNameAccessPoints = "Access Points Data Source"
-)
 
 type dataSourceAccessPoints struct {
 	framework.DataSourceWithModel[dataSourceAccessPointsModel]

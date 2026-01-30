@@ -18,6 +18,7 @@ resource "aws_cleanrooms_collaboration" "test" {
     preserve_nulls                              = false
   }
 }
+
 variable "rName" {
   description = "Name for resource"
   type        = string

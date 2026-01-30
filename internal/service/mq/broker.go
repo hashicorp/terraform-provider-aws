@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package mq
 
 import (
@@ -21,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -700,9 +701,8 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	output, err := conn.DescribeBroker(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -717,8 +717,8 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	return output, nil
 }
 
-func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBrokerState(conn *mq.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBrokerByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -734,11 +734,11 @@ func statusBrokerState(ctx context.Context, conn *mq.Client, id string) sdkretry
 }
 
 func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateCreationInProgress, types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -750,7 +750,7 @@ func waitBrokerCreated(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.BrokerStateCreationFailed,
 			types.BrokerStateDeletionInProgress,
@@ -759,7 +759,7 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 		),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -771,11 +771,11 @@ func waitBrokerDeleted(ctx context.Context, conn *mq.Client, id string, timeout 
 }
 
 func waitBrokerRebooted(ctx context.Context, conn *mq.Client, id string, timeout time.Duration) (*mq.DescribeBrokerOutput, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.BrokerStateRebootInProgress),
 		Target:  enum.Slice(types.BrokerStateRunning),
 		Timeout: timeout,
-		Refresh: statusBrokerState(ctx, conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 

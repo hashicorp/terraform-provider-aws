@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dms
 
 import (
@@ -30,6 +32,7 @@ import (
 
 // @SDKResource("aws_dms_s3_endpoint", name="S3 Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceS3Endpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3EndpointCreate,
