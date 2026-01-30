@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -111,6 +112,20 @@ func resourceUser() *schema.Resource {
 				},
 				Sensitive: true,
 			},
+			"passwords_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ValidateFunc:  validation.StringLenBetween(16, 128),
+				ConflictsWith: []string{"passwords", "authentication_mode"},
+				RequiredWith:  []string{"passwords_wo_version"},
+			},
+			"passwords_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"passwords_wo"},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_id": {
@@ -132,6 +147,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 
+	// Get write-only password from configuration
+	passwordsWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("passwords_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	userID := d.Get("user_id").(string)
 	input := &elasticache.CreateUserInput{
 		AccessString:       aws.String(d.Get("access_string").(string)),
@@ -143,11 +165,15 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.AuthenticationMode = expandAuthenticationMode(v.([]any)[0].(map[string]any))
+		input.AuthenticationMode = expandAuthenticationMode(d, v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("passwords"); ok && v.(*schema.Set).Len() > 0 {
 		input.Passwords = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if passwordsWO != "" {
+		input.Passwords = []string{passwordsWO}
 	}
 
 	output, err := conn.CreateUser(ctx, input)
@@ -241,7 +267,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		if d.HasChange("authentication_mode") {
 			if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-				input.AuthenticationMode = expandAuthenticationMode(v.([]any)[0].(map[string]any))
+				input.AuthenticationMode = expandAuthenticationMode(d, v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -255,6 +281,17 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 		if d.HasChange("passwords") {
 			input.Passwords = flex.ExpandStringValueSet(d.Get("passwords").(*schema.Set))
+		}
+
+		if d.HasChange("passwords_wo_version") {
+			passwordsWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("passwords_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+			if passwordsWO != "" {
+				input.Passwords = []string{passwordsWO}
+			}
 		}
 
 		_, err := conn.ModifyUser(ctx, input)
@@ -415,7 +452,7 @@ func waitUserDeleted(ctx context.Context, conn *elasticache.Client, id string, t
 	return nil, err
 }
 
-func expandAuthenticationMode(tfMap map[string]any) *awstypes.AuthenticationMode {
+func expandAuthenticationMode(d *schema.ResourceData, tfMap map[string]any) *awstypes.AuthenticationMode {
 	if tfMap == nil {
 		return nil
 	}
