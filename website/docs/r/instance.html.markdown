@@ -366,6 +366,7 @@ For more information, see the documentation on [Nitro Enclaves](https://docs.aws
 The `maintenance_options` block supports the following:
 
 * `auto_recovery` - (Optional) Automatic recovery behavior of the Instance. Can be `"default"` or `"disabled"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
+* `reboot_migration` - (Optional) Automatic reboot migration behavior of the Instance. Can be `"default"` or `"disabled"`. See [Scheduled events for your instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-instances-status-check_sched.html) for more details.
 
 ### Market Options
 

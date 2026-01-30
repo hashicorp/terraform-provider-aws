@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `reboot_migration` argument to `maintenance_options` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `reboot_migration` attribute to `maintenance_options` configuration block
+```

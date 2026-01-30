@@ -226,6 +226,10 @@ func dataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"reboot_migration": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

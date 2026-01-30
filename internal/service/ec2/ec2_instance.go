@@ -554,6 +554,12 @@ func resourceInstance() *schema.Resource {
 							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.InstanceAutoRecoveryState](),
 						},
+						"reboot_migration": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceRebootMigrationState](),
+						},
 					},
 				},
 			},
@@ -1633,22 +1639,47 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if d.HasChange("maintenance_options") && !d.IsNewResource() {
-		autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
+	// Handle maintenance_options updates.
+	// For new resources: only modify reboot_migration since auto_recovery is set during creation.
+	// For existing resources: modify both if maintenance_options changed.
+	if d.HasChange("maintenance_options") {
+		rebootMigration := d.Get("maintenance_options.0.reboot_migration").(string)
 
-		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
-		input := ec2.ModifyInstanceMaintenanceOptionsInput{
-			AutoRecovery: awstypes.InstanceAutoRecoveryState(autoRecovery),
-			InstanceId:   aws.String(d.Id()),
-		}
-		_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
+		if d.IsNewResource() {
+			// For new resources, only call ModifyInstanceMaintenanceOptions if reboot_migration is set,
+			// since auto_recovery is already handled during instance creation.
+			if rebootMigration != "" {
+				log.Printf("[INFO] Modifying instance reboot migration settings %s", d.Id())
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
-		}
+				input := ec2.ModifyInstanceMaintenanceOptionsInput{
+					RebootMigration: awstypes.InstanceRebootMigrationState(rebootMigration),
+					InstanceId:      aws.String(d.Id()),
+				}
+				_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
 
-		if _, err := waitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx, conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: waiting for completion: %s", d.Id(), err)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
+				}
+			}
+		} else {
+			autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
+
+			log.Printf("[INFO] Modifying instance maintenance options %s", d.Id())
+
+			input := ec2.ModifyInstanceMaintenanceOptionsInput{
+				AutoRecovery:    awstypes.InstanceAutoRecoveryState(autoRecovery),
+				RebootMigration: awstypes.InstanceRebootMigrationState(rebootMigration),
+				InstanceId:      aws.String(d.Id()),
+			}
+			_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
+			}
+
+			if _, err := waitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx, conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: waiting for completion: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -1859,7 +1890,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", d.Id())
 
 				_, err := conn.ModifyInstanceCapacityReservationAttributes(ctx, &input)
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) capacity reservation attributes: %s", d.Id(), err)
 				}
@@ -1896,7 +1926,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			_, err := conn.ModifyPrivateDnsNameOptions(ctx, &input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
 			}
@@ -1929,7 +1958,6 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 			SpotInstanceRequestIds: []string{spotInstanceRequestID},
 		}
 		_, err := conn.CancelSpotInstanceRequests(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Fleet Request (%s): %s", spotInstanceRequestID, err)
 		}
@@ -2201,7 +2229,6 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 		}
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("associating instance profile: %w", err)
 	}
@@ -2226,7 +2253,6 @@ func findRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*s
 	}
 
 	image, err := findImageByID(ctx, conn, amiID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -2481,7 +2507,6 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				launchTemplateData, err := findLaunchTemplateData(ctx, conn, expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any)))
-
 				if err != nil {
 					return nil, err
 				}
@@ -2597,7 +2622,6 @@ func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, c
 		Attribute:  awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior,
 	}
 	output, err := conn.DescribeInstanceAttribute(ctx, &input)
-
 	if err != nil {
 		return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
 	}
@@ -2620,7 +2644,6 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 	err := tfresource.Retry(ctx, timeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		resp, err = conn.GetPasswordData(ctx, &input)
-
 		if err != nil {
 			return tfresource.NonRetryableError(err)
 		}
@@ -2634,7 +2657,6 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.C
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-
 	if err != nil {
 		return "", err
 	}
@@ -2703,7 +2725,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]any)[0].(map[string]any))
 		launchTemplateData, err := findLaunchTemplateData(ctx, conn, launchTemplateSpecification)
-
 		if err != nil {
 			return nil, err
 		}
@@ -2727,7 +2748,6 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]any)) > 0 {
 		if instanceType != "" {
 			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
@@ -2961,7 +2981,6 @@ func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, 
 		InstanceIds: []string{id},
 	}
 	_, err := conn.StopInstances(ctx, &input)
-
 	if err != nil {
 		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
 	}
@@ -3760,7 +3779,8 @@ func flattenInstanceMaintenanceOptions(apiObject *awstypes.InstanceMaintenanceOp
 	}
 
 	tfMap := map[string]any{
-		"auto_recovery": apiObject.AutoRecovery,
+		"auto_recovery":    apiObject.AutoRecovery,
+		"reboot_migration": apiObject.RebootMigration,
 	}
 
 	return tfMap
