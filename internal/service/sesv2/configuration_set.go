@@ -391,11 +391,19 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			ConfigurationSetName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("suppression_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			tfMap := v.([]any)[0].(map[string]any)
+		if v, ok := d.GetRawConfig().AsValueMap()["suppression_options"]; ok && v.LengthInt() > 0 {
+			if v, ok := v.Index(cty.NumberIntVal(0)).AsValueMap()["suppressed_reasons"]; ok && !v.IsNull() {
+				tfMap := map[string]any{
+					"suppressed_reasons": []any{},
+				}
 
-			if v, ok := tfMap["suppressed_reasons"].([]any); ok && len(v) > 0 {
-				input.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
+				for _, v := range v.AsValueSlice() {
+					tfMap["suppressed_reasons"] = append(tfMap["suppressed_reasons"].([]any), v.AsString())
+				}
+
+				if v, ok := tfMap["suppressed_reasons"].([]any); ok {
+					input.SuppressedReasons = expandSuppressedReasons(v)
+				}
 			}
 		}
 
@@ -676,14 +684,22 @@ func expandSuppressionOptions(tfMap map[string]any) *types.SuppressionOptions {
 	apiObject := &types.SuppressionOptions{}
 
 	if v, ok := tfMap["suppressed_reasons"].([]any); ok {
-		if len(v) > 0 {
-			apiObject.SuppressedReasons = flex.ExpandStringyValueList[types.SuppressionListReason](v)
-		} else {
-			apiObject.SuppressedReasons = make([]types.SuppressionListReason, 0)
-		}
+		apiObject.SuppressedReasons = expandSuppressedReasons(v)
 	}
 
 	return apiObject
+}
+
+func expandSuppressedReasons(tfList []any) []types.SuppressionListReason {
+	var apiObjects []types.SuppressionListReason
+
+	if len(tfList) > 0 {
+		apiObjects = flex.ExpandStringyValueList[types.SuppressionListReason](tfList)
+	} else {
+		apiObjects = make([]types.SuppressionListReason, 0)
+	}
+
+	return apiObjects
 }
 
 func expandTrackingOptions(tfMap map[string]any) *types.TrackingOptions {
