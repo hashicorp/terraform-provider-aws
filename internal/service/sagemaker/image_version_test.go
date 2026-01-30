@@ -479,3 +479,74 @@ resource "aws_sagemaker_image_version" "test" {
 }
 `, baseImage))
 }
+func TestAccSageMakerImageVersion_concurrentCreation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	baseImage := acctest.SkipIfEnvVarNotSet(t, imageVersionBaseImageEnvVar)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageVersionConfig_concurrent(rName, baseImage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test10", "image_name", rName),
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test20", "image_name", rName),
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test30", "image_name", rName),
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test40", "image_name", rName),
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test50", "image_name", rName),
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test60", "image_name", rName),
+					resource.TestCheckResourceAttr("aws_sagemaker_image_version.test70", "image_name", rName),
+				),
+			},
+		},
+	})
+}
+
+func testAccImageVersionConfig_concurrent(rName, baseImage string) string {
+	versions := ""
+	for i := 1; i <= 80; i++ {
+		versions += fmt.Sprintf(`
+resource "aws_sagemaker_image_version" "test%d" {
+  image_name = aws_sagemaker_image.test.image_name
+  base_image = %q
+}
+`, i, baseImage)
+	}
+
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+%s
+`, rName, versions)
+}
