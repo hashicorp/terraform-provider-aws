@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codeartifact
 
@@ -28,6 +30,7 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_domain", name="Domain")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
@@ -209,7 +212,7 @@ func findDomainByTwoPartKey(ctx context.Context, conn *codeartifact.Client, owne
 	}
 
 	if output == nil || output.Domain == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Domain, nil

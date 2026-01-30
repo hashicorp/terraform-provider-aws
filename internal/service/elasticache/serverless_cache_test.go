@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -545,7 +545,7 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 				Config: testAccServerlessCacheConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceServerlessCache, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfelasticache.ResourceServerlessCache, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

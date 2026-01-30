@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -131,7 +131,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceIPGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfworkspaces.ResourceIPGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

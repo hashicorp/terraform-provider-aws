@@ -1,9 +1,5 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
-
-resource "aws_sns_topic" "test" {
-  name = var.rName
-}
 
 resource "aws_sns_topic_policy" "test" {
   arn    = aws_sns_topic.test.arn
@@ -29,6 +25,10 @@ resource "aws_sns_topic_policy" "test" {
   ]
 }
 POLICY
+}
+
+resource "aws_sns_topic" "test" {
+  name = var.rName
 }
 
 variable "rName" {

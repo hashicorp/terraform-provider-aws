@@ -1,4 +1,4 @@
-<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <!-- markdownlint-configure-file { "code-block-style": false } -->
@@ -761,7 +761,7 @@ func TestAccExampleThing_disappears(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName, &job),
-          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
+          acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
         ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -810,7 +810,7 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName),
-          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
+          acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
         ConfigPlanChecks: resource.ConfigPlanChecks{

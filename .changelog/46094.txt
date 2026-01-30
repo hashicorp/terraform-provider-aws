@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix perpetual diff for `warm_throughput` in global_secondary_index when not set in configuration.
+```

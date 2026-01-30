@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_odb_cloud_autonomous_vm_cluster: autonomous vm cluster creation using odb network ARN and exadata infrastructure ARN for resource sharing model.
+```

@@ -1,4 +1,4 @@
-<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 # Adding a New Function
@@ -110,7 +110,7 @@ For functions with variadic arguments, or which can potentially return an error,
 An example outline is included below:
 
 ```go
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package function_test

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssoadmin
 
@@ -187,7 +189,7 @@ func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadm
 	}
 
 	if output == nil || aws.ToString(output.InlinePolicy) == "" {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.InlinePolicy), nil

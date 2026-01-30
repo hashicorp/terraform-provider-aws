@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -69,7 +69,7 @@ func testAccVerifiedAccessInstanceTrustProviderAttachment_disappears(t *testing.
 				Config: testAccVerifiedAccessInstanceTrustProviderAttachmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceTrustProviderAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstanceTrustProviderAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstanceTrustProviderAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dsql
 
@@ -27,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -373,9 +374,8 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	output, err := conn.GetCluster(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -384,7 +384,7 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -397,9 +397,8 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	output, err := conn.GetVpcEndpointServiceName(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -408,14 +407,14 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	}
 
 	if output == nil || output.ServiceName == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceName, nil
 }
 
-func statusCluster(ctx context.Context, conn *dsql.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -431,10 +430,10 @@ func statusCluster(ctx context.Context, conn *dsql.Client, id string) sdkretry.S
 }
 
 func waitClusterCreated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusActive, awstypes.ClusterStatusPendingSetup),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -449,10 +448,10 @@ func waitClusterCreated(ctx context.Context, conn *dsql.Client, id string, timeo
 }
 
 func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ClusterStatusUpdating),
 		Target:  enum.Slice(awstypes.ClusterStatusActive),
-		Refresh: statusCluster(ctx, conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -466,10 +465,10 @@ func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeo
 }
 
 func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusPendingDelete),
 		Target:       []string{},
-		Refresh:      statusCluster(ctx, conn, id),
+		Refresh:      statusCluster(conn, id),
 		Timeout:      timeout,
 		Delay:        1 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -484,8 +483,8 @@ func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeo
 	return nil, err
 }
 
-func statusClusterEncryption(ctx context.Context, conn *dsql.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterEncryption(conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -505,10 +504,10 @@ func statusClusterEncryption(ctx context.Context, conn *dsql.Client, id string) 
 }
 
 func waitClusterEncryptionEnabled(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*awstypes.EncryptionDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EncryptionStatusEnabling, awstypes.EncryptionStatusUpdating),
 		Target:  enum.Slice(awstypes.EncryptionStatusEnabled),
-		Refresh: statusClusterEncryption(ctx, conn, id),
+		Refresh: statusClusterEncryption(conn, id),
 		Timeout: timeout,
 	}
 

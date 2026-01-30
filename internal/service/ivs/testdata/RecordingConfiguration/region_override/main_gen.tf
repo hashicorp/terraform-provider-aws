@@ -1,4 +1,4 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_ivs_recording_configuration" "test" {
@@ -6,7 +6,7 @@ resource "aws_ivs_recording_configuration" "test" {
 
   destination_configuration {
     s3 {
-      bucket_name = aws_s3_bucket.test.id
+      bucket_name = aws_s3_bucket.test.bucket
     }
   }
 }

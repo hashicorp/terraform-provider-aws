@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -246,7 +246,7 @@ func TestAccRoute53Record_disappears(t *testing.T) {
 				Config: testAccRecordConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceRecord(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceRecord(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -273,7 +273,7 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 					testAccCheckRecordExists(ctx, "aws_route53_record.test.2", &v3),
 					testAccCheckRecordExists(ctx, "aws_route53_record.test.3", &v4),
 					testAccCheckRecordExists(ctx, "aws_route53_record.test.4", &v5),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceRecord(), "aws_route53_record.test.0"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceRecord(), "aws_route53_record.test.0"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

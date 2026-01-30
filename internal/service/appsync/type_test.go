@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -67,7 +67,7 @@ func testAccType_disappears(t *testing.T) {
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName, &typ),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceType(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -71,7 +71,7 @@ func TestAccIoTBillingGroup_disappears(t *testing.T) {
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiot.NewResourceBillingGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfiot.NewResourceBillingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

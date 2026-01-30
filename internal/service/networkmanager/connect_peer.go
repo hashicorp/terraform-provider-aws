@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -33,6 +35,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(importIgnore="state")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,
@@ -354,7 +357,7 @@ func findConnectPeer(ctx context.Context, conn *networkmanager.Client, input *ne
 	}
 
 	if output == nil || output.ConnectPeer == nil || output.ConnectPeer.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConnectPeer, nil
@@ -387,7 +390,7 @@ func waitConnectPeerCreated(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
-		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+		retry.SetLastError(err, connectPeersError(output.LastModificationErrors))
 
 		return output, err
 	}
@@ -409,7 +412,7 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 	outputRaw, err := stateconf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectPeer); ok {
-		tfresource.SetLastError(err, connectPeersError(output.LastModificationErrors))
+		retry.SetLastError(err, connectPeersError(output.LastModificationErrors))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -41,6 +41,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
 			"Identity":                          testAccOrganizationsOrganization_IdentitySerial,
+			"DataSource_returnOrganizationOnly": testAccOrganizationDataSource_returnOrganizationOnly,
 		},
 		"Account": {
 			acctest.CtBasic:    testAccAccount_basic,

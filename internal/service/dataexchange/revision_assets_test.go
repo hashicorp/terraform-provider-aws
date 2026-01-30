@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -156,7 +156,7 @@ func TestAccDataExchangeRevisionAssets_disappears(t *testing.T) {
 				Config: testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevisionAssets, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdataexchange.ResourceRevisionAssets, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

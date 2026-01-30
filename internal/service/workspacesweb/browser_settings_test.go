@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -112,7 +112,7 @@ func TestAccWorkSpacesWebBrowserSettings_disappears(t *testing.T) {
 				Config: testAccBrowserSettingsConfig_basic(browserPolicy),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsExists(ctx, resourceName, &browserSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceBrowserSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceBrowserSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

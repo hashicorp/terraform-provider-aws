@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ds
 
@@ -504,7 +506,7 @@ func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -538,7 +540,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -571,7 +573,7 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -601,7 +603,7 @@ func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}

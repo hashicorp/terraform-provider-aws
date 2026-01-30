@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -71,7 +71,7 @@ func TestAccQuickSightDashboard_disappears(t *testing.T) {
 				Config: testAccDashboardConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDashboard(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDashboard(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

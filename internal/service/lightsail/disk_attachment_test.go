@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -79,7 +79,7 @@ func TestAccLightsailDiskAttachment_disappears(t *testing.T) {
 				Config: testAccDiskAttachmentConfig_basic(dName, liName, diskPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDiskAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDiskAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

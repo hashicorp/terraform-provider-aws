@@ -243,7 +243,7 @@ The following arguments are optional:
 
 #### destination_config on_failure Configuration Block
 
-* `destination_arn` - (Required) ARN of the destination resource.
+* `destination_arn` - (Required) ARN of the destination resource, or `kafka://your-topic-name` for Amazon MSK and self-managed Apache Kafka destinations.
 
 ### document_db_event_source_config Configuration Block
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -149,7 +149,7 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 				Config: testAccDataCellsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceDataCellsFilter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceDataCellsFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

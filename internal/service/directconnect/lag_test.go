@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -93,7 +93,7 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 				Config: testAccLagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms_test
@@ -81,7 +81,7 @@ func TestAccCleanRoomsCollaboration_disappears(t *testing.T) {
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceCollaboration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceCollaboration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

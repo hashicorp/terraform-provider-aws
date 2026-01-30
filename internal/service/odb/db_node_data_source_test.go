@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -127,7 +127,7 @@ func (testDbNodeDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cli
 		return err
 	}
 	if output == nil || output.CloudVmCluster == nil {
-		return tfresource.NewEmptyResultError(&input)
+		return tfresource.NewEmptyResultError()
 	}
 	return nil
 }

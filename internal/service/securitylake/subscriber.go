@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securitylake
 
@@ -25,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -361,7 +362,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 	// "UnauthorizedException: Unauthorized"
 	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") ||
 		tfawserr.ErrMessageContains(err, errCodeUnauthorizedException, "Unauthorized") {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -369,14 +370,14 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Subscriber, nil
 }
 
-func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSubscriber(conn *securitylake.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSubscriberByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -392,10 +393,10 @@ func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string)
 }
 
 func waitSubscriberCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.SubscriberResource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SubscriberStatusPending),
 		Target:  enum.Slice(awstypes.SubscriberStatusActive, awstypes.SubscriberStatusReady),
-		Refresh: statusSubscriber(ctx, conn, id),
+		Refresh: statusSubscriber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -409,10 +410,10 @@ func waitSubscriberCreated(ctx context.Context, conn *securitylake.Client, id st
 }
 
 func waitSubscriberUpdated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.SubscriberResource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SubscriberStatusPending),
 		Target:  enum.Slice(awstypes.SubscriberStatusActive, awstypes.SubscriberStatusReady),
-		Refresh: statusSubscriber(ctx, conn, id),
+		Refresh: statusSubscriber(conn, id),
 		Timeout: timeout,
 	}
 
@@ -426,10 +427,10 @@ func waitSubscriberUpdated(ctx context.Context, conn *securitylake.Client, id st
 }
 
 func waitSubscriberDeleted(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.SubscriberResource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SubscriberStatusActive, awstypes.SubscriberStatusReady, awstypes.SubscriberStatusDeactivated),
 		Target:  []string{},
-		Refresh: statusSubscriber(ctx, conn, id),
+		Refresh: statusSubscriber(conn, id),
 		Timeout: timeout,
 	}
 

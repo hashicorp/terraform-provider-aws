@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -78,7 +78,7 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 				Config: testAccIngestionConfig_basic(rId, rName, string(awstypes.IngestionTypeFullRefresh)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSet(), dataSetName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSet(), dataSetName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

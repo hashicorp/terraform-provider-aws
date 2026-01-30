@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -207,7 +207,7 @@ func TestAccSageMakerHub_disappears(t *testing.T) {
 				Config: testAccHubConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHub(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHub(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

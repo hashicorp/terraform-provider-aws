@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -225,7 +225,7 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -4893,6 +4893,10 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	// Versions
+	// 8.4.7: latest as of 2026-01-15. End of support is 2026-11-30.
+	// 8.4.5: End of support is 2026-09-30.
+	const sourceVersion = "8.4.5" // Source version must *not* be the current version
 
 	var v, vRestoredInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4909,12 +4913,12 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName),
+				Config: testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName, sourceVersion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, restoreResourceName, &vRestoredInstance),
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					// Hardcoded older version. Will need to update when no longer compatible to upgrade from this to the default version.
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.32"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, sourceVersion),
 					resource.TestCheckResourceAttrPair(restoreResourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
@@ -8147,10 +8151,10 @@ func dbInstanceIdentity(v *types.DBInstance) string {
 }
 
 func testAccCheckDBInstanceExists(ctx context.Context, n string, v *types.DBInstance) resource.TestCheckFunc {
-	return testAccCheckDBInstanceExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckDBInstanceExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckDBInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckDBInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -9774,7 +9778,7 @@ resource "aws_db_instance" "test" {
 `, rName, domain, domainOu))
 }
 
-func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) string {
+func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName, sourceVersion string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
@@ -9783,7 +9787,7 @@ func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) strin
 resource "aws_db_instance" "test" {
   allocated_storage   = 20
   engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = "8.0.32" # test is from older to newer version, update when restore from this to current default version is incompatible
+  engine_version      = %[2]q
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
@@ -9832,7 +9836,7 @@ resource "aws_security_group_rule" "test" {
 
   security_group_id = aws_security_group.test.id
 }
-`, rName))
+`, rName, sourceVersion))
 }
 
 func testAccInstanceConfig_Versions_allowMajor(rName string, allowMajorVersionUpgrade bool) string {

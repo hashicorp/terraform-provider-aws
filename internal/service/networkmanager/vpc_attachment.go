@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmanager
 
@@ -32,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.VpcAttachment")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,
@@ -176,7 +179,6 @@ func resourceVPCAttachment() *schema.Resource {
 			"routing_policy_label": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"segment_name": {
@@ -295,7 +297,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "routing_policy_label") {
 		input := networkmanager.UpdateVpcAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		}
@@ -329,6 +331,34 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	// An update (via transparent tagging) to tags can put the attachment into PENDING_NETWORK_UPDATE state.
 	if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
+	}
+
+	if d.HasChange("routing_policy_label") {
+		if v, ok := d.GetOk("routing_policy_label"); ok {
+			// Set or update routing policy label
+			input := networkmanager.PutAttachmentRoutingPolicyLabelInput{
+				AttachmentId:       aws.String(d.Id()),
+				CoreNetworkId:      aws.String(d.Get("core_network_id").(string)),
+				RoutingPolicyLabel: aws.String(v.(string)),
+			}
+			_, err := conn.PutAttachmentRoutingPolicyLabel(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+			}
+		} else {
+			// Remove routing policy label
+			input := networkmanager.RemoveAttachmentRoutingPolicyLabelInput{
+				AttachmentId:  aws.String(d.Id()),
+				CoreNetworkId: aws.String(d.Get("core_network_id").(string)),
+			}
+			_, err := conn.RemoveAttachmentRoutingPolicyLabel(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Network Manager VPC Attachment (%s) routing policy label: %s", d.Id(), err)
+			}
+		}
+		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager VPC Attachment (%s) routing policy label update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceVPCAttachmentRead(ctx, d, meta)...)
@@ -417,7 +447,7 @@ func findVPCAttachment(ctx context.Context, conn *networkmanager.Client, input *
 	}
 
 	if output == nil || output.VpcAttachment == nil || output.VpcAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcAttachment, nil
@@ -498,7 +528,7 @@ func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -517,7 +547,7 @@ func waitVPCAttachmentAvailable(ctx context.Context, conn *networkmanager.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -536,7 +566,7 @@ func waitVPCAttachmenRejected(ctx context.Context, conn *networkmanager.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -558,7 +588,7 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -566,7 +596,7 @@ func waitVPCAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, 
 	return nil, err
 }
 
-func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) {
+func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.VpcAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
@@ -577,7 +607,7 @@ func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -249,7 +249,7 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 				Config: testAccJobDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceJobDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -998,6 +998,7 @@ func TestAccBatchJobDefinition_EKSProperties_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", "Always"),
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.0.name", "tmp"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.security_context.0.allow_privilege_escalation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
@@ -2223,6 +2224,7 @@ resource "aws_batch_job_definition" "test" {
           }
         }
         security_context {
+          allow_privilege_escalation = true
           privileged                 = true
           read_only_root_file_system = true
           run_as_group               = 1000

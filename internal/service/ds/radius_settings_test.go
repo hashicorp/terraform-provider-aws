@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -94,7 +94,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceRadiusSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

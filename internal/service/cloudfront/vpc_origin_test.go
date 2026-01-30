@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -79,7 +79,7 @@ func TestAccCloudFrontVPCOrigin_disappears(t *testing.T) {
 				Config: testAccVPCOriginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceVPCOrigin, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceVPCOrigin, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
