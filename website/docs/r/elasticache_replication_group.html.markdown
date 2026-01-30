@@ -240,8 +240,8 @@ The following arguments are optional:
 * `cluster_mode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `data_tiering_enabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
 * `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
-  Valid values are `redis` or `valkey`.
-  Default is `redis`.
+  Valid values are `valkey` or `redis`.
+  Default is `valkey`.
 * `engine_version` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
   If the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
   If the version is 6, the major and minor version can be set, e.g., `6.2`,

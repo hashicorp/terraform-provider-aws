@@ -555,8 +555,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.ReplicationGroupDescription = aws.String(v.(string))
 	}
 
+	var engineVersionSet = false
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
+		engineVersionSet = true
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
@@ -571,11 +573,41 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.CacheNodeType = aws.String(nodeType)
 		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 
-		// backwards-compatibility; imply redis engine if empty and not part of global replication group
+		// backwards-compatibility; imply valkey engine if empty and not part of global replication group
 		if e, ok := d.GetOk(names.AttrEngine); ok {
-			input.Engine = aws.String(e.(string))
+			engineName := e.(string)
+			input.Engine = aws.String(engineName)
+			if !engineVersionSet {
+				input.EngineVersion = aws.String(engineDefaultVersions[engineName])
+			}
 		} else {
-			input.Engine = aws.String(engineRedis)
+			if !engineVersionSet {
+				input.Engine = aws.String(engineValkey)
+				input.EngineVersion = aws.String(engineDefaultVersions[engineValkey])
+			} else {
+				// Determine engine based on version
+				// Versions < 7.2 are Redis, >= 7.2 are Valkey
+				version := d.Get(names.AttrEngineVersion).(string)
+
+				// Normalize version for comparison (handles "6.x", "7.x" patterns)
+				normalizedVersion, err := normalizeEngineVersion(version)
+				if err != nil {
+					// If normalization fails, fall back to string comparison
+					if semver.LessThan(version, "7.2.0") {
+						input.Engine = aws.String(engineRedis)
+					} else {
+						input.Engine = aws.String(engineValkey)
+					}
+				} else {
+					// Compare normalized version with 7.2.0
+					versionThreshold, _ := normalizeEngineVersion("7.2.0")
+					if normalizedVersion.LessThan(versionThreshold) {
+						input.Engine = aws.String(engineRedis)
+					} else {
+						input.Engine = aws.String(engineValkey)
+					}
+				}
+			}
 		}
 	}
 
