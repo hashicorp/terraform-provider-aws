@@ -4737,8 +4737,8 @@ resource "aws_elasticache_replication_group" "test" {
   port                 = 6379
   subnet_group_name    = aws_elasticache_subnet_group.test.name
   security_group_ids   = [aws_security_group.test.id]
-  engine_version             = "6.2"
-  parameter_group_name       = "default.redis6.x"
+  engine_version       = "6.2"
+  parameter_group_name = "default.redis6.x"
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -4778,7 +4778,7 @@ resource "aws_elasticache_replication_group" "test" {
   transit_encryption_enabled = true
   auth_token                 = %[2]q
   auth_token_update_strategy = %[3]q
-  apply_immediately    		 = true
+  apply_immediately          = true
 }
 
 resource "aws_elasticache_subnet_group" "test" {
@@ -4832,7 +4832,7 @@ resource "aws_elasticache_replication_group" "test" {
   transit_encryption_enabled = true
   auth_token_update_strategy = "DELETE"
   user_group_ids             = [aws_elasticache_user_group.test.id]
-  apply_immediately    		 = true
+  apply_immediately          = true
 }
 
 resource "aws_elasticache_subnet_group" "test" {
