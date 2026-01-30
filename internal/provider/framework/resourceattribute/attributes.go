@@ -23,6 +23,6 @@ var RegionDeprecated = sync.OnceValue(func() schema.StringAttribute {
 		Optional:           true,
 		Computed:           true,
 		Description:        names.ResourceTopLevelRegionAttributeDescription,
-		DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
+		DeprecationMessage: "This attribute will be removed in a future version of the provider.",
 	}
 })
