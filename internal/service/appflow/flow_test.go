@@ -50,6 +50,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "task.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.source_fields.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),
+					resource.TestCheckResourceAttr(resourceName, "single_task_flag", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
@@ -217,6 +218,7 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 						"task_properties.SOURCE_DATA_TYPE":      names.AttrID,
 						"task_type":                             "Map",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "single_task_flag", acctest.CtFalse),
 				),
 			},
 			{

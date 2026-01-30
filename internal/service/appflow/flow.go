@@ -1212,16 +1212,12 @@ func resourceFlow() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(0, 2048),
 							},
 							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-								if v, ok := d.Get("task").(*schema.Set); ok && v.Len() == 1 {
-									if tl, ok := v.List()[0].(map[string]any); ok && len(tl) > 0 {
-										if sf, ok := tl["source_fields"].([]any); ok && len(sf) == 1 {
-											if sf[0] == "" {
-												return oldValue == "0" && newValue == "1"
-											}
-										}
-									}
+								marker, ok := d.Get("single_task_flag").(bool)
+								if !ok || !marker {
+									return false
 								}
-								return false
+
+								return oldValue == "0" && newValue == "1"
 							},
 						},
 						"task_properties": {
@@ -1238,6 +1234,16 @@ func resourceFlow() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.TaskType](),
 						},
 					},
+				},
+			},
+			"single_task_flag": {
+				Type:     schema.TypeBool,
+				Computed: true,
+				Optional: true,
+				ForceNew: false,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Ignore internal field
+					return true
 				},
 			},
 			"trigger_config": {
@@ -1419,8 +1425,12 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	} else {
 		d.Set("source_flow_config", nil)
 	}
-	if err := d.Set("task", flattenTasks(output.Tasks)); err != nil {
+	tasks := flattenTasks(output.Tasks)
+	if err := d.Set("task", tasks); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting task: %s", err)
+	}
+	if err := d.Set("single_task_flag", len(tasks) == 1); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting single_task_flag: %s", err)
 	}
 	if output.TriggerConfig != nil {
 		if err := d.Set("trigger_config", []any{flattenTriggerConfig(output.TriggerConfig)}); err != nil {
