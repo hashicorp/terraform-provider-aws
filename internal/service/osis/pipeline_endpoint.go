@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package osis
@@ -12,25 +12,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/osis/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,10 +67,10 @@ func (r *pipelineEndpointResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -86,7 +86,7 @@ func (r *pipelineEndpointResource) Schema(ctx context.Context, request resource.
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"subnet_ids": schema.SetAttribute{
+						names.AttrSubnetIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,
@@ -97,7 +97,7 @@ func (r *pipelineEndpointResource) Schema(ctx context.Context, request resource.
 								setvalidator.SizeBetween(1, 12),
 							},
 						},
-						"security_group_ids": schema.SetAttribute{
+						names.AttrSecurityGroupIDs: schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
@@ -177,7 +177,7 @@ func (r *pipelineEndpointResource) Read(ctx context.Context, request resource.Re
 	endpointID := data.ID.ValueString()
 	endpoint, err := findPipelineEndpointByID(ctx, conn, endpointID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -256,7 +256,7 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 	}
 
 	if endpoint == nil {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -264,11 +264,11 @@ func findPipelineEndpointByID(ctx context.Context, conn *osis.Client, endpointID
 	return endpoint, nil
 }
 
-func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID string) retry.StateRefreshFunc {
+func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPipelineEndpointByID(ctx, conn, endpointID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -281,7 +281,7 @@ func statusPipelineEndpoint(ctx context.Context, conn *osis.Client, endpointID s
 }
 
 func waitPipelineEndpointCreated(ctx context.Context, conn *osis.Client, endpointID string, timeout time.Duration) (*awstypes.PipelineEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineEndpointStatusCreating),
 		Target:     enum.Slice(awstypes.PipelineEndpointStatusActive),
 		Refresh:    statusPipelineEndpoint(ctx, conn, endpointID),
@@ -300,7 +300,7 @@ func waitPipelineEndpointCreated(ctx context.Context, conn *osis.Client, endpoin
 }
 
 func waitPipelineEndpointDeleted(ctx context.Context, conn *osis.Client, endpointID string, timeout time.Duration) (*awstypes.PipelineEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.PipelineEndpointStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusPipelineEndpoint(ctx, conn, endpointID),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package osis_test
@@ -14,27 +14,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfosis "github.com/hashicorp/terraform-provider-aws/internal/service/osis"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOSISPipelineEndpoint_basic(t *testing.T) {
+func TestAccOpenSearchIngestionPipelineEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineEndpoint awstypes.PipelineEndpoint
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline_endpoint.test"
 	pipelineResourceName := "aws_osis_pipeline.test"
-	fmt.Printf("Pipeline endpoint name: %#v\n", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
 			testAccPreCheck(ctx, t)
-			fmt.Println("PreCheck completed")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,8 +42,8 @@ func TestAccOSISPipelineEndpoint_basic(t *testing.T) {
 					testAccCheckPipelineEndpointExists(ctx, resourceName, &pipelineEndpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_arn", pipelineResourceName, "pipeline_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -72,7 +70,7 @@ func testAccCheckPipelineEndpointDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfosis.FindPipelineEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -115,13 +113,14 @@ func testAccCheckPipelineEndpointExists(ctx context.Context, n string, v *awstyp
 func testAccPipelineEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccPipelineEndpointConfig_vpc(rName), fmt.Sprintf(`
 
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
 resource "aws_vpc" "endpoint_test" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
     Name = %[1]q
@@ -130,8 +129,8 @@ resource "aws_vpc" "endpoint_test" {
 
 resource "aws_subnet" "endpoint_test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block = "10.0.1.0/24"
-  vpc_id     = aws_vpc.endpoint_test.id
+  cidr_block        = "10.0.1.0/24"
+  vpc_id            = aws_vpc.endpoint_test.id
 }
 
 resource "aws_security_group" "endpoint_test" {
@@ -173,8 +172,8 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
     Name = %[1]q
@@ -182,9 +181,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.1.0/24"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id     = aws_vpc.test.id
+  vpc_id            = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test" {
