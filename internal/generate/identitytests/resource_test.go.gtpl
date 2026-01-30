@@ -28,7 +28,7 @@ PreCheck: func() { acctest.PreCheck(ctx, t)
 	{{- end -}}
 	{{- range .PreChecks }}
 		{{ .Code }}
-	{{ end -}}
+	{{- end -}}
 	{{- range .PreChecksWithRegion }}
 		{{ .Code }}(ctx, t, acctest.AlternateRegion())
 	{{- end -}}

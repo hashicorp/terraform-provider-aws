@@ -128,7 +128,6 @@ func TestAccARCRegionSwitchPlan_Identity_RegionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
