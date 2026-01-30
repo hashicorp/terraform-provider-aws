@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3tables_namespace: Allow hyphens in `namespace` attribute
+```
