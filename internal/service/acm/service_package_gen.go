@@ -61,6 +61,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
+			Factory:  resourceCertificateExport,
+			TypeName: "aws_acm_certificate_export",
+			Name:     "Certificate Export",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceCertificateValidation,
 			TypeName: "aws_acm_certificate_validation",
 			Name:     "Certificate Validation",
