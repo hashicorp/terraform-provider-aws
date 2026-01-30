@@ -201,50 +201,6 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	})
 }
 
-func TestAccARCRegionSwitchPlan_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccPlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test requiring VPC creation and Route53 health check setup")
@@ -1285,11 +1241,6 @@ resource "aws_arcregionswitch_plan" "test" {
   regions           = [%[3]q, %[2]q]
   primary_region    = %[3]q
 
-  tags = {
-    Name        = %[1]q
-    Environment = "test"
-  }
-
   workflow {
     workflow_target_action = "activate"
     workflow_target_region = %[2]q
@@ -1546,133 +1497,6 @@ resource "aws_arcregionswitch_plan" "test" {
 `, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
-func testAccPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  tags = {
-    %[4]q = %[5]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1)
-}
-
-func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 func testAccPlanConfig_regionOverride(rName, regionOverride string) string {
 	return fmt.Sprintf(`
 resource "aws_arcregionswitch_plan" "test" {
@@ -1683,11 +1507,6 @@ resource "aws_arcregionswitch_plan" "test" {
   recovery_approach = "activePassive"
   regions           = [%[3]q, %[2]q]
   primary_region    = %[3]q
-
-  tags = {
-    Name        = %[1]q
-    Environment = "test"
-  }
 
   workflow {
     workflow_target_action = "activate"

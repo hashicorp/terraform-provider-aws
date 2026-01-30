@@ -41,8 +41,6 @@ import (
 // @Region(overrideDeprecated=true)
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
-// Generating tags tests does not work because alternate region isn't working and tests require 2 regions
-// @Testing(tagsTest=false)
 // @Testing(altRegionTfVars=true)
 // @Testing(preIdentityVersion="6.30.0")
 // @Testing(existsTakesT=false, destroyTakesT=false)
