@@ -4131,22 +4131,22 @@ func testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName string, en
 func testAccReplicationGroupConfig_clusterModeWithNumNodeGroupsReplica(rName string, engine string, engineVersion string, numNodeGroups int, replicationPerNodeGroup int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id = %[1]q
-  description          = "test description"
-  node_type            = "cache.t3.small"
-  port                 = 6379
-  apply_immediately    = true
-  maintenance_window   = "tue:06:30-tue:07:30"
-  snapshot_window      = "01:00-02:00"
-  engine               = %[2]q
-  engine_version	   = %[3]q
+  replication_group_id    = %[1]q
+  description             = "test description"
+  node_type               = "cache.t3.small"
+  port                    = 6379
+  apply_immediately       = true
+  maintenance_window      = "tue:06:30-tue:07:30"
+  snapshot_window         = "01:00-02:00"
+  engine                  = %[2]q
+  engine_version          = %[3]q
   cluster_mode            = "enabled"
   num_node_groups         = %[4]d
   replicas_per_node_group = %[5]d
 
   automatic_failover_enabled = true
   multi_az_enabled           = false
-  
+
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
 

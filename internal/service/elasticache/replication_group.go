@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -1278,7 +1277,7 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 		lengthOfNodeGroupIDs := len(nodeGroupIDs)
 
 		if lengthOfNodeGroupIDs > newNodeGroupCount {
-			sort.Strings(nodeGroupIDs)
+			slices.Sort(nodeGroupIDs)
 
 			nodeGroupsToRemove := []string{}
 
