@@ -22,7 +22,7 @@ resource "aws_mpa_approval_team" "test" {
 
   approver {
     primary_identity_id         = data.aws_caller_identity.current.user_id
-    primary_identity_source_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    primary_identity_source_arn = "arn:aws:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity-source/example"
   }
 
   policy {
