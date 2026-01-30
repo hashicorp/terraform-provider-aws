@@ -674,6 +674,20 @@ resource "aws_bedrockagent_agent" "test" {
 `, rName, model, description))
 }
 
+func testAccAgentConfig_basicUnprepared(rName, model, description string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  prepare_agent               = false
+}
+`, rName, model, description))
+}
+
 func testAccAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
