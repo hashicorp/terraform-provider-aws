@@ -7,6 +7,7 @@ package wafv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -241,8 +242,25 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
 	if _, ok := d.GetOk("rules_json"); !ok {
-		if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+		var setErr error
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					setErr = fmt.Errorf("%v", r)
+				}
+			}()
+			setErr = d.Set(names.AttrRule, flattenRules(ruleGroup.Rules))
+		}()
+
+		if setErr != nil {
+			if len(ruleGroup.Rules) > 0 {
+				jsonBytes, jsonErr := json.Marshal(ruleGroup.Rules)
+				if jsonErr != nil {
+					return sdkdiag.AppendErrorf(diags, "setting rule: %s, json error: %s", setErr, jsonErr)
+				}
+				d.Set("rules_json", string(jsonBytes))
+				d.Set(names.AttrRule, nil)
+			}
 		}
 	} else {
 		d.Set("rules_json", d.Get("rules_json"))
