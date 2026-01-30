@@ -112,6 +112,7 @@ func resourceStateMachine() *schema.Resource {
 						"level": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Default:          awstypes.LogLevelOff,
 							ValidateDiagFunc: enum.Validate[awstypes.LogLevel](),
 						},
 						"log_destination": {
