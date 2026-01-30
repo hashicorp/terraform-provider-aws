@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecrpublic_test
@@ -36,7 +36,7 @@ func TestAccECRPublicAuthorizationTokenEphemeral_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("authorization_token"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("expires_at"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrUserName), regexache.MustCompile(`AWS`)),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrUserName), knownvalue.StringRegexp(regexache.MustCompile(`AWS`))),
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrPassword), knownvalue.NotNull()),
 				},
 			},
