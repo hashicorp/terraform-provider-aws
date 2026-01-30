@@ -3571,7 +3571,7 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey8(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7ToValkey8(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3638,7 +3638,7 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7_3NodeGroups(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7ToValkey8_3NodeGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
