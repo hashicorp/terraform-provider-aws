@@ -176,7 +176,7 @@ val services = mapOf(
     "opensearch" to ServiceSpec("OpenSearch", vpcLock = true),
     "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),
     "organizations" to ServiceSpec("Organizations"),
-    "osis" to ServiceSpec("OpenSearch Ingestion"),
+    "osis" to ServiceSpec("OpenSearch Ingestion (OSIS)"),
     "outposts" to ServiceSpec("Outposts"),
     "paymentcryptography" to ServiceSpec("Payment Cryptography Control Plane"),
     "pcaconnectorad" to ServiceSpec("Private CA Connector for Active Directory"),
