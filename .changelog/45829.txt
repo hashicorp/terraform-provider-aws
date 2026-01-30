@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified
+```

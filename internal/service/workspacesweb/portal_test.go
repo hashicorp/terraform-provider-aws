@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func TestAccWorkSpacesWebPortal_disappears(t *testing.T) {
 				Config: testAccPortalConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortalExists(ctx, resourceName, &portal),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourcePortal, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourcePortal, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -183,7 +183,7 @@ func testAccCheckPortalDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfworkspacesweb.FindPortalByARN(ctx, conn, rs.Primary.Attributes["portal_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -843,7 +843,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -862,7 +862,7 @@ func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

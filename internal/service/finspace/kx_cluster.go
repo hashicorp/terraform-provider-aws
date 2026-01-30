@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package finspace
 
@@ -15,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -528,7 +530,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxClusterByID(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxCluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -702,7 +704,7 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	_, err = waitKxClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxCluster, d.Id(), err)
 	}
 
@@ -713,7 +715,7 @@ func waitKxClusterCreated(ctx context.Context, conn *finspace.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusCreating),
 		Target:                    enum.Slice(types.KxClusterStatusRunning),
-		Refresh:                   statusKxCluster(ctx, conn, id),
+		Refresh:                   statusKxCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -731,7 +733,7 @@ func waitKxClusterUpdated(ctx context.Context, conn *finspace.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxClusterStatusPending, types.KxClusterStatusUpdating),
 		Target:                    enum.Slice(types.KxClusterStatusRunning),
-		Refresh:                   statusKxCluster(ctx, conn, id),
+		Refresh:                   statusKxCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -749,7 +751,7 @@ func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxClusterStatusDeleting),
 		Target:  enum.Slice(types.KxClusterStatusDeleted),
-		Refresh: statusKxCluster(ctx, conn, id),
+		Refresh: statusKxCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -761,10 +763,10 @@ func waitKxClusterDeleted(ctx context.Context, conn *finspace.Client, id string,
 	return nil, err
 }
 
-func statusKxCluster(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKxCluster(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findKxClusterByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -791,8 +793,7 @@ func findKxClusterByID(ctx context.Context, conn *finspace.Client, id string) (*
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -800,7 +801,7 @@ func findKxClusterByID(ctx context.Context, conn *finspace.Client, id string) (*
 	}
 
 	if out == nil || out.ClusterName == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

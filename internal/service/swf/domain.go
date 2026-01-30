@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package swf
 
@@ -174,7 +176,7 @@ func findDomainByName(ctx context.Context, conn *swf.Client, name string) (*swf.
 	}
 
 	if output == nil || output.Configuration == nil || output.DomainInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.DomainInfo.Status; status == types.RegistrationStatusDeprecated {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elasticsearch
 
@@ -20,7 +22,6 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -710,7 +712,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrDomainName).(string)
 	ds, err := findDomainByName(ctx, conn, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1013,7 +1015,7 @@ func findDomainByName(ctx context.Context, conn *elasticsearch.Client, name stri
 
 	if aws.ToBool(output.Deleted) {
 		return nil, &retry.NotFoundError{
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1025,8 +1027,7 @@ func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elastics
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1035,7 +1036,7 @@ func findDomain(ctx context.Context, conn *elasticsearch.Client, input *elastics
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil
@@ -1054,8 +1055,7 @@ func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *el
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1064,7 +1064,7 @@ func findDomainConfig(ctx context.Context, conn *elasticsearch.Client, input *el
 	}
 
 	if output == nil || output.DomainConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainConfig, nil
@@ -1083,8 +1083,7 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -1093,21 +1092,20 @@ func findDomainUpgradeStatus(ctx context.Context, conn *elasticsearch.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		// Don't call findDomainByName here as the domain's Deleted flag will be set while DomainProcessingStatus is "Deleting".
+func statusDomainProcessing(conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &elasticsearch.DescribeElasticsearchDomainInput{
 			DomainName: aws.String(name),
 		}
 		output, err := findDomain(ctx, conn, input)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1119,11 +1117,11 @@ func statusDomainProcessing(ctx context.Context, conn *elasticsearch.Client, nam
 	}
 }
 
-func statusDomainUpgrade(ctx context.Context, conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainUpgrade(conn *elasticsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainUpgradeStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1147,7 +1145,7 @@ func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name 
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.UpgradeStatusInProgress),
 		Target:     enum.Slice(awstypes.UpgradeStatusSucceeded, awstypes.UpgradeStatusSucceededWithIssues),
-		Refresh:    statusDomainUpgrade(ctx, conn, name),
+		Refresh:    statusDomainUpgrade(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1166,7 +1164,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeCreating),
 		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
-		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Refresh: statusDomainProcessing(conn, domainName),
 		Timeout: timeout,
 	}
 
@@ -1174,7 +1172,7 @@ func waitDomainCreated(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -1187,7 +1185,7 @@ func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, do
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeModifying),
 		Target:  enum.Slice(awstypes.DomainProcessingStatusTypeActive),
-		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Refresh: statusDomainProcessing(conn, domainName),
 		Timeout: timeout,
 	}
 
@@ -1195,7 +1193,7 @@ func waitDomainConfigUpdated(ctx context.Context, conn *elasticsearch.Client, do
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -1208,7 +1206,7 @@ func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainNa
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainProcessingStatusTypeDeleting),
 		Target:  []string{},
-		Refresh: statusDomainProcessing(ctx, conn, domainName),
+		Refresh: statusDomainProcessing(conn, domainName),
 		Timeout: timeout,
 	}
 
@@ -1216,7 +1214,7 @@ func waitDomainDeleted(ctx context.Context, conn *elasticsearch.Client, domainNa
 
 	if output, ok := outputRaw.(*awstypes.ElasticsearchDomainStatus); ok {
 		if v := output.ChangeProgressDetails; v != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", v.ConfigChangeStatus, aws.ToString(v.Message)))
 		}
 
 		return output, err

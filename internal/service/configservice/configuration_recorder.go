@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package configservice
 
@@ -11,8 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -163,7 +167,8 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("recording_group"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.ConfigurationRecorder.RecordingGroup = expandRecordingGroup(v.([]any)[0].(map[string]any))
+		rgRawCfg := d.GetRawConfig().GetAttr("recording_group")
+		input.ConfigurationRecorder.RecordingGroup = expandRecordingGroup(v.([]any)[0].(map[string]any), rgRawCfg)
 	}
 
 	if v, ok := d.GetOk("recording_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -189,7 +194,7 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 
 	recorder, err := findConfigurationRecorderByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Configuration Recorder (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -314,7 +319,7 @@ func findConfigurationRecorders(ctx context.Context, conn *configservice.Client,
 	output, err := conn.DescribeConfigurationRecorders(ctx, input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -325,13 +330,13 @@ func findConfigurationRecorders(ctx context.Context, conn *configservice.Client,
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConfigurationRecorders, nil
 }
 
-func expandRecordingGroup(tfMap map[string]any) *types.RecordingGroup {
+func expandRecordingGroup(tfMap map[string]any, rgRawCfg cty.Value) *types.RecordingGroup {
 	if tfMap == nil {
 		return nil
 	}
@@ -342,16 +347,22 @@ func expandRecordingGroup(tfMap map[string]any) *types.RecordingGroup {
 		apiObject.AllSupported = v.(bool)
 	}
 
-	if v, ok := tfMap["exclusion_by_resource_types"]; ok && len(v.([]any)) > 0 {
-		apiObject.ExclusionByResourceTypes = expandExclusionByResourceTypes(v.([]any))
+	// Only expand this optional/computed argument when explicitly set in configuration
+	if vCfg, ok := rgRawCfg.Index(cty.NumberIntVal(0)).AsValueMap()["exclusion_by_resource_types"]; ok && !vCfg.IsNull() && vCfg.LengthInt() > 0 {
+		if v, ok := tfMap["exclusion_by_resource_types"]; ok && len(v.([]any)) > 0 {
+			apiObject.ExclusionByResourceTypes = expandExclusionByResourceTypes(v.([]any))
+		}
 	}
 
 	if v, ok := tfMap["include_global_resource_types"]; ok {
 		apiObject.IncludeGlobalResourceTypes = v.(bool)
 	}
 
-	if v, ok := tfMap["recording_strategy"]; ok && len(v.([]any)) > 0 {
-		apiObject.RecordingStrategy = expandRecordingStrategy(v.([]any))
+	// Only expand this optional/computed argument when explicitly set in configuration
+	if vCfg, ok := rgRawCfg.Index(cty.NumberIntVal(0)).AsValueMap()["recording_strategy"]; ok && !vCfg.IsNull() && vCfg.LengthInt() > 0 {
+		if v, ok := tfMap["recording_strategy"]; ok && len(v.([]any)) > 0 {
+			apiObject.RecordingStrategy = expandRecordingStrategy(v.([]any))
+		}
 	}
 
 	if v, ok := tfMap["resource_types"]; ok && v.(*schema.Set).Len() > 0 {

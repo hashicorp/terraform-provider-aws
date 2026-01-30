@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,7 +59,7 @@ func TestAccDirectConnectBGPPeer_disappears(t *testing.T) {
 				Config: testAccBGPPeerConfig_basic(vifID, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBGPPeerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceBGPPeer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceBGPPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,7 +78,7 @@ func testAccCheckBGPPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdirectconnect.FindBGPPeerByThreePartKey(ctx, conn, rs.Primary.Attributes["virtual_interface_id"], awstypes.AddressFamily(rs.Primary.Attributes["address_family"]), flex.StringValueToInt32Value(rs.Primary.Attributes["bgp_asn"]))
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

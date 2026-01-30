@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kinesisanalyticsv2
 
@@ -15,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -117,7 +119,7 @@ func resourceApplicationSnapshotRead(ctx context.Context, d *schema.ResourceData
 
 	snapshot, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,15 +210,13 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not exist") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -225,17 +225,17 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 	}
 
 	if output == nil || output.SnapshotDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SnapshotDetails, nil
 }
 
-func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshotDetails(conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -251,7 +251,7 @@ func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, a
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusReady),
-		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
+		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 
@@ -268,7 +268,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, a
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusDeleting),
 		Target:  []string{},
-		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
+		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 

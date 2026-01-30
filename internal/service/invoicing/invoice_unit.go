@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package invoicing
 
@@ -14,11 +16,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/invoicing/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -33,6 +38,14 @@ import (
 
 // @FrameworkResource("aws_invoicing_invoice_unit", name="Invoice Unit")
 // @Tags(identifierAttribute="arn")
+// @Region(overrideDeprecated=true)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/invoicing;invoicing.GetInvoiceUnitOutput")
+// @Testing(requireEnvVar="INVOICING_INVOICE_TESTS_ENABLED")
+// @Testing(preIdentityVersion="6.28.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(tagsTest=false)
+// @Testing(serialize=true)
 func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &invoiceUnitResource{}
 
@@ -45,7 +58,7 @@ func newInvoiceUnitResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type invoiceUnitResource struct {
 	framework.ResourceWithModel[invoiceUnitResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -75,6 +88,9 @@ func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.Schem
 			"tax_inheritance_disabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -82,6 +98,10 @@ func (r *invoiceUnitResource) Schema(ctx context.Context, request resource.Schem
 		Blocks: map[string]schema.Block{
 			names.AttrRule: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"linked_accounts": schema.SetAttribute{
@@ -215,11 +235,13 @@ func (r *invoiceUnitResource) Update(ctx context.Context, request resource.Updat
 			return
 		}
 
-		_, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		var output *invoicing.GetInvoiceUnitOutput
+		output, err = waitInvoiceUnitUpdated(ctx, conn, new.ARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ARN.ValueString())
 			return
 		}
+		new.LastModified = fwflex.TimeToFramework(ctx, output.LastModified)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, new))
@@ -270,7 +292,7 @@ func findInvoiceUnitByARN(ctx context.Context, conn *invoicing.Client, arn strin
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil

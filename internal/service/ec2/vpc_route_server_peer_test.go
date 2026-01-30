@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,7 +100,7 @@ func TestAccVPCRouteServerPeer_disappears(t *testing.T) {
 				Config: testAccVPCRouteServerPeerConfig_basic(rName, rAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCRouteServerPeerExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCRouteServerPeer, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceVPCRouteServerPeer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -242,7 +242,7 @@ func testAccCheckVPCRouteServerPeerDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfec2.FindRouteServerPeerByID(ctx, conn, rs.Primary.Attributes["route_server_peer_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

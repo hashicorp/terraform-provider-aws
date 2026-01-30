@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -224,7 +226,6 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 			"credential_provider_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[credentialProviderConfigurationModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -380,6 +381,25 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 																},
 															},
 														},
+													},
+												},
+											},
+										},
+									},
+									"mcp_server": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[mcpServerConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrEndpoint: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(
+															regexache.MustCompile(`https://.*`),
+															"Must start with https://",
+														),
 													},
 												},
 											},
@@ -664,7 +684,7 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -682,7 +702,7 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -699,7 +719,7 @@ func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -745,7 +765,7 @@ func findGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -875,6 +895,8 @@ func (m *targetConfigurationModel) GetConfigurationType(ctx context.Context) str
 	switch mcpData, _ := m.MCP.ToPtr(ctx); {
 	case !mcpData.Lambda.IsNull():
 		return "lambda"
+	case !mcpData.MCPServer.IsNull():
+		return "mcp_server"
 	case !mcpData.OpenApiSchema.IsNull():
 		return "open_api_schema"
 	case !mcpData.SmithyModel.IsNull():
@@ -933,6 +955,7 @@ func (m targetConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnos
 
 type mcpConfigurationModel struct {
 	Lambda        fwtypes.ListNestedObjectValueOf[mcpLambdaConfigurationModel] `tfsdk:"lambda"`
+	MCPServer     fwtypes.ListNestedObjectValueOf[mcpServerConfigurationModel] `tfsdk:"mcp_server"`
 	SmithyModel   fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"smithy_model"`
 	OpenApiSchema fwtypes.ListNestedObjectValueOf[apiSchemaConfigurationModel] `tfsdk:"open_api_schema"`
 }
@@ -952,6 +975,14 @@ func (m *mcpConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnos
 			return diags
 		}
 		m.Lambda = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.McpTargetConfigurationMemberMcpServer:
+		var model mcpServerConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &model))
+		if diags.HasError() {
+			return diags
+		}
+		m.MCPServer = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case awstypes.McpTargetConfigurationMemberOpenApiSchema:
 		var model apiSchemaConfigurationModel
@@ -990,6 +1021,20 @@ func (m mcpConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostic
 
 		var r awstypes.McpTargetConfigurationMemberLambda
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, lambdaMCPConfigurationData, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+
+	case !m.MCPServer.IsNull():
+		mcpServerConfigurationData, d := m.MCPServer.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var r awstypes.McpTargetConfigurationMemberMcpServer
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, mcpServerConfigurationData, &r.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -1545,6 +1590,10 @@ func (m schemaPropertyLeafModel) Expand(ctx context.Context) (any, diag.Diagnost
 type s3ConfigurationModel struct {
 	BucketOwnerAccountId types.String `tfsdk:"bucket_owner_account_id"`
 	Uri                  types.String `tfsdk:"uri"`
+}
+
+type mcpServerConfigurationModel struct {
+	Endpoint types.String `tfsdk:"endpoint"`
 }
 
 type apiSchemaConfigurationModel struct {

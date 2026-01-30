@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceDirectory(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -444,7 +444,7 @@ func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfds.FindDirectoryByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

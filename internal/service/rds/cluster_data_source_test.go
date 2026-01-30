@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -42,6 +42,7 @@ func TestAccRDSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "upgrade_rollout_order", resourceName, "upgrade_rollout_order"),
 				),
 			},
 		},

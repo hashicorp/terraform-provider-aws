@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -14,12 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -117,7 +119,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	endpoint, err := findVPCEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -264,7 +266,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearch.Client, input *opens
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if errs := output.VpcEndpointErrors; len(errs) > 0 {
@@ -274,11 +276,11 @@ func findVPCEndpoints(ctx context.Context, conn *opensearch.Client, input *opens
 	return output.VpcEndpoints, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCEndpoint(conn *opensearch.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -294,7 +296,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearch.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcEndpointStatusCreating),
 		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh: statusVPCEndpoint(ctx, conn, id),
+		Refresh: statusVPCEndpoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -307,7 +309,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearch.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcEndpointStatusUpdating),
 		Target:  enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh: statusVPCEndpoint(ctx, conn, id),
+		Refresh: statusVPCEndpoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -320,7 +322,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearch.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcEndpointStatusDeleting),
 		Target:  []string{},
-		Refresh: statusVPCEndpoint(ctx, conn, id),
+		Refresh: statusVPCEndpoint(conn, id),
 		Timeout: timeout,
 	}
 

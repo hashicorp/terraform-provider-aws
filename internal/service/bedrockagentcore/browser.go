@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -107,7 +109,7 @@ func (r *browserResource) Schema(ctx context.Context, request resource.SchemaReq
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"network_mode_config": schema.ListNestedBlock{
+						names.AttrVPCConfig: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
@@ -387,7 +389,7 @@ func findBrowser(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -409,7 +411,7 @@ type browserResourceModel struct {
 
 type browserNetworkConfigurationModel struct {
 	NetworkMode fwtypes.StringEnum[awstypes.BrowserNetworkMode] `tfsdk:"network_mode"`
-	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"network_mode_config"`
+	VPCConfig   fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"vpc_config"`
 }
 
 type recordingConfigModel struct {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kinesisvideo
 
@@ -237,7 +239,7 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 	}
 
 	if output == nil || output.StreamInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StreamInfo, nil
@@ -247,7 +249,7 @@ func statusStream(conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc 
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

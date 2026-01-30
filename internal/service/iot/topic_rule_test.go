@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -96,7 +96,7 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 				Config: testAccTopicRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceTopicRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceTopicRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2429,7 +2429,7 @@ func testAccCheckTopicRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfiot.FindTopicRuleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

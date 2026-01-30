@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +82,7 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 				Config: testAccFirewallTransitGatewayAttachmentAccepterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -106,7 +106,7 @@ func testAccCheckFirewallTransitGatewayAttachmentAccepterDestroy(ctx context.Con
 
 			output, err := tfec2.FindTransitGatewayAttachmentByID(ctx, conn, rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

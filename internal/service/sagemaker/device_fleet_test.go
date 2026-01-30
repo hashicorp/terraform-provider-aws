@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -159,7 +159,7 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 				Config: testAccDeviceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDeviceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -177,7 +177,7 @@ func testAccCheckDeviceFleetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			_, err := tfsagemaker.FindDeviceFleetByName(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

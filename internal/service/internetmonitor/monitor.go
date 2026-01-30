@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package internetmonitor
 
@@ -360,7 +362,7 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -370,7 +372,7 @@ func statusMonitor(conn *internetmonitor.Client, name string) retry.StateRefresh
 	return func(ctx context.Context) (any, string, error) {
 		monitor, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
