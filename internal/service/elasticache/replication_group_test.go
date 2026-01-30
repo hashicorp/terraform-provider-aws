@@ -611,7 +611,7 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_authToRbacMigration(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_authToRBACMigration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
