@@ -1052,6 +1052,9 @@ func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
 	diags.Append(flex.Expand(ctx, m.Name, &result.Name)...)
 	diags.Append(flex.Expand(ctx, m.Description, &result.Description)...)
 	diags.Append(flex.Expand(ctx, m.ExecutionBlockType, &result.ExecutionBlockType)...)
+	if diags.HasError() {
+		return nil, diags
+	}
 
 	// Handle ExecutionBlockConfiguration union type
 	switch {
@@ -1205,6 +1208,9 @@ func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
 	diags.Append(flex.Flatten(ctx, step.Name, &m.Name)...)
 	diags.Append(flex.Flatten(ctx, step.Description, &m.Description)...)
 	diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &m.ExecutionBlockType)...)
+	if diags.HasError() {
+		return diags
+	}
 
 	// Handle ExecutionBlockConfiguration union type
 	if step.ExecutionBlockConfiguration != nil {
@@ -1257,6 +1263,9 @@ func (m arcRoutingControlConfigModel) Expand(ctx context.Context) (any, fwdiag.D
 	diags.Append(flex.Expand(ctx, m.CrossAccountRole, &result.CrossAccountRole)...)
 	diags.Append(flex.Expand(ctx, m.ExternalID, &result.ExternalId)...)
 	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
+	if diags.HasError() {
+		return nil, diags
+	}
 
 	if !m.RegionAndRoutingControls.IsNull() && !m.RegionAndRoutingControls.IsUnknown() {
 		var regionControls []regionAndRoutingControlsModel
@@ -1304,6 +1313,9 @@ func (m *arcRoutingControlConfigModel) Flatten(ctx context.Context, v any) fwdia
 	diags.Append(flex.Flatten(ctx, config.CrossAccountRole, &m.CrossAccountRole)...)
 	diags.Append(flex.Flatten(ctx, config.ExternalId, &m.ExternalID)...)
 	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
+	if diags.HasError() {
+		return diags
+	}
 
 	if len(config.RegionAndRoutingControls) > 0 {
 		regionControls := make([]regionAndRoutingControlsModel, 0, len(config.RegionAndRoutingControls))
@@ -1442,6 +1454,9 @@ func (m eksResourceScalingConfigModel) Expand(ctx context.Context) (any, fwdiag.
 	diags.Append(flex.Expand(ctx, m.KubernetesResourceType, &result.KubernetesResourceType)...)
 	diags.Append(flex.Expand(ctx, m.EKSClusters, &result.EksClusters)...)
 	diags.Append(flex.Expand(ctx, m.Ungraceful, &result.Ungraceful)...)
+	if diags.HasError() {
+		return nil, diags
+	}
 
 	if !m.ScalingResources.IsNull() && !m.ScalingResources.IsUnknown() {
 		var scalingResources []scalingResourcesModel
@@ -1493,6 +1508,9 @@ func (m *eksResourceScalingConfigModel) Flatten(ctx context.Context, v any) fwdi
 	diags.Append(flex.Flatten(ctx, config.TargetPercent, &m.TargetPercent)...)
 	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
 	diags.Append(flex.Flatten(ctx, config.Ungraceful, &m.Ungraceful)...)
+	if diags.HasError() {
+		return diags
+	}
 
 	if len(config.ScalingResources) > 0 {
 		scalingResources := make([]scalingResourcesModel, len(config.ScalingResources))
@@ -1605,6 +1623,9 @@ func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics)
 	diags.Append(flex.Expand(ctx, m.Name, &result.Name)...)
 	diags.Append(flex.Expand(ctx, m.Description, &result.Description)...)
 	diags.Append(flex.Expand(ctx, m.ExecutionBlockType, &result.ExecutionBlockType)...)
+	if diags.HasError() {
+		return nil, diags
+	}
 
 	// Handle ExecutionBlockConfiguration union type
 	switch {
@@ -1746,6 +1767,9 @@ func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnosti
 	diags.Append(flex.Flatten(ctx, step.Name, &m.Name)...)
 	diags.Append(flex.Flatten(ctx, step.Description, &m.Description)...)
 	diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &m.ExecutionBlockType)...)
+	if diags.HasError() {
+		return diags
+	}
 
 	// Handle ExecutionBlockConfiguration union type
 	if step.ExecutionBlockConfiguration != nil {
