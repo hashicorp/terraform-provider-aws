@@ -586,10 +586,15 @@ func resourceCluster() *schema.Resource {
 				},
 			},
 			"serverlessv2_scaling_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if k == "serverlessv2_scaling_configuration.#" {
+						return verify.SuppressMissingOptionalConfigurationBlock(k, old, new, d)
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrMaxCapacity: {
