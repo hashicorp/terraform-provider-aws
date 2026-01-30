@@ -103,7 +103,7 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"number_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.RequestableNumberType](),
+				CustomType: fwtypes.StringEnumType[awstypes.NumberType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -176,6 +176,15 @@ func (r *phoneNumberResource) Create(ctx context.Context, request resource.Creat
 	var data phoneNumberResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if data.NumberType.ValueString() == string(awstypes.NumberTypeShortCode) {
+		response.Diagnostics.AddError(
+			"Invalid Number Type",
+			"SHORT_CODE cannot be created via Terraform. Short codes must be provisioned through AWS Support. "+
+				"After provisioning, you can import the resource using 'terraform import'.",
+		)
 		return
 	}
 
