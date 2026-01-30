@@ -642,6 +642,119 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_lifecycleConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_lifecycleConfiguration(rName, rImageUri, 3600, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lifecycle_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"max_lifetime":                 knownvalue.Int32Exact(3600),
+							"idle_runtime_session_timeout": knownvalue.Int32Exact(300),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_lifecycleConfiguration(rName, rImageUri, 7200, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lifecycle_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"max_lifetime":                 knownvalue.Int32Exact(7200),
+							"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_lifecycleConfigurationMaxLifetimeOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_lifecycleConfigurationMaxLifetimeOnly(rName, rImageUri, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lifecycle_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"max_lifetime":                 knownvalue.Int32Exact(600),
+							"idle_runtime_session_timeout": knownvalue.Int32Exact(600),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
 // Ensure that changing the artifact type forces a new resource.
 func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1043,4 +1156,51 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, s3Bucket, s3Key))
+}
+
+func testAccAgentRuntimeConfig_lifecycleConfiguration(rName, rImageUri string, maxLifetime, idleTimeout int32) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  lifecycle_configuration {
+    max_lifetime                 = %[3]d
+    idle_runtime_session_timeout = %[4]d
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, rImageUri, maxLifetime, idleTimeout))
+}
+
+func testAccAgentRuntimeConfig_lifecycleConfigurationMaxLifetimeOnly(rName, rImageUri string, maxLifetime int32) string {
+	return acctest.ConfigCompose(testAccAgentRuntimeConfig_baseIAMRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = %[2]q
+    }
+  }
+
+  lifecycle_configuration {
+    max_lifetime = %[3]d
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+}
+`, rName, rImageUri, maxLifetime))
 }
