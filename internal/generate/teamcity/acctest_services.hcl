@@ -32,6 +32,10 @@ service "appstream" {
   parallelism = 10
 }
 
+service "arcregionswitch" {
+  parallelism = 10
+}
+
 service "autoscaling" {
   vpc_lock = true
 }
