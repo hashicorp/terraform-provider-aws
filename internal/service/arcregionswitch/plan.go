@@ -39,8 +39,14 @@ import (
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
 // @Region(overrideDeprecated=true)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
 // Generating tags tests does not work because alternate region isn't working and tests require 2 regions
 // @Testing(tagsTest=false)
+// @Testing(altRegionTfVars=true)
+// @Testing(preIdentityVersion="6.30.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(preCheck="testAccPreCheck")
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
 
@@ -53,7 +59,7 @@ func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 
 type resourcePlan struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
