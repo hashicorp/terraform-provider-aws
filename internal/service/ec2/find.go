@@ -2188,7 +2188,7 @@ func findSecurityGroupRules(ctx context.Context, conn *ec2.Client, input *ec2.De
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound, errCodeInvalidGroupNotFound) {
 			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,

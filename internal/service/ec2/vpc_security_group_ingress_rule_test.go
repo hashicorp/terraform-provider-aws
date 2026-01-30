@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -955,4 +956,49 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   depends_on = [aws_vpc_peering_connection_accepter.peer]
 }
 `, rName, acctest.Region()))
+}
+
+func TestAccVPCSecurityGroupIngressRule_securityGroupDeleted(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+	sgResourceName := "aws_security_group.test"
+	var sgID string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, new(awstypes.SecurityGroupRule)),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[sgResourceName]
+						if !ok {
+							return fmt.Errorf("Not found: %s", sgResourceName)
+						}
+						sgID = rs.Primary.ID
+						return nil
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+					input := &ec2.DeleteSecurityGroupInput{
+						GroupId: aws.String(sgID),
+					}
+					_, err := conn.DeleteSecurityGroup(ctx, input)
+					if err != nil {
+						t.Fatalf("error deleting security group %s: %s", sgID, err)
+					}
+				},
+				Config:             testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
