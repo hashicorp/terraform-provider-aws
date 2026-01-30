@@ -46,6 +46,7 @@ func testAccPermissions_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_cells_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_location.#", "0"),
@@ -1108,7 +1109,9 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 	}
 
 	if v, ok := rs.Primary.Attributes["catalog_resource"]; ok && v == acctest.CtTrue {
-		input.Resource.Catalog = tflakeformation.ExpandCatalogResource()
+		// When catalog_resource_id is set (e.g., S3 Tables catalog), it must be used as
+		// Resource.Catalog.Id for ListPermissions filtering.
+		input.Resource.Catalog = tflakeformation.ExpandCatalogResource(rs.Primary.Attributes["catalog_resource_id"])
 
 		noResource = false
 	}

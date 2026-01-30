@@ -39,9 +39,15 @@ func ResourcePermissions() *schema.Resource {
 		CreateWithoutTimeout: resourcePermissionsCreate,
 		ReadWithoutTimeout:   resourcePermissionsRead,
 		DeleteWithoutTimeout: resourcePermissionsDelete,
+		CustomizeDiff:        customizeDiffPermissions,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+			"catalog_resource_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -475,6 +481,24 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
 
+func customizeDiffPermissions(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if v, ok := d.GetOk("catalog_resource_id"); ok && v.(string) != "" {
+		if !d.Get("catalog_resource").(bool) {
+			return fmt.Errorf("catalog_resource_id can only be set when catalog_resource is true")
+		}
+	}
+
+	// AWS rejects revoke/grant-options operations when SUPER_USER is included in
+	// permissions_with_grant_option, so fail early if the user explicitly sets it.
+	if v, ok := d.GetOk("permissions_with_grant_option"); ok && v != nil {
+		if s, ok := v.(*schema.Set); ok && s.Contains(string(awstypes.PermissionSuperUser)) {
+			return fmt.Errorf("permissions_with_grant_option must not contain %q", awstypes.PermissionSuperUser)
+		}
+	}
+
+	return nil
+}
+
 func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
@@ -529,8 +553,20 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	if permissions[0].Resource.Catalog != nil {
 		d.Set("catalog_resource", true)
+		// Only persist catalog_resource_id for non-default catalogs (e.g., S3 Tables).
+		// The default Data Catalog returns the account ID in Resource.Catalog.Id,
+		// but we should not store it to maintain backward compatibility with existing
+		// configurations that use catalog_resource=true without catalog_resource_id.
+		// S3 Tables catalog IDs have the format: "<account-id>:s3tablescatalog/<bucket>".
+		catalogID := aws.ToString(permissions[0].Resource.Catalog.Id)
+		if strings.Contains(catalogID, ":") {
+			d.Set("catalog_resource_id", catalogID)
+		} else {
+			d.Set("catalog_resource_id", nil)
+		}
 	} else {
 		d.Set("catalog_resource", false)
+		d.Set("catalog_resource_id", nil)
 	}
 
 	if permissions[0].Resource.DataLocation != nil {
@@ -632,7 +668,7 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions:                flex.ExpandStringyValueSet[awstypes.Permission](d.Get(names.AttrPermissions).(*schema.Set)),
-		PermissionsWithGrantOption: flex.ExpandStringyValueSet[awstypes.Permission](d.Get("permissions_with_grant_option").(*schema.Set)),
+		PermissionsWithGrantOption: normalizeGrantOptionPermissions(flex.ExpandStringyValueSet[awstypes.Permission](d.Get("permissions_with_grant_option").(*schema.Set))),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
@@ -801,8 +837,13 @@ func expandResource(d *schema.ResourceData) *awstypes.Resource {
 	var resource *awstypes.Resource
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
+		var catalogResourceID string
+		if v, ok := d.GetOk("catalog_resource_id"); ok {
+			catalogResourceID = v.(string)
+		}
+
 		resource = &awstypes.Resource{
-			Catalog: ExpandCatalogResource(),
+			Catalog: ExpandCatalogResource(catalogResourceID),
 		}
 	} else if v, ok := d.GetOk("data_cells_filter"); ok {
 		resource = &awstypes.Resource{
@@ -833,8 +874,14 @@ func expandResource(d *schema.ResourceData) *awstypes.Resource {
 	return resource
 }
 
-func ExpandCatalogResource() *awstypes.CatalogResource {
-	return &awstypes.CatalogResource{}
+func ExpandCatalogResource(catalogResourceID string) *awstypes.CatalogResource {
+	if catalogResourceID == "" {
+		return &awstypes.CatalogResource{}
+	}
+
+	return &awstypes.CatalogResource{
+		Id: aws.String(catalogResourceID),
+	}
 }
 
 func ExpandDataCellsFilter(in []any) *awstypes.DataCellsFilterResource {
@@ -1275,6 +1322,12 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 
 	for _, resourcePermission := range apiObjects {
 		for _, grantPermission := range resourcePermission.PermissionsWithGrantOption {
+			// Lake Formation returns SUPER_USER in PermissionsWithGrantOption in some cases,
+			// but the API rejects revoke operations when grant options include SUPER_USER.
+			// Exclude it from state to keep delete/idempotency working.
+			if grantPermission == awstypes.PermissionSuperUser {
+				continue
+			}
 			tfList = append(tfList, string(grantPermission))
 		}
 	}
@@ -1282,6 +1335,21 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 	slices.Sort(tfList)
 
 	return tfList
+}
+
+func normalizeGrantOptionPermissions(in []awstypes.Permission) []awstypes.Permission {
+	if len(in) == 0 {
+		return nil
+	}
+
+	out := make([]awstypes.Permission, 0, len(in))
+	for _, p := range in {
+		if p == awstypes.PermissionSuperUser {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
 }
 
 func includePrincipalIdentifierInList(principalIdentifier string) bool {
