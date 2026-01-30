@@ -1607,16 +1607,14 @@ func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDif
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
 	_, tokenOk := diff.GetOk("auth_token")
 
-	if strategyOk {
-		if !tokenOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
-			return nil
-		} else {
-			if !tokenOk {
-				// AuthTokenUpdateStrategyTypeDelete can only be used when migrating to RBAC,
-				// auth_token should not be provided in this case.
-				return errors.New(`"auth_token_update_strategy": all of "auth_token,auth_token_update_strategy" must be specified. When "auth_token_update_strategy" has value DELETE, allowed only when transitioning to RBAC, "auth_token" is not required`)
-			}
+	if strategyOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+		if tokenOk {
+			return errors.New(`"auth_token" must not be specified when "auth_token_update_strategy" is "DELETE"`)
 		}
+		return nil
+	}
+	if strategyOk && !tokenOk {
+		return errors.New(`"auth_token_update_strategy": "auth_token" must be specified`)
 	}
 
 	return nil
