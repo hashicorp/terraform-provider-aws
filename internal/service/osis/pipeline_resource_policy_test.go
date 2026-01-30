@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package osis_test
@@ -67,7 +67,7 @@ func TestAccOSISPipelineResourcePolicy_disappears(t *testing.T) {
 				Config: testAccPipelineResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineResourcePolicyExists(ctx, resourceArn),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfosis.ResourcePipelineResourcePolicy, resourceArn),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipelineResourcePolicy, resourceArn),
 				),
 				ExpectNonEmptyPlan: true,
 			},
