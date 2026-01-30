@@ -15,12 +15,47 @@ Manages an AWS Cognito IDP (Identity Provider) Log Delivery Configuration.
 ### Basic Usage with CloudWatch Logs
 
 ```terraform
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_cognito_user_pool" "example" {
   name = "example"
 }
 
 resource "aws_cloudwatch_log_group" "example" {
   name = "example"
+}
+
+data "aws_iam_policy_document" "log_resource_policy" {
+  statement {
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "${aws_cloudwatch_log_group.example.arn}:log-stream:*"
+    ]
+    condition {
+      test     = "StringEquals"
+      values   = [data.aws_caller_identity.current.account_id]
+      variable = "aws:SourceAccount"
+    }
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+      variable = "aws:SourceArn"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_document = data.aws_iam_policy_document.log_resource_policy.json
+  policy_name     = "example-log-delivery-policy"
 }
 
 resource "aws_cognito_log_delivery_configuration" "example" {
@@ -41,11 +76,16 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool" "example" {
-  name = "example"
+  name           = "example"
+  user_pool_tier = "PLUS" # Required for log delivery configuration with `userAuthEvents` event source
 }
 
 resource "aws_cloudwatch_log_group" "example" {
   name = "example"
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  # See the Basic Usage with CloudWatch Logs example
 }
 
 resource "aws_s3_bucket" "example" {
@@ -100,6 +140,13 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   name        = "example-stream"
   destination = "extended_s3"
 
+  # The tag named "LogDeliveryEnabled" must be set to "true" to allow the service-linked role "AWSServiceRoleForLogDelivery"
+  # to perform permitted actions on your behalf.
+  # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html#AWS-logs-infrastructure-V2-Firehose
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+
   extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.example.arn
@@ -120,7 +167,7 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
   log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     firehose_configuration {
       stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
@@ -145,8 +192,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
 
   log_configurations {
-    event_source = "userNotification"
-    log_level    = "ERROR"
+    event_source = "userAuthEvents"
+    log_level    = "INFO"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.example.arn
@@ -170,8 +217,8 @@ The following arguments are optional:
 
 The `log_configurations` block supports the following:
 
-* `event_source` - (Required) The event source to configure logging for. Valid values are `userNotification` and `userAuthEvents`.
-* `log_level` - (Required) The log level to set for the event source. Valid values are `ERROR` and `INFO`.
+* `event_source` - (Required) The event source to configure logging for. Valid values are `userNotification` (message-delivery logs) and `userAuthEvents` (advanced security user activity logs).
+* `log_level` - (Required) The log level to set for the event source. Valid values are `ERROR` and `INFO`. If `event_source` is set to `userNotification`, choose `ERROR` with `cloud_watch_logs_configuration`. If `event_source` is set to `userAuthEvents`, choose `INFO` with one of `cloud_watch_logs_configuration`, `firehose_configuration`, or `s3_configuration`.
 * `cloud_watch_logs_configuration` - (Optional) Configuration for CloudWatch Logs delivery. See [CloudWatch Logs Configuration](#cloudwatch-logs-configuration) below.
 * `firehose_configuration` - (Optional) Configuration for Kinesis Data Firehose delivery. See [Firehose Configuration](#firehose-configuration) below.
 * `s3_configuration` - (Optional) Configuration for S3 delivery. See [S3 Configuration](#s3-configuration) below.
