@@ -37,6 +37,13 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"multipleDirectories": testAccIPGroup_MultipleDirectories,
 			"tags":                testAccIPGroup_tags,
 		},
+		"Pool": {
+			acctest.CtBasic:                            testAccPool_basic,
+			acctest.CtDisappears:                       testAccPool_disappears,
+			"applicationSettings":                      testAccPool_ApplicationSettings,
+			"timeoutSettings":                          testAccPool_TimeoutSettings,
+			"timeoutSettings_maxUserDurationInSeconds": testAccPool_TimeoutSettings_MaxUserDurationInSeconds,
+		},
 		"Workspace": {
 			acctest.CtBasic:          testAccWorkspace_basic,
 			"recreate":               testAccWorkspace_recreate,
