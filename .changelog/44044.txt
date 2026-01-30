@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_glue_catalog_table_optimizer: `compaction_configuration` is required when setting optimizer type to `compaction`.
+```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table_optimizer: `sort` and `z-order` strategies supported in compaction configuration. Requires sort order to be defined on existing table.
+```

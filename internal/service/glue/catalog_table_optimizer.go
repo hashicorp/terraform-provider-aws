@@ -7,6 +7,7 @@ package glue
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
@@ -97,7 +98,40 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 							Required:   true,
 						},
 					},
+					PlanModifiers: []planmodifier.Object{
+						requireMatchingOptimizerConfiguration{},
+					},
 					Blocks: map[string]schema.Block{
+						"compaction_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[compactionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergCompactionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"strategy": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.CompactionStrategy](),
+													Required:   true,
+												},
+												"min_input_files": schema.Int32Attribute{
+													Optional: true,
+												},
+												"delete_file_threshold": schema.Int32Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"retention_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[retentionConfigurationData](ctx),
 							Validators: []validator.List{
@@ -314,7 +348,6 @@ func (r *catalogTableOptimizerResource) Update(ctx context.Context, request reso
 		}
 
 		_, err := conn.UpdateTableOptimizer(ctx, &input)
-
 		if err != nil {
 			id, _ := flex.FlattenResourceId([]string{
 				state.CatalogID.ValueString(),
@@ -401,7 +434,6 @@ func (r *catalogTableOptimizerResource) Delete(ctx context.Context, request reso
 
 func (r *catalogTableOptimizerResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts, err := flex.ExpandResourceId(request.ID, idParts, false)
-
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Glue, create.ErrActionImporting, ResNameCatalogTableOptimizer, request.ID, err),
@@ -430,6 +462,7 @@ type configurationData struct {
 	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
 	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
 	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
 }
 
 type retentionConfigurationData struct {
@@ -451,6 +484,16 @@ type icebergOrphanFileDeletionConfigurationData struct {
 	Location                        types.String `tfsdk:"location"`
 	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
 	RunRateInHours                  types.Int32  `tfsdk:"run_rate_in_hours"`
+}
+
+type compactionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergCompactionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergCompactionConfigurationData struct {
+	DeleteFileThreshold types.Int32                                     `tfsdk:"delete_file_threshold"`
+	MinInputFiles       types.Int32                                     `tfsdk:"min_input_files"`
+	Strategy            fwtypes.StringEnum[awstypes.CompactionStrategy] `tfsdk:"strategy"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
@@ -479,4 +522,149 @@ func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID
 	}
 
 	return output, nil
+}
+
+type requireMatchingOptimizerConfiguration struct{}
+
+func (m requireMatchingOptimizerConfiguration) Description(ctx context.Context) string {
+	return "Requires the optimizer configuration to match the optimizer type"
+}
+
+func (m requireMatchingOptimizerConfiguration) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m requireMatchingOptimizerConfiguration) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	if req.PlanValue.Equal(req.StateValue) {
+		return
+	}
+
+	var plan catalogTableOptimizerResourceModel
+	diag := req.Plan.Get(ctx, &plan)
+	if diag.HasError() {
+		for _, d := range diag.Errors() {
+			tflog.Error(ctx, fmt.Sprintf("error getting optimizer configuration: %v, %v\n", d.Summary(), d.Detail()))
+		}
+		return
+	}
+
+	if plan.Configuration.IsNull() {
+		if plan.Type.ValueString() == string(awstypes.TableOptimizerTypeCompaction) {
+			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(path.Root(names.AttrConfiguration), path.Root(names.AttrType), string(awstypes.TableOptimizerTypeCompaction)))
+		}
+		return
+	}
+
+	configData, diag := plan.Configuration.ToPtr(ctx)
+	if diag.HasError() {
+		for _, d := range diag.Errors() {
+			tflog.Error(ctx, fmt.Sprintf("error getting compaction configuration: %v, %v\n", d.Summary(), d.Detail()))
+		}
+		return
+	}
+
+	compactionConfig, diag := configData.CompactionConfiguration.ToPtr(ctx)
+	if diag.HasError() {
+		for _, d := range diag.Errors() {
+			tflog.Error(ctx, fmt.Sprintf("error getting compaction configuration: %v, %v\n", d.Summary(), d.Detail()))
+		}
+	}
+
+	retentionConfig, diag := configData.RetentionConfiguration.ToPtr(ctx)
+	if diag.HasError() {
+		for _, d := range diag.Errors() {
+			tflog.Error(ctx, fmt.Sprintf("error getting retention configuration: %v, %v\n", d.Summary(), d.Detail()))
+		}
+	}
+
+	orphanFileDeletionConfig, diag := configData.OrphanFileDeletionConfiguration.ToPtr(ctx)
+	if diag.HasError() {
+		for _, d := range diag.Errors() {
+			tflog.Error(ctx, fmt.Sprintf("error getting orphan file deletion configuration: %v, %v\n", d.Summary(), d.Detail()))
+		}
+	}
+
+	switch plan.Type.ValueString() {
+	case string(awstypes.TableOptimizerTypeCompaction):
+		if compactionConfig == nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeCompaction)))
+			return
+		}
+
+		if retentionConfig != nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("retention_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeCompaction)))
+			return
+		}
+
+		if orphanFileDeletionConfig != nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("orphan_file_deletion_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeCompaction)))
+			return
+		}
+
+		icebergConfig, diag := compactionConfig.IcebergConfiguration.ToPtr(ctx)
+		if diag.HasError() {
+			for _, d := range diag.Errors() {
+				tflog.Error(ctx, fmt.Sprintf("error getting iceberg configuration: %v, %v\n", d.Summary(), d.Detail()))
+			}
+			return
+		}
+		if icebergConfig == nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration").AtListIndex(0).AtName("iceberg_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeCompaction)))
+			return
+		}
+
+	case string(awstypes.TableOptimizerTypeRetention):
+		if compactionConfig != nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeRetention)))
+			return
+		}
+
+		if orphanFileDeletionConfig != nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("orphan_file_deletion_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeRetention)))
+			return
+		}
+
+	case string(awstypes.TableOptimizerTypeOrphanFileDeletion):
+		if compactionConfig != nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeOrphanFileDeletion)))
+			return
+		}
+
+		if retentionConfig != nil {
+			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("retention_configuration"),
+				path.Root(names.AttrType),
+				string(awstypes.TableOptimizerTypeOrphanFileDeletion)))
+			return
+		}
+	}
 }
