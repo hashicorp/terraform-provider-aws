@@ -121,6 +121,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -308,6 +309,7 @@ func registerSweepers() {
 	medialive.RegisterSweepers()
 	mediapackage.RegisterSweepers()
 	memorydb.RegisterSweepers()
+	mpa.RegisterSweepers()
 	mq.RegisterSweepers()
 	mwaa.RegisterSweepers()
 	neptune.RegisterSweepers()

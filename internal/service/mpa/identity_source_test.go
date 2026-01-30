@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmpa "github.com/hashicorp/terraform-provider-aws/internal/service/mpa"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -89,8 +90,11 @@ func testAccCheckIdentitySourceDestroy(ctx context.Context, t *testing.T) resour
 			}
 
 			_, err := tfmpa.FindIdentitySourceByID(ctx, conn, rs.Primary.ID)
-			if err != nil {
+			if retry.NotFound(err) {
 				return nil
+			}
+			if err != nil {
+				return err
 			}
 
 			return fmt.Errorf("MPA Identity Source %s still exists", rs.Primary.ID)

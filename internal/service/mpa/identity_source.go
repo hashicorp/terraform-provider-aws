@@ -317,6 +317,8 @@ func findIdentitySourceByID(ctx context.Context, conn *mpa.Client, id string) (*
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type identitySourceResourceModel struct {
+	framework.WithRegionModel
+
 	ARN                      types.String                                                   `tfsdk:"arn"`
 	CreationTime             timetypes.RFC3339                                              `tfsdk:"creation_time"`
 	ID                       types.String                                                   `tfsdk:"id"`
