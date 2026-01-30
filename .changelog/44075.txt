@@ -1,0 +1,18 @@
+```release-note:enhancement
+resource/aws_ssm_association: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ssm_document: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ssm_maintenance_window: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_target: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_task: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ssm_patch_baseline: Add resource identity support
+```

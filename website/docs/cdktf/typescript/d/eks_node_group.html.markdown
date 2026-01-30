@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterName` - (Required) Name of the cluster.
 * `nodeGroupName` - (Required) Name of the node group.
 
@@ -57,8 +58,8 @@ This data source exports the following attributes in addition to the arguments a
     * `id` - The ID of the launch template.
     * `name` - The name of the launch template.
     * `version` - The version number of the launch template.
-* `nodeRoleArn` – ARN of the IAM Role that provides permissions for the EKS Node Group.
-* `releaseVersion` – AMI version of the EKS Node Group.
+* `nodeRoleArn` - ARN of the IAM Role that provides permissions for the EKS Node Group.
+* `releaseVersion` - AMI version of the EKS Node Group.
 * `remoteAccess` - Configuration block with remote access settings.
     * `ec2SshKey` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
     * `sourceSecurityGroupIds` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
@@ -71,12 +72,12 @@ This data source exports the following attributes in addition to the arguments a
     * `maxSize` - Maximum number of worker nodes.
     * `minSize` - Minimum number of worker nodes.
 * `status` - Status of the EKS Node Group.
-* `subnetIds` – Identifiers of EC2 Subnets to associate with the EKS Node Group.
+* `subnetIds` - Identifiers of EC2 Subnets to associate with the EKS Node Group.
 * `taints` - List of objects containing information about taints applied to the nodes in the EKS Node Group.
     * `key` - The key of the taint.
     * `value` - The value of the taint.
     * `effect` - The effect of the taint.
 * `tags` - Key-value map of resource tags.
-* `version` – Kubernetes version.
+* `version` - Kubernetes version.
 
-<!-- cache-key: cdktf-0.20.8 input-899c67e46adce5f86a5054b1922efb47bb5d15d281e71b1b619ad4cb9fb4eac8 -->
+<!-- cache-key: cdktf-0.20.8 input-04463eb05c9b62bfa4da264ae800fae5f1bb5c6200aefdb637f8ba1be67866c8 -->

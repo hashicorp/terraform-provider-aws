@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hub_name` - (Required) The name of the hub.
 * `hub_description` - (Required) A description of the hub.
 * `hub_display_name` - (Optional) The display name of the hub.
@@ -82,4 +83,4 @@ Using `terraform import`, import SageMaker AI Hubs using the `name`. For example
 % terraform import aws_sagemaker_hub.test_hub my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e1a51d75deb821418381c664fef921c3cdb7818801383a4be2a4f96b0f0e7e5a -->
+<!-- cache-key: cdktf-0.20.8 input-19de137d1d288b06744dfbb12bf163ddab02c4f3140e1598a34f2747dfccd427 -->

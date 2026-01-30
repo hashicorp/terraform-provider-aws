@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package comprehend_test
@@ -15,14 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -123,7 +118,7 @@ func TestAccComprehendDocumentClassifier_disappears(t *testing.T) {
 				Config: testAccDocumentClassifierConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcomprehend.ResourceDocumentClassifier(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcomprehend.ResourceDocumentClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1491,92 +1486,6 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 	})
 }
 
-func TestAccComprehendDocumentClassifier_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var documentclassifier types.DocumentClassifierProperties
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_comprehend_document_classifier.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.ComprehendServiceID),
-		CheckDestroy: testAccCheckDocumentClassifierDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccDocumentClassifierConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccDocumentClassifierConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccDocumentClassifierConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
-					}),
-				},
-			},
-		},
-	})
-}
-
 func testAccCheckDocumentClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
@@ -1710,7 +1619,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1736,7 +1645,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_CLASS"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1766,7 +1675,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1792,7 +1701,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1817,7 +1726,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1843,7 +1752,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1868,8 +1777,8 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-    test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri      = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
+    test_s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1894,7 +1803,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri          = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     label_delimiter = %q
   }
 
@@ -1921,7 +1830,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_CLASS"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri          = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     label_delimiter = %q
   }
 
@@ -1948,7 +1857,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_LABEL"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+    s3_uri = "s3://${aws_s3_object.multilabel.bucket}/${aws_s3_object.multilabel.key}"
   }
 
   depends_on = [
@@ -1978,7 +1887,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_LABEL"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+    s3_uri          = "s3://${aws_s3_object.multilabel.bucket}/${aws_s3_object.multilabel.key}"
     label_delimiter = %[2]q
   }
 
@@ -2007,7 +1916,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2073,7 +1982,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2135,7 +2044,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2163,7 +2072,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2228,7 +2137,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2292,7 +2201,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2321,7 +2230,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2351,7 +2260,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2377,7 +2286,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2408,7 +2317,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2464,7 +2373,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2520,7 +2429,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2581,7 +2490,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2642,7 +2551,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2698,7 +2607,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2729,7 +2638,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2923,7 +2832,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -3031,7 +2940,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -3132,7 +3041,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [

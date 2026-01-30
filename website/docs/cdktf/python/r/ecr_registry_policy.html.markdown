@@ -47,7 +47,7 @@ class MyConvertedCode(TerraformStack):
                         "Principal": {
                             "AWS": "arn:${" + data_aws_partition_current.partition + "}:iam::${" + current.account_id + "}:root"
                         },
-                        "Resource": ["arn:${" + data_aws_partition_current.partition + "}:ecr:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:repository/*"
+                        "Resource": ["arn:${" + data_aws_partition_current.partition + "}:ecr:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:repository/*"
                         ],
                         "Sid": "testpolicy"
                     }
@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
 ## Attribute Reference
@@ -94,4 +95,4 @@ Using `terraform import`, import ECR Registry Policy using the registry id. For 
 % terraform import aws_ecr_registry_policy.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dccd791b43ed9685939eb25a51810cab91d696a9aee10913a04d5c1bc0ef292c -->
+<!-- cache-key: cdktf-0.20.8 input-66739073c2b330ac6bda88d32072b48b07899201a66ce3237d0890e9d17e2a34 -->

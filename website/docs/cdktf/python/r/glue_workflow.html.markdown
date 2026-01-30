@@ -63,9 +63,10 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` – (Required) The name you assign to this workflow.
-* `default_run_properties` – (Optional) A map of default run properties for this workflow. These properties are passed to all jobs associated to the workflow.
-* `description` – (Optional) Description of the workflow.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name you assign to this workflow.
+* `default_run_properties` - (Optional) A map of default run properties for this workflow. These properties are passed to all jobs associated to the workflow.
+* `description` - (Optional) Description of the workflow.
 * `max_concurrent_runs` - (Optional) Prevents exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -102,4 +103,4 @@ Using `terraform import`, import Glue Workflows using `name`. For example:
 % terraform import aws_glue_workflow.MyWorkflow MyWorkflow
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7df9adc6f57f0dd25966f803f616a0d5ba6f246209f657e6b2508d999ef81f32 -->
+<!-- cache-key: cdktf-0.20.8 input-3c4f27c40db130bcf14f11cd0cdbde0b85800e2b5ae5df8b5bd5c95ccecd0273 -->

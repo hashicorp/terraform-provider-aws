@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enable_www_subdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
 * `service_arn` - (Required) ARN of the App Runner service.
@@ -84,4 +85,4 @@ Using `terraform import`, import App Runner Custom Domain Associations using the
 % terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d59bb982403c685cc22e2c6459ced2397f7ff3295cd1eb2413d76d679b8a1b50 -->
+<!-- cache-key: cdktf-0.20.8 input-ea0bc21d0afc62862a8dc44100a00169d5b82511a70a342ea544fcf342df39b7 -->

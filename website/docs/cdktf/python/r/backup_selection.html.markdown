@@ -194,6 +194,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
@@ -278,4 +279,4 @@ Using `terraform import`, import Backup selection using the role plan_id and id 
 % terraform import aws_backup_selection.example plan-id|selection-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1b2c673f05bd7fe873496812dab7eaa71a1d54ba120b1bb1f6d73889b1210f65 -->
+<!-- cache-key: cdktf-0.20.8 input-789c3fb7dc6762eb5d7f23905bec030e99cfd540546ecac689a7898340e7778a -->

@@ -108,6 +108,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the configuration aggregator.
 * `accountAggregationSource` - (Optional) The account(s) to aggregate config data from as documented below.
 * `organizationAggregationSource` - (Optional) The organization to aggregate config data from as documented below.
@@ -172,4 +173,4 @@ Using `terraform import`, import Configuration Aggregators using the name. For e
 % terraform import aws_config_configuration_aggregator.example foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd7368dc645892d0916218e47f2c57cc5932d586ba0ba2eedc64e2d5eb4009f8 -->
+<!-- cache-key: cdktf-0.20.8 input-3d8e5a19f0d9e8515ea4c210d0b50ae19c2cc6d56581775c776ccbc1325a7d6e -->

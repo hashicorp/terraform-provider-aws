@@ -1,0 +1,208 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements",
+    "source_type": "flex.awsCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "[]string",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with ListValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "[]string",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field2",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.fieldname": "Field2",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field2",
+    "autoflex.source.type": "[]*string",
+    "autoflex.target.path": "Field2",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with ListValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field2",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "[]*string",
+    "autoflex.target.path": "Field2",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.ListValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field3",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.fieldname": "Field3",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field3",
+    "autoflex.source.type": "[]string",
+    "autoflex.target.path": "Field3",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.SetValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with SetValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field3",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "[]string",
+    "autoflex.target.path": "Field3",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.SetValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field4",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.fieldname": "Field4",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field4",
+    "autoflex.source.type": "[]*string",
+    "autoflex.target.path": "Field4",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.SetValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with SetValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field4",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "[]*string",
+    "autoflex.target.path": "Field4",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.SetValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field5",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.fieldname": "Field5",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field5",
+    "autoflex.source.type": "map[string]string",
+    "autoflex.target.path": "Field5",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.MapValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with MapValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field5",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "map[string]string",
+    "autoflex.target.path": "Field5",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.MapValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field6",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsCollectionsOfPrimitiveElements",
+    "autoflex.target.fieldname": "Field6",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfCollectionsOfPrimitiveElements"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field6",
+    "autoflex.source.type": "map[string]*string",
+    "autoflex.target.path": "Field6",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.MapValue"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening with MapValue",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field6",
+    "autoflex.source.size": 2,
+    "autoflex.source.type": "map[string]*string",
+    "autoflex.target.path": "Field6",
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.MapValue"
+  }
+]

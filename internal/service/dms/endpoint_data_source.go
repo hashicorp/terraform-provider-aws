@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dms
 
@@ -20,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,
@@ -245,6 +248,54 @@ func dataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"mysql_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"authentication_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"target_db_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -259,6 +310,10 @@ func dataSourceEndpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"after_connect_script": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"authentication_method": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -315,6 +370,10 @@ func dataSourceEndpoint() *schema.Resource {
 							Computed: true,
 						},
 						"plugin_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_access_role_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -635,6 +694,9 @@ func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstyp
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+		if err := d.Set("mysql_settings", flattenMySQLSettings(endpoint.MySQLSettings)); err != nil {
+			return fmt.Errorf("setting mysql_settings: %w", err)
+		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
 		if endpoint.PostgreSQLSettings != nil {
 			d.Set(names.AttrUsername, endpoint.PostgreSQLSettings.Username)
@@ -757,7 +819,7 @@ func resourceEndpointDataSourceSetState(d *schema.ResourceData, endpoint *awstyp
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %w", err)
 		}
 	default:
 		d.Set(names.AttrDatabaseName, endpoint.DatabaseName)

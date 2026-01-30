@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `image_name` - (Required) The name of the image. Must be unique to your account.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker AI to perform tasks on your behalf.
 * `display_name` - (Optional) The display name of the image. When the image is added to a domain (must be unique to the domain).
@@ -77,4 +78,4 @@ Using `terraform import`, import SageMaker AI Code Images using the `name`. For 
 % terraform import aws_sagemaker_image.test_image my-code-repo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8e1e162250bb908fe60a266e2342aedbef9eeeaf8a1e0881be09f9891da74b32 -->
+<!-- cache-key: cdktf-0.20.8 input-ad02e211ab515ddfd86fe2201ca075bffd9bac0dfa48f3f405a7c67984ffd297 -->

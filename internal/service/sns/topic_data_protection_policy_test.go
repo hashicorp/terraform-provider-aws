@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -64,7 +64,7 @@ func TestAccSNSTopicDataProtectionPolicy_disappears(t *testing.T) {
 				Config: testAccTopicDataProtectionPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicDataProtectionPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopicDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +83,7 @@ func testAccCheckTopicDataProtectionPolicyDestroy(ctx context.Context) resource.
 
 			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -132,4 +132,18 @@ resource "aws_sns_topic_data_protection_policy" "test" {
   )
 }
 `, rName)
+}
+
+func testAccCheckTopicDataProtectionPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
+		_, err := tfsns.FindDataProtectionPolicyByARN(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
 }

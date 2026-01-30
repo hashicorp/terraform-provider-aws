@@ -101,6 +101,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `checksumMode` - (Optional) To retrieve the object's checksum, this argument must be `ENABLED`. If you enable `checksumMode` and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `ENABLED`
 * `key` - (Required) Full path to the object inside the bucket
@@ -141,4 +142,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.20.8 input-420a2bb9d077886e51a5aa1d3f87297e069b766641d2e3a6388d4688bf1a95cb -->
+<!-- cache-key: cdktf-0.20.8 input-44ca16d8e18b450ebb7c59f6e21159a0a2ac617b2ff8fcbbab0ca9f62ee14b40 -->

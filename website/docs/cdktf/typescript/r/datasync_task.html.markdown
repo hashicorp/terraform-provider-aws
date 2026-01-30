@@ -133,6 +133,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinationLocationArn` - (Required) Amazon Resource Name (ARN) of destination DataSync Location.
 * `sourceLocationArn` - (Required) Amazon Resource Name (ARN) of source DataSync Location.
 * `cloudwatchLogGroupArn` - (Optional) Amazon Resource Name (ARN) of the CloudWatch Log Group that is used to monitor and log events in the sync task.
@@ -228,6 +229,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_task.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:task/task-12345678901234567"
+  }
+}
+
+resource "aws_datasync_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync task.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -258,4 +280,4 @@ Using `terraform import`, import `aws_datasync_task` using the DataSync Task Ama
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-53c242c23e5dd30583394af3a7ee846a81b16fe7fbb82ec3f7cb2ba2c946ee09 -->
+<!-- cache-key: cdktf-0.20.8 input-c7c96effac34fccbf05e0ad55f111b3e26bd733738a2cf5818f21693a8d3d5ee -->

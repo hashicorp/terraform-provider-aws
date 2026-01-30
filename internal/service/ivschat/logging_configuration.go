@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ivschat
 
@@ -18,23 +20,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ivschat_logging_configuration", name="Logging Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetLoggingConfigurationOutput")
+// @Testing(preIdentityVersion="v6.5.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceLoggingConfigurationRead,
 		UpdateWithoutTimeout: resourceLoggingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceLoggingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -183,7 +185,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IVSChat LoggingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

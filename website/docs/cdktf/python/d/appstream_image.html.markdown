@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Name of the image being searched for. Cannot be used with name_regex or arn.
 * `name_regex` - Regular expression name of the image being searched for. Cannot be used with arn or name.
 * `arn` - Arn of the image being searched for. Cannot be used with name_regex or name.
@@ -85,4 +86,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state` - Current state of image. Image starts in PENDING state which changes to AVAILABLE if creation passes and FAILED if it fails. Values will be from: PENDING | AVAILABLE | FAILED | COPYING | DELETING | CREATING | IMPORTING.
 * `visibility` - Visibility type enum indicating whether the image is PUBLIC, PRIVATE, or SHARED. Valid values include: PUBLIC | PRIVATE | SHARED.
 
-<!-- cache-key: cdktf-0.20.8 input-551ad3ec8bcc30fe636ba241965421ebf2e3b1ba11015d0fea99a873ce9d25ad -->
+<!-- cache-key: cdktf-0.20.8 input-d0918dbd0ff82870acc42b1c33fa7dc523c6327f71953caf2a4904185d7f52d2 -->

@@ -44,7 +44,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -53,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - AWS Region.
 * `names` - Set of EKS clusters names
 
-<!-- cache-key: cdktf-0.20.8 input-b1175bc8c570a5af18e57a7c1afa031c3f603aac9bf8e194248bfe11a5fb0505 -->
+<!-- cache-key: cdktf-0.20.8 input-bbdf203f6acf79163e602b55c79f082bdc1f1127a7bd441a503ec40e16e7dc44 -->

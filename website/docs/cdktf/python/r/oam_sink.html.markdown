@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -87,4 +88,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink us
 % terraform import aws_oam_sink.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fc14b3d0063a642e172a6862e1572eb26cd8eb72d3a2f437f10d25fb94f83b4e -->
+<!-- cache-key: cdktf-0.20.8 input-be0a101098348e52247bd25d3d08c3816ccebc079b52c816e2f1625a69e72b21 -->

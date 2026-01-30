@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicequotas_service_quota: Add validation, during `create`, to check if new value is less than current value of quota
+```

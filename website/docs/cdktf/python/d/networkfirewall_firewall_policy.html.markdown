@@ -80,6 +80,7 @@ AWS Network Firewall does not allow multiple firewall policies with the same nam
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - ARN of the firewall policy.
 * `name` - Descriptive name of the firewall policy.
 
@@ -97,4 +98,4 @@ This data source exports the following attributes in addition to the arguments a
 [1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_share
 [2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy
 
-<!-- cache-key: cdktf-0.20.8 input-f24c92ba8b1e7dab3dd678ce624681c5364fc12ed5ddda21101a08bef7a3416b -->
+<!-- cache-key: cdktf-0.20.8 input-a3eecf01b2fadfe112128abaab3155c45d15dcedc43e558efe2f6b951f58b5f7 -->

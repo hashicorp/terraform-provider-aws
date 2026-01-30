@@ -51,6 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `boot_mode` - (Optional) Boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
 * `deprecation_time` - (Optional) Date and time to deprecate the AMI. If you specified a value for seconds, Amazon EC2 rounds the seconds to the nearest minute. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
@@ -161,4 +162,4 @@ Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
 % terraform import aws_ami.example ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e29c760a1adb479a11c3a235bf5dd387f28de9ed364868040394442d85b5def6 -->
+<!-- cache-key: cdktf-0.20.8 input-e5dc215f16b07f9482525b7061a44f8dcb80cfce4173c5bd8f248b888ed4248f -->

@@ -119,6 +119,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
@@ -195,4 +196,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1969b7e5823c37dcaa70faf533c61504633b6662145d39efba4b15fdc30e77b9 -->
+<!-- cache-key: cdktf-0.20.8 input-8c90bbe27a05ab3aca20849c5b84359c9f03c1a958894c652375c2fc667766f4 -->

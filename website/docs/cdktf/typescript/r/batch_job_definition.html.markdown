@@ -353,6 +353,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `containerProperties` - (Optional) Valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
 * `deregisterOnNewRevision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
 * `ecsProperties` - (Optional) Valid [ECS properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
@@ -415,7 +416,7 @@ The following arguments are optional:
 
 #### eks_metadata
 
-* `labels` - Key-value pairs used to identify, sort, and organize cube resources.
+* `labels` - Key-value pairs used to identify, sort, and organize kubernetes resources.
 
 #### `eks_secret`
 
@@ -449,6 +450,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_job_definition.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:job-definition/sample:1"
+  }
+}
+
+resource "aws_batch_job_definition" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the job definition.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Definition using the `arn`. For example:
 
 ```typescript
@@ -479,4 +501,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ce143b511a8d573fff1391227be985658d941bc94824b3deac578464fda8dcec -->
+<!-- cache-key: cdktf-0.20.8 input-9037d71bdc77baa299f745b92347489aa6bc82f242ef29999cc05c2268bb42fe -->

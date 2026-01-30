@@ -35,7 +35,7 @@ class MyConvertedCode extends TerraformStack {
       findingCriteria: {
         criterion: [
           {
-            eq: [Token.asString(current.name)],
+            eq: [Token.asString(current.region)],
             field: "region",
           },
         ],
@@ -52,6 +52,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `findingCriteria` - (Required) The criteria to use to filter findings.
 * `name` - (Optional) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -111,4 +112,4 @@ Using `terraform import`, import `aws_macie2_findings_filter` using the id. For 
 % terraform import aws_macie2_findings_filter.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2f1b89a866d3a79f4b1e88305d4fa4d87929efc607e9902836dad4cbd497f946 -->
+<!-- cache-key: cdktf-0.20.8 input-25a7adbfaebc5693d931155b04d475049e993eace7514bce19ced29e61c19884 -->

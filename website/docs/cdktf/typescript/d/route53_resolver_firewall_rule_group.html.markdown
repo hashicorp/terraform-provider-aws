@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewallRuleGroupId` - (Required) The ID of the rule group.
 
 ## Attribute Reference
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - The status of the rule group.
 * `statusMessage` - Additional information about the status of the rule group, if available.
 
-<!-- cache-key: cdktf-0.20.8 input-5fc6aa3bdc0e45f8ec0dc6aee7b0935f3b92cbec6e132b23a93613e5dfd049bd -->
+<!-- cache-key: cdktf-0.20.8 input-8069d12d328598aeae455c0d69cc5b731835f4e00e8998c457616dd59401902e -->

@@ -68,6 +68,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) The AWS account ID for the S3 Storage Lens configuration. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `config_id` - (Required) The ID of the S3 Storage Lens configuration.
 * `storage_lens_configuration` - (Required) The S3 Storage Lens configuration. See [Storage Lens Configuration](#storage-lens-configuration) below for more details.
@@ -238,4 +239,4 @@ Using `terraform import`, import S3 Storage Lens configurations using the `accou
 % terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9a78e0cfb3d6a96dedf49697ad6a9c2449a751f987c0e874d9a0f885a390fd34 -->
+<!-- cache-key: cdktf-0.20.8 input-d10ba5cd51971892eb845d941239b8c7f8cf0b5f2f4558ceb3f221ef177f0b90 -->

@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_appautoscaling_policy: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panics when `step_scaling_policy_configuration` is empty
+```
+
+```release-note:enhancement
+resource/aws_appautoscaling_policy: Add plan-time validation of `policy_type`
+```
+
+```release-note:enhancement
+resource/aws_appautoscaling_policy: Add plan-time validation of `step_scaling_policy_configuration.adjustment_type` and `step_scaling_policy_configuration.metric_aggregation_type`
+```
+
+```release-note:enhancement
+resource/aws_appautoscaling_policy: Add `predictive_scaling_policy_configuration` argument
+```

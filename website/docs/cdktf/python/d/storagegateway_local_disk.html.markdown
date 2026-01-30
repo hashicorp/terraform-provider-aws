@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `gateway_arn` - (Required) ARN of the gateway.
 * `disk_node` - (Optional) Device node of the local disk to retrieve. For example, `/dev/sdb`.
 * `disk_path` - (Optional) Device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.
@@ -47,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `disk_id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 * `id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 
-<!-- cache-key: cdktf-0.20.8 input-6b979c721dca74259ed8632e9e51e5b48ce907c3ecdac61071a898c5c8fa2dee -->
+<!-- cache-key: cdktf-0.20.8 input-aeec0b98a14e86ecce1efe18b0c8d3a5a3c4e5c035b15111cbd08f586a736d4c -->

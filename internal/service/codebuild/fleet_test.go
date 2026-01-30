@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -12,17 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +66,7 @@ func TestAccCodeBuildFleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceFleet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -365,78 +359,48 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildFleet_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeBuildFleet_customInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckFleetDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
+				Config: testAccFleetConfig_customInstanceType(rName, "t3.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.disk", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.instance_type", "t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", "GENERAL"),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "CUSTOM_INSTANCE_TYPE"),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "QUEUE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("codebuild", regexache.MustCompile(`fleet/.+`)),
-					}),
-				},
 			},
 		},
 	})
@@ -453,7 +417,7 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindFleetByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -751,4 +715,19 @@ resource "aws_codebuild_fleet" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccFleetConfig_customInstanceType(rName, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity = 1
+  compute_type  = "CUSTOM_INSTANCE_TYPE"
+  compute_configuration {
+    instance_type = %[2]q
+  }
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
+}
+`, rName, instanceType)
 }

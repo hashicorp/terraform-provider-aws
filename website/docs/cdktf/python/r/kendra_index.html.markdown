@@ -613,6 +613,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. [Detailed below](#capacity_units).
 * `description` - (Optional) The description of the Index.
 * `document_metadata_configuration_updates` - (Optional) One or more blocks that specify the configuration settings for any metadata applied to the documents in the index. Minimum number of 0 items. Maximum number of 500 items. If specified, you must define all elements, including those that are provided by default. These index fields are documented at [Amazon Kendra Index documentation](https://docs.aws.amazon.com/kendra/latest/dg/hiw-index.html). For an example resource that defines these default index fields, refer to the [default example above](#specifying-the-predefined-elements). For an example resource that appends additional index fields, refer to the [append example above](#appending-additional-elements). All arguments for each block must be specified. Note that blocks cannot be removed since index fields cannot be deleted. This argument is [detailed below](#document_metadata_configuration_updates).
@@ -765,4 +766,4 @@ Using `terraform import`, import Amazon Kendra Indexes using its `id`. For examp
 % terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6cc698419e860f9ea07f4071ddb08285b934ea5d155e90fd45036dc562040080 -->
+<!-- cache-key: cdktf-0.20.8 input-9033803b9116d2eee35cfe0f12d2b863876eb94c2ed704f841e1061fe5bd503b -->

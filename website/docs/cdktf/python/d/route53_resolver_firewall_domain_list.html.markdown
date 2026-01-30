@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_domain_list_id` - (Required) The ID of the domain list.
 
 ## Attribute Reference
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - The status of the domain list.
 * `status_message` - Additional information about the status of the list, if available.
 
-<!-- cache-key: cdktf-0.20.8 input-7815cd8200a5b7e7cea4e4fc539f132894cc7db22a326837dbd9c39e7e28de53 -->
+<!-- cache-key: cdktf-0.20.8 input-2b32c327d614311c68addd754473031c060dbb2b4ce2de02f40dec464c5c96b2 -->

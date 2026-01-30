@@ -12,7 +12,7 @@ description: |-
 
 Creates a new Amazon Redshift Serverless Namespace.
 
--> **Note:** Write-Only argument `admin_password_wo` is available to use in place of `admin_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+-> **Note:** Write-Only argument `admin_password_wo` is available to use in place of `admin_password`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the namespace's admin credentials secret.
 * `admin_user_password` - (Optional) The password of the administrator for the first database created in the namespace.
   Conflicts with `manage_admin_password` and `admin_user_password_wo`.
@@ -89,4 +90,4 @@ Using `terraform import`, import Redshift Serverless Namespaces using the `names
 % terraform import aws_redshiftserverless_namespace.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a7fa84b26a505d053ab1a264484c942dfcffb8ab785d1ec48be4868cb5fe59bf -->
+<!-- cache-key: cdktf-0.20.8 input-c9d7e8a2be49521b85f375337d5b8ef5d9c6b0dcae7cae6a432dafb2d1b79a3d -->

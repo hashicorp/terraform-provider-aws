@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs_test
@@ -30,6 +30,8 @@ func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -61,6 +63,8 @@ func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
@@ -92,6 +96,8 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddressType, resourceName, names.AttrIPAddressType),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ipv6_address", resourceName, "ipv6_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDNSName, resourceName, names.AttrDNSName),

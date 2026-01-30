@@ -131,6 +131,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `action` Block
@@ -266,4 +267,4 @@ Using `terraform import`, import VPC Lattice Listener Rule using the `id`. For e
 % terraform import aws_vpclattice_listener_rule.example service123/listener456/rule789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dc7367c41ecf23c649d0b9291cd7986d0030b25a95b5abf9c56e7c79d4f4f74e -->
+<!-- cache-key: cdktf-0.20.8 input-f95017130829eedd78838a84b4ae93d2ba8cfb5b398e577b6369c7ff22310277 -->

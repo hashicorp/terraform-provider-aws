@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the thing.
 * `attributes` - (Optional) Map of attributes of the thing.
 * `thingTypeName` - (Optional) The thing type name.
@@ -81,4 +82,4 @@ Using `terraform import`, import IOT Things using the name. For example:
 % terraform import aws_iot_thing.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6a474f82e70cff5931f96150e895fa63f7054fead1a17adf451f8532e75e4b3e -->
+<!-- cache-key: cdktf-0.20.8 input-7e994db9f73675037d8cc4930a7ac3a29d1cd920ba03670cbb7abc66dc88e40e -->

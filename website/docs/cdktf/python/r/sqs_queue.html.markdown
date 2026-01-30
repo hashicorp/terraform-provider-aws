@@ -171,6 +171,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content_based_deduplication` - (Optional) Enables content-based deduplication for FIFO queues. For more information, see the [related documentation](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html#FIFO-queues-exactly-once-processing).
 * `deduplication_scope` - (Optional) Specifies whether message deduplication occurs at the message group or queue level. Valid values are `messageGroup` and `queue` (default).
 * `delay_seconds` - (Optional) Time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes). The default for this attribute is 0 seconds.
@@ -178,7 +179,7 @@ This resource supports the following arguments:
 * `fifo_throughput_limit` - (Optional) Specifies whether the FIFO queue throughput quota applies to the entire queue or per message group. Valid values are `perQueue` (default) and `perMessageGroupId`.
 * `kms_data_key_reuse_period_seconds` - (Optional) Length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours). The default is 300 (5 minutes).
 * `kms_master_key_id` - (Optional) ID of an AWS-managed customer master key (CMK) for Amazon SQS or a custom CMK. For more information, see [Key Terms](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-sse-key-terms).
-* `max_message_size` - (Optional) Limit of how many bytes a message can contain before Amazon SQS rejects it. An integer from 1024 bytes (1 KiB) up to 262144 bytes (256 KiB). The default for this attribute is 262144 (256 KiB).
+* `max_message_size` - (Optional) Limit of how many bytes a message can contain before Amazon SQS rejects it. An integer from 1024 bytes (1 KiB) up to 1048576 bytes (1024 KiB). The default for this attribute is 262144 (256 KiB).
 * `message_retention_seconds` - (Optional) Number of seconds Amazon SQS retains a message. Integer representing seconds, from 60 (1 minute) to 1209600 (14 days). The default for this attribute is 345600 (4 days).
 * `name` - (Optional) Name of the queue. Queue names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 80 characters long. For a FIFO (first-in-first-out) queue, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -209,6 +210,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sqs_queue.example
+  identity = {
+    url = "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
+  }
+}
+
+resource "aws_sqs_queue" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `url` (String) URL of the SQS queue.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queues using the queue `url`. For example:
 
 ```python
@@ -223,13 +250,13 @@ from imports.aws.sqs_queue import SqsQueue
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SqsQueue.generate_config_for_import(self, "publicQueue", "https://queue.amazonaws.com/80398EXAMPLE/MyQueue")
+        SqsQueue.generate_config_for_import(self, "example", "https://queue.amazonaws.com/80398EXAMPLE/MyQueue")
 ```
 
 Using `terraform import`, import SQS Queues using the queue `url`. For example:
 
 ```console
-% terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
+% terraform import aws_sqs_queue.example https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-aa48008d02302b7be741c149ee348ec0b6e94815e244d6df7bfdeb0152eaaa30 -->
+<!-- cache-key: cdktf-0.20.8 input-544a3a13de54ae0d9f7af4143e60aa52a2da530829a47308342006553ef0eb69 -->

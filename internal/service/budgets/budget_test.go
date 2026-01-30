@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package budgets_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,6 +67,7 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					resource.TestCheckResourceAttr(resourceName, "billing_view_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
@@ -188,7 +189,7 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 				Config: testAccBudgetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbudgets.ResourceBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -508,28 +509,61 @@ func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
 	})
 }
 
-func testAccCheckBudgetExists(ctx context.Context, resourceName string, v *awstypes.Budget) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
+func TestAccBudgetsBudget_billingViewARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var budget awstypes.Budget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Budget ID is set")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBudgetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_billingViewARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "budgets", fmt.Sprintf(`budget/%s`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "billing_view_arn", "billing", "billingview/primary"),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_UTILIZATION"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cost_filter.*", map[string]string{
+						names.AttrName: "Service",
+						"values.#":     "1",
+						"values.0":     "Amazon Redshift",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
+					resource.TestCheckResourceAttrSet(resourceName, "time_period_start"),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "QUARTERLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckBudgetExists(ctx context.Context, n string, v *awstypes.Budget) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
 
-		accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
-			return tfbudgets.FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-		})
+		output, err := tfbudgets.FindBudgetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -550,17 +584,9 @@ func testAccCheckBudgetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			accountID, budgetName, err := tfbudgets.BudgetParseResourceID(rs.Primary.ID)
+			_, err := tfbudgets.FindBudgetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrName])
 
-			if err != nil {
-				return err
-			}
-
-			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Budget, error) {
-				return tfbudgets.FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
-			})
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -796,6 +822,29 @@ resource "aws_budgets_budget" "test" {
   %[2]s
 }
 `, rName, config)
+}
+
+func testAccBudgetConfig_billingViewARN(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+  time_unit    = "QUARTERLY"
+
+  cost_filter {
+    name   = "Service"
+    values = ["Amazon Redshift"]
+  }
+
+  billing_view_arn = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
+
+}
+`, rName)
 }
 
 func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {

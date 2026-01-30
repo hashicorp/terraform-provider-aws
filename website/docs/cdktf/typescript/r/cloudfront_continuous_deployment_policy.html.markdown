@@ -192,8 +192,8 @@ The following arguments are required:
 
 ### `sessionStickinessConfig`
 
-* `idleTtl` - (Required) The amount of time in seconds after which sessions will cease if no requests are received. Valid values are `300` – `3600` (5–60 minutes). The value must be less than or equal to `maximumTtl`.
-* `maximumTtl` - (Required) The maximum amount of time in seconds to consider requests from the viewer as being part of the same session. Valid values are `300` – `3600` (5–60 minutes). The value must be greater than or equal to `idleTtl`.
+* `idleTtl` - (Required) The amount of time in seconds after which sessions will cease if no requests are received. Valid values are `300` - `3600` (5–60 minutes). The value must be less than or equal to `maximumTtl`.
+* `maximumTtl` - (Required) The maximum amount of time in seconds to consider requests from the viewer as being part of the same session. Valid values are `300` - `3600` (5–60 minutes). The value must be greater than or equal to `idleTtl`.
 
 ## Attribute Reference
 
@@ -236,4 +236,4 @@ Using `terraform import`, import CloudFront Continuous Deployment Policy using t
 % terraform import aws_cloudfront_continuous_deployment_policy.example abcd-1234 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-779fb348c8272463946aabcacbf99725daf03a1c519cfe27bf37763949d54c36 -->
+<!-- cache-key: cdktf-0.20.8 input-0d3c267dbb8bce9ac984033ec201d189ca81e9a38fafc2c56d8011d0b95f3da7 -->

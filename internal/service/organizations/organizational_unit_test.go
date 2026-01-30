@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,7 +40,7 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("ou/o-.+")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("ou/"+organizationIDRegexPattern+"/ou-[0-9a-z]{4}-[0-9a-z]{8}$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -73,7 +73,7 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 				Config: testAccOrganizationalUnitConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceOrganizationalUnit(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tforganizations.ResourceOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,55 +120,6 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 	})
 }
 
-func testAccOrganizationalUnit_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var unit awstypes.OrganizationalUnit
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_organizations_organizational_unit.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOrganizationalUnitConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccOrganizationalUnitConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccOrganizationalUnitConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckOrganizationalUnitDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
@@ -180,7 +131,7 @@ func testAccCheckOrganizationalUnitDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tforganizations.FindOrganizationalUnitByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -225,35 +176,4 @@ resource "aws_organizations_organizational_unit" "test" {
   parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 `, rName)
-}
-
-func testAccOrganizationalUnitConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_organizations_organization" "current" {}
-
-resource "aws_organizations_organizational_unit" "test" {
-  name      = %[1]q
-  parent_id = data.aws_organizations_organization.current.roots[0].id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccOrganizationalUnitConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_organizations_organization" "current" {}
-
-resource "aws_organizations_organizational_unit" "test" {
-  name      = %[1]q
-  parent_id = data.aws_organizations_organization.current.roots[0].id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

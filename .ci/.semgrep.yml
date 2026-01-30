@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: acceptance-test-naming-parent-disappears
     languages: [go]
     message: Prefer naming acceptance tests with _disappears_Parent suffix
     paths:
       include:
-        - "internal/**/*_test.go"
+        - "/internal/**/*_test.go"
     patterns:
       - pattern: func $FUNCNAME(t *testing.T) { ... }
       - metavariable-regex:
@@ -18,7 +21,7 @@ rules:
     message: Calling a resource's Read method from within a data-source is discouraged
     paths:
       include:
-        - internal/service/**/*_data_source.go
+        - "/internal/service/**/*_data_source.go"
     patterns:
       - pattern-regex: "(resource.+Read|flatten.+Resource)"
       - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
@@ -36,7 +39,7 @@ rules:
     message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
-        - internal/
+        - "/internal/"
     patterns:
       - pattern-either:
           - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
@@ -48,7 +51,7 @@ rules:
     message: Using `acctest.RandString()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
@@ -60,7 +63,7 @@ rules:
     message: Using `acctest.RandomWithPrefix()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
@@ -72,9 +75,9 @@ rules:
     message: Elem must be either a *schema.Schema or *schema.Resource type
     paths:
       include:
-        - internal/service/**/*.go
+        - "/internal/service/**/*.go"
       exclude:
-        - internal/service/**/*_data_source.go
+        - "/internal/service/**/*_data_source.go"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern-regex: "Elem:[ ]*schema.Type[a-zA-Z]*,"
@@ -85,7 +88,7 @@ rules:
     message: Prefer `flex.FlattenStringSet()` or `flex.FlattenStringValueSet()`
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
       - pattern: schema.NewSet(schema.HashString, flex.FlattenStringValueList($APIOBJECT))
@@ -96,7 +99,7 @@ rules:
     message: Prefer `flex.ExpandStringSet()` or `flex.ExpandStringValueSet()`
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: flex.ExpandStringList($SET.List())
@@ -116,7 +119,7 @@ rules:
     message: Zero value conditional check after `d.GetOk()` is extraneous
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
@@ -131,7 +134,7 @@ rules:
     message: Nil value check before `d.Set()` is extraneous
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: |
@@ -180,9 +183,9 @@ rules:
     message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
     paths:
       include:
-        - internal/service/**/*.go
+        - "/internal/service/**/*.go"
       exclude:
-        - internal/service/**/*_data_source.go
+        - "/internal/service/**/*_data_source.go"
     patterns:
       - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
       - pattern-either:
@@ -205,111 +208,12 @@ rules:
           ...
     severity: WARNING
 
-  - id: helper-schema-retry-RetryContext-without-TimeoutError-check
-    languages: [go]
-    message: Check retry.RetryContext() errors with tfresource.TimedOut()
-    paths:
-      exclude:
-        - "*_test.go"
-        - sweep.go
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: |
-              $ERR := retry.RetryContext(...)
-              ...
-              return ...
-          - pattern: |
-              $ERR = retry.RetryContext(...)
-              ...
-              return ...
-      - pattern-not: |
-          $ERR := retry.RetryContext(...)
-          ...
-          if isResourceTimeoutError($ERR) { ... }
-          ...
-          return ...
-      - pattern-not: |
-          $ERR = retry.RetryContext(...)
-          ...
-          if isResourceTimeoutError($ERR) { ... }
-          ...
-          return ...
-      - pattern-not: |
-          $ERR := retry.RetryContext(...)
-          ...
-          if tfresource.TimedOut($ERR) { ... }
-          ...
-          return ...
-      - pattern-not: |
-          $ERR = retry.RetryContext(...)
-          ...
-          if tfresource.TimedOut($ERR) { ... }
-          ...
-          return ...
-    severity: WARNING
-
-  - id: helper-schema-TimeoutError-check-doesnt-return-output
-    languages: [go]
-    message: If the retry.RetryContext() or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
-    paths:
-      exclude:
-        - "*_test.go"
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - patterns:
-              - pattern: |
-                  if isResourceTimeoutError($ERR) {
-                    _, $ERR = $CONN.$FUNC(...)
-                  }
-              - pattern-not-inside: |
-                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  }, ...)
-                  ...
-                  if isResourceTimeoutError($ERR) { ... }
-          - patterns:
-              - pattern: |
-                  if tfresource.TimedOut($ERR) {
-                    _, $ERR = $CONN.$FUNC(...)
-                  }
-              - pattern-not-inside: |
-                  $ERR = retry.RetryContext(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.Retry(..., func() *retry.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  }, ...)
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-    severity: WARNING
-
   - id: is-not-found-error
     languages: [go]
-    message: Check for retry.NotFoundError errors with tfresource.NotFound()
+    message: Check for retry.NotFoundError errors with retry.NotFound()
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - patterns:
@@ -333,7 +237,7 @@ rules:
     message: Use time.Equal() instead of ==
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: |
@@ -359,7 +263,7 @@ rules:
     message: Use lastPage for bool variable in pagination functions
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
@@ -383,10 +287,10 @@ rules:
     message: Do not call `fmt.Print` and variant
     paths:
       include:
-        - internal/
+        - "/internal"
       exclude:
-        - .ci/providerlint/vendor/
-        - internal/generate/
+        - "/.ci/providerlint/vendor/"
+        - "/internal/generate/"
     patterns:
       - pattern-either:
           - pattern: |
@@ -402,9 +306,9 @@ rules:
     message: Do not call `regexp.MustCompile` directly, use `regexache.MustCompile` instead
     paths:
       include:
-        - internal/
+        - "/internal"
       exclude:
-        - .ci/providerlint/vendor/
+        - "/.ci/providerlint/vendor/"
     patterns:
       - pattern: 'regexp.MustCompile($X)'
     severity: WARNING
@@ -415,22 +319,22 @@ rules:
     message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
     paths:
       include:
-        - internal/service
+        - "/internal/service"
       exclude:
-        - internal/service/firehose/delivery_stream_test.go
-        - internal/service/fsx/windows_file_system_test.go
-        - internal/service/iam/openid_connect_provider_test.go
-        - internal/service/mq/broker_test.go
-        - internal/service/mq/forge_test.go
-        - internal/service/route53/sweep.go
-        - internal/service/s3/bucket_test.go
-        - internal/service/s3/object_test.go
-        - internal/service/storagegateway/cached_iscsi_volume.go
-        - internal/service/storagegateway/cached_iscsi_volume_test.go
-        - internal/service/storagegateway/stored_iscsi_volume_test.go
-        - internal/service/transfer/access_test.go
-        - internal/service/transfer/server_test.go
-        - "internal/service/**/*_test.go"
+        - "/internal/service/firehose/delivery_stream_test.go"
+        - "/internal/service/fsx/windows_file_system_test.go"
+        - "/internal/service/iam/openid_connect_provider_test.go"
+        - "/internal/service/mq/broker_test.go"
+        - "/internal/service/mq/forge_test.go"
+        - "/internal/service/route53/sweep.go"
+        - "/internal/service/s3/bucket_test.go"
+        - "/internal/service/s3/object_test.go"
+        - "/internal/service/storagegateway/cached_iscsi_volume.go"
+        - "/internal/service/storagegateway/cached_iscsi_volume_test.go"
+        - "/internal/service/storagegateway/stored_iscsi_volume_test.go"
+        - "/internal/service/transfer/access_test.go"
+        - "/internal/service/transfer/server_test.go"
+        - "/internal/service/**/*_test.go"
     patterns:
       - patterns:
           - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
@@ -461,9 +365,9 @@ rules:
     message: Use default email address or generate a random email address. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-email-addresses
     paths:
       include:
-        - internal/
+        - "/internal"
       exclude:
-        - internal/service/route53domains/registered_domain_test.go
+        - "/internal/service/route53domains/registered_domain_test.go"
     patterns:
       - pattern-regex: '[-_A-Za-z0-9.+]+@([-A-Za-z0-9]+\.)(com|net|org)'
       - pattern-not-regex: 'no-reply@hashicorp\.com'
@@ -475,9 +379,9 @@ rules:
     message: Generate random SSH keys using acctest.RandSSHKeyPair() or RandSSHKeyPairSize(). https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md#hardcoded-ssh-key
     paths:
       include:
-        - internal/
+        - "/internal"
       exclude:
-        - .ci/providerlint/vendor/
+        - "/.ci/providerlint/vendor/"
     patterns:
       # This isn't technically the correct regex, but for some reason adding a '+' causes the regex to
       # miss some SSH keys. AFAICT, this is good enough.
@@ -490,9 +394,9 @@ rules:
     message: Incorrect form of non-tags change detection. https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#resource-tagging-code-implementation
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
-      - pattern: 'if d.HasChangeExcept("tags_all") {...}'
+      - pattern: 'if d.HasChangeExcept(names.AttrTagsAll) {...}'
     severity: WARNING
 
   - id: unnecessary-literal-type-conversion
@@ -500,7 +404,7 @@ rules:
     message: Literal numbers do not need type conversions
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: "aws.Int64(int64($X))"
       - metavariable-regex:
@@ -514,7 +418,7 @@ rules:
     message: Do not call `d.SetId("")` inside a resource create function
     paths:
       include:
-        - internal/service/
+        - "/internal/service/"
     patterns:
       - pattern: |
           func $FUNC(...) {
@@ -531,7 +435,7 @@ rules:
     message: Do not call `d.SetId("")` inside a resource update function
     paths:
       include:
-        - internal/service/
+        - "/internal/service/"
     patterns:
       - pattern: |
           func $FUNC(...) {
@@ -548,7 +452,7 @@ rules:
     message: Do not call `d.SetId(...)` inside a resource delete function
     paths:
       include:
-        - internal/service/
+        - "/internal/service/"
     patterns:
       - pattern: |
           func $FUNC(...) {
@@ -565,7 +469,7 @@ rules:
     message: Empty strings should not be included in validation
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: validation.Any(..., validation.StringIsEmpty, ...)
     severity: ERROR
@@ -575,7 +479,7 @@ rules:
     message: Use tfawserr.ErrCodeEquals() when message parameter is empty string
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: tfawserr.ErrMessageContains(err, ..., "")
     severity: ERROR
@@ -585,9 +489,9 @@ rules:
     message: Use constant in the same package rather than importing iam for a constant
     paths:
       include:
-        - internal/
+        - "/internal"
       exclude:
-        - internal/service/iam
+        - "/internal/service/iam"
     patterns:
       - pattern: tfiam.PropagationTimeout
     severity: ERROR
@@ -597,7 +501,7 @@ rules:
     message: Use acctest.ProtoV5ProviderFactories, not acctest.Providers or acctest.ProviderFactories
     paths:
       include:
-        - "internal/**/*_test.go"
+        - "/internal/**/*_test.go"
     pattern-either:
       - pattern-regex: Providers:\s+(acctest\.)?Providers,
       - pattern-regex: ProviderFactories:\s+(acctest\.)?ProviderFactories,
@@ -608,7 +512,7 @@ rules:
     message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern-either:
           - pattern: fmt.Errorf(..., $ERR.Code(), ...)
@@ -620,7 +524,7 @@ rules:
     message: Prefer using `enum.Slice()` to convert a slice of typed string enums to a slice of strings
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
@@ -630,7 +534,7 @@ rules:
     message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
     paths:
       include:
-        - internal/service
+        - "/internal/service"
     patterns:
       - pattern-regex: "(Create|Read|Update|Delete)Context:"
     severity: ERROR
@@ -640,7 +544,7 @@ rules:
     message: Calls to `sdkdiag.AppendErrorf()` should be returned or set to the `diags` variable
     paths:
       include:
-        - internal/
+        - "/internal"
     patterns:
       - pattern: |
           if err != nil {
@@ -665,7 +569,7 @@ rules:
     message: Avoid use of `errs.Must()` in service packages, handle errors explicitly instead.
     paths:
       include:
-        - internal/service
+        - "/internal/service"
     patterns:
       - pattern-either:
           - pattern: errs.Must(...)
@@ -676,7 +580,7 @@ rules:
     message: Avoid use of `SingleNestedBlock` in schema definitions. Use `ListNestedBlock` with a size validator instead.
     paths:
       include:
-        - internal/service
+        - "/internal/service"
     patterns:
       - pattern: schema.SingleNestedBlock{ ... }
     severity: ERROR
@@ -686,7 +590,7 @@ rules:
     message: Deprecation messages should begin with `argument_name is deprecated`.
     paths:
       include:
-        - internal/service
+        - "/internal/service"
     patterns:
       - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
       - pattern: |

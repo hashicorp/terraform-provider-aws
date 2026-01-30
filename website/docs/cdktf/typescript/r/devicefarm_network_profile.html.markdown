@@ -51,6 +51,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the network profile.
 * `downlinkBandwidthBits` - (Optional) The data throughput rate in bits per second, as an integer from `0` to `104857600`. Default value is `104857600`.
 * `downlinkDelayMs` - (Optional) Delay time for all packets to destination in milliseconds as an integer from `0` to `2000`.
@@ -73,6 +74,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_network_profile.example
+  identity = {
+    "arn" = "arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e"
+  }
+}
+
+resource "aws_devicefarm_network_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Device Farm network profile.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Network Profiles using their ARN. For example:
 
@@ -104,4 +126,4 @@ Using `terraform import`, import DeviceFarm Network Profiles using their ARN. Fo
 % terraform import aws_devicefarm_network_profile.example arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e59af8f8ae7f9fd243a2d5f6af7ae0824807ba4d62a05a49852d46321808e194 -->
+<!-- cache-key: cdktf-0.20.8 input-23928514f95c63c6d942007f5d298788ee4a957557273e60ae9f0f07d36b6377 -->

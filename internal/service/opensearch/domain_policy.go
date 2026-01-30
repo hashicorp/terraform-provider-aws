@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,6 +37,10 @@ func resourceDomainPolicy() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(180 * time.Minute),
 			Delete: schema.DefaultTimeout(90 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,9 +66,10 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	domainName := strings.Replace(d.Id(), "esd-policy-", "", 1)
+	ds, err := findDomainByName(ctx, conn, domainName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -77,6 +86,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("access_policies", policies)
+	d.Set(names.AttrDomainName, ds.DomainName)
 
 	return diags
 }
@@ -92,8 +102,8 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),

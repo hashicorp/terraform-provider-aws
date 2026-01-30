@@ -63,7 +63,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity Policy using the `id` (`email_identity|policy_name`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity Policy using the `email_identity` and `policy_name` separated by `|`. For example:
 
 ```terraform
 import {
@@ -72,7 +72,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Policy using the `example_id_arg`. For example:
+Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Policy using the `email_identity` and `policy_name` separated by `|`. For example:
 
 ```console
 % terraform import aws_sesv2_email_identity_policy.example example_email_identity|example_policy_name

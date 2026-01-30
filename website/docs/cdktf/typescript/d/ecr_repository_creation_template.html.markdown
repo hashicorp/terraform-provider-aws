@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `prefix` - (Required) The repository name prefix that the template matches against.
 
 ## Attribute Reference
@@ -49,6 +50,7 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - The description for this template.
 * `encryptionConfiguration` - Encryption configuration for any created repositories. See [Encryption Configuration](#encryption-configuration) below.
 * `imageTagMutability` - The tag mutability setting for any created repositories.
+* `imageTagMutabilityExclusionFilter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
 * `lifecyclePolicy` - The lifecycle policy document to apply to any created repositories.
 * `registryId` - The registry ID the repository creation template applies to.
 * `repositoryPolicy` - The registry policy document to apply to any created repositories.
@@ -59,4 +61,9 @@ This data source exports the following attributes in addition to the arguments a
 * `encryptionType` - Encryption type to use for any created repositories, either `AES256` or `KMS`.
 * `kmsKey` - If `encryptionType` is `KMS`, the ARN of the KMS key used.
 
-<!-- cache-key: cdktf-0.20.8 input-f1c4bbe12045f65ff162d44fb4a86ac5bbbe85bcc7fe18d7917dbdc3db134be7 -->
+### Image Tag Mutability Exclusion Filter
+
+* `filter` - The filter pattern to use for excluding image tags from the mutability setting.
+* `filterType` - The type of filter to use.
+
+<!-- cache-key: cdktf-0.20.8 input-c0dfec454d7833e695583f00e64db173355f88121792024f33c165d878d1041b -->

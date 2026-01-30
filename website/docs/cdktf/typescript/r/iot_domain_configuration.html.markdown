@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationProtocol` - (Optional) An enumerated string that speciﬁes the application-layer protocol. Valid values are `SECURE_MQTT`, `MQTT_WSS`, `HTTPS` or `DEFAULT`.
 * `authenticationType` - (Optional) An enumerated string that speciﬁes the authentication type. Valid values are `CUSTOM_AUTH_X509`, `CUSTOM_AUTH`, `AWS_X509`, `AWS_SIGV4` or `DEFAULT`.
 * `authorizerConfig` - (Optional) An object that specifies the authorization service for a domain. See the [`authorizerConfig` Block](#authorizer_config-block) below for details.
@@ -103,4 +104,4 @@ Using `terraform import`, import domain configurations using the name. For examp
 % terraform import aws_iot_domain_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-30c9d87b51a8b980ffffbc74cb1d809130044dcb5b75a1871ff5ac9abf00c2d4 -->
+<!-- cache-key: cdktf-0.20.8 input-11bb4673daa8a1845556c2c0b0e8483cf7413abab226b03343bfbcf8d22f58ac -->

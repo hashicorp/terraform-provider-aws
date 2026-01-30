@@ -142,12 +142,34 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Amazon Resource Name (ARN) of the distribution configuration.
 * `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
 * `date_created` - Date the distribution configuration was created.
 * `date_updated` - Date the distribution configuration was updated.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_distribution_configuration.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example"
+  }
+}
+
+resource "aws_imagebuilder_distribution_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder distribution configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
 

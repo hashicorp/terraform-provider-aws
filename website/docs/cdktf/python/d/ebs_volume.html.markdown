@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-volumes in the AWS CLI reference][1].
@@ -69,6 +70,7 @@ This data source exports the following attributes in addition to the arguments a
 * `throughput` - Throughput that the volume supports, in MiB/s.
 * `volume_id` - Volume ID (e.g., vol-59fcb34e).
 * `volume_type` - Type of EBS volume.
+* `volume_initialization_rate` - EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume.
 
 ## Timeouts
 
@@ -78,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
 
-<!-- cache-key: cdktf-0.20.8 input-26d231a20747ba6784fad37eca209e746a455b3ffe0dc1357e656eda086d02bf -->
+<!-- cache-key: cdktf-0.20.8 input-482e12664407431b2090499f23de9884c316239acea4040045270a2d863576e6 -->

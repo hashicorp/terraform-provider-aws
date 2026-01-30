@@ -50,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Unique name of the load balancer.
 
 ## Attribute Reference
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 See the [ELB Resource](/docs/providers/aws/r/elb.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.8 input-cf436a2bafe66bc759c6805b65524f62bb120508c01dfaea758e0846c3374585 -->
+<!-- cache-key: cdktf-0.20.8 input-80ec48448786c8a6dc6a4b20ba243fedc20f3e279cd99137eee0f0e264473c8e -->

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package athena
 
@@ -16,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -108,6 +110,11 @@ func resourceDatabase() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"workgroup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -139,12 +146,16 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	queryString.WriteString(";")
 
-	input := &athena.StartQueryExecutionInput{
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString.String()),
 		ResultConfiguration: expandResultConfiguration(d),
 	}
 
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena Database (%s): %s", name, err)
@@ -165,7 +176,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	db, err := findDatabaseByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Athena Database (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -192,19 +203,28 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 	queryString += ";"
 
-	input := &athena.StartQueryExecutionInput{
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
 		ResultConfiguration: expandResultConfiguration(d),
 	}
-
-	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
-	if err := executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId)); err != nil {
+	err = executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId))
+
+	// "reason: FAILED: SemanticException [Error 10072]: Database does not exist: ...".
+	if errs.Contains(err, "does not exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
@@ -212,17 +232,16 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (*types.Database, error) {
-	input := &athena.GetDatabaseInput{
+	input := athena.GetDatabaseInput{
 		CatalogName:  aws.String("AwsDataCatalog"),
 		DatabaseName: aws.String(name),
 	}
 
-	output, err := conn.GetDatabase(ctx, input)
+	output, err := conn.GetDatabase(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.MetadataException](err, "not found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -231,7 +250,7 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 	}
 
 	if output == nil || output.Database == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Database, nil
@@ -301,7 +320,7 @@ func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string)
 	executionStateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.QueryExecutionStateQueued, types.QueryExecutionStateRunning),
 		Target:     enum.Slice(types.QueryExecutionStateSucceeded),
-		Refresh:    queryExecutionStateRefreshFunc(ctx, conn, qeid),
+		Refresh:    queryExecutionStateRefreshFunc(conn, qeid),
 		Timeout:    10 * time.Minute,
 		Delay:      3 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -322,8 +341,8 @@ func queryExecutionResult(ctx context.Context, conn *athena.Client, qeid string)
 	return resp.ResultSet, nil
 }
 
-func queryExecutionStateRefreshFunc(ctx context.Context, conn *athena.Client, qeid string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func queryExecutionStateRefreshFunc(conn *athena.Client, qeid string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),
 		}

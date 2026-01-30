@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Optional) Name of the RDS instance.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
@@ -94,4 +95,4 @@ The `master_user_secret` configuration block supports the following attributes:
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret.
 * `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
-<!-- cache-key: cdktf-0.20.8 input-c2ecfd582ca8b9e530b9e379afc4eed00eb577e75d053cca214aa40c806c4575 -->
+<!-- cache-key: cdktf-0.20.8 input-1327c585f632a73e192d45f4fe45a839e9c5b50890fd9259ac880721210b5561 -->

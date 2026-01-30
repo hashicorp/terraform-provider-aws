@@ -100,6 +100,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A summary description of the connector.
 * `logDelivery` - (Optional) Details about log delivery. See [`logDelivery` Block](#log_delivery-block) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -277,4 +278,4 @@ Using `terraform import`, import MSK Connect Connector using the connector's `ar
 % terraform import aws_mskconnect_connector.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:connector/example/264edee4-17a3-412e-bd76-6681cfc93805-3'
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8bf765ae92b4515b183aeeaf6db394f4d9e92daef2b158bdb10a64871f0845b2 -->
+<!-- cache-key: cdktf-0.20.8 input-4ee0d5808327d2a40eab5d24e8c22103cc72f071acfec6cc118484dbe97264a5 -->

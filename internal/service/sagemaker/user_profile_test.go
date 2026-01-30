@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -11,21 +11,13 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -453,69 +445,9 @@ func testAccUserProfile_disappears(t *testing.T) {
 				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceUserProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v sagemaker.DescribeUserProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_user_profile.test"
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy: acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.2.0",
-					},
-				},
-				Config: testAccUserProfileConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccUserProfileConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{domain_id}/{user_profile_name}"),
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						"domain_id":         knownvalue.NotNull(),
-						"user_profile_name": knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("domain_id")),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("user_profile_name")),
-				},
 			},
 		},
 	})
@@ -535,7 +467,7 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfsagemaker.FindUserProfileByName(ctx, conn, domainID, userProfileName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -846,13 +778,6 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
-	for i, appType := range hiddenAppTypes {
-		if i > 0 {
-			hiddenAppTypesString += ", "
-		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -866,17 +791,10 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, acctest.ListOfStrings(hiddenAppTypes...)))
 }
 
 func testAccUserProfileConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
-	for i, mlTool := range hiddenMlTools {
-		if i > 0 {
-			hiddenMlToolsString += ", "
-		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
-	}
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
@@ -890,5 +808,5 @@ resource "aws_sagemaker_user_profile" "test" {
     }
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, acctest.ListOfStrings(hiddenMlTools...)))
 }

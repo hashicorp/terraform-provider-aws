@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta_test
@@ -23,7 +23,7 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,7 +44,7 @@ func TestAccMetaIPRangesDataSource_none(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,7 +64,7 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -85,7 +85,7 @@ func TestAccMetaIPRangesDataSource_uppercase(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -186,7 +186,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 
 			_, _, err := net.ParseCIDR(cidrBlock)
 			if err != nil {
-				return fmt.Errorf("malformed CIDR block %s in %s: %s", cidrBlock, attribute, err)
+				return fmt.Errorf("malformed CIDR block %s in %s: %w", cidrBlock, attribute, err)
 			}
 
 			cidrBlocks[i] = cidrBlock

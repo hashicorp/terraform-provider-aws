@@ -440,7 +440,7 @@ This resource supports the following arguments:
   group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead. To remove all load balancer attachments an empty list should be specified.
 - `traffic_source` - (Optional) Attaches one or more traffic sources to the specified Auto Scaling group.
 - `vpc_zone_identifier` - (Optional) List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
-- `target_group_arns` - (Optional) Set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
+- `target_group_arns` - (Optional) Set of `aws_lb_target_group` ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
 - `termination_policies` - (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 - `suspended_processes` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`, `InstanceRefresh`.
   Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
@@ -684,7 +684,7 @@ This configuration block supports the following:
     - `instance_warmup` - (Optional) Number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     - `max_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between `100` and `200`, defaults to `100`.
     - `min_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
-    - `skip_matching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
+    - `skip_matching` - (Optional) Skip replacing instances that already have your desired configuration. Defaults to `false`.
     - `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launch_template` or `mixed_instances_policy`.
     - `alarm_specification` - (Optional) Alarm Specification for Instance Refresh.
         - `alarms` - (Required) List of Cloudwatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.

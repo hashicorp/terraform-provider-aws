@@ -137,6 +137,7 @@ The following arguments are optional:
 * `is_disabled` - (Optional) Whether to disable the container service. Defaults to `false`.
 * `private_registry_access` - (Optional) Configuration for the container service to access private container image repositories, such as Amazon Elastic Container Registry (Amazon ECR) private repositories. [See below](#private-registry-access).
 * `public_domain_names` - (Optional) Public domain names to use with the container service, such as example.com and www.example.com. You can specify up to four public domain names for a container service. The domain names that you specify are used when you create a deployment with a container configured as the public endpoint of your container service. If you don't specify public domain names, then you can use the default domain of the container service. [See below](#public-domain-names).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Private Registry Access
@@ -212,4 +213,4 @@ Using `terraform import`, import Lightsail Container Service using the `name`. F
 % terraform import aws_lightsail_container_service.example container-service-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-957bac77c363bd5691f285580e8b1f01a4d148754f5ed1a78deb145615753a6f -->
+<!-- cache-key: cdktf-0.20.8 input-e101666f9174ded7ef6b4d60c28cb3174ab42c5119b629844c7433c51299a753 -->

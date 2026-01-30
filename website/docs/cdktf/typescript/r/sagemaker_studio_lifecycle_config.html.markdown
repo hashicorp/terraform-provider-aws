@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `studioLifecycleConfigName` - (Required) The name of the Studio Lifecycle Configuration to create.
 - `studioLifecycleConfigAppType` - (Required) The App type that the Lifecycle Configuration is attached to. Valid values are `JupyterServer`, `JupyterLab`, `CodeEditor` and `KernelGateway`.
 - `studioLifecycleConfigContent` - (Required) The content of your Studio Lifecycle Configuration script. This content must be base64 encoded.
@@ -89,4 +90,4 @@ Using `terraform import`, import SageMaker AI Studio Lifecycle Configs using the
 % terraform import aws_sagemaker_studio_lifecycle_config.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f592e15bbfde4e2bf8e2e22307c82572eafe467350d647c1a2b048d6d9585912 -->
+<!-- cache-key: cdktf-0.20.8 input-96a8b1115bd857d07b4f1ba94cc78491cc2541260c13ccadd4c00625fb07dfc1 -->

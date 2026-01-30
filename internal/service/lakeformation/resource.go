@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lakeformation
 
@@ -12,11 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,6 +67,12 @@ func ResourceResource() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"with_privileged_access": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -95,6 +104,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.WithFederation = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("with_privileged_access"); ok {
+		input.WithPrivilegedAccess = v.(bool)
+	}
+
 	_, err := conn.RegisterResource(ctx, input)
 
 	if errs.IsA[*awstypes.AlreadyExistsException](err) {
@@ -114,7 +127,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	resource, err := FindResourceByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Resource Lake Formation Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,6 +144,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set(names.AttrRoleARN, resource.RoleArn)
 	d.Set("with_federation", resource.WithFederation)
+	d.Set("with_privileged_access", resource.WithPrivilegedAccess)
 
 	return diags
 }
@@ -163,7 +177,7 @@ func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn stri
 	output, err := conn.DescribeResource(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -174,7 +188,7 @@ func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn stri
 	}
 
 	if output == nil || output.ResourceInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceInfo, nil

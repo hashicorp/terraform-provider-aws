@@ -75,6 +75,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the user group.
 * `user_pool_id` - (Required) The user pool ID.
 * `description` - (Optional) The description of the user group.
@@ -110,4 +111,4 @@ Using `terraform import`, import Cognito User Groups using the `user_pool_id`/`n
 % terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cc1b14439a5de34e3245c86b3fde6854b55b9ec7ad46bd038fb95fabbe714a37 -->
+<!-- cache-key: cdktf-0.20.8 input-caf2234500365abb02cd93cae5466d9ffea8fd6586d8a15d8fcdb2a69f0dfdb3 -->

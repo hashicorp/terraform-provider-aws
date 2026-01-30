@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_computeoptimizer_recommendation_preferences: Add `AuroraDBClusterStorage` as a valid `resource_type`
+```
+

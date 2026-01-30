@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -75,6 +75,15 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSource, resourceName, names.AttrSource),
 				),
 			},
+			{
+				Config: testAccPatchBaselineDataSourceConfig_availableSecurityUpdatesComplianceStatus(rName, "COMPLIANT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "approval_rule", resourceName, "approval_rule"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "available_security_updates_compliance_status", resourceName, "available_security_updates_compliance_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+				),
+			},
 		},
 	})
 }
@@ -113,4 +122,39 @@ data "aws_ssm_patch_baseline" "test" {
   operating_system = "AMAZON_LINUX_2"
 }
 `, name)
+}
+
+func testAccPatchBaselineDataSourceConfig_availableSecurityUpdatesComplianceStatus(rName, complianceStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                                         = "patch-baseline-%[1]s"
+  operating_system                             = "WINDOWS"
+  description                                  = "Baseline"
+  approved_patches_compliance_level            = "CRITICAL"
+  available_security_updates_compliance_status = "%[2]s"
+  approval_rule {
+    approve_after_days = 7
+    compliance_level   = "CRITICAL"
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["WindowsServer2019", "WindowsServer2022", "MicrosoftDefenderAntivirus"]
+    }
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates", "FeaturePacks", "SecurityUpdates", "Updates", "UpdateRollups"]
+    }
+    patch_filter {
+      key    = "MSRC_SEVERITY"
+      values = ["*"]
+    }
+  }
+}
+
+data "aws_ssm_patch_baseline" "test" {
+  owner            = "Self"
+  name_prefix      = aws_ssm_patch_baseline.test.name
+  operating_system = "WINDOWS"
+}
+
+`, rName, complianceStatus)
 }

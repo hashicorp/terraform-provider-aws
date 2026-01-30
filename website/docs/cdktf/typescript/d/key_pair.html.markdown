@@ -56,6 +56,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `keyPairId` - (Optional) Key Pair ID.
 * `keyName` - (Optional) Key Pair name.
 * `includePublicKey` - (Optional) Whether to include the public key material in the response.
@@ -90,4 +91,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-a3bf15d34602c90960a63e7ec13324611b0923f7896e7480d319d75caf986104 -->
+<!-- cache-key: cdktf-0.20.8 input-50cc3969439bfed24baba154e0c03d8e9c65f35c5b9acd7c17faf74a4e586211 -->

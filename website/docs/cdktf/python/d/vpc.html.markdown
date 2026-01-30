@@ -53,6 +53,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) Cidr block of the desired VPC.
 * `dhcp_options_id` - (Optional) DHCP options id of the desired VPC.
 * `default` - (Optional) Boolean constraint on whether the desired VPC is
@@ -104,4 +105,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-cc6ea0d60d2449cce5826ad755bd7f23e1db87034cd5f02ceeeebf778e05a3bd -->
+<!-- cache-key: cdktf-0.20.8 input-a149abcdf6c93ceaf1a84563507c805586fc344d80b2fd597e9a8f4887a29342 -->

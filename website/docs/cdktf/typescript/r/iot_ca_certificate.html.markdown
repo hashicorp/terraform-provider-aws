@@ -96,6 +96,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active` - (Required)  Boolean flag to indicate if the certificate should be active for device authentication.
 * `allowAutoRegistration` - (Required)  Boolean flag to indicate if the certificate should be active for device regisration.
 * `caCertificatePem` - (Required)  PEM encoded CA certificate.
@@ -124,4 +125,4 @@ This resource exports the following attributes in addition to the arguments abov
     * `notAfter` - The certificate is not valid after this date.
     * `notBefore` - The certificate is not valid before this date.
 
-<!-- cache-key: cdktf-0.20.8 input-e4efef128162bb45b41d06e789b11315bc4c7a49d2ebc0f22dee2d342d432fb8 -->
+<!-- cache-key: cdktf-0.20.8 input-d9d94ddbb7c9cff4b87c2136f3ca6826f5db72a823c908a5b6f31fd619962ed8 -->

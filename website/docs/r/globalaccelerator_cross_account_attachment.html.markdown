@@ -69,7 +69,28 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator Cross Account Attachment using the `example_id_arg`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_cross_account_attachment.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:attachment/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  }
+}
+
+resource "aws_globalaccelerator_cross_account_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator cross-account attachment.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator Cross Account Attachment using the `arn`. For example:
 
 ```terraform
 import {
@@ -78,7 +99,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Global Accelerator Cross Account Attachment using the `example_id_arg`. For example:
+Using `terraform import`, import Global Accelerator Cross Account Attachment using the `arn`. For example:
 
 ```console
 % terraform import aws_globalaccelerator_cross_account_attachment.example arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012

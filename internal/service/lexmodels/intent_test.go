@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels_test
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflexmodels "github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -599,7 +599,7 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceIntent(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceIntent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -630,14 +630,14 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 					Type: awstypes.FulfillmentActivityType("ReturnIntent"),
 				},
 			}
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 				_, err := conn.PutIntent(ctx, input)
 
 				if errs.IsA[*awstypes.ConflictException](err) {
-					return retry.RetryableError(fmt.Errorf("%q: intent still updating", resourceName))
+					return tfresource.RetryableError(fmt.Errorf("%q: intent still updating", resourceName))
 				}
 				if err != nil {
-					return retry.NonRetryableError(err)
+					return tfresource.NonRetryableError(err)
 				}
 
 				return nil
@@ -774,7 +774,7 @@ func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion 
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("error getting intent %s version %s: %s", intentName, intentVersion, err)
+			return fmt.Errorf("error getting intent %s version %s: %w", intentName, intentVersion, err)
 		}
 
 		return fmt.Errorf("error intent %s version %s exists", intentName, intentVersion)

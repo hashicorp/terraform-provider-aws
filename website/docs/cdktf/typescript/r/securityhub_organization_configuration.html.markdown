@@ -107,6 +107,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoEnable` - (Required) Whether to automatically enable Security Hub for new accounts in the organization.
 * `autoEnableStandards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `DEFAULT`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `NONE`.
 * `organizationConfiguration` - (Optional) Provides information about the way an organization is configured in Security Hub.
@@ -161,4 +162,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_organization_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2fbc3368dfe1e813d4004abb851ef466468b7d2bea02a2126eea8fae74ad5485 -->
+<!-- cache-key: cdktf-0.20.8 input-e5f7fc0bbc3cedf2f85ad21fa3213e2380bc1289af2e4c4409a05f9afe27de5c -->

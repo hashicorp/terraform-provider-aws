@@ -27,8 +27,8 @@ price availability or by a user.
 
 ~> **NOTE:** Because their behavior depends on the live status of the spot
 market, Spot Instance Requests have a unique lifecycle that makes them behave
-differently than other Terraform resources. Most importantly: there is __no
-guarantee__ that a Spot Instance exists to fulfill the request at any given
+differently than other Terraform resources. Most importantly: there is **no
+guarantee** that a Spot Instance exists to fulfill the request at any given
 point in time. See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
 for more information.
@@ -67,6 +67,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 Spot Instance Requests support all the same arguments as [`aws_instance`](instance.html), with the addition of:
 
 * `spotPrice` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
@@ -77,9 +79,6 @@ Spot Instance Requests support all the same arguments as [`aws_instance`](instan
   the instance is terminated, the spot request will be closed.
 * `launchGroup` - (Optional) A launch group is a group of spot instances that launch together and terminate together.
   If left empty instances are launched and terminated individually.
-* `blockDurationMinutes` - (Optional) The required duration for the Spot instances, in minutes. This value must be a multiple of 60 (60, 120, 180, 240, 300, or 360).
-  The duration period starts as soon as your Spot instance receives its instance ID. At the end of the duration period, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
-  Note that you can't specify an Availability Zone group or a launch group if you specify a duration.
 * `instanceInterruptionBehavior` - (Optional) Indicates Spot instance behavior when it is interrupted. Valid values are `terminate`, `stop`, or `hibernate`. Default value is `terminate`.
 * `validUntil` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. The default end date is 7 days from the current date.
 * `validFrom` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
@@ -90,9 +89,9 @@ Spot Instance Requests support all the same arguments as [`aws_instance`](instan
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Spot Instance Request ID.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-These attributes are exported, but they are expected to change over time and so
-should only be used for informational purposes, not for resource dependencies:
+The following attributes are exported, but they are expected to change over time and so should only be used for informational purposes, not for resource dependencies:
 
 * `spotBidStatus` - The current [bid
   status](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html)
@@ -109,7 +108,6 @@ should only be used for informational purposes, not for resource dependencies:
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
   for your VPC
 * `privateIp` - The private IP address assigned to the instance
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -119,4 +117,4 @@ should only be used for informational purposes, not for resource dependencies:
 * `read` - (Default `15m`)
 * `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-5b0e79480fdada45ad4fd09733380e9ac4df8581e7d0b1fb0a5ef8bed3fbb8e7 -->
+<!-- cache-key: cdktf-0.20.8 input-3c8d9d417a791c4e27b860748141dc76bf531c247fe983ae0328aa35b7f13ffd -->

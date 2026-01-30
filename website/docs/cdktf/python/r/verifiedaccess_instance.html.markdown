@@ -78,6 +78,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description for the AWS Verified Access Instance.
 * `fips_enabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
 * `cidr_endpoints_custom_subdomain` - (Optional) The custom subdomain for the CIDR endpoints.
@@ -127,4 +128,4 @@ Using `terraform import`, import Verified Access Instances using the  `id`. For 
 % terraform import aws_verifiedaccess_instance.example vai-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d4eb1c8923a4e4932f6e43bb85ddd972ec7ec1b53356cf301845c2622ce5ef4c -->
+<!-- cache-key: cdktf-0.20.8 input-754d0092b0f38a1a9a8331ed97740d6f04580fdf108cc66138b2376bd52772be -->

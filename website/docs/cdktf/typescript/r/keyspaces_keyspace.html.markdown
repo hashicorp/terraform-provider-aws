@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the keyspace to be created.
 * `replicationSpecification` - (Optional) The replication specification of the keyspace.
     * `regionList` - (Optional) Replication regions. If `replicationStrategy` is `MULTI_REGION`, `regionList` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
@@ -89,4 +90,4 @@ Using `terraform import`, import a keyspace using the `name`. For example:
 % terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-844352969380329131561246ee81e55956d9a04b4a4ada89d8e72e906d873bdd -->
+<!-- cache-key: cdktf-0.20.8 input-03df7d87a86238f583485e88cfad2101fa6372a155ceb3d7a9491a2d45f81c47 -->

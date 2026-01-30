@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -83,6 +83,15 @@ func (g *Generator) NewGoFileDestination(filename string) Destination {
 func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	return &fileDestination{
 		filename: filename,
+	}
+}
+
+func (g *Generator) NewFileDestinationWithFormatter(filename string, formatter func([]byte) ([]byte, error)) Destination {
+	return &fileDestination{
+		filename: filename,
+		baseDestination: baseDestination{
+			formatter: formatter,
+		},
 	}
 }
 

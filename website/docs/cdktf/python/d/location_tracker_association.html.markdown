@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `consumer_arn` - (Required) ARN of the geofence collection associated to tracker resource.
 * `tracker_name` - (Required) Name of the tracker resource associated with a geofence collection.
 
@@ -45,4 +46,4 @@ The following arguments are required:
 
 This data source exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-6af42e44615a0ca8da0850e3473b78cfb0b5edd6184e26e8d3695a1276214a1c -->
+<!-- cache-key: cdktf-0.20.8 input-d97c30a73816ed96c267ed132846704fa21039d2df2db323e6e90a29bcaca71b -->

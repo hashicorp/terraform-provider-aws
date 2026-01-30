@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_name` - (Required) Service name to lookup within Service Quotas. Available values can be found with the [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 
 ## Attribute Reference
@@ -46,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Code of the service.
 * `service_code` - Code of the service.
 
-<!-- cache-key: cdktf-0.20.8 input-31524052830d67a9508c9dbf8e638bc6dab75852bd77dd320e249854c15b325c -->
+<!-- cache-key: cdktf-0.20.8 input-9a6898ea81dd2e9fca4339929d704b69b018e9e3e668d49dcd3d66e1b9ca94b4 -->

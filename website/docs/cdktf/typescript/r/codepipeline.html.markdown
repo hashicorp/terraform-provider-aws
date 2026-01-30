@@ -191,17 +191,18 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the pipeline.
 * `pipelineType` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
 * `roleArn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifactStore` (Required) One or more artifact_store blocks. Artifact stores are documented below.
 * `executionMode` (Optional) The method that the pipeline will use to handle multiple executions. The default mode is `SUPERSEDED`. For value values, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_PipelineDeclaration.html#CodePipeline-Type-PipelineDeclaration-executionMode).
-
-  **Note:** `QUEUED` or `PARALLEL` mode can only be used with V2 pipelines.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `trigger` - (Optional) A trigger block. Valid only when `pipelineType` is `V2`. Triggers are documented below.
 * `variable` - (Optional) A pipeline-level variable block. Valid only when `pipelineType` is `V2`. Variable are documented below.
+
+**Note:** `QUEUED` or `PARALLEL` mode can only be used with V2 pipelines.
 
 ### `artifactStore`
 
@@ -400,4 +401,4 @@ Using `terraform import`, import CodePipelines using the `name`. For example:
 % terraform import aws_codepipeline.example example-pipeline
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-86ed694e0beb3337934531985ca3bede48a807c5e017dfbbd869c2d2594468b3 -->
+<!-- cache-key: cdktf-0.20.8 input-6be2a20b81dd5169c13bfa91858ed30652a6cc14999491f79eee1f6eb0ff79f9 -->

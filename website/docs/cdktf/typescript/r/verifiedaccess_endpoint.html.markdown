@@ -135,6 +135,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationDomain` - (Optional) The DNS name for users to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `description` - (Optional) A description for the Verified Access endpoint.
 * `domainCertificateArn` - (Optional) - The ARN of the public TLS/SSL certificate in AWS Certificate Manager to associate with the endpoint. The CN in the certificate must match the DNS name your end users will use to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
@@ -194,4 +195,4 @@ Using `terraform import`, import Verified Access Instances using the  `id`. For 
 % terraform import aws_verifiedaccess_endpoint.example vae-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-de1d8646cfda153ee9aad0b2b08577eb69ed2166b01196bc1671e72eaf13be82 -->
+<!-- cache-key: cdktf-0.20.8 input-1a7b7144597b39b5fcdadf0f9f8945b7bb4d0702244c74babae989133047c61f -->

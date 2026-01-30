@@ -119,6 +119,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `gatewayArn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 * `locationArn` - (Required) The Amazon Resource Name (ARN) of the Amazon FSx file system to associate with the FSx File Gateway.
 * `username` - (Required) The user name of the user credential that has permission to access the root share of the Amazon FSx file system. The user account must belong to the Amazon FSx delegated admin user group.
@@ -181,4 +182,4 @@ Using `terraform import`, import `aws_storagegateway_file_system_association` us
 % terraform import aws_storagegateway_file_system_association.example arn:aws:storagegateway:us-east-1:123456789012:fs-association/fsa-0DA347732FDB40125
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0fc4b46c8cce65d1d599ed8c27a0dd97f0a2254d3ed5f86cfe59f2ad0b4abea6 -->
+<!-- cache-key: cdktf-0.20.8 input-9f8f07b9bea625e6001dd0e88307fd8c63c5d50548d84c4f8bf96278de65c341 -->

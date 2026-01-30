@@ -97,6 +97,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additionalEncryptionContext` - (Optional) Additional encryption context for the browser settings.
 * `customerManagedKey` - (Optional) ARN of the customer managed KMS key.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -141,4 +142,4 @@ Using `terraform import`, import WorkSpaces Web Browser Settings using the `brow
 % terraform import aws_workspacesweb_browser_settings.example arn:aws:workspacesweb:us-west-2:123456789012:browsersettings/abcdef12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8956fece3587479152904150348e44c9f4accd67bc29a16db13d5334379de3cd -->
+<!-- cache-key: cdktf-0.20.8 input-83c240ba20feea331d5cc5f31fa0c4bb65e28cc34d5460d590fb8b248663e95b -->

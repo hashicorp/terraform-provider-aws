@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics
@@ -10,14 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 func retryCreateCanary(ctx context.Context, conn *synthetics.Client, d *schema.ResourceData, input *synthetics.CreateCanaryInput) (*awstypes.Canary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CanaryStateCreating, awstypes.CanaryStateUpdating),
 		Target:  enum.Slice(awstypes.CanaryStateReady),
 		Refresh: statusCanaryState(ctx, conn, d.Id()),

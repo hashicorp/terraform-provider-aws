@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -23,7 +23,7 @@ var (
 	ResourceStorageLensConfiguration           = resourceStorageLensConfiguration
 
 	FindAccessGrantByTwoPartKey                            = findAccessGrantByTwoPartKey
-	FindAccessGrantsInstance                               = findAccessGrantsInstance
+	FindAccessGrantsInstanceByID                           = findAccessGrantsInstanceByID
 	FindAccessGrantsInstanceResourcePolicy                 = findAccessGrantsInstanceResourcePolicy
 	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
@@ -39,4 +39,6 @@ var (
 	FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey = findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey
 	FindPublicAccessBlockByAccountID                       = findPublicAccessBlockByAccountID
 	FindStorageLensConfigurationByAccountIDAndConfigID     = findStorageLensConfigurationByAccountIDAndConfigID
+
+	AccessPointParseResourceID = accessPointParseResourceID
 )

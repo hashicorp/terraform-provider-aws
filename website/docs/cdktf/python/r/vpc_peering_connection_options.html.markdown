@@ -147,6 +147,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_peering_connection_id` - (Required) The ID of the requester VPC peering connection.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that accepts the peering connection (a maximum of one).
 * `requester` (Optional) - A optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that requests the peering connection (a maximum of one).
@@ -188,4 +189,4 @@ Using `terraform import`, import VPC Peering Connection Options using the VPC pe
 % terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6ec91844b8fe040be8bdaa6fedfe78ce6d155f95d1258d7182e6ce5f3573c4a7 -->
+<!-- cache-key: cdktf-0.20.8 input-00cfbea3c0ed62b840baa946eeb27c87c2a7ea1f808aae7ce04fb40d988631d8 -->

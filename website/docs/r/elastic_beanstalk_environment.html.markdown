@@ -18,15 +18,15 @@ Environments are often things such as `development`, `integration`, or
 ## Example Usage
 
 ```terraform
-resource "aws_elastic_beanstalk_application" "tftest" {
-  name        = "tf-test-name"
-  description = "tf-test-desc"
+resource "aws_elastic_beanstalk_environment" "example" {
+  name                = "tf-test-name"
+  application         = aws_elastic_beanstalk_application.example.name
+  solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
 }
 
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name                = "tf-test-name"
-  application         = aws_elastic_beanstalk_application.tftest.name
-  solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
+resource "aws_elastic_beanstalk_application" "example" {
+  name        = "tf-test-name"
+  description = "tf-test-desc"
 }
 ```
 
@@ -72,9 +72,9 @@ for supported options and examples.
 
 The `setting` and `all_settings` mappings support the following format:
 
-* `namespace` - unique namespace identifying the option's associated AWS resource
-* `name` - name of the configuration option
-* `value` - value for the configuration option
+* `namespace` - (Required) Unique namespace identifying the option's associated AWS resource
+* `name` - (Required) Name of the configuration option
+* `value` - (Required) Value for the configuration option
 * `resource` - (Optional) resource name for [scheduled action](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-options-general.html#command-options-general-autoscalingscheduledaction)
 
 ### Example With Options

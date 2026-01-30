@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts_test
@@ -185,7 +185,7 @@ func testAccContact_disappears(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceContact(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourceContact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codegurureviewer_test
@@ -11,19 +11,11 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodegurureviewer "github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,10 +24,10 @@ import (
 func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var repositoryassociation types.RepositoryAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codegurureviewer_repository_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
@@ -43,12 +35,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
@@ -73,10 +65,10 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var repositoryassociation types.RepositoryAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codegurureviewer_repository_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
@@ -84,12 +76,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryAssociationConfig_kms_key(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
@@ -108,10 +100,10 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 	ctx := acctest.Context(t)
 	var repositoryassociation types.RepositoryAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codegurureviewer_repository_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
@@ -119,12 +111,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryAssociationConfig_s3_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
@@ -145,9 +137,9 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var repositoryassociation types.RepositoryAssociation
 	resourceName := "aws_codegurureviewer_repository_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
@@ -155,12 +147,12 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryAssociationConfig_tags_1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -168,7 +160,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 			{
 				Config: testAccRepositoryAssociationConfig_tags_2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -177,7 +169,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 			{
 				Config: testAccRepositoryAssociationConfig_tags_1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -189,9 +181,9 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var repositoryassociation types.RepositoryAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codegurureviewer_repository_association.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
@@ -199,13 +191,13 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
+					testAccCheckRepositoryAssociationExists(ctx, t, resourceName, &repositoryassociation),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -213,91 +205,9 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCodeGuruReviewerRepositoryAssociation_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var repositoryassociation types.RepositoryAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_codegurureviewer_repository_association.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
-		CheckDestroy: testAccCheckRepositoryAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccRepositoryAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccRepositoryAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRepositoryAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN: tfknownvalue.RegionalARNRegexp("codeguru-reviewer", regexache.MustCompile(`association:.+`)),
-					}),
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckRepositoryAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRepositoryAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeGuruReviewerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codegurureviewer_repository_association" {
@@ -306,7 +216,7 @@ func testAccCheckRepositoryAssociationDestroy(ctx context.Context) resource.Test
 
 			_, err := tfcodegurureviewer.FindRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -321,14 +231,14 @@ func testAccCheckRepositoryAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckRepositoryAssociationExists(ctx context.Context, n string, v *types.RepositoryAssociation) resource.TestCheckFunc {
+func testAccCheckRepositoryAssociationExists(ctx context.Context, t *testing.T, n string, v *types.RepositoryAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeGuruReviewerClient(ctx)
 
 		output, err := tfcodegurureviewer.FindRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
 
@@ -343,7 +253,7 @@ func testAccCheckRepositoryAssociationExists(ctx context.Context, n string, v *t
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CodeGuruReviewerClient(ctx)
 
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
 	_, err := conn.ListRepositoryAssociations(ctx, input)

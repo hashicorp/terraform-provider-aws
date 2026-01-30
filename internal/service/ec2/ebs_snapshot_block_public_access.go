@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -7,7 +9,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +23,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotBlockPublicAccessPut,
@@ -32,7 +35,7 @@ func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 			names.AttrState: {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.SnapshotBlockPublicAccessState](),
+				ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
 			},
 		},
 	}
@@ -44,7 +47,7 @@ func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.Reso
 
 	state := d.Get(names.AttrState).(string)
 	input := ec2.EnableSnapshotBlockPublicAccessInput{
-		State: types.SnapshotBlockPublicAccessState(state),
+		State: awstypes.SnapshotBlockPublicAccessState(state),
 	}
 
 	_, err := conn.EnableSnapshotBlockPublicAccess(ctx, &input)

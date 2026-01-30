@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) Id of the specific Local Gateway to retrieve.
 * `state` - (Optional) Current state of the desired Local Gateway.
@@ -79,4 +80,4 @@ The following attributes are additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-dfaa82fedb3ed169f1ea7dc6b994df9bf605bbdb6b3a54fd16f945ab30a3a4b9 -->
+<!-- cache-key: cdktf-0.20.8 input-2ffa068d73e670d8d8ed36270fe6a9439e64bb15d1979e39b31372245469fa7e -->

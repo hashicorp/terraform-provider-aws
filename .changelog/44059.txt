@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `endpoint_ip_address_type` and `traffic_ip_address_type` arguments to support IPv6 connectivity in Client VPN
+```
+
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Make `client_cidr_block` optional
+```
+
+```release-note:enhancement
+data-source/aws_ec2_client_vpn_endpoint: Add `endpoint_ip_address_type` and `traffic_ip_address_type` attributes
+```

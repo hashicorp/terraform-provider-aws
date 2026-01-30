@@ -77,6 +77,7 @@ The `attachment` block supports the following:
 
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.
+* `network_card_index` - (Optional) Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by [some instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards). The default is 0.
 
 ## Attribute Reference
 

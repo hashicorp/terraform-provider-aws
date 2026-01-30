@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codebuild
 
@@ -13,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -58,9 +62,15 @@ func resourceFleet() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						names.AttrInstanceType: {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"machine_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.MachineType](),
 						},
 						"memory": {
@@ -262,7 +272,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// InvalidInputException: CodeBuild is not authorized to perform
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -289,7 +299,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	fleet, err := findFleetByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -398,7 +408,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -456,7 +466,7 @@ func findFleetByARN(ctx context.Context, conn *codebuild.Client, arn string) (*t
 	}
 
 	if statusCode := output.Status.StatusCode; statusCode == types.FleetStatusCodePendingDeletion {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(statusCode),
 			LastRequest: input,
 		}
@@ -485,17 +495,17 @@ func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.Ba
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Fleets, nil
 }
 
-func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFleetByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -508,7 +518,7 @@ func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.
 }
 
 func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeCreating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
 		Refresh:    statusFleet(ctx, conn, arn),
@@ -520,7 +530,7 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -529,7 +539,7 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 }
 
 func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeUpdating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
 		Refresh:    statusFleet(ctx, conn, arn),
@@ -541,7 +551,7 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -550,7 +560,7 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 }
 
 func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, timeout time.Duration) (*types.Fleet, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeDeleting),
 		Target:     []string{},
 		Refresh:    statusFleet(ctx, conn, arn),
@@ -562,7 +572,7 @@ func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -583,6 +593,10 @@ func expandComputeConfiguration(tfMap map[string]any) *types.ComputeConfiguratio
 
 	if v, ok := tfMap["machine_type"].(string); ok && v != "" {
 		apiObject.MachineType = types.MachineType(v)
+	}
+
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
+		apiObject.InstanceType = aws.String(v)
 	}
 
 	if v, ok := tfMap["memory"].(int); ok {
@@ -672,6 +686,10 @@ func flattenComputeConfiguration(apiObject *types.ComputeConfiguration) map[stri
 
 	if v := apiObject.MachineType; v != "" {
 		tfMap["machine_type"] = v
+	}
+
+	if v := apiObject.InstanceType; v != nil {
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.Memory; v != nil {

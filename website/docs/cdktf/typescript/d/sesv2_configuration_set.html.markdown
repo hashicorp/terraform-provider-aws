@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configurationSetName` - (Required) The name of the configuration set.
 
 ## Attribute Reference
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
     * `guardianOptions` - Specifies additional settings for your VDM configuration as applicable to the Guardian.
         * `optimizedSharedDelivery` - Specifies the status of your VDM optimized shared delivery.
 
-<!-- cache-key: cdktf-0.20.8 input-e6353414858883fb07247041530d51f4b74536d516beddd793bd2f0b8c34a7a9 -->
+<!-- cache-key: cdktf-0.20.8 input-839396ade58efc075f49eac4bb59e33f8b473a746f424a518dff974740b9d98c -->

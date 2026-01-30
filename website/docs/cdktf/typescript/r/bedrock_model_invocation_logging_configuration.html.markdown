@@ -83,42 +83,43 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `loggingConfig` - (Required) The logging configuration values to set. See [`loggingConfig` Block](#logging_config-block) for details.
 
 ### `loggingConfig` Block
 
 The `loggingConfig` configuration block supports the following arguments:
 
-* `cloudwatchConfig` – (Optional) CloudWatch logging configuration. See [`cloudwatchConfig` Block](#cloudwatch_config-block) for details.
-* `embeddingDataDeliveryEnabled` – (Optional) Set to include embeddings data in the log delivery. Defaults to `true`.
-* `imageDataDeliveryEnabled` – (Optional) Set to include image data in the log delivery. Defaults to `true`.
-* `s3Config` – (Optional) S3 configuration for storing log data. See [`s3Config` Block](#s3_config-block) for details.
-* `textDataDeliveryEnabled` – (Optional) Set to include text data in the log delivery. Defaults to `true`.
-* `videoDataDeliveryEnabled` – (Optional) Set to include text data in the log delivery. Defaults to `true`.
+* `cloudwatchConfig` - (Optional) CloudWatch logging configuration. See [`cloudwatchConfig` Block](#cloudwatch_config-block) for details.
+* `embeddingDataDeliveryEnabled` - (Optional) Set to include embeddings data in the log delivery. Defaults to `true`.
+* `imageDataDeliveryEnabled` - (Optional) Set to include image data in the log delivery. Defaults to `true`.
+* `s3Config` - (Optional) S3 configuration for storing log data. See [`s3Config` Block](#s3_config-block) for details.
+* `textDataDeliveryEnabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
+* `videoDataDeliveryEnabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
 
 ### `cloudwatchConfig` Block
 
 The `cloudwatchConfig` configuration block supports the following arguments:
 
-* `largeDataDeliveryS3Config` – (Optional) S3 configuration for delivering a large amount of data. See [`largeDataDeliveryS3Config` Block](#large_data_delivery_s3_config-block) for details.
-* `logGroupName` – (Required) Log group name.
-* `roleArn` – (Optional) The role ARN.
+* `largeDataDeliveryS3Config` - (Optional) S3 configuration for delivering a large amount of data. See [`largeDataDeliveryS3Config` Block](#large_data_delivery_s3_config-block) for details.
+* `logGroupName` - (Required) Log group name.
+* `roleArn` - (Optional) The role ARN.
 
 ### `largeDataDeliveryS3Config` Block
 
 The `largeDataDeliveryS3Config` configuration block supports the following arguments:
 
-* `bucketName` – (Required) S3 bucket name.
-* `keyPrefix` – (Optional) S3 prefix.
+* `bucketName` - (Required) S3 bucket name.
+* `keyPrefix` - (Optional) S3 prefix.
 
 ### `s3Config` Block
 
 The `s3Config` configuration block supports the following arguments:
 
-* `bucketName` – (Required) S3 bucket name.
-* `keyPrefix` – (Optional) S3 prefix.
+* `bucketName` - (Required) S3 bucket name.
+* `keyPrefix` - (Optional) S3 prefix.
 
 ## Attribute Reference
 
@@ -158,4 +159,4 @@ Using `terraform import`, import Bedrock custom model using the `id` set to the 
 % terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e86e416c0781b81f15982991e543323b3a5fbf5051f17b00f11609420d27bcfb -->
+<!-- cache-key: cdktf-0.20.8 input-60a144b3051f0b928779ff9d01e9713b65c7e41053f147bdcfff4ec012f59519 -->

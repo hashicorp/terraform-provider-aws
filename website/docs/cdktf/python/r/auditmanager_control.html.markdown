@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action_plan_instructions` - (Optional) Recommended actions to carry out if the control isn't fulfilled.
 * `action_plan_title` - (Optional) Title of the action plan for remediating the control.
 * `description` - (Optional) Description of the control.
@@ -64,6 +65,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_description` - (Optional) Description of the source.
 * `source_frequency` - (Optional) Frequency of evidence collection. Valid values are `DAILY`, `WEEKLY`, or `MONTHLY`.
 * `source_keyword` - (Optional) The keyword to search for in CloudTrail logs, Config rules, Security Hub checks, and Amazon Web Services API names. See [`source_keyword`](#source_keyword) below.
@@ -110,4 +112,4 @@ Using `terraform import`, import an Audit Manager Control using the `id`. For ex
 % terraform import aws_auditmanager_control.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bc2f89c5792b58fb108a1ff46386c011ac7aef5ec1461e6d9b303095ac1ea3b0 -->
+<!-- cache-key: cdktf-0.20.8 input-1ff6c511f0021af6269cd9f56a14302de9a86e13ad5b5423527f5236a21ddbe1 -->

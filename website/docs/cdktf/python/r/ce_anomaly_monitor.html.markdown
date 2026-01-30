@@ -90,6 +90,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ce_anomaly_monitor.example
+  identity = {
+    "arn" = "arn:aws:ce::123456789012:anomalymonitor/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_ce_anomaly_monitor" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Cost Explorer anomaly monitor.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_monitor` using the `id`. For example:
 
 ```python
@@ -113,4 +134,4 @@ Using `terraform import`, import `aws_ce_anomaly_monitor` using the `id`. For ex
 % terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fba337b98c8a976fb0697ff231ad81e424f25bc592fd1ebfa9050a36521da4be -->
+<!-- cache-key: cdktf-0.20.8 input-81fdf954fd8b094a73054639aa5e2642507953e7d2a5aef52847a225fd7d3bf5 -->

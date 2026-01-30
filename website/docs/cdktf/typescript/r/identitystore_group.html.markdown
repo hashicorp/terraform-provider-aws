@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `displayName` - (Optional) A string containing the name of the group. This value is commonly displayed when the group is referenced.
 * `description` - (Optional) A string containing the description of the group.
 
@@ -103,4 +104,4 @@ Using `terraform import`, import an Identity Store Group using the combination `
 % terraform import aws_identitystore_group.example d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-77081370c526c7da03dc3c3f8a50e4bd16a1ba6cea9abd0f209e0c794a9106bf -->
+<!-- cache-key: cdktf-0.20.8 input-2c4473f3eb81e3c2f13ef3c7cb624d106c3cf1bae3c04bf4cfd7c5b849cb38df -->

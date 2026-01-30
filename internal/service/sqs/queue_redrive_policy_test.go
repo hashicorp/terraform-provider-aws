@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -80,7 +80,7 @@ func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
 					testAccCheckQueueExists(ctx, fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueueRedrivePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueueRedrivePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,7 +104,7 @@ func TestAccSQSQueueRedrivePolicy_Disappears_queue(t *testing.T) {
 				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,6 +146,17 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 		},
 	})
 }
+
+// Satisfy generated identity test function names by aliasing to queue checks
+//
+// This mimics the standard policy acceptance test behavior, but in the
+// future we may consider replacing this approach with custom checks
+// to validate the presence/content of the redrive policy rather than just
+// the parent queue.
+var (
+	testAccCheckQueueRedrivePolicyExists  = testAccCheckQueueExists
+	testAccCheckQueueRedrivePolicyDestroy = testAccCheckQueueDestroy
+)
 
 func testAccQueueRedrivePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`

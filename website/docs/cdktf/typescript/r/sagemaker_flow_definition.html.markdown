@@ -78,7 +78,7 @@ class MyConvertedCode extends TerraformStack {
         taskTitle: "example",
         workteamArn:
           "arn:aws:sagemaker:${" +
-          current.name +
+          current.region +
           "}:394669845002:workteam/public-crowd/default",
       },
       outputConfig: {
@@ -139,6 +139,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `flowDefinitionName` - (Required) The name of your flow definition.
 * `humanLoopConfig` - (Required)  An object containing information about the tasks the human reviewers will perform. See [Human Loop Config](#human-loop-config) details below.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of the role needed to call other services on your behalf.
@@ -222,4 +223,4 @@ Using `terraform import`, import SageMaker AI Flow Definitions using the `flowDe
 % terraform import aws_sagemaker_flow_definition.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e506a27d2d029ff752fe9ae84781d3e61480a24e6b42cb86580d436799f3ac2d -->
+<!-- cache-key: cdktf-0.20.8 input-c2b6a9431ad1025cffc928177ee8bdffd22fa83fdc842f261a211648285a9a0a -->

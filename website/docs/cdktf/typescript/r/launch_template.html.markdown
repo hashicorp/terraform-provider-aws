@@ -48,14 +48,6 @@ class MyConvertedCode extends TerraformStack {
       disableApiStop: true,
       disableApiTermination: true,
       ebsOptimized: Token.asString(true),
-      elasticGpuSpecifications: [
-        {
-          type: "test",
-        },
-      ],
-      elasticInferenceAccelerator: {
-        type: "eia1.medium",
-      },
       iamInstanceProfile: {
         name: "test",
       },
@@ -112,6 +104,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `blockDeviceMappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacityReservationSpecification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -124,9 +117,6 @@ This resource supports the following arguments:
 * `disableApiTermination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebsOptimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elasticGpuSpecifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
-  below for more details.
-* `elasticInferenceAccelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclaveOptions` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -197,7 +187,7 @@ The `ebs` block supports the following:
 
 The `capacityReservationSpecification` block supports the following:
 
-* `capacityReservationPreference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacityReservationPreference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. If `capacityReservationId` or `capacityReservationResourceGroupArn` is specified in `capacityReservationTarget` block, either omit `capacityReservationPreference` or set it to `capacity-reservations-only`.
 * `capacityReservationTarget` - Used to target a specific Capacity Reservation:
 
 The `capacityReservationTarget` block supports the following:
@@ -227,22 +217,6 @@ The `creditSpecification` block supports the following:
   Can be `standard` or `unlimited`.
   T3 instances are launched as `unlimited` by default.
   T2 instances are launched as `standard` by default.
-
-### Elastic GPU
-
-Attach an elastic GPU the instance.
-
-The `elasticGpuSpecifications` block supports the following:
-
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
-
-### Elastic Inference Accelerator
-
-**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
-
-The `elasticInferenceAccelerator` configuration block supports the following:
-
-* `type` - (Required) Accelerator type.
 
 ### Enclave Options
 
@@ -488,7 +462,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availabilityZone` - (Optional) The Availability Zone for the instance.
-* `groupName` - (Optional) The name of the placement group for the instance.
+* `groupId` - (Optional) The ID of the placement group for the instance. Conflicts with `groupName`.
+* `groupName` - (Optional) The name of the placement group for the instance. Conflicts with `groupId`.
 * `hostId` - (Optional) The ID of the Dedicated Host for the instance.
 * `hostResourceGroupArn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spreadDomain` - (Optional) Reserved for future use.
@@ -549,4 +524,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f96a6df42d4adf0fb13f42a075e9a959af313470da2120128823b0ed62073b56 -->
+<!-- cache-key: cdktf-0.20.8 input-92d9977f8d1c5bc9b3b0021fb0d5d2f7dce3e91c7a647d9c0095fd0667e0d85b -->

@@ -56,6 +56,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_node_count` - (Optional) Number of cache node instances to reserve.
   Default value is `1`.
 * `id` - (Optional) Customer-specified identifier to track this reservation.
@@ -68,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN for the reserved cache node.
 * `duration` - Duration of the reservation as an RFC3339 duration.
-* `fixed_price` – Fixed price charged for this reserved cache node.
+* `fixed_price` - Fixed price charged for this reserved cache node.
 * `cache_node_type` - Node type for the reserved cache nodes.
 * `offering_type` - Offering type of this reserved cache node.
 * `product_description` - Engine type for the reserved cache node.
@@ -111,4 +112,4 @@ Using `terraform import`, import ElastiCache Reserved Cache Node using the `id`.
 % terraform import aws_elasticache_reserved_cache_node.example CustomReservationID
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-136412662030dbc89cb137902b3caabdc5b5752628416bda8d4acb2dec2c6e57 -->
+<!-- cache-key: cdktf-0.20.8 input-94a55079954d7559afb8fe47b43b5c1f26d7b013eee115f50b4520fb398a3f92 -->

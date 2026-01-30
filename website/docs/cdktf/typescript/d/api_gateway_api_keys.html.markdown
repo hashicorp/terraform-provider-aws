@@ -36,6 +36,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `customerId` - (Optional) Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `includeValues` - (Optional) Set this value to `true` if you wish the result contains the key value. Defaults to `false`.
 
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `enabled` - Whether the API Key is enabled.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-d56d4971c470cc91c2bb40282378de54d4de75189ebb0c5f37875f3eefcde4d9 -->
+<!-- cache-key: cdktf-0.20.8 input-d84cbfd771c970515520bc33c71a184aa89453626afe43860ffc7056b3c810a6 -->

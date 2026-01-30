@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,11 +14,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +41,7 @@ func TestAccIPAM_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "ipam/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "metered_account", string(awstypes.IpamMeteredAccountIpamOwner)),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
@@ -73,7 +75,7 @@ func TestAccIPAM_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -297,6 +299,45 @@ func TestAccIPAM_enablePrivateGUA(t *testing.T) { // nosemgrep:ci.vpc-in-test-na
 	})
 }
 
+func TestAccIPAM_meteredAccount(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	var ipam awstypes.Ipam
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMConfig_meteredAccount(string(awstypes.IpamMeteredAccountIpamOwner)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "metered_account", string(awstypes.IpamMeteredAccountIpamOwner)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIPAMConfig_meteredAccount(string(awstypes.IpamMeteredAccountResourceOwner)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "metered_account", string(awstypes.IpamMeteredAccountResourceOwner)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMExists(ctx context.Context, n string, v *awstypes.Ipam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -329,7 +370,7 @@ func testAccCheckIPAMDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindIPAMByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -471,4 +512,17 @@ resource "aws_vpc_ipam" "test" {
   }
 }
 `, enablePrivateGUA)
+}
+
+func testAccIPAMConfig_meteredAccount(meteredAccount string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+  metered_account = %[1]q
+}
+`, meteredAccount)
 }

@@ -57,6 +57,7 @@ The following arguments are optional:
 * `asserted_controls` - (Optional) Routing controls that are part of transactions that are evaluated to determine if a request to change a routing control state is allowed.
 * `gating_controls` - (Optional) Gating controls for the new gating rule. That is, routing controls that are evaluated by the rule configuration that you specify.
 * `target_controls` - (Optional) Routing controls that can only be set or unset if the specified `rule_config` evaluates to true for the specified `gating_controls`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### rule_config
 
@@ -70,6 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the safety rule.
 * `status` - Status of the safety rule. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

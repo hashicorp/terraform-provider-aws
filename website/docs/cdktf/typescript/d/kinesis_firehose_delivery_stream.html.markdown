@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Firehose Delivery Stream.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://aws.amazon.com/documentation/firehose/
 
-<!-- cache-key: cdktf-0.20.8 input-97c724edf71069e742bb98ba323aecba980b61cdcb1ef8501a8151e5788394af -->
+<!-- cache-key: cdktf-0.20.8 input-d4eb67e2a8b3dd25acca8d4fc326161e97c1b17b969bea5cc1ede98706d1a8ef -->

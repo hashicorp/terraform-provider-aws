@@ -59,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A friendly name of the rule group
 * `metricName` - (Required) A friendly name for the metrics from the rule group
 * `activatedRule` - (Optional) A list of activated rules, see below
@@ -116,4 +117,4 @@ Using `terraform import`, import WAF Regional Rule Group using the id. For examp
 % terraform import aws_wafregional_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2935ebb79c393d1d70c3018dc3927bc8f00af67f128cb5a4088d52b0c5dc4769 -->
+<!-- cache-key: cdktf-0.20.8 input-8f3b4d48d13ba9595451d6d138f7320353c4383032130d4cac156a6c5fefdf98 -->

@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `pipeline_id` - (Required) ID of the pipeline.
 
 ## Attribute Reference
@@ -72,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `ref_value` - Field value, expressed as the identifier of another object
 * `string_value` - Field value, expressed as a String.
 
-<!-- cache-key: cdktf-0.20.8 input-cc8300439a8458d08d01383f1358adcf5b4ce4762702afb3389fb0223fb953e6 -->
+<!-- cache-key: cdktf-0.20.8 input-c145e7e8e8678abe0ea20be653663aa00f0c71c2ba2afb3f4d1230d0506465d2 -->

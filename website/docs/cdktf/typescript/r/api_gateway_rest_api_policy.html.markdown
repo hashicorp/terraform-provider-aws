@@ -82,6 +82,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) ID of the REST API.
 * `policy` - (Required) JSON formatted policy document that controls access to the API Gateway. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
@@ -123,4 +124,4 @@ Using `terraform import`, import `aws_api_gateway_rest_api_policy` using the RES
 % terraform import aws_api_gateway_rest_api_policy.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-edfcd3e0e03b147387e0d375285883cfd209479f809d2f037d9e35a59b92dcf5 -->
+<!-- cache-key: cdktf-0.20.8 input-e2a2f045ff6fc9b197197dfcd0b3b78ae3c532f30f65cb925e8e7a7951e9fe50 -->

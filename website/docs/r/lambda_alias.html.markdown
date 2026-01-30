@@ -37,8 +37,7 @@ resource "aws_lambda_alias" "example" {
   routing_config {
     additional_version_weights = {
       "1" = 0.1 # Send 10% of traffic to version 1
-      "3" = 0.2 # Send 20% of traffic to version 3
-      # Remaining 70% goes to version 2 (the primary version)
+      # Remaining 90% goes to version 2 (the primary version)
     }
   }
 }

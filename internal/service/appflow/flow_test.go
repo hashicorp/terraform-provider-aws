@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow_test
@@ -12,18 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -302,7 +295,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 				Config: testAccFlowConfig_basic(rName, scheduleStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceFlow(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappflow.ResourceFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -331,91 +324,6 @@ func TestAccAppFlowFlow_metadataCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.1", "EXECUTION_ID"),
 					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.#", "2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAppFlowFlow_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var v appflow.DescribeFlowOutput
-	resourceName := "aws_appflow_flow.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.AppFlowServiceID),
-		CheckDestroy: testAccCheckFlowDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccFlowConfig_basic(rName, scheduleStartTime),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccFlowConfig_basic(rName, scheduleStartTime),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: knownvalue.Null(),
-						names.AttrRegion:    knownvalue.Null(),
-						names.AttrName:      knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccFlowConfig_basic(rName, scheduleStartTime),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(ctx, resourceName, &v),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-						names.AttrName:      knownvalue.NotNull(),
-					}),
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-				},
 			},
 		},
 	})
@@ -990,7 +898,7 @@ func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappflow.FindFlowByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

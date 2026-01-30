@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
@@ -6,16 +6,37 @@ package tfresource
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
+func TestEmptyResultErrorAsSDKNotFoundError(t *testing.T) {
 	t.Parallel()
 
-	lastRequest := 123
-	err := NewEmptyResultError(lastRequest)
+	err := NewEmptyResultError()
+
+	var nfe *sdkretry.NotFoundError
+	ok := errors.As(err, &nfe)
+
+	if !ok {
+		t.Fatal("expected errors.As() to return true")
+	}
+	if nfe.Message != "empty result" {
+		t.Errorf(`expected Message to be "empty result", got %q`, nfe.Message)
+	}
+	if nfe.LastRequest != nil {
+		t.Errorf("unexpected value for LastRequest")
+	}
+}
+
+func TestEmptyResultErrorAsRetryNotFoundError(t *testing.T) {
+	t.Parallel()
+
+	err := NewEmptyResultError()
 
 	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
@@ -26,8 +47,13 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 	if nfe.Message != "empty result" {
 		t.Errorf(`expected Message to be "empty result", got %q`, nfe.Message)
 	}
-	if nfe.LastRequest != lastRequest {
-		t.Errorf("unexpected value for LastRequest")
+}
+
+func TestEmptyResultErrorErrorsIs(t *testing.T) {
+	t.Parallel()
+
+	if !errors.Is(&emptyResultError{}, ErrEmptyResult) {
+		t.Error("Expected `errors.Is` to match EmptyResultError")
 	}
 }
 
@@ -49,7 +75,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		},
 		{
 			name: "EmptyResultError with LastRequest",
-			err: &EmptyResultError{
+			err: &emptyResultError{
 				LastRequest: 123,
 			},
 			expected: true,
@@ -65,7 +91,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		},
 		{
 			name: "wrapped EmptyResultError with LastRequest",
-			err: fmt.Errorf("test: %w", &EmptyResultError{
+			err: fmt.Errorf("test: %w", &emptyResultError{
 				LastRequest: 123,
 			}),
 			expected: true,
@@ -81,7 +107,7 @@ func TestEmptyResultErrorIs(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := &EmptyResultError{}
+			err := &emptyResultError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)
@@ -97,7 +123,7 @@ func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
 	lastRequest := 123
 	err := NewTooManyResultsError(count, lastRequest)
 
-	var nfe *retry.NotFoundError
+	var nfe *sdkretry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -167,5 +193,127 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)
 			}
 		})
+	}
+}
+
+func TestAssertSingleValueResult(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         []int
+		expectedValue int
+		expectedError error
+	}{
+		"empty slice": {
+			input:         []int{},
+			expectedError: NewEmptyResultError(),
+		},
+		"single element": {
+			input:         []int{42},
+			expectedValue: 42,
+		},
+		"multiple elements": {
+			input:         []int{42, 43},
+			expectedError: NewTooManyResultsError(2, nil),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResult(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
+
+func TestAssertSingleValueResultIterErr(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         iter.Seq2[int, error]
+		expectedValue int
+		expectedError error
+	}{
+		"empty slice": {
+			input:         tfiter.Null2[int, error](),
+			expectedError: NewEmptyResultError(),
+		},
+		"single element": {
+			input:         valuesWithErrors([]int{42}),
+			expectedValue: 42,
+		},
+		"multiple elements": {
+			input:         valuesWithErrors([]int{42, 43}),
+			expectedError: NewTooManyResultsError(2, nil),
+		},
+		"with error": {
+			input:         valueError(errors.New("test error")),
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResultIterErr(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
+
+func valuesWithErrors(values []int) iter.Seq2[int, error] {
+	return func(yield func(int, error) bool) {
+		for _, v := range values {
+			if !yield(v, nil) {
+				break
+			}
+		}
+	}
+}
+
+func valueError(err error) iter.Seq2[int, error] {
+	return func(yield func(int, error) bool) {
+		if !yield(0, err) {
+			return
+		}
 	}
 }

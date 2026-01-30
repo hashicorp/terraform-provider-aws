@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -11,18 +11,41 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccEnvironment_basic(t *testing.T) {
+// Tests need to be serialized due to `aws_lakeformation_data_lake_settings` dependency
+func TestAccDataZoneEnvironment_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:              testAccDataZoneEnvironment_basic,
+		acctest.CtDisappears:         testAccDataZoneEnvironment_disappears,
+		"updateNameAndDescription":   testAccDataZoneEnvironment_updateNameAndDescription,
+		"accountIDAndRegion":         testAccDataZoneEnvironment_accountIDAndRegion,
+		"userParameters_Environment": testAccDataZoneEnvironment_userParameters_Environment,
+		"userParameters_Inherited":   testAccDataZoneEnvironment_userParameters_Inherited,
+		"userParameters_Override":    testAccDataZoneEnvironment_userParameters_Override,
+		"glossaryTerms":              testAccDataZoneEnvironment_glossaryTerms,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccDataZoneEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
@@ -40,35 +63,38 @@ func testAccEnvironment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "account_region"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "blueprint_identifier", "aws_datazone_environment_blueprint_configuration.test", "environment_blueprint_id"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "blueprint_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "profile_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "user_parameters.#", "3"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", "aws_datazone_domain.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_identifier", "aws_datazone_environment_profile.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "project_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", "aws_datazone_project.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "provider_environment", "Amazon DataZone"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioned_resources"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListSizeExact(0)),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccEnvironmentImportStateFunc(resourceName),
-				ImportStateVerifyIgnore: []string{"user_parameters"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
 			},
 		},
 	})
 }
 
-func testAccEnvironment_disappears(t *testing.T) {
+func testAccDataZoneEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
@@ -86,9 +112,9 @@ func testAccEnvironment_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +122,7 @@ func testAccEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccEnvironment_update(t *testing.T) {
+func testAccDataZoneEnvironment_updateNameAndDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
@@ -114,31 +140,300 @@ func testAccEnvironment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_update(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEnvironmentConfig_updateNameAndDescription(rName, rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "account_region"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "blueprint_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "profile_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "user_parameters.#", "3"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "project_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_environment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-description"),
 				),
 			},
 			{
-				Config: testAccEnvironmentConfig_update(rName, rNameUpdate),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEnvironmentConfig_updateNameAndDescription(rName, rNameUpdate),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate+"-description"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_accountIDAndRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_accountIDAndRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parameterPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parameterPrefixUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_userParameters(rName, parameterPrefix),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("consumerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefix + "-consumer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("producerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefix + "-producer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefix + "-workgroup"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+			{
+				Config: testAccEnvironmentConfig_userParameters(rName, parameterPrefixUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("consumerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefixUpdated + "-consumer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("producerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefixUpdated + "-producer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(parameterPrefixUpdated + "-workgroup"),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_userParameters_Inherited(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_userParameters_Inherited(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-workgroup"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"user_parameters",
+				},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("user_parameters.#", "3"),
+					acctest.ImportCheckResourceAttr("user_parameters.0.name", "consumerGlueDbName"),
+					acctest.ImportCheckResourceAttr("user_parameters.0.value", rName+"-consumer-inherited"),
+					acctest.ImportCheckResourceAttr("user_parameters.1.name", "producerGlueDbName"),
+					acctest.ImportCheckResourceAttr("user_parameters.1.value", rName+"-producer-inherited"),
+					acctest.ImportCheckResourceAttr("user_parameters.2.name", "workgroupName"),
+					acctest.ImportCheckResourceAttr("user_parameters.2.value", rName+"-workgroup"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_userParameters_Override(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_userParameters_Override(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("consumerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-consumer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("producerGlueDbName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-producer"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName:  knownvalue.StringExact("workgroupName"),
+							names.AttrValue: knownvalue.StringExact(rName + "-workgroup"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccDataZoneEnvironment_glossaryTerms(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var environment datazone.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datazone_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_glossaryTerms(rName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.ListSizeExact(3)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(0), "aws_datazone_glossary_term.test[0]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(1), "aws_datazone_glossary_term.test[1]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(2), "aws_datazone_glossary_term.test[2]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
+			},
+			{
+				Config: testAccEnvironmentConfig_glossaryTerms(rName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.ListSizeExact(4)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(0), "aws_datazone_glossary_term.test[0]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(1), "aws_datazone_glossary_term.test[1]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(2), "aws_datazone_glossary_term.test[2]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("glossary_terms").AtSliceIndex(3), "aws_datazone_glossary_term.test[3]", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccEnvironmentImportStateFunc(resourceName),
 			},
 		},
 	})
@@ -189,7 +484,7 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -282,7 +577,6 @@ resource "aws_security_group" "test" {
 
 resource "aws_datazone_project" "test" {
   domain_identifier   = aws_datazone_domain.test.id
-  glossary_terms      = ["2N8w6XJCwZf"]
   name                = %[1]q
   description         = %[1]q
   skip_deletion_check = true
@@ -312,30 +606,135 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
     }
   }
 }
-
-resource "aws_datazone_environment_profile" "test" {
-  aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.region
-  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
-  description                      = %[1]q
-  name                             = %[1]q
-  project_identifier               = aws_datazone_project.test.id
-  domain_identifier                = aws_datazone_domain.test.id
-  user_parameters {
-    name  = "consumerGlueDbName"
-    value = "value"
-  }
-}
 `, rName)
 }
 
 func testAccEnvironmentConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
+		fmt.Sprintf(`
 resource "aws_datazone_environment" "test" {
   name                 = %[1]q
-  description          = %[1]q
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.region
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEnvironmentConfig_updateNameAndDescription(rName, rNameUpdated string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[2]q
+  description          = "%[2]s-description"
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName, rNameUpdated))
+}
+
+func testAccEnvironmentConfig_accountIDAndRegion(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  account_identifier = data.aws_caller_identity.test.account_id
+  account_region     = data.aws_region.test.region
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEnvironmentConfig_userParameters(rName, parameterPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "%[2]s-consumer"
+  }
+
+  user_parameters {
+    name  = "producerGlueDbName"
+    value = "%[2]s-producer"
+  }
+
+  user_parameters {
+    name  = "workgroupName"
+    value = "%[2]s-workgroup"
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName, parameterPrefix))
+}
+
+func testAccEnvironmentConfig_userParameters_Inherited(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_Inherited(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
+  blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
+  profile_identifier   = aws_datazone_environment_profile.test.id
+  project_identifier   = aws_datazone_project.test.id
+  domain_identifier    = aws_datazone_domain.test.id
+
+  user_parameters {
+    name  = "workgroupName"
+    value = "%[1]s-workgroup"
+  }
+
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+  ]
+}
+`, rName))
+}
+
+func testAccEnvironmentConfig_userParameters_Override(rName string) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_Inherited(rName),
+		fmt.Sprintf(`
+resource "aws_datazone_environment" "test" {
+  name                 = %[1]q
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
@@ -363,36 +762,75 @@ resource "aws_datazone_environment" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_update(rName, rNameUpdated string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+func testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_datazone_environment_profile" "test" {
+  name                             = %[1]q
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.region
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
+}
+`, rName)
+}
+
+func testAccEnvironmentConfig_EnvironmentProfile_userParameters_Inherited(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_datazone_environment_profile" "test" {
+  name                             = %[1]q
+  aws_account_id                   = data.aws_caller_identity.test.account_id
+  aws_account_region               = data.aws_region.test.region
+  environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
+  project_identifier               = aws_datazone_project.test.id
+  domain_identifier                = aws_datazone_domain.test.id
+
+  user_parameters {
+    name  = "consumerGlueDbName"
+    value = "%[1]s-consumer-inherited"
+  }
+
+  user_parameters {
+    name  = "producerGlueDbName"
+    value = "%[1]s-producer-inherited"
+  }
+}
+`, rName)
+}
+
+func testAccEnvironmentConfig_glossaryTerms(rName string, count int) string {
+	return acctest.ConfigCompose(
+		testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_EnvironmentProfile_userParameters_None(rName),
+		fmt.Sprintf(`
 resource "aws_datazone_environment" "test" {
-  name                 = %[2]q
-  description          = %[2]q
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.region
+  name                 = %[1]q
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
   domain_identifier    = aws_datazone_domain.test.id
 
-  user_parameters {
-    name  = "consumerGlueDbName"
-    value = "%[1]s-consumer"
-  }
-
-  user_parameters {
-    name  = "producerGlueDbName"
-    value = "%[1]s-producer"
-  }
-
-  user_parameters {
-    name  = "workgroupName"
-    value = "%[1]s-workgroup"
-  }
+  glossary_terms = aws_datazone_glossary_term.test[*].id
 
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
   ]
 }
-`, rName, rNameUpdated))
+
+resource "aws_datazone_glossary" "test" {
+  name                      = %[1]q
+  owning_project_identifier = aws_datazone_project.test.id
+  status                    = "ENABLED"
+  domain_identifier         = aws_datazone_project.test.domain_identifier
+}
+
+resource "aws_datazone_glossary_term" "test" {
+  count = %[2]d
+
+  domain_identifier   = aws_datazone_glossary.test.domain_identifier
+  glossary_identifier = aws_datazone_glossary.test.id
+  name                = "%[1]s-${count.index}"
+  status              = "ENABLED"
+}
+`, rName, count))
 }

@@ -42,3 +42,11 @@ This data source exports the following attributes in addition to the arguments a
 * `share_status` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags` - Map of tags assigned to the resolver rule.
+* `target_ips` - List of configurations for target IP addresses. Only applicable for `FORWARD` rules. See [`target_ips`](#target_ips) below for details.
+
+### target_ips
+
+* `ip` - IPv4 address that you want to forward DNS queries to.
+* `ipv6` - IPv6 address that you want to forward DNS queries to.
+* `port` - Port at the IP address that you want to forward DNS queries to.
+* `protocol` - Protocol for the target IP address. Valid values are `Do53` (DNS over port 53), `DoH` (DNS over HTTPS), and `DoH-FIPS` (DNS over HTTPS with FIPS).

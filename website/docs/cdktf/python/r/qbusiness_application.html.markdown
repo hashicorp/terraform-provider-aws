@@ -49,6 +49,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the Amazon Q application.
 * `encryption_configuration` - (Optional) Information about encryption configuration. See [`encryption_configuration`](#encryption_configuration) below.
 
@@ -102,4 +103,4 @@ Using `terraform import`, import a Q Business Application using the `id`. For ex
 % terraform import aws_qbusiness_application.example id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-165b71e336e9c39bc4a3bbb86b2365bb50d2e4a303137d636336d2f301c2ffcd -->
+<!-- cache-key: cdktf-0.20.8 input-b51ffba46bb142dba1108f3ee36f935ff3dd819492e220e3cd214465881c4ec6 -->

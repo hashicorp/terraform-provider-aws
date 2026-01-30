@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the connection to retrieve.
 
 ## Attribute Reference
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags for the resource.
 * `vlanId` - The VLAN ID.
 
-<!-- cache-key: cdktf-0.20.8 input-897446d8ce963c4d9a3d8b81cd0b162465a0530059f32e0c2f1c1c8b86077975 -->
+<!-- cache-key: cdktf-0.20.8 input-fc4168b2991511014961b38b3b097d7e1ee715f0f31ac7e2d0b2a0992ca4dac4 -->

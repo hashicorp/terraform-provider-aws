@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the component.
 
 ## Attribute Reference
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Type of the component.
 * `version` - Version of the component.
 
-<!-- cache-key: cdktf-0.20.8 input-8446b281be25a50462ca80be2131836ca95edb32e33b0fc4874eb723f9df98cf -->
+<!-- cache-key: cdktf-0.20.8 input-0bd7cb394c5fa797693dd181ea384c44af825e86fa351b5332da323ba8bc90fb -->

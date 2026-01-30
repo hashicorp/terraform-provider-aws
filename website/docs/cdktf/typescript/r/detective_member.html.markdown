@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Required) AWS account ID for the account.
 * `emailAddress` - (Required) Email address for the account.
 * `graphArn` - (Required) ARN of the behavior graph to invite the member accounts to contribute their data to.
@@ -95,4 +96,4 @@ Using `terraform import`, import `aws_detective_member` using the ARN of the gra
 % terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cc2edc293d454e0755bc867df2a8ca03969ad4261f1a3093de06323c8cb8f69d -->
+<!-- cache-key: cdktf-0.20.8 input-a7c484ce9ee222e96ab0082cec81858d2001cd3c075d31de20e4624661af6d9b -->

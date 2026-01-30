@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,7 +47,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccSecurityPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -114,7 +112,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_disappears(t *testing.T) {
 				Config: testAccSecurityPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityPolicyExists(ctx, resourceName, &securitypolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceSecurityPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,7 +162,7 @@ func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
 			},
 			{
 				ResourceName:            resourceName,
-				ImportStateIdFunc:       testAccSecurityPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType),
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // JSON is semantically correct but can be set in state in a different order
@@ -218,7 +216,7 @@ func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -226,45 +224,31 @@ func testAccCheckSecurityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingDestroyed, tfopensearchserverless.ResNameSecurityPolicy, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("OpenSearch Serverless Security Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSecurityPolicyExists(ctx context.Context, name string, securitypolicy *types.SecurityPolicyDetail) resource.TestCheckFunc {
+func testAccCheckSecurityPolicyExists(ctx context.Context, n string, v *types.SecurityPolicyDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityPolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityPolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
+
+		output, err := tfopensearchserverless.FindSecurityPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
 
 		if err != nil {
-			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityPolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*securitypolicy = *resp
+		*v = *output
 
 		return nil
-	}
-}
-
-func testAccSecurityPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrType]), nil
 	}
 }
 

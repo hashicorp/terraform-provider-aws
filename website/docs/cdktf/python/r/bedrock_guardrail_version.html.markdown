@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the Guardrail version.
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Guardrail. Default is `false`
 
@@ -83,4 +84,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail Version using using a 
 % terraform import aws_bedrock_guardrail_version.example arn:aws:bedrock:us-west-2:123456789012:guardrail-id-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d25e55323f6bf131f1cc2a349e79696414422e88a6634ccb6d04b8f7e4678949 -->
+<!-- cache-key: cdktf-0.20.8 input-9bf180a3e0b96296b5b8b74cdf6337df12798b8a1cd3d601aa538a5052012566 -->

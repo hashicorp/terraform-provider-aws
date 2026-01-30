@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rule_state` - (Optional) State of the rule. Valid values are `ENABLED` and `DISABLED`.
 
 ## Attribute Reference
@@ -77,4 +78,4 @@ Using `terraform import`, import CloudWatch Contributor Insight Rule using the `
 % terraform import aws_cloudwatch_contributor_insight_rule.example contributor_insight_rule-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-21d65102f94125b57dd33463032b6383a8a7c82faec66b559b62ecbd55b4e10f -->
+<!-- cache-key: cdktf-0.20.8 input-f16bf4ec066f442f9741ea897fd5e0646cd029f7b21826b494ff8c3a4a15c71a -->

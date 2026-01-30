@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `feature_group_name` - (Required) The name of the Feature Group. The name must be unique within an AWS Region in an AWS account.
 * `record_identifier_feature_name` - (Required) The name of the Feature whose value uniquely identifies a Record defined in the Feature Store. Only the latest record per identifier value will be stored in the Online Store.
 * `event_time_feature_name` - (Required) The name of the feature that stores the EventTime of a Record in a Feature Group.
@@ -131,4 +132,4 @@ Using `terraform import`, import Feature Groups using the `name`. For example:
 % terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-87d1701dab5632ff473e842d7fd070bc5e4a23046dca5d749299c1ca403634a7 -->
+<!-- cache-key: cdktf-0.20.8 input-78b465d67681f4bcd1ec14afda11841888d2991277f7f48fe1bfac8b5f8c2412 -->

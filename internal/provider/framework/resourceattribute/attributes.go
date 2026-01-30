@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceattribute
@@ -14,6 +14,15 @@ var Region = sync.OnceValue(func() schema.Attribute {
 	return schema.StringAttribute{
 		Optional:    true,
 		Computed:    true,
-		Description: names.TopLevelRegionAttributeDescription,
+		Description: names.ResourceTopLevelRegionAttributeDescription,
+	}
+})
+
+var RegionDeprecated = sync.OnceValue(func() schema.Attribute {
+	return schema.StringAttribute{
+		Optional:           true,
+		Computed:           true,
+		Description:        names.ResourceTopLevelRegionAttributeDescription,
+		DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 	}
 })

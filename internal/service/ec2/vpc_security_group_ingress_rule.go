@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -36,14 +38,18 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.SecurityGroupRule")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
+// @Testing(idAttrDuplicates="security_group_rule_id")
+// @Testing(preIdentityVersion="v6.12.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
@@ -168,7 +174,7 @@ type securityGroupRule interface {
 type securityGroupRuleResource struct {
 	securityGroupRule
 	framework.ResourceWithModel[securityGroupRuleResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -274,7 +280,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 
 	output, err := r.findByID(ctx, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

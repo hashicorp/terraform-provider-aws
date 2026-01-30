@@ -53,13 +53,40 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_policy_attachment.example
+  identity = {
+    policy_id = "p-12345678"
+    target_id = "123456789012"
+  }
+}
+
+resource "aws_organizations_policy_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `policy_id` (String) Organizations policy ID.
+* `target_id` (String) Organizations target ID (account, OU, or root).
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_organizations_policy_attachment` using the target ID and policy ID. For example:
 
 With an account target:
 
 ```terraform
 import {
-  to = aws_organizations_policy_attachment.account
+  to = aws_organizations_policy_attachment.example
   id = "123456789012:p-12345678"
 }
 ```
@@ -69,5 +96,5 @@ Using `terraform import`, import `aws_organizations_policy_attachment` using the
 With an account target:
 
 ```console
-% terraform import aws_organizations_policy_attachment.account 123456789012:p-12345678
+% terraform import aws_organizations_policy_attachment.example 123456789012:p-12345678
 ```

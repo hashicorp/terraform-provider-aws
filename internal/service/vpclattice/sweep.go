@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice
@@ -21,7 +21,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_vpclattice_service", sweepServices)
 	awsv2.Register("aws_vpclattice_service_network", sweepServiceNetworks, "aws_vpclattice_service")
 	awsv2.Register("aws_vpclattice_service_network_resource_association", sweepServiceNetworkResourceAssociations)
-	awsv2.Register("aws_vpclattice_target_group", sweepTargetGroups)
+	awsv2.Register("aws_vpclattice_target_group", sweepTargetGroups, "aws_vpclattice_target_group_attachment")
+	awsv2.Register("aws_vpclattice_target_group_attachment", sweepTargetGroupAttachments)
 }
 
 func sweepResourceConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -163,6 +164,46 @@ func sweepTargetGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepTargetGroupAttachments(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.VPCLatticeClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input vpclattice.ListTargetGroupsInput
+	pages := vpclattice.NewListTargetGroupsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, targetGroup := range page.Items {
+			input := vpclattice.ListTargetsInput{
+				TargetGroupIdentifier: targetGroup.Id,
+			}
+			pages := vpclattice.NewListTargetsPaginator(conn, &input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, target := range page.Items {
+					r := resourceTargetGroupAttachment()
+					d := r.Data(nil)
+
+					d.SetId(targetGroupAttachmentCreateResourceID(aws.ToString(targetGroup.Id), aws.ToString(target.Id), aws.ToInt32(target.Port)))
+					d.Set("target_group_identifier", targetGroup.Id)
+					d.Set(names.AttrTarget, []any{flattenTargetSummary(&target)})
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+			}
 		}
 	}
 

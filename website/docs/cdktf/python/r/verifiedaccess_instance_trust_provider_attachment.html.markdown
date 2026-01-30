@@ -51,8 +51,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `verifiedaccess_instance_id` - (Required) The ID of the Verified Access instance to attach the Trust Provider to.
 * `verifiedaccess_trust_provider_id` - (Required) The ID of the Verified Access trust provider.
 
@@ -87,4 +88,4 @@ Using `terraform import`, import Verified Access Instance Trust Provider Attachm
 % terraform import aws_verifiedaccess_instance_trust_provider_attachment.example vai-1234567890abcdef0/vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0166dda69fa58c229770979a9c41f2063a0855d337e923d65532e9982cc3d392 -->
+<!-- cache-key: cdktf-0.20.8 input-1812253b30a1e2c93f5385393e27abe7bf5bba5ffc1ea6ed942d511b206f857d -->

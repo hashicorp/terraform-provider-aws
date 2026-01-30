@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) The ID of the Policy Store.
 
 ## Attribute Reference
@@ -45,8 +46,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - The ARN of the Policy Store.
 * `created_date` - The date the Policy Store was created.
+* `deletion_protection` - Whether the policy store can be deleted.
 * `last_updated_date` - The date the Policy Store was last updated.
 * `tags` - Map of key-value pairs associated with the policy store.
 * `validation_settings` - Validation settings for the policy store.
 
-<!-- cache-key: cdktf-0.20.8 input-d22de3abf8c77497a881a4a47c37699a0c1f3a1fee0cc88a3c642a5315728554 -->
+<!-- cache-key: cdktf-0.20.8 input-e473e37f511825f5480eb063ca78a158782e10809e90be9d2b3cb705a6ad25bb -->

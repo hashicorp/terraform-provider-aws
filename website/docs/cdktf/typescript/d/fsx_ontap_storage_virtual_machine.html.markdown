@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `id` - (Optional) Identifier of the storage virtual machine (e.g. `svm-12345678`).
 
@@ -128,4 +129,4 @@ The following arguments are supported for `activeDirectoryConfiguration` configu
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - The SVM endpoint's IP addresses.
 
-<!-- cache-key: cdktf-0.20.8 input-91d451d892bb70658b217941bc02ea03faec4f281854ab47b47b62384ee8061d -->
+<!-- cache-key: cdktf-0.20.8 input-c3b65e6c32d83c94ad7319e557dccc5f8db943d388a56d976dc8b7a3ecb818dc -->

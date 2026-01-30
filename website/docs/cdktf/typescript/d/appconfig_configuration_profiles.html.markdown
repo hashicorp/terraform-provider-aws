@@ -55,8 +55,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) ID of the AppConfig Application.
 
 ## Attribute Reference
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `configurationProfileIds` - Set of Configuration Profile IDs associated with the AppConfig Application.
 
-<!-- cache-key: cdktf-0.20.8 input-b4fc2e385f4cf8f2b77339adbebe9e03369792e3c761bb5599667ff5bad6268d -->
+<!-- cache-key: cdktf-0.20.8 input-7547ae2f67bad4644b0b3968273ca138689a730337d694f84e7e8982c13ccdc9 -->

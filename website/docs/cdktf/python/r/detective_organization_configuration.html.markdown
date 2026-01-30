@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_enable` - (Required) When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s Detective delegated administrator and Detective is enabled in that AWS Region.
 * `graph_arn` - (Required) ARN of the behavior graph.
 
@@ -79,4 +80,4 @@ Using `terraform import`, import `aws_detective_organization_admin_account` usin
 % terraform import aws_detective_organization_configuration.example arn:aws:detective:us-east-1:123456789012:graph:00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-26598e0384cc441f9dbc868bde2a81ac4d750bc991020cb281cf57795050fc2c -->
+<!-- cache-key: cdktf-0.20.8 input-cd2bd6f6cfa83b72424a7235924ebd50a4306ee1b63218e2d8cdff38a4615b51 -->

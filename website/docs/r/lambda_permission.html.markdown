@@ -222,6 +222,7 @@ The following arguments are optional:
 
 * `event_source_token` - (Optional) Event Source Token for Alexa Skills
 * `function_url_auth_type` - (Optional) Lambda Function URL authentication type. Valid values: `AWS_IAM` or `NONE`. Only valid with `lambda:InvokeFunctionUrl` action
+* `invoked_via_function_url` (Optional) Lambda Function URL invoke permission. Only valid with `lambda:InvokeFunction` action
 * `principal_org_id` - (Optional) AWS Organizations ID to grant permission to all accounts under this organization
 * `qualifier` - (Optional) Lambda function version or alias name
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference)
@@ -236,11 +237,40 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lambda_permission.example
+  identity = {
+    function_name = "my_test_lambda_function"
+    statement_id  = "AllowExecutionFromCloudWatch"
+  }
+}
+
+resource "aws_lambda_permission" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `function_name` (String) Lambda function name.
+* `statement_id` (String) Statement ID for the permission.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `qualifier` (String) Qualifier for the function version or alias.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda permission statements using function_name/statement_id with an optional qualifier. For example:
 
 ```terraform
 import {
-  to = aws_lambda_permission.test_lambda_permission
+  to = aws_lambda_permission.example
   id = "my_test_lambda_function/AllowExecutionFromCloudWatch"
 }
 ```
@@ -249,7 +279,7 @@ Using `qualifier`:
 
 ```terraform
 import {
-  to = aws_lambda_permission.test_lambda_permission
+  to = aws_lambda_permission.example
   id = "my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch"
 }
 ```
@@ -258,5 +288,5 @@ For backwards compatibility, the following legacy `terraform import` commands ar
 
 ```console
 % terraform import aws_lambda_permission.example my_test_lambda_function/AllowExecutionFromCloudWatch
-% terraform import aws_lambda_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
+% terraform import aws_lambda_permission.example my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```

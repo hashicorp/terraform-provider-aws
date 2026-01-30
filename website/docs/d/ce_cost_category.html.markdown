@@ -6,7 +6,7 @@ description: |-
   Provides details about a specific CostExplorer Cost Category Definition
 ---
 
-# Resource: aws_ce_cost_category
+# Data Source: aws_ce_cost_category
 
 Provides details about a specific CostExplorer Cost Category.
 

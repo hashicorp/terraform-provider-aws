@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -11,14 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,78 +58,6 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
-			},
-		},
-	})
-}
-
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_macie2_classification_export_configuration.test"
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Macie2EndpointID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.Macie2ServiceID),
-		CheckDestroy: testAccCheckClassificationExportConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccClassificationExportConfigurationConfig_basicV5(acctest.ResourcePrefix),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccClassificationExportConfigurationConfig_basic(acctest.ResourcePrefix),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: knownvalue.Null(),
-						names.AttrRegion:    knownvalue.Null(),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccClassificationExportConfigurationConfig_basic(acctest.ResourcePrefix),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-				},
 			},
 		},
 	})
@@ -284,105 +206,6 @@ resource "aws_s3_bucket_policy" "test" {
               "aws:SourceArn" : [
                 "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:export-configuration:*",
                 "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:classification-job/*"
-              ]
-            }
-          }
-        }
-      ]
-    }
-  )
-}
-
-resource "aws_macie2_account" "test" {}
-
-resource "aws_macie2_classification_export_configuration" "test" {
-  depends_on = [
-    aws_macie2_account.test,
-    aws_s3_bucket_policy.test
-  ]
-  s3_destination {
-    bucket_name = aws_s3_bucket.test.bucket
-    key_prefix  = (%[1]q == "") ? null : %[1]q
-    kms_key_arn = aws_kms_key.test.arn
-  }
-}
-`, prefix)
-}
-
-func testAccClassificationExportConfigurationConfig_basicV5(prefix string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_kms_key" "test" {
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Id" : "allow_macie",
-    "Statement" : [
-      {
-        "Sid" : "Allow Macie to use the key",
-        "Effect" : "Allow",
-        "Principal" : {
-          "Service" : "macie.${data.aws_partition.current.dns_suffix}"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      },
-      {
-        "Sid" : "Allow root to use the key",
-        "Effect" : "Allow",
-        "Principal" : {
-          "AWS" : "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-        },
-        "Action" : "kms:*",
-        "Resource" : "*"
-      }
-    ]
-  })
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = "%[1]s-tf-test-bucket"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  policy = jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Sid" : "Allow Macie to use the bucket",
-          "Effect" : "Allow",
-          "Principal" : {
-            "Service" : "macie.${data.aws_partition.current.dns_suffix}"
-          },
-          "Action" : [
-            "s3:GetBucketLocation",
-            "s3:ListBucket",
-            "s3:PutObject",
-            "s3:GetObject"
-          ],
-          "Resource" : [
-            aws_s3_bucket.test.arn,
-            "${aws_s3_bucket.test.arn}/*"
-          ],
-          "Condition" : {
-            "StringEquals" : {
-              "aws:SourceAccount" : data.aws_caller_identity.current.account_id
-            },
-            "ArnLike" : {
-              "aws:SourceArn" : [
-                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:export-configuration:*",
-                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:classification-job/*"
               ]
             }
           }

@@ -65,10 +65,12 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket. The name must be in the format `[bucket_name]--[azid]--x-s3`. Use the [`aws_s3_bucket`](s3_bucket.html) resource to manage general purpose buckets.
 * `data_redundancy` - (Optional) Data redundancy. Valid values: `SingleAvailabilityZone`, `SingleLocalZone`. The default value depends on the value of the `location.type` attribute.
 * `force_destroy` - (Optional, Default:`false`) Boolean that indicates all objects should be deleted from the bucket *when the bucket is destroyed* so that the bucket can be destroyed without error. These objects are *not* recoverable. This only deletes objects when the bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 * `location` - (Required) Bucket location. See [Location](#location) below for more details.
+* `tags` - (Optional) Map of tags to assign to the bucket. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional, Default:`Directory`) Bucket type. Valid values: `Directory`.
 
 ### Location
@@ -84,6 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - (**Deprecated**, use `bucket` instead) Name of the bucket.
 * `arn` - ARN of the bucket.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -110,4 +113,4 @@ Using `terraform import`, import S3 bucket using `bucket`. For example:
 % terraform import aws_s3_directory_bucket.example example--usw2-az1--x-s3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-66926a2d0413733c212dcca1db954aa53ee6aa186f57a71c040b2e8e5013d80b -->
+<!-- cache-key: cdktf-0.20.8 input-60390384f4a43d7d5834de84b1fd70b5cb4a368a7c40bb22f71c325e4572b093 -->

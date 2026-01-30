@@ -42,14 +42,15 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalogId` - (Required) ID of the Data Catalog. This is typically the AWS account ID.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `dataCatalogEncryptionSettings` – The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
-* `id` – The ID of the Data Catalog to set the security configuration for.
+* `dataCatalogEncryptionSettings` - The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
+* `id` - The ID of the Data Catalog to set the security configuration for.
 
 ### data_catalog_encryption_settings
 
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `catalogEncryptionServiceRole` - The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sseAwsKmsKeyId` - ARN of the AWS KMS key to use for encryption at rest.
 
-<!-- cache-key: cdktf-0.20.8 input-694090223f069af9024378014dc1b2d686f4298b8a74453da518d4421efa5793 -->
+<!-- cache-key: cdktf-0.20.8 input-0b0f1c2d94a5986d0b920cf2310be978a65de5c37554ef19e8540ca53ac5dbce -->

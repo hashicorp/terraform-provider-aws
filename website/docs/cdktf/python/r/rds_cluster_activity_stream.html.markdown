@@ -73,6 +73,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
 * `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.
 * `kms_key_id` - (Required, Forces new resources) The AWS KMS key identifier for encrypting messages in the database activity stream. The AWS KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key.
@@ -117,4 +118,4 @@ Using `terraform import`, import RDS Aurora Cluster Database Activity Streams us
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartActivityStream.html
 [3]: https://docs.aws.amazon.com/cli/latest/reference/rds/start-activity-stream.html
 
-<!-- cache-key: cdktf-0.20.8 input-a1605fe96e9ffe976f09082c178fd9f68edf080135da220d038187a470df3bf0 -->
+<!-- cache-key: cdktf-0.20.8 input-e2e771dddb72e676fcddefa3f26bec80edd810b24ee4bd4ab71131fb87993201 -->

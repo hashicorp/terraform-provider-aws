@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,7 +78,7 @@ func TestAccVPCManagedPrefixList_disappears(t *testing.T) {
 				Config: testAccVPCManagedPrefixListConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceManagedPrefixList(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceManagedPrefixList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -358,6 +358,41 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 	})
 }
 
+func TestAccVPCManagedPrefixList_descriptionOnlyChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_managed_prefix_list.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName, "old description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+				),
+			},
+			{
+				// This reproduces the bug: change ONLY the description
+				// Before the fix, this would fail with "PrefixListVersionMismatch"
+				Config: testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName, "new description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":                "1.0.0.0/8",
+						names.AttrDescription: "new description",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -369,7 +404,7 @@ func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfec2.FindManagedPrefixListByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -555,4 +590,19 @@ resource "aws_ec2_managed_prefix_list" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName string, description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+
+  entry {
+    cidr        = "1.0.0.0/8"
+    description = %[2]q
+  }
+}
+`, rName, description)
 }

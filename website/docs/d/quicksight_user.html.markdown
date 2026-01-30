@@ -30,9 +30,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Optional) AWS account ID.
+* `aws_account_id` - (Optional) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -40,6 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `active` - The active status of user. When you create an Amazon QuickSight user that’s not an IAM user or an Active Directory user, that user is inactive until they sign in and provide a password.
 * `arn` - The Amazon Resource Name (ARN) for the user.
+* `custom_permissions_name` - The custom permissions profile associated with this user.
 * `email` - The user's email address.
 * `identity_type` - The type of identity authentication used by the user.
 * `principal_id` - The principal ID of the user.

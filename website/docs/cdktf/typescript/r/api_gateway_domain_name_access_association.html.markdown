@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessAssociationSource` - (Required) The identifier of the domain name access association source. For a `VPCE`, the value is the VPC endpoint ID.
 * `accessAssociationSourceType` - (Required) The type of the domain name access association source. Valid values are `VPCE`.
 * `domainNameArn` - (Required) The ARN of the domain name.
@@ -54,6 +55,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_api_gateway_domain_name_access_association.example
+  identity = {
+    "arn" = "arn:aws:apigateway:us-east-1::/domainnames/example.com/accessassociation"
+  }
+}
+
+resource "aws_api_gateway_domain_name_access_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the API Gateway domain name access association.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain name acces associations using their `arn`. For example:
 
@@ -85,4 +107,4 @@ Using `terraform import`, import API Gateway domain name acces associations as u
 % terraform import aws_api_gateway_domain_name_access_association.example arn:aws:apigateway:us-west-2:123456789012:/domainnameaccessassociations/domainname/12qmzgp2.9m7ilski.test+hykg7a12e7/vpcesource/vpce-05de3f8f82740a748
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ac5fcb980ef755047bbbcac35ac93723049a96cffecd83228aa26089ab8a0a60 -->
+<!-- cache-key: cdktf-0.20.8 input-cd437536ef04a8a386322c39bed9106f6f65d896f76d1f578484cf8f955d3ad8 -->

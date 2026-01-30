@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `licenseArn` - (Required) The ARN of the received license you want data for.
 
 ## Attribute Reference
@@ -124,4 +125,4 @@ A list with a single map.
 * `begin` - Start of the validity time range.
 * `end` - End of the validity time range.
 
-<!-- cache-key: cdktf-0.20.8 input-1f77cb569239ead33cc90466f12490aa33c8f28be59141c825fd51f43a4a3446 -->
+<!-- cache-key: cdktf-0.20.8 input-9e406ce60d26a195036e6e212c2fe66ef5d531f9b2d27eb007dc1357e3b44075 -->

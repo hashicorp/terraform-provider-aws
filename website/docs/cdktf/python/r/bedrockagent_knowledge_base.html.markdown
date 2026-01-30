@@ -76,24 +76,24 @@ class MyConvertedCode(TerraformStack):
                 type="VECTOR",
                 vector_knowledge_base_configuration=[BedrockagentKnowledgeBaseKnowledgeBaseConfigurationVectorKnowledgeBaseConfiguration(
                     embedding_model_arn="arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-embed-text-v2:0",
-                    embedding_model_configuration=[{
-                        "bedrock_embedding_model_configuration": [{
-                            "dimensions": 1024,
-                            "embedding_data_type": "FLOAT32"
-                        }
+                    embedding_model_configuration=[BedrockagentKnowledgeBaseKnowledgeBaseConfigurationVectorKnowledgeBaseConfigurationEmbeddingModelConfiguration(
+                        bedrock_embedding_model_configuration=[BedrockagentKnowledgeBaseKnowledgeBaseConfigurationVectorKnowledgeBaseConfigurationEmbeddingModelConfigurationBedrockEmbeddingModelConfiguration(
+                            dimensions=1024,
+                            embedding_data_type="FLOAT32"
+                        )
                         ]
-                    }
+                    )
                     ],
-                    supplemental_data_storage_configuration=[{
-                        "storage_location": [{
-                            "s3_location": [{
-                                "uri": "s3://my-bucket/chunk-processor/"
-                            }
+                    supplemental_data_storage_configuration=[BedrockagentKnowledgeBaseKnowledgeBaseConfigurationVectorKnowledgeBaseConfigurationSupplementalDataStorageConfiguration(
+                        storage_location=[BedrockagentKnowledgeBaseKnowledgeBaseConfigurationVectorKnowledgeBaseConfigurationSupplementalDataStorageConfigurationStorageLocation(
+                            s3_location=[BedrockagentKnowledgeBaseKnowledgeBaseConfigurationVectorKnowledgeBaseConfigurationSupplementalDataStorageConfigurationStorageLocationS3Location(
+                                uri="s3://my-bucket/chunk-processor/"
+                            )
                             ],
-                            "type": "S3"
-                        }
+                            type="S3"
+                        )
                         ]
-                    }
+                    )
                     ]
                 )
                 ]
@@ -130,6 +130,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the knowledge base.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -281,4 +282,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Knowledge Base using 
 % terraform import aws_bedrockagent_knowledge_base.example EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-65cd22ffe02afc9c69622cf824ae03fc810a40c9ed4cb62f0d1185cacfe1dd0b -->
+<!-- cache-key: cdktf-0.20.8 input-0e03b5b72c6d03d9e151bacea847398de5d7dc3b9f8939d76792e3bc7dc540bd -->

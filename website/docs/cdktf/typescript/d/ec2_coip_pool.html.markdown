@@ -47,6 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `localGatewayRouteTableId` - (Optional) Local Gateway Route Table Id assigned to desired COIP Pool
 * `poolId` - (Optional) ID of the specific COIP Pool to retrieve.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
@@ -78,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-d259a136e00adeed22737d86e60402d9d4fba4ad8dfe357b7fd61575e4914dfa -->
+<!-- cache-key: cdktf-0.20.8 input-6364a04172d726ebc8cd5e10ae5ca9fbd5ebbfc361dd5d5e36955f2ca2e0f0ba -->

@@ -1,24 +1,20 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,24 +22,24 @@ func TestAccS3TablesTablePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var tablepolicy s3tables.GetTablePolicyOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	namespace := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_s3tables_table_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTablePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTablePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTablePolicyConfig_basic(rName, namespace, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTablePolicyExists(ctx, resourceName, &tablepolicy),
+					testAccCheckTablePolicyExists(ctx, t, resourceName, &tablepolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, "aws_s3tables_table.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, "aws_s3tables_table.test", names.AttrNamespace),
@@ -66,25 +62,25 @@ func TestAccS3TablesTablePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var tablepolicy s3tables.GetTablePolicyOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	namespace := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_s3tables_table_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTablePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckTablePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTablePolicyConfig_basic(rName, namespace, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTablePolicyExists(ctx, resourceName, &tablepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTablePolicy, resourceName),
+					testAccCheckTablePolicyExists(ctx, t, resourceName, &tablepolicy),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTablePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,57 +88,56 @@ func TestAccS3TablesTablePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTablePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTablePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3tables_table_policy" {
 				continue
 			}
 
-			_, err := tfs3tables.FindTablePolicy(ctx, conn,
+			_, err := tfs3tables.FindTablePolicyByThreePartKey(ctx, conn,
 				rs.Primary.Attributes["table_bucket_arn"],
 				rs.Primary.Attributes[names.AttrNamespace],
 				rs.Primary.Attributes[names.AttrName],
 			)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTablePolicy, rs.Primary.ID, err)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTablePolicy, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Table Policy %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTablePolicyExists(ctx context.Context, name string, tablepolicy *s3tables.GetTablePolicyOutput) resource.TestCheckFunc {
+func testAccCheckTablePolicyExists(ctx context.Context, t *testing.T, n string, v *s3tables.GetTablePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTablePolicy, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" || rs.Primary.Attributes[names.AttrName] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTablePolicy, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
-
-		resp, err := tfs3tables.FindTablePolicy(ctx, conn,
+		output, err := tfs3tables.FindTablePolicyByThreePartKey(ctx, conn,
 			rs.Primary.Attributes["table_bucket_arn"],
 			rs.Primary.Attributes[names.AttrNamespace],
 			rs.Primary.Attributes[names.AttrName],
 		)
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTablePolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*tablepolicy = *resp
+		*v = *output
 
 		return nil
 	}

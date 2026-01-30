@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_profile_name` - (Required, Forces new resource) The name of the authentication profile.
 * `authentication_profile_content` - (Required) The content of the authentication profile in JSON format. The maximum length of the JSON string is determined by a quota for your account.
 
@@ -75,4 +76,4 @@ Using `terraform import`, import Redshift Authentication by `authentication_prof
 % terraform import aws_redshift_authentication_profile.test example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dc99cb7420c5de511051f2f61b1ee290d874bf0770374a9047ba240fbb6ae37e -->
+<!-- cache-key: cdktf-0.20.8 input-cda729980d30d3fa82760ff06de9ebbe1fc924e4cfc3d64d16454c260db102b5 -->

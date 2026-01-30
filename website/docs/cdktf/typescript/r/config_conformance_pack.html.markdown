@@ -100,6 +100,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the conformance pack. Must begin with a letter and contain from 1 to 256 alphanumeric characters and hyphens.
 * `deliveryS3Bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Maximum length of 63.
 * `deliveryS3KeyPrefix` - (Optional) The prefix for the Amazon S3 bucket. Maximum length of 1024.
@@ -150,4 +151,4 @@ Using `terraform import`, import Config Conformance Packs using the `name`. For 
 % terraform import aws_config_conformance_pack.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-12d063c99df038398e8c54061ab20a0f2b9f1b96ee51d70b6d8d12cd3155ef3c -->
+<!-- cache-key: cdktf-0.20.8 input-8f440865510b05bee3086dfd9b75b90d596a862eaf06570b709426526910546a -->

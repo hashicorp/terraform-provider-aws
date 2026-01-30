@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_id` - (Required) The ID of the EC2 resource to manage the tag for.
 * `key` - (Required) The tag name.
 * `value` - (Required) The value of the tag.
@@ -96,4 +97,4 @@ Using `terraform import`, import `aws_ec2_tag` using the EC2 resource identifier
 % terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef,Name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-426f65492ad1473d61135571b53f491b7c40004b57450d752d563e20252feea5 -->
+<!-- cache-key: cdktf-0.20.8 input-e8fc17346600a811d5e28428872e0fc78725879637d7b138be2f93eb9be2892f -->

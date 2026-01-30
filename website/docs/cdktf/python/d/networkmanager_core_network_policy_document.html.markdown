@@ -3,7 +3,7 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_document"
 description: |-
-  Generates an Core Network policy document in JSON format
+  Generates a Core Network policy document in JSON format
 ---
 
 
@@ -223,6 +223,8 @@ The following arguments are available:
 * `inside_cidr_blocks` (Optional) - The Classless Inter-Domain Routing (CIDR) block range used to create tunnels for AWS Transit Gateway Connect. The format is standard AWS CIDR range (for example, `10.0.1.0/24`). You can optionally define the inside CIDR in the Core Network Edges section per Region. The minimum is a `/24` for IPv4 or `/64` for IPv6. You can provide multiple `/24` subnets or a larger CIDR range. If you define a larger CIDR range, new Core Network Edges will be automatically assigned `/24` and `/64` subnets from the larger CIDR. an Inside CIDR block is required for attaching Connect attachments to a Core Network Edge.
 * `vpn_ecmp_support` (Optional) - Indicates whether the core network forwards traffic over multiple equal-cost routes using VPN. The value can be either `true` or `false`. The default is `true`.
 * `edge_locations` (Required) - A block value of AWS Region locations where you're creating Core Network Edges. Detailed below.
+* `dns_support` (Optional) - Indicates whether DNS resolution is enabled for the core network. The value can be either `true` or `false`. When set to `true`, DNS resolution is enabled for VPCs attached to the core network, allowing resources in different VPCs to resolve each other's domain names. The default is `true`.
+* `security_group_referencing_support` — (Optional) Indicates whether security group referencing is enabled for the core network. The value can be either `true` or `false`. When set to `true`, security groups in one VPC can reference security groups in another VPC attached to the core network, enabling more flexible security configurations across your network. The default is `false`.
 
 ### `edge_locations`
 
@@ -281,4 +283,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.8 input-4d6a79b81cf74c58e096b9cbab914bc148a764b64a942b0795e793291d1b2036 -->
+<!-- cache-key: cdktf-0.20.8 input-56e6b6619d7f4da214d8edb84d237c5917a104883cf345208b1801297dbe9761 -->

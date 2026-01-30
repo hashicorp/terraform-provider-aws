@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dsql
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -26,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -34,6 +36,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,6 +46,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
+// @Testing(generator=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -64,8 +68,15 @@ func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaReq
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"deletion_protection_enabled": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
 			"encryption_details": framework.ResourceComputedListOfObjectsAttribute[encryptionDetailsModel](ctx),
+			names.AttrForceDestroy: schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
 			names.AttrIdentifier: framework.IDAttribute(),
 			"kms_encryption_key": schema.StringAttribute{
 				Optional: true,
@@ -195,7 +206,7 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
 	output, err := findClusterByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -309,6 +320,19 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 
 	conn := r.Meta().DSQLClient(ctx)
 
+	if data.ForceDestroy.ValueBool() {
+		input := dsql.UpdateClusterInput{
+			Identifier:                data.Identifier.ValueStringPointer(),
+			DeletionProtectionEnabled: aws.Bool(false),
+			ClientToken:               aws.String(sdkid.UniqueId()),
+		}
+		// Changing DeletionProtectionEnabled is instantaneous, no need to wait.
+		if _, err := conn.UpdateCluster(ctx, &input); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("disabling deletion protection for Aurora DSQL Cluster (%s)", data.Identifier.ValueString()), err.Error())
+			return
+		}
+	}
+
 	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
 	tflog.Debug(ctx, "deleting Aurora DSQL Cluster", map[string]any{
 		names.AttrIdentifier: id,
@@ -338,6 +362,9 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (r *clusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), request, response)
+
+	// Set force_destroy to false on import to prevent accidental deletion
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)
 }
 
 func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.GetClusterOutput, error) {
@@ -348,8 +375,7 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+			LastError: err,
 		}
 	}
 
@@ -358,7 +384,7 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -372,8 +398,7 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+			LastError: err,
 		}
 	}
 
@@ -382,17 +407,17 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	}
 
 	if output == nil || output.ServiceName == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceName, nil
 }
 
-func statusCluster(ctx context.Context, conn *dsql.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -408,7 +433,7 @@ func waitClusterCreated(ctx context.Context, conn *dsql.Client, id string, timeo
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusActive, awstypes.ClusterStatusPendingSetup),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -426,7 +451,7 @@ func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeo
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ClusterStatusUpdating),
 		Target:  enum.Slice(awstypes.ClusterStatusActive),
-		Refresh: statusCluster(ctx, conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -441,10 +466,12 @@ func waitClusterUpdated(ctx context.Context, conn *dsql.Client, id string, timeo
 
 func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusPendingDelete),
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, id),
-		Timeout: timeout,
+		Pending:      enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusPendingDelete),
+		Target:       []string{},
+		Refresh:      statusCluster(conn, id),
+		Timeout:      timeout,
+		Delay:        1 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -456,11 +483,11 @@ func waitClusterDeleted(ctx context.Context, conn *dsql.Client, id string, timeo
 	return nil, err
 }
 
-func statusClusterEncryption(ctx context.Context, conn *dsql.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterEncryption(conn *dsql.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -480,7 +507,7 @@ func waitClusterEncryptionEnabled(ctx context.Context, conn *dsql.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EncryptionStatusEnabling, awstypes.EncryptionStatusUpdating),
 		Target:  enum.Slice(awstypes.EncryptionStatusEnabled),
-		Refresh: statusClusterEncryption(ctx, conn, id),
+		Refresh: statusClusterEncryption(conn, id),
 		Timeout: timeout,
 	}
 
@@ -522,6 +549,7 @@ type clusterResourceModel struct {
 	ARN                       types.String                                                `tfsdk:"arn"`
 	DeletionProtectionEnabled types.Bool                                                  `tfsdk:"deletion_protection_enabled"`
 	EncryptionDetails         fwtypes.ListNestedObjectValueOf[encryptionDetailsModel]     `tfsdk:"encryption_details"`
+	ForceDestroy              types.Bool                                                  `tfsdk:"force_destroy"`
 	Identifier                types.String                                                `tfsdk:"identifier"`
 	KMSEncryptionKey          types.String                                                `tfsdk:"kms_encryption_key"`
 	MultiRegionProperties     fwtypes.ListNestedObjectValueOf[multiRegionPropertiesModel] `tfsdk:"multi_region_properties"`

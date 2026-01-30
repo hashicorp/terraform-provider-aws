@@ -60,6 +60,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destinationCidrBlock` - (Required) The CIDR block associated with the local subnet of the customer network.
 * `vpnConnectionId` - (Required) The ID of the VPN connection.
 
@@ -70,4 +71,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `destinationCidrBlock` - The CIDR block associated with the local subnet of the customer network.
 * `vpnConnectionId` - The ID of the VPN connection.
 
-<!-- cache-key: cdktf-0.20.8 input-64b067c6df57ea0b47856274e104f5456078a8dcbea6eef290dbd19011659e4a -->
+<!-- cache-key: cdktf-0.20.8 input-8f8d512d7c4f5cec27ea7153220a06d9aac35bc3fba6d1e950beacddc5f62a6f -->

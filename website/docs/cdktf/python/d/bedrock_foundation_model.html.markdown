@@ -42,7 +42,8 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `model_id` – (Required) Model identifier.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `model_id` - (Required) Model identifier.
 
 ## Attribute Reference
 
@@ -57,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `provider_name` - Model provider name.
 * `response_streaming_supported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.8 input-c75c9c15d61ec94a1981795aaaa8623eed5814b08359d63d8dd10d45a2ef9523 -->
+<!-- cache-key: cdktf-0.20.8 input-a67af68ab2d739928980a3a40e7ff283ddbc049ff3b090f23bdfa033811a21b2 -->

@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster
 
 ## Attribute Reference
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the cluster.
 * `token` - Token to use to authenticate with the cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-2ee4c4b3d187fab2d178b971fd6fdd68c62248b57053b509e8bce5978b46db2c -->
+<!-- cache-key: cdktf-0.20.8 input-5f6789b7a17d3da5269c6194428b99328780dbbcb68d4e4934d245baf57f8a92 -->

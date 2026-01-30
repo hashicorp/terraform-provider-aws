@@ -33,7 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -48,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `managed_by` - Identifier of a datashare to show its managing entity.
 * `producer_arn` - ARN (Amazon Resource Name) of the producer.
 
-<!-- cache-key: cdktf-0.20.8 input-bc78fb63b8eb03db01d5bdd7240594da9ae7408306324a0be98e60537bef0bbe -->
+<!-- cache-key: cdktf-0.20.8 input-0f8577a4a09e27c07e1c2645963d98855f942a0fdda50263f2eac29b319ff865 -->

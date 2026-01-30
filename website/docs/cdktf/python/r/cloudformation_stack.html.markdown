@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Stack name.
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
 * `template_url` - (Optional) Location of a file containing the template body (max size: 460,800 bytes).
@@ -123,4 +124,4 @@ Using `terraform import`, import Cloudformation Stacks using the `name`. For exa
 % terraform import aws_cloudformation_stack.stack networking-stack
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c53bfbdca12c0eaf80e8a2eed58d9aa3dfa199b8365b1dbcd91c0ab7688d53d5 -->
+<!-- cache-key: cdktf-0.20.8 input-99f59f189e14ade07fba27c4e3a0e8e87fe5a8c0d3fbfb3a02486b28a1cd5407 -->

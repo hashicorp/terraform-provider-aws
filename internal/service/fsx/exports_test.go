@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -15,6 +15,7 @@ var (
 	ResourceOpenZFSFileSystem          = resourceOpenZFSFileSystem
 	ResourceOpenZFSSnapshot            = resourceOpenZFSSnapshot
 	ResourceOpenZFSVolume              = resourceOpenZFSVolume
+	ResourceS3AccessPointAttachment    = newS3AccessPointAttachmentResource
 
 	FindBackupByID                    = findBackupByID
 	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID
@@ -24,6 +25,7 @@ var (
 	FindONTAPVolumeByID               = findONTAPVolumeByID
 	FindOpenZFSFileSystemByID         = findOpenZFSFileSystemByID
 	FindOpenZFSVolumeByID             = findOpenZFSVolumeByID
+	FindS3AccessPointAttachmentByName = findS3AccessPointAttachmentByName
 	FindStorageVirtualMachineByID     = findStorageVirtualMachineByID
 	FindSnapshotByID                  = findSnapshotByID
 	FindWindowsFileSystemByID         = findWindowsFileSystemByID

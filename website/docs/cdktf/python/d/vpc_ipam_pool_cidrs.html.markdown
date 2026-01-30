@@ -91,6 +91,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipam_pool_id` - ID of the IPAM pool you would like the list of provisioned CIDRs.
 * `filter` - Custom filter block as described below.
 
@@ -119,4 +120,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `1m`)
 
-<!-- cache-key: cdktf-0.20.8 input-e6aeb2e0aaf75b93552763f30ce2969165ef5e2ba0b203aa62b11b342bc1609b -->
+<!-- cache-key: cdktf-0.20.8 input-c5ad51f46a250cd1e36054554dd527004f0500affc543b5370df8be39872bb58 -->

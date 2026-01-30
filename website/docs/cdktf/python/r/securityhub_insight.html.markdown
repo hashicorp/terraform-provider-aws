@@ -180,8 +180,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filters` - (Required) A configuration block including one or more (up to 10 distinct) attributes used to filter the findings included in the insight. The insight only includes findings that match criteria defined in the filters. See [filters](#filters) below for more details.
 * `group_by_attribute` - (Required) The attribute used to group the findings for the insight e.g., if an insight is grouped by `ResourceId`, then the insight produces a list of resource identifiers.
 * `name` - (Required) The name of the custom insight.
@@ -372,4 +373,4 @@ Using `terraform import`, import Security Hub insights using the ARN. For exampl
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3396819782d5b2f4ff9f550b5257b26e8ed453c9d639ebd13d6480a1a582b6a8 -->
+<!-- cache-key: cdktf-0.20.8 input-42e50fbcf564ec01f655c00e92c8479955f33c9202106960a585cbafee3ef377 -->

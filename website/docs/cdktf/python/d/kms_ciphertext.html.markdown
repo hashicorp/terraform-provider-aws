@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `plaintext` - (Required) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `context` - (Optional) An optional mapping that makes up the encryption context.
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Globally unique key ID for the customer master key.
 * `ciphertext_blob` - Base64 encoded ciphertext
 
-<!-- cache-key: cdktf-0.20.8 input-2252fddcd00f61de57dc4bf7ec11e526004f599c4838c47466886222ab70e001 -->
+<!-- cache-key: cdktf-0.20.8 input-04ca0ab727dd66ef1ccdf52457a4645dbd17f340ffe3cb83d48997c6cf6e3d3d -->

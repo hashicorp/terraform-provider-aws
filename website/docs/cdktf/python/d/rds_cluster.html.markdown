@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required) Cluster identifier of the RDS cluster.
 
 ## Attribute Reference
@@ -46,4 +47,4 @@ returned attributes - they are identical for all attributes, except the `tags_al
 
 * `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-6397fceb8621ecfb4607bfc69b2b0c2578c794f40ce62e2e22305ce20e6bd436 -->
+<!-- cache-key: cdktf-0.20.8 input-3a438ffc0d4a4ccc7cc44eccc1592a120d9f3651179c868a2e9c26a2c2cbabbd -->

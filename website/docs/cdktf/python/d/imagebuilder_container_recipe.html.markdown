@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the container recipe.
 
 ## Attribute Reference
@@ -78,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the container recipe.
 * `working_directory` - Working directory used during build and test workflows.
 
-<!-- cache-key: cdktf-0.20.8 input-e569a61653822a76ec6119978f91743770357b8c6cad1852a1100d4461e88a74 -->
+<!-- cache-key: cdktf-0.20.8 input-3908c3e50c991cc678c2d5ffb916c74c8b4fd8325d45d59b8e993e519c7fb856 -->

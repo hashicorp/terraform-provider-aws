@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `internet_gateway_id` - (Optional) ID of the specific Internet Gateway to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired Internet Gateway.
@@ -79,4 +80,4 @@ Each attachment supports the following:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-5c14bdf19d2e56df7c6509364958932cac11a35a7bcdfd7a4df5a1666a9d451e -->
+<!-- cache-key: cdktf-0.20.8 input-8358a60caa28c7c2a2b4f10745c28120c38195086d1f558b96ce55d4f4330906 -->

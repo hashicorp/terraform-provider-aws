@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp_test
@@ -9,36 +9,34 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPQueryLoggingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.QueryLoggingConfigurationMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_query_logging_configuration.test"
 	workspaceResourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueryLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckQueryLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckQueryLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.cloudwatch_logs.#", "1"),
@@ -61,22 +59,22 @@ func TestAccAMPQueryLoggingConfiguration_basic(t *testing.T) {
 func TestAccAMPQueryLoggingConfiguration_withFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.QueryLoggingConfigurationMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_query_logging_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueryLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckQueryLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLoggingConfigurationConfig_withFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
+					testAccCheckQueryLoggingConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.filters.0.qsp_threshold", "1000"),
@@ -96,23 +94,23 @@ func TestAccAMPQueryLoggingConfiguration_withFilters(t *testing.T) {
 func TestAccAMPQueryLoggingConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.QueryLoggingConfigurationMetadata
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_query_logging_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueryLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckQueryLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLoggingConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQueryLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceQueryLoggingConfiguration, resourceName),
+					testAccCheckQueryLoggingConfigurationExists(ctx, t, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceQueryLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,9 +118,9 @@ func TestAccAMPQueryLoggingConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_query_logging_configuration" {
@@ -131,7 +129,7 @@ func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfamp.FindQueryLoggingConfigurationByID(ctx, conn, rs.Primary.Attributes["workspace_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -146,14 +144,14 @@ func testAccCheckQueryLoggingConfigurationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckQueryLoggingConfigurationExists(ctx context.Context, n string, v *types.QueryLoggingConfigurationMetadata) resource.TestCheckFunc {
+func testAccCheckQueryLoggingConfigurationExists(ctx context.Context, t *testing.T, n string, v *types.QueryLoggingConfigurationMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		output, err := tfamp.FindQueryLoggingConfigurationByID(ctx, conn, rs.Primary.Attributes["workspace_id"])
 
