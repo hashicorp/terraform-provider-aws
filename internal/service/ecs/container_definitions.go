@@ -210,7 +210,10 @@ func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (str
 		return "", err
 	}
 
-	return jsonEncoder.String(), nil
+	// Remove empty fields (null, [], {}) from JSON to prevent spurious diffs.
+	// The AWS SDK serialization outputs [] for empty arrays, but Terraform
+	// configs typically omit these fields, causing diffs like "mountPoints: [] -> null".
+	return string(tfjson.RemoveEmptyFields([]byte(jsonEncoder.String()))), nil
 }
 
 func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
