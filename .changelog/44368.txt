@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_glue_inbound_integration
+aws_glue_integration_table_properties
+```
+
+
