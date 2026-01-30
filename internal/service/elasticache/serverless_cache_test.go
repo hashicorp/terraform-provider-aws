@@ -763,14 +763,14 @@ resource "aws_elasticache_serverless_cache" "test" {
 `, rName, engine)
 }
 
-func testAccServerlessCacheConfig_majorEngineVersion(rName, engine, major_engine_version string) string {
+func testAccServerlessCacheConfig_majorEngineVersion(rName, engine, majorEngineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_serverless_cache" "test" {
   name                 = %[1]q
   engine               = %[2]q
   major_engine_version = %[3]q
 }
-`, rName, engine, major_engine_version)
+`, rName, engine, majorEngineVersion)
 }
 
 func testAccServerlessCacheConfig_full(rName string) string {

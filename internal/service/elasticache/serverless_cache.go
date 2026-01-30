@@ -94,7 +94,6 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIf(
 						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
 							// In-place update support for redis -> valkey
@@ -132,17 +131,20 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplaceIf(
 						func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
 							var engineVal types.String
-							req.Config.GetAttribute(ctx, path.Root(names.AttrEngine), &engineVal)
+							resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrEngine), &engineVal)...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
 
 							stateFloatVal, err := strconv.ParseFloat(req.StateValue.ValueString(), 64)
 							if err != nil {
-								response.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								resp.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
 								return
 							}
 
 							planFloatVal, err := strconv.ParseFloat(req.PlanValue.ValueString(), 64)
 							if err != nil {
-								response.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
+								resp.Diagnostics.AddError("incorrect major_engine_version format", err.Error())
 								return
 							}
 
