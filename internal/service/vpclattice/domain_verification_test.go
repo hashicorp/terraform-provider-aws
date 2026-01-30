@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func TestAccVPCLatticeDomainVerification_disappears(t *testing.T) {
 				Config: testAccDomainVerificationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainVerificationExists(ctx, resourceName, &domainVerification),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceDomainVerification, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceDomainVerification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +91,7 @@ func testAccCheckDomainVerificationDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfvpclattice.FindDomainVerificationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

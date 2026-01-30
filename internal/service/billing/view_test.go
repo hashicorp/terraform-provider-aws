@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package billing_test
@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/billing"
@@ -17,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbilling "github.com/hashicorp/terraform-provider-aws/internal/service/billing"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -125,7 +126,7 @@ func TestAccBillingView_disappears(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbilling.ResourceView, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbilling.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -188,6 +189,103 @@ func TestAccBillingView_tags(t *testing.T) {
 	})
 }
 
+func TestAccBillingView_dataFilterExpressionTags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var view1, view2 awstypes.BillingViewElement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_billing_view.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_dataFilterExpressionTags(rName, "Environment", []string{"production"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view1),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.key", "Environment"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.0", "production"),
+				),
+			},
+			{
+				Config: testAccViewConfig_dataFilterExpressionTags(rName, "CostCenter", []string{"engineering", "finance"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view2),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.key", "CostCenter"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.0", "engineering"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.1", "finance"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccBillingView_dataFilterExpressionDimensions(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var view1, view2 awstypes.BillingViewElement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_billing_view.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{acctest.Ct12Digit}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view1),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.key", "LINKED_ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "1"),
+				),
+			},
+			{
+				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{"111222333444", "999999999912"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view2),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.key", "LINKED_ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "2"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
@@ -203,7 +301,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err := tfbilling.FindViewByARN(ctx, conn, arn)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -311,4 +409,50 @@ resource "aws_billing_view" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccViewConfig_dataFilterExpressionTags(rName, tagKey string, tagValues []string) string {
+	var tagValuesStr strings.Builder
+	for i, v := range tagValues {
+		if i > 0 {
+			tagValuesStr.WriteString(", ")
+		}
+		fmt.Fprintf(&tagValuesStr, "%q", v)
+	}
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
+resource "aws_billing_view" "test" {
+  name         = %[1]q
+  description  = "Test with data_filter_expression tags"
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+  data_filter_expression {
+    tags {
+      key    = %[2]q
+      values = [%[3]s]
+    }
+  }
+}
+`, rName, tagKey, tagValuesStr.String()))
+}
+
+func testAccViewConfig_dataFilterExpressionDimensions(rName, dimensionKey string, dimensionValues []string) string {
+	var dimensionValuesStr strings.Builder
+	for i, v := range dimensionValues {
+		if i > 0 {
+			dimensionValuesStr.WriteString(", ")
+		}
+		fmt.Fprintf(&dimensionValuesStr, "%q", v)
+	}
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
+resource "aws_billing_view" "test" {
+  name         = %[1]q
+  description  = "Test with data_filter_expression dimensions"
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+  data_filter_expression {
+    dimensions {
+      key    = %[2]q
+      values = [%[3]s]
+    }
+  }
+}
+`, rName, dimensionKey, dimensionValuesStr.String()))
 }

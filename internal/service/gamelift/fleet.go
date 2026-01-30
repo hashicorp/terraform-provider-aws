@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package gamelift
 
@@ -16,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -321,7 +323,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	fleet, err := findFleetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GameLift Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -483,8 +485,7 @@ func findFleets(ctx context.Context, conn *gamelift.Client, input *gamelift.Desc
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -515,8 +516,7 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -534,11 +534,11 @@ func findFleetEvents(ctx context.Context, conn *gamelift.Client, input *gamelift
 	return output, nil
 }
 
-func statusFleet(ctx context.Context, conn *gamelift.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *gamelift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -560,7 +560,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 			awstypes.FleetStatusValidating,
 		),
 		Target:  enum.Slice(awstypes.FleetStatusActive),
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -568,7 +568,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err
@@ -586,7 +586,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 			awstypes.FleetStatusTerminated,
 		),
 		Target:  []string{},
-		Refresh: statusFleet(ctx, conn, id),
+		Refresh: statusFleet(conn, id),
 		Timeout: timeout,
 	}
 
@@ -594,7 +594,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err

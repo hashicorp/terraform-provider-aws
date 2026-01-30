@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -187,7 +187,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_disappears(t *testing.T) {
 				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -601,7 +601,7 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 
 			// Get the Web ACL
 			webACL, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				// Web ACL is gone, so the association is definitely destroyed
 				continue
 			}

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -56,6 +58,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -677,6 +680,10 @@ func resourceInstance() *schema.Resource {
 				ConflictsWith: []string{
 					"s3_import",
 				},
+			},
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"upgrade_storage_config": {
 				Type:     schema.TypeBool,
@@ -1940,10 +1947,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
-		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			// Retry with `identifier`
 			v, err = findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
 				return diags
@@ -2070,6 +2077,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
+	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
 	d.Set(names.AttrUsername, v.MasterUsername)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
@@ -2819,7 +2827,7 @@ func findDBInstanceByID(ctx context.Context, conn *rds.Client, id string, optFns
 	output, err := findDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstance](), optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if idLooksLikeDbiResourceID && tfresource.NotFound(err) {
+	if idLooksLikeDbiResourceID && retry.NotFound(err) {
 		input = &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
@@ -2876,7 +2884,7 @@ func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options))
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -3074,7 +3082,7 @@ func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFu
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -3133,7 +3141,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
 		if status := aws.ToString(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
 		}
 
 		return output, err

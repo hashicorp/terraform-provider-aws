@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package finspace
 
@@ -16,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -217,7 +219,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := FindKxDataviewById(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FinSpace KxDataview (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -306,7 +308,7 @@ func resourceKxDataviewDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxDataview, d.Get(names.AttrName).(string), err)
 	}
 
-	if _, err := waitKxDataviewDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil && !tfresource.NotFound(err) {
+	if _, err := waitKxDataviewDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil && !retry.NotFound(err) {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxDataview, d.Id(), err)
 	}
 	return diags
@@ -330,15 +332,14 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 		return nil, err
 	}
 
 	if out == nil || out.DataviewName == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out, nil
 }
@@ -347,7 +348,7 @@ func waitKxDataviewCreated(ctx context.Context, conn *finspace.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxDataviewStatusCreating),
 		Target:                    enum.Slice(types.KxDataviewStatusActive),
-		Refresh:                   statusKxDataview(ctx, conn, id),
+		Refresh:                   statusKxDataview(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -364,7 +365,7 @@ func waitKxDataviewUpdated(ctx context.Context, conn *finspace.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxDataviewStatusUpdating),
 		Target:                    enum.Slice(types.KxDataviewStatusActive),
-		Refresh:                   statusKxDataview(ctx, conn, id),
+		Refresh:                   statusKxDataview(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -381,7 +382,7 @@ func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxDataviewStatusDeleting),
 		Target:  []string{},
-		Refresh: statusKxDataview(ctx, conn, id),
+		Refresh: statusKxDataview(conn, id),
 		Timeout: timeout,
 	}
 
@@ -393,10 +394,10 @@ func waitKxDataviewDeleted(ctx context.Context, conn *finspace.Client, id string
 	return nil, err
 }
 
-func statusKxDataview(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKxDataview(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindKxDataviewById(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {

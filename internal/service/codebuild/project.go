@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codebuild
 
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,6 +39,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
@@ -206,6 +210,10 @@ func resourceProject() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cache_namespace": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -930,7 +938,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	project, err := findProjectByNameOrARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1216,7 +1224,7 @@ func findProjects(ctx context.Context, conn *codebuild.Client, input *codebuild.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Projects, nil
@@ -1407,6 +1415,10 @@ func expandProjectCache(tfMap map[string]any) *types.ProjectCache {
 		if v, ok := tfMap["modes"].([]any); ok && len(v) > 0 {
 			apiObject.Modes = flex.ExpandStringyValueList[types.CacheMode](v)
 		}
+	}
+
+	if v, ok := tfMap["cache_namespace"]; ok && v != "" {
+		apiObject.CacheNamespace = aws.String(v.(string))
 	}
 
 	return apiObject
@@ -1926,6 +1938,10 @@ func flattenProjectCache(apiObject *types.ProjectCache) []any {
 		names.AttrLocation: aws.ToString(apiObject.Location),
 		"modes":            apiObject.Modes,
 		names.AttrType:     apiObject.Type,
+	}
+
+	if apiObject.CacheNamespace != nil {
+		tfMap["cache_namespace"] = aws.ToString(apiObject.CacheNamespace)
 	}
 
 	return []any{tfMap}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,7 +81,7 @@ func TestAccBackupLogicallyAirGappedVault_disappears(t *testing.T) {
 				Config: testAccLogicallyAirGappedVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogicallyAirGappedVaultExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceLogicallyAirGappedVault, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceLogicallyAirGappedVault, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -192,7 +192,7 @@ func testAccCheckLogicallyAirGappedVaultDestroy(ctx context.Context) resource.Te
 
 			_, err := tfbackup.FindLogicallyAirGappedBackupVaultByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

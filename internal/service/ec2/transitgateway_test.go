@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -25,8 +25,8 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,6 +76,8 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"securityGroupReferencingSupport":                    testAccTransitGateway_securityGroupReferencingSupport,
 			"securityGroupReferencingSupportExistingResource":    testAccTransitGateway_securityGroupReferencingSupportExistingResource,
 			"vpnEcmpSupport":                                     testAccTransitGateway_vpnECMPSupport,
+			"encryptionSupportWhenCreated":                       testAccTransitGateway_encryptionSupportWhenCreated,
+			"encryptionSupportWhenUpdated":                       testAccTransitGateway_encryptionSupportWhenUpdated,
 		},
 		"MulticastDomain": {
 			acctest.CtBasic:      testAccTransitGatewayMulticastDomain_basic,
@@ -247,7 +249,7 @@ func testAccTransitGateway_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccTransitGatewayConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -733,6 +735,77 @@ func testAccTransitGateway_description(t *testing.T, semaphore tfsync.Semaphore)
 	})
 }
 
+// Encryption support is enabled when creating a transit gateway
+func testAccTransitGateway_encryptionSupportWhenCreated(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_encryptionSupport(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueEnable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// A transit gateway is created without encryption support, then updated to enable it
+func testAccTransitGateway_encryptionSupportWhenUpdated(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGateway1 awstypes.TransitGateway
+	resourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueDisable)),
+				),
+			},
+			{
+				Config: testAccTransitGatewayConfig_encryptionSupport(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_support", string(awstypes.EncryptionSupportOptionValueEnable)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccTransitGateway_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway1, transitGateway2, transitGateway3 awstypes.TransitGateway
@@ -820,7 +893,7 @@ func testAccCheckTransitGatewayDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfec2.FindTransitGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -875,7 +948,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 
 		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return errors.New("EC2 Transit Gateway Route Table Association not found")
 		}
 
@@ -903,7 +976,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociat
 
 		_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 
@@ -935,7 +1008,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 
 		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
 		}
 
@@ -963,7 +1036,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagat
 
 		_, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 
@@ -1187,4 +1260,12 @@ resource "aws_ec2_transit_gateway" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTransitGatewayConfig_encryptionSupport() string {
+	return `
+resource "aws_ec2_transit_gateway" "test" {
+  encryption_support = "enable"
+}
+`
 }

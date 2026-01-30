@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sagemaker
 
@@ -14,13 +16,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -109,7 +112,7 @@ func resourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validModelDataURL,
+							ValidateFunc: validHTTPSOrS3URI,
 						},
 						"model_package_name": {
 							Type:         schema.TypeString,
@@ -159,7 +162,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -214,7 +217,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -347,7 +350,7 @@ func resourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validModelDataURL,
+							ValidateFunc: validHTTPSOrS3URI,
 						},
 						"model_package_name": {
 							Type:         schema.TypeString,
@@ -398,7 +401,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -453,7 +456,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -499,12 +502,14 @@ func resourceModel() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 16,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 5,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -573,7 +578,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	output, err := findModelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 		d.SetId("")
 		return diags
@@ -656,7 +661,7 @@ func findModelByName(ctx context.Context, conn *sagemaker.Client, name string) (
 	output, err := conn.DescribeModel(ctx, input)
 
 	if tfawserr.ErrCodeContains(err, ErrCodeValidationException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -667,7 +672,7 @@ func findModelByName(ctx context.Context, conn *sagemaker.Client, name string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

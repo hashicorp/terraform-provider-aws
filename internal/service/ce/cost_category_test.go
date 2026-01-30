@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ce_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -116,7 +116,7 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceCostCategory(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceCostCategory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -318,7 +318,7 @@ func testAccCheckCostCategoryDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
