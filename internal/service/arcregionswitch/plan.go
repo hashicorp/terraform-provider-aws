@@ -731,7 +731,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
 	var input arcregionswitch.CreatePlanInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -754,12 +754,12 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, planOutput, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, planOutput, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(sortWorkflows(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sortWorkflows(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -788,12 +788,12 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, plan, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, plan, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(sortWorkflows(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sortWorkflows(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -823,7 +823,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
 	var createInput arcregionswitch.CreatePlanInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &createInput)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &createInput))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -859,12 +859,12 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, planOutput, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, planOutput, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(sortWorkflows(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sortWorkflows(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
