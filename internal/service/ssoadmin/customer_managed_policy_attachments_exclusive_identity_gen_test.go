@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -41,12 +41,12 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -63,7 +63,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -77,7 +77,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -96,7 +96,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -115,10 +115,10 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -135,7 +135,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t 
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -155,7 +155,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t 
 
 			// Step 2: Import command
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -170,7 +170,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t 
 
 			// Step 3: Import block with Import ID
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),
@@ -190,7 +190,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t 
 
 			// Step 4: Import block with Resource Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ManagedPolicyAttachmentsExclusive/region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/CustomerManagedPolicyAttachmentsExclusive/region_override/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"region":        config.StringVariable(acctest.AlternateRegion()),

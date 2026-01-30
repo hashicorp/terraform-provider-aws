@@ -47,7 +47,9 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateId: {{ .ImportStateID }},
 {{ end -}}
 	ImportStateVerify: true,
-{{ if .HasImportStateIDAttribute -}}
+{{ if .HasImportStateIDAttributes -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttributesFirst }},
+{{ else if .HasImportStateIDAttribute -}}
 	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
 {{ end }}
 {{- end }}
@@ -56,6 +58,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateKind:   resource.ImportCommandWithID,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ end -}}
@@ -71,6 +75,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateKind:   resource.ImportCommandWithID,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else -}}
@@ -90,6 +96,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateKind: resource.ImportBlockWithID,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ end -}}
@@ -101,6 +109,8 @@ CheckDestroy: acctest.CheckDestroyNoop,
 	ImportStateKind: resource.ImportBlockWithID,
 {{ if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, {{ .ImportStateIDFunc }}),
+{{ else if .HasImportStateIDAttributes -}}
+	ImportStateIdFunc: acctest.CrossRegionAttrsImportStateIdFunc(resourceName, {{ .ImportStateIDAttributesSep }}, {{ .ImportStateIDAttributes }}),
 {{ else if .HasImportStateIDAttribute -}}
 	ImportStateIdFunc: acctest.CrossRegionAttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
 {{ else -}}

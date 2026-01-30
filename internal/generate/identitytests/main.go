@@ -747,7 +747,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
-					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") && !d.HasImportStateIDAttributes() {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}

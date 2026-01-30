@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,9 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,11 +36,12 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.0.path", "/"),
 				),
 			},
 			{
@@ -53,9 +55,9 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -68,12 +70,10 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_multiple(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())),
-					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", fmt.Sprintf("arn:%s:iam::aws:policy/PowerUserAccess", acctest.Partition())),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "2"),
 				),
 			},
 			{
@@ -87,9 +87,9 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_update(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -102,33 +102,26 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_update(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "0"),
 				),
 			},
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_multiple(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-				),
-			},
-			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_empty(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-				),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "instance_arn",
 			},
 		},
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -141,27 +134,27 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandRemoval(t *testin
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckManagedPolicyDetach(ctx, resourceName, "ReadOnlyAccess"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyDetach(ctx, resourceName, rName, "/"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
+	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -174,25 +167,25 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandAddition(t *testi
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					testAccCheckManagedPolicyAttach(ctx, resourceName, "PowerUserAccess"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckCustomerManagedPolicyAttach(ctx, resourceName, fmt.Sprintf("%s-2", rName), "/"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName),
+				Config: testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "customer_managed_policy_reference.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCustomerManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -201,13 +194,13 @@ func testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err := tfssoadmin.FindManagedPolicyAttachmentsByTwoPartKey(ctx, conn, rs.Primary.Attributes["permission_set_arn"], rs.Primary.Attributes["instance_arn"])
+		_, err := tfssoadmin.FindCustomerManagedPolicyAttachmentsByTwoPartKey(ctx, conn, rs.Primary.Attributes["permission_set_arn"], rs.Primary.Attributes["instance_arn"])
 
 		return err
 	}
 }
 
-func testAccCheckManagedPolicyDetach(ctx context.Context, n, policyName string) resource.TestCheckFunc {
+func testAccCheckCustomerManagedPolicyDetach(ctx context.Context, n, policyName, policyPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -215,19 +208,21 @@ func testAccCheckManagedPolicyDetach(ctx context.Context, n, policyName string) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
-		policyARN := fmt.Sprintf("arn:%s:iam::aws:policy/%s", acctest.Partition(), policyName)
 
-		_, err := conn.DetachManagedPolicyFromPermissionSet(ctx, &ssoadmin.DetachManagedPolicyFromPermissionSetInput{
+		_, err := conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(ctx, &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
 			InstanceArn:      aws.String(rs.Primary.Attributes["instance_arn"]),
 			PermissionSetArn: aws.String(rs.Primary.Attributes["permission_set_arn"]),
-			ManagedPolicyArn: aws.String(policyARN),
+			CustomerManagedPolicyReference: &awstypes.CustomerManagedPolicyReference{
+				Name: aws.String(policyName),
+				Path: aws.String(policyPath),
+			},
 		})
 
 		return err
 	}
 }
 
-func testAccCheckManagedPolicyAttach(ctx context.Context, n, policyName string) resource.TestCheckFunc {
+func testAccCheckCustomerManagedPolicyAttach(ctx context.Context, n, policyName, policyPath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -235,64 +230,108 @@ func testAccCheckManagedPolicyAttach(ctx context.Context, n, policyName string) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
-		policyARN := fmt.Sprintf("arn:%s:iam::aws:policy/%s", acctest.Partition(), policyName)
 
-		_, err := conn.AttachManagedPolicyToPermissionSet(ctx, &ssoadmin.AttachManagedPolicyToPermissionSetInput{
+		_, err := conn.AttachCustomerManagedPolicyReferenceToPermissionSet(ctx, &ssoadmin.AttachCustomerManagedPolicyReferenceToPermissionSetInput{
 			InstanceArn:      aws.String(rs.Primary.Attributes["instance_arn"]),
 			PermissionSetArn: aws.String(rs.Primary.Attributes["permission_set_arn"]),
-			ManagedPolicyArn: aws.String(policyARN),
+			CustomerManagedPolicyReference: &awstypes.CustomerManagedPolicyReference{
+				Name: aws.String(policyName),
+				Path: aws.String(policyPath),
+			},
 		})
 
 		return err
 	}
 }
 
-func testAccManagedPolicyAttachmentsExclusiveConfig_basic(rName string) string {
+func testAccCustomerManagedPolicyAttachmentsExclusiveConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:ListBucket"
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
-resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
+resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "test" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 
-  managed_policy_arns = [
-    "arn:${data.aws_partition.current.partition}:iam::aws:policy/ReadOnlyAccess",
-  ]
+  customer_managed_policy_reference {
+    name = aws_iam_policy.test.name
+  }
 }
 `, rName)
 }
 
-func testAccManagedPolicyAttachmentsExclusiveConfig_multiple(rName string) string {
+func testAccCustomerManagedPolicyAttachmentsExclusiveConfig_multiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:ListBucket"
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_policy" "test2" {
+  name = "%[1]s-2"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = "s3:GetObject"
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
-resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
+resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "test" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 
-  managed_policy_arns = [
-    "arn:${data.aws_partition.current.partition}:iam::aws:policy/ReadOnlyAccess",
-    "arn:${data.aws_partition.current.partition}:iam::aws:policy/PowerUserAccess",
-  ]
+  customer_managed_policy_reference {
+    name = aws_iam_policy.test.name
+  }
+
+  customer_managed_policy_reference {
+    name = aws_iam_policy.test2.name
+  }
 }
 `, rName)
 }
 
-func testAccManagedPolicyAttachmentsExclusiveConfig_empty(rName string) string {
+func testAccCustomerManagedPolicyAttachmentsExclusiveConfig_empty(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -303,11 +342,9 @@ resource "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
-resource "aws_ssoadmin_managed_policy_attachments_exclusive" "test" {
+resource "aws_ssoadmin_customer_managed_policy_attachments_exclusive" "test" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
-
-  managed_policy_arns = []
 }
 `, rName)
 }
