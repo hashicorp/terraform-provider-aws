@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -541,9 +540,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.OneOf("activeActive", "activePassive"),
-				},
 			},
 			"regions": fwschema.ListAttribute{
 				Required:   true,
@@ -575,9 +571,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"alarm_type": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AlarmType](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("applicationHealth", "trigger"),
-							},
 						},
 						"resource_identifier": fwschema.StringAttribute{
 							Required: true,
@@ -598,9 +591,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						names.AttrAction: fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
 						},
 						names.AttrDescription: fwschema.StringAttribute{
 							Optional: true,
@@ -623,9 +613,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									names.AttrCondition: fwschema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
 										Required:   true,
-										Validators: []validator.String{
-											stringvalidator.OneOf("red", "green"),
-										},
 									},
 								},
 							},
@@ -643,9 +630,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"workflow_target_action": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
 						},
 						"workflow_target_region": fwschema.StringAttribute{
 							Optional: true,
