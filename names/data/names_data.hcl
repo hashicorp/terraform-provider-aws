@@ -3439,6 +3439,8 @@ service "invoicing" {
   provider_package_correct = "invoicing"
   doc_prefix               = ["invoicing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "mediaconnect" {

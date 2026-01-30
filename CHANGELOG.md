@@ -1,9 +1,30 @@
-## 6.29.0 (Unreleased)
+## 6.31.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_odb_cloud_autonomous_vm_cluster: autonomous vm cluster creation using odb network ARN and exadata infrastructure ARN for resource sharing model. ([#45583](https://github.com/hashicorp/terraform-provider-aws/issues/45583))
+
+BUG FIXES:
+
+* resource/aws_network_interface: Fix `UnauthorizedOperation` error when detaching resource that does not have an attachment ([#46211](https://github.com/hashicorp/terraform-provider-aws/issues/46211))
+
+## 6.30.0 (January 28, 2026)
+
+FEATURES:
+
+* **New Resource:** `aws_ssoadmin_managed_policy_attachments_exclusive` ([#46176](https://github.com/hashicorp/terraform-provider-aws/issues/46176))
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Fix panic when `global_secondary_index` or `global_secondary_index.key_schema` are `dynamic` ([#46195](https://github.com/hashicorp/terraform-provider-aws/issues/46195))
+
+## 6.29.0 (January 28, 2026)
 
 NOTES:
 
 * data-source/aws_organizations_organization: Add `return_organization_only` argument to return only the results of the [`DescribeOrganization`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganization.html) API and avoid API limits ([#40884](https://github.com/hashicorp/terraform-provider-aws/issues/40884))
 * resource/aws_cloudfront_anycast_ip_list: Because we cannot easily test all this functionality, it is best effort and we ask for community help in testing ([#43331](https://github.com/hashicorp/terraform-provider-aws/issues/43331))
+* resource/aws_invoicing_invoice_unit: Deprecates `region` attribute, as the resource is global. ([#46185](https://github.com/hashicorp/terraform-provider-aws/issues/46185))
 * resource/aws_organizations_organization: Add `return_organization_only` argument to return only the results of the [`DescribeOrganization`](https://docs.aws.amazon.com/organizations/latest/APIReference/API_DescribeOrganization.html) API and avoid API limits ([#40884](https://github.com/hashicorp/terraform-provider-aws/issues/40884))
 * resource/aws_savingsplans_savings_plan: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#45834](https://github.com/hashicorp/terraform-provider-aws/issues/45834))
 
@@ -64,6 +85,8 @@ ENHANCEMENTS:
 * resource/aws_ecr_account_setting: Add support for `BLOB_MOUNTING` account setting name with `ENABLED` and `DISABLED` values ([#46092](https://github.com/hashicorp/terraform-provider-aws/issues/46092))
 * resource/aws_fsx_windows_file_system: Add `domain_join_service_account_secret` argument to `self_managed_active_directory` configuration block ([#45852](https://github.com/hashicorp/terraform-provider-aws/issues/45852))
 * resource/aws_fsx_windows_file_system: Change `self_managed_active_directory.password` to Optional and `self_managed_active_directory.username` to Optional and Computed ([#45852](https://github.com/hashicorp/terraform-provider-aws/issues/45852))
+* resource/aws_invoicing_invoice_unit: Adds resource identity support. ([#46185](https://github.com/hashicorp/terraform-provider-aws/issues/46185))
+* resource/aws_invoicing_invoice_unit: Adds validation to restrict `rules` to a single element. ([#46185](https://github.com/hashicorp/terraform-provider-aws/issues/46185))
 * resource/aws_lambda_function: Increase upper limit of `memory_size` from 10240 MB to 32768 MB ([#46065](https://github.com/hashicorp/terraform-provider-aws/issues/46065))
 * resource/aws_launch_template: Add `network_performance_options` argument ([#46071](https://github.com/hashicorp/terraform-provider-aws/issues/46071))
 * resource/aws_odb_network: Enhancements to support KMS and STS parameters in CreateOdbNetwork and UpdateOdbNetwork. ([#45636](https://github.com/hashicorp/terraform-provider-aws/issues/45636))
@@ -96,6 +119,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_event_rule: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_config_configuration_recorder: Fix `InvalidRecordingGroupException: The recording group provided is not valid` errors when the `recording_group.exclusion_by_resource_type` or `recording_group.recording_strategy` argument is removed during update ([#46110](https://github.com/hashicorp/terraform-provider-aws/issues/46110))
 * resource/aws_datazone_environment_profile: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_dynamodb_table: Fix perpetual diff for `warm_throughput` in global_secondary_index when not set in configuration. ([#46094](https://github.com/hashicorp/terraform-provider-aws/issues/46094))
 * resource/aws_dynamodb_table: Fixes error when `name` is known after apply ([#45917](https://github.com/hashicorp/terraform-provider-aws/issues/45917))
 * resource/aws_eks_cluster: Fix `kubernetes_network_config` argument name in EKS Auto Mode validation error message ([#45997](https://github.com/hashicorp/terraform-provider-aws/issues/45997))
 * resource/aws_emrserverless_application: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))

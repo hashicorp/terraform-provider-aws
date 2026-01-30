@@ -833,7 +833,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				} else if resource.Identity.IsCustomInherentRegion {
 					r.Importer = customInherentRegionResourceImporter(resource.Identity)
 				} else {
-					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)
+					r.Importer = newParameterizedIdentityImporter(resource.Identity, resource.Import)
 				}
 			}
 

@@ -53,6 +53,10 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				Computed:    true,
 				Description: "Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.",
 			},
+			"cloud_exadata_infrastructure_arn": schema.StringAttribute{
+				Computed:    true,
+				Description: "Cloud exadata infrastructure arn associated with this cloud autonomous VM cluster.",
+			},
 			"autonomous_data_storage_percentage": schema.Float32Attribute{
 				Computed:    true,
 				Description: "The percentage of data storage currently in use for Autonomous Databases in the Autonomous VM cluster.",
@@ -178,6 +182,10 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				Computed:    true,
 				Description: "The unique identifier of the ODB network associated with this Autonomous VM cluster.",
 			},
+			"odb_network_arn": schema.StringAttribute{
+				Computed:    true,
+				Description: "The arn of the ODB network associated with this Autonomous VM cluster.",
+			},
 			"percent_progress": schema.Float32Attribute{
 				Computed:    true,
 				Description: "The progress of the current operation on the Autonomous VM cluster, as a percentage.",
@@ -283,6 +291,7 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	CloudAutonomousVmClusterArn                  types.String                                                                              `tfsdk:"arn"`
 	CloudAutonomousVmClusterId                   types.String                                                                              `tfsdk:"id"`
 	CloudExadataInfrastructureId                 types.String                                                                              `tfsdk:"cloud_exadata_infrastructure_id"`
+	CloudExadataInfrastructureArn                types.String                                                                              `tfsdk:"cloud_exadata_infrastructure_arn" autoflex:"-"`
 	AutonomousDataStoragePercentage              types.Float32                                                                             `tfsdk:"autonomous_data_storage_percentage"`
 	AutonomousDataStorageSizeInTBs               types.Float64                                                                             `tfsdk:"autonomous_data_storage_size_in_tbs"`
 	AvailableAutonomousDataStorageSizeInTBs      types.Float64                                                                             `tfsdk:"available_autonomous_data_storage_size_in_tbs"`
@@ -313,6 +322,7 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	OciUrl                                       types.String                                                                              `tfsdk:"oci_url"`
 	Ocid                                         types.String                                                                              `tfsdk:"ocid"`
 	OdbNetworkId                                 types.String                                                                              `tfsdk:"odb_network_id"`
+	OdbNetworkArn                                types.String                                                                              `tfsdk:"odb_network_arn" autoflex:"-"`
 	PercentProgress                              types.Float32                                                                             `tfsdk:"percent_progress"`
 	ProvisionableAutonomousContainerDatabases    types.Int32                                                                               `tfsdk:"provisionable_autonomous_container_databases"`
 	ProvisionedAutonomousContainerDatabases      types.Int32                                                                               `tfsdk:"provisioned_autonomous_container_databases"`
