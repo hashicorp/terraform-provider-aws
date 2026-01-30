@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: Add option to preserve state after attribute changes which require EC2 start/stop
+```
