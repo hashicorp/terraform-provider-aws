@@ -34,7 +34,11 @@ PreCheck: func() { acctest.PreCheck(ctx, t)
 	{{- end -}}
 },
 ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
-CheckDestroy: acctest.CheckDestroyNoop,
+{{- if .RegionOverrideDeprecated }}
+	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
+{{- else }}
+	CheckDestroy: acctest.CheckDestroyNoop,
+{{- end }}
 {{- if not .UseAlternateAccount }}
 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 {{- end -}}
