@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -231,7 +233,7 @@ func findTrafficPolicyByID(ctx context.Context, conn *route53.Client, id string)
 	}
 
 	if output == nil || output.TrafficPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(inputLTP)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicy, nil

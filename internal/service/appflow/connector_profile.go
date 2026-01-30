@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appflow
 
 import (
@@ -32,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
 // @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
 // @Testing(idAttrDuplicates="name")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
@@ -1562,7 +1565,7 @@ func findConnectorProfileByName(ctx context.Context, conn *appflow.Client, name 
 	}
 
 	if output == nil || len(output.ConnectorProfileDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.ConnectorProfileDetails)

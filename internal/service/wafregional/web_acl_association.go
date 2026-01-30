@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package wafregional
 
 import (
@@ -152,7 +154,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafregional.Client, arn 
 	}
 
 	if output == nil || output.WebACLSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WebACLSummary, nil

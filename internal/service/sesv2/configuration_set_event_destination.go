@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -398,7 +400,7 @@ func findConfigurationSetEventDestinations(ctx context.Context, conn *sesv2.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.EventDestinations, tfslices.PredicateValue(filter)), nil

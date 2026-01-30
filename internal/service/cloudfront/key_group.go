@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -179,7 +181,7 @@ func findKeyGroupByID(ctx context.Context, conn *cloudfront.Client, id string) (
 	}
 
 	if output == nil || output.KeyGroup == nil || output.KeyGroup.KeyGroupConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

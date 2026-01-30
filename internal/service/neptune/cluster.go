@@ -1,10 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package neptune
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -546,7 +549,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if err != nil {
-		if !errs.IsA[*tfresource.EmptyResultError](err) {
+		if !errors.Is(err, tfresource.ErrEmptyResult) {
 			return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster, pre-retry (%s): %s", d.Id(), err)
 		}
 	}
@@ -555,7 +558,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	for l := backoff.NewLoop(d.Timeout(schema.TimeoutRead)); err != nil && l.Continue(ctx); {
 		dbc, err = findDBClusterByID(ctx, conn, d.Id())
 
-		if errs.IsA[*tfresource.EmptyResultError](err) {
+		if errors.Is(err, tfresource.ErrEmptyResult) {
 			continue
 		}
 

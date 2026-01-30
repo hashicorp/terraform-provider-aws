@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package m2
 
 import (
@@ -46,6 +48,7 @@ import (
 // @FrameworkResource("aws_m2_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetEnvironmentOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 
@@ -471,7 +474,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -504,7 +507,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -523,7 +526,7 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -544,7 +547,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

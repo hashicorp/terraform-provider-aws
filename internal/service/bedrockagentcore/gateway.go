@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagentcore
 
 import (
@@ -420,7 +422,7 @@ func waitGatewayCreated(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -438,7 +440,7 @@ func waitGatewayUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -455,7 +457,7 @@ func waitGatewayDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Clien
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -500,7 +502,7 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

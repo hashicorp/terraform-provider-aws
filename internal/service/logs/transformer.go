@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 // Copyright 2025 Twilio Inc.
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package logs
 
 import (
@@ -931,7 +933,7 @@ func findTransformer(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

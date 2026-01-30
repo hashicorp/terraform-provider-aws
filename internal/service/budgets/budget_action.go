@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package budgets
 
 import (
@@ -429,7 +431,7 @@ func findBudgetAction(ctx context.Context, conn *budgets.Client, input *budgets.
 	}
 
 	if output == nil || output.Action == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Action, nil

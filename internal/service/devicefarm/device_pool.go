@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package devicefarm
 
 import (
@@ -35,6 +37,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.DevicePool")
 // @Testing(preCheckRegion="us-west-2")
 // @Testing(identityRegionOverrideTest=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
@@ -246,7 +249,7 @@ func findDevicePoolByARN(ctx context.Context, conn *devicefarm.Client, arn strin
 	}
 
 	if output == nil || output.DevicePool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DevicePool, nil

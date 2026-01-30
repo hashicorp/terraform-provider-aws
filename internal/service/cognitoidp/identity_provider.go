@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cognitoidp
 
 import (
@@ -256,7 +258,7 @@ func findIdentityProviderByTwoPartKey(ctx context.Context, conn *cognitoidentity
 	}
 
 	if output == nil || output.IdentityProvider == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IdentityProvider, nil

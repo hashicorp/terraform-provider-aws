@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rolesanywhere
 
 import (
@@ -263,7 +265,7 @@ func findProfile(ctx context.Context, conn *rolesanywhere.Client, input *rolesan
 	}
 
 	if output == nil || output.Profile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Profile, nil

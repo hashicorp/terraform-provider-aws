@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -235,7 +237,7 @@ func findHostedZoneDNSSECByZoneID(ctx context.Context, conn *route53.Client, hos
 	}
 
 	if output == nil || output.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -272,7 +274,7 @@ func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Client
 
 	if output, ok := outputRaw.(*awstypes.DNSSECStatus); ok {
 		if serveSignature := aws.ToString(output.ServeSignature); serveSignature == serveSignatureInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

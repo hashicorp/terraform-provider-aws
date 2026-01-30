@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kafka
 
 import (
@@ -407,7 +409,7 @@ func waitReplicatorCreated(ctx context.Context, conn *kafka.Client, arn string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
 		if stateInfo := output.StateInfo; stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -427,7 +429,7 @@ func waitReplicatorUpdated(ctx context.Context, conn *kafka.Client, arn string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
 		if stateInfo := output.StateInfo; stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -447,7 +449,7 @@ func waitReplicatorDeleted(ctx context.Context, conn *kafka.Client, arn string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*kafka.DescribeReplicatorOutput); ok {
 		if stateInfo := output.StateInfo; stateInfo != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
 		}
 
 		return output, err
@@ -491,7 +493,7 @@ func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

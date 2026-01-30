@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,16 +21,16 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_athena_named_query.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx),
+		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_basic(acctest.RandInt(t), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(ctx, resourceName),
+					testAccCheckNamedQueryExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -47,16 +46,16 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_athena_named_query.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx),
+		CheckDestroy:             testAccCheckNamedQueryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamedQueryConfig_workGroup(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_workGroup(acctest.RandInt(t), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNamedQueryExists(ctx, resourceName),
+					testAccCheckNamedQueryExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -68,9 +67,9 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	})
 }
 
-func testAccCheckNamedQueryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNamedQueryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_named_query" {
 				continue
@@ -92,14 +91,14 @@ func testAccCheckNamedQueryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckNamedQueryExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckNamedQueryExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
 
 		_, err := tfathena.FindNamedQueryByID(ctx, conn, rs.Primary.ID)
 

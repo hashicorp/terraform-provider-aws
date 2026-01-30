@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -199,7 +201,7 @@ func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDe
 	}
 
 	if output == nil || output.DedicatedIp == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DedicatedIp, nil

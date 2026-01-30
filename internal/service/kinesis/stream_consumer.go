@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kinesis
 
 import (
@@ -169,7 +171,7 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	}
 
 	if output == nil || output.ConsumerDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConsumerDescription, nil

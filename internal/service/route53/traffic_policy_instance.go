@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -200,7 +202,7 @@ func findTrafficPolicyInstanceByID(ctx context.Context, conn *route53.Client, id
 	}
 
 	if output == nil || output.TrafficPolicyInstance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrafficPolicyInstance, nil
@@ -246,7 +248,7 @@ func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
@@ -267,7 +269,7 @@ func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err
@@ -288,7 +290,7 @@ func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Cl
 
 	if output, ok := outputRaw.(*awstypes.TrafficPolicyInstance); ok {
 		if state := aws.ToString(output.State); state == trafficPolicyInstanceStateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 
 		return output, err

@@ -223,16 +223,39 @@ func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_regions(endpoints.UsWest2RegionID, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID),
+				Config: testAccHealthCheckConfig_regions(
+					string(awstypes.HealthCheckRegionUsWest2),
+					string(awstypes.HealthCheckRegionUsEast1),
+					string(awstypes.HealthCheckRegionEuWest1),
+				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionUsWest2)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionUsEast1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionEuWest1)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccHealthCheckConfig_regions(
+					string(awstypes.HealthCheckRegionUsWest2),
+					string(awstypes.HealthCheckRegionUsEast1),
+					string(awstypes.HealthCheckRegionEuWest1),
+					string(awstypes.HealthCheckRegionApNortheast1),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, resourceName, &check),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionUsWest2)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionUsEast1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionEuWest1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", string(awstypes.HealthCheckRegionApNortheast1)),
+				),
 			},
 		},
 	})

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sagemaker
 
 import (
@@ -23,6 +25,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceServicecatalogPortfolioStatus() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServicecatalogPortfolioStatusPut,
@@ -85,7 +88,7 @@ func findServicecatalogPortfolioStatus(ctx context.Context, conn *sagemaker.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

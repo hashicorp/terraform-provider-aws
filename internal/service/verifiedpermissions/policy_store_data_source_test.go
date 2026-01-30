@@ -23,7 +23,7 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_verifiedpermissions_policy_store.test"
 	resourceName := "aws_verifiedpermissions_policy_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -31,12 +31,12 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreDataSourceConfig_basic("OFF"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, dataSourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, dataSourceName, &policystore),
 					resource.TestCheckResourceAttrPair(resourceName, "validation_settings.0.mode", dataSourceName, "validation_settings.0.mode"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
@@ -60,7 +60,7 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_tags(t *testing.T) {
 	dataSourceName := "data.aws_verifiedpermissions_policy_store.test"
 	resourceName := "aws_verifiedpermissions_policy_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
@@ -68,12 +68,12 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyStoreDataSourceConfig_tags("OFF", acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyStoreExists(ctx, dataSourceName, &policystore),
+					testAccCheckPolicyStoreExists(ctx, t, dataSourceName, &policystore),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, dataSourceName, acctest.CtTagsKey1),

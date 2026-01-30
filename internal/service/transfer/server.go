@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package transfer
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
@@ -915,7 +917,7 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	}
 
 	if output == nil || output.Server == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Server, nil

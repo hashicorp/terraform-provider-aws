@@ -42,6 +42,9 @@ func TestAWSRegionValidator(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		"valid AWS Region": {
 			val: types.StringValue("us-west-2"),
 		},
+		"valid AWS ESC Region": {
+			val: types.StringValue("eusc-de-east-1"),
+		},
 	}
 
 	for name, test := range tests {

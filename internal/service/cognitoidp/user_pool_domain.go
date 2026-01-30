@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cognitoidp
 
 import (
@@ -258,7 +260,7 @@ func findUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 	// 	"DomainDescription": {}
 	// }
 	if output == nil || output.DomainDescription == nil || output.DomainDescription.Status == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainDescription, nil

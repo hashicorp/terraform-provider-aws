@@ -1498,6 +1498,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// mpa
+
+				"mpa": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// mq
 
 				"mq": {
@@ -1995,6 +2003,14 @@ func endpointsSchema() *schema.Schema {
 				// sagemaker
 
 				"sagemaker": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// savingsplans
+
+				"savingsplans": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

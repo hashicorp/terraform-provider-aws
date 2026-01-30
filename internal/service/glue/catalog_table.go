@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package glue
 
 import (
@@ -607,7 +609,7 @@ func findTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, 
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Table, nil

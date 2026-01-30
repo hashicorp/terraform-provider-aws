@@ -12,11 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,15 +34,15 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 
 func testAccGlobalSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_global_settings.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
@@ -63,14 +61,14 @@ func testAccGlobalSettings_basic(t *testing.T) {
 
 func testAccGlobalSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_global_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
@@ -85,19 +83,19 @@ func testAccGlobalSettings_disappears(t *testing.T) {
 
 func testAccGlobalSettings_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkvoice_global_settings.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckGlobalSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
@@ -118,14 +116,14 @@ func testAccGlobalSettings_update(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGlobalSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkvoice_global_settings" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ChimeSDKVoiceClient(ctx)
 			input := &chimesdkvoice.GetGlobalSettingsInput{}
 
 			const retryTimeout = 10 * time.Second

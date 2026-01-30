@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sesv2
 
 import (
@@ -29,6 +31,7 @@ import (
 // @FrameworkResource("aws_sesv2_tenant", name="Tenant")
 // @Tags(identifierAttribute="tenant_arn")
 // @Testing(importStateIdAttribute="tenant_name")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTenantResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tenantResource{}
 	return r, nil
@@ -171,7 +174,7 @@ func findTenant(ctx context.Context, conn *sesv2.Client, input *sesv2.GetTenantI
 	}
 
 	if out == nil || out.Tenant == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Tenant, nil

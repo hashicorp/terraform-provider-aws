@@ -5,8 +5,10 @@ package cloudfront
 
 // Exports for use in tests only.
 var (
+	ResourceAnycastIPList               = newAnycastIPListResource
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceConnectionFunction          = newResourceConnectionFunction
+	ResourceConnectionGroup             = newConnectionGroupResource
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
 	ResourceDistributionTenant          = newDistributionTenantResource
@@ -25,8 +27,11 @@ var (
 	ResourceTrustStore                  = newTrustStoreResource
 	ResourceVPCOrigin                   = newVPCOriginResource
 
+	FindAnycastIPListByID                      = findAnycastIPListByID
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindConnectionFunctionByTwoPartKey         = findConnectionFunctionByTwoPartKey
+	FindConnectionGroupById                    = findConnectionGroupByID
+	FindConnectionGroupByRoutingEndpoint       = findConnectionGroupByRoutingEndpoint
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
 	FindDistributionTenantByIdentifier         = findDistributionTenantByIdentifier
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
@@ -391,7 +393,7 @@ func findDBClusterSnapshotAttributes(ctx context.Context, conn *rds.Client, inpu
 	}
 
 	if output == nil || output.DBClusterSnapshotAttributesResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes, tfslices.PredicateValue(filter)), nil

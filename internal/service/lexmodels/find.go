@@ -35,7 +35,7 @@ func findBotVersionByName(ctx context.Context, conn *lexmodelbuildingservice.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -61,7 +61,7 @@ func findSlotTypeVersionByName(ctx context.Context, conn *lexmodelbuildingservic
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

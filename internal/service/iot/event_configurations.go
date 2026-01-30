@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iot
 
 import (
@@ -112,7 +114,7 @@ func findEventConfigurations(ctx context.Context, conn *iot.Client) (map[string]
 	}
 
 	if output == nil || len(output.EventConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EventConfigurations, nil

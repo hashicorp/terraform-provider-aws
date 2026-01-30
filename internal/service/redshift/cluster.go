@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package redshift
 
 import (
@@ -43,6 +45,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Cluster")
 // @Testing(importIgnore="final_snapshot_identifier;master_password;skip_final_snapshot;apply_immediately")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -788,6 +791,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("manage_master_password") {
 			input.ManageMasterPassword = aws.Bool(d.Get("manage_master_password").(bool))
+		}
+
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 		}
 
 		if d.HasChange(names.AttrPreferredMaintenanceWindow) {

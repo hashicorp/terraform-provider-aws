@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datasync
 
 import (
@@ -36,6 +38,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationObjectStorageOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(domainTfVar="domain")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationObjectStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationObjectStorageCreate,
@@ -299,7 +302,7 @@ func findLocationObjectStorageByARN(ctx context.Context, conn *datasync.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

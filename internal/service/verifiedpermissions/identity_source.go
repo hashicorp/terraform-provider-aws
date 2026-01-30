@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package verifiedpermissions
 
 import (
@@ -623,7 +625,7 @@ func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedp
 	}
 
 	if out == nil || out.IdentitySourceId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

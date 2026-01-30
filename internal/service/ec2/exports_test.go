@@ -213,6 +213,7 @@ var (
 	FindSecurityGroupByID                                       = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
+	FindSecurityGroupRuleIDsBySecurityGroupID                   = findSecurityGroupRuleIDsBySecurityGroupID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package bedrockagent
 
 import (
@@ -559,7 +561,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	}
 
 	if output == nil || output.Agent == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Agent, nil
@@ -592,7 +594,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -611,7 +613,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -630,7 +632,7 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -649,7 +651,7 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -668,7 +670,7 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}

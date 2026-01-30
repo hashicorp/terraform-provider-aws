@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package devopsguru
 
 import (
@@ -267,7 +269,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	}
 
 	if out == nil || out.ResourceCollection == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	switch collectionType {

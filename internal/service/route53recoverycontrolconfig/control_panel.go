@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53recoverycontrolconfig
 
 import (
@@ -12,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -77,17 +78,15 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CreateControlPanel(ctx, input)
-	result := output.ControlPanel
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	if result == nil {
+	if output == nil || output.ControlPanel == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: empty response")
 	}
 
-	d.SetId(aws.ToString(result.ControlPanelArn))
+	d.SetId(aws.ToString(output.ControlPanel.ControlPanelArn))
 
 	if _, err := waitControlPanelCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %s", d.Id(), err)
@@ -183,9 +182,8 @@ func findControlPanelByARN(ctx context.Context, conn *r53rcc.Client, arn string)
 
 	output, err := conn.DescribeControlPanel(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -193,7 +191,7 @@ func findControlPanelByARN(ctx context.Context, conn *r53rcc.Client, arn string)
 	}
 
 	if output == nil || output.ControlPanel == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ControlPanel, nil

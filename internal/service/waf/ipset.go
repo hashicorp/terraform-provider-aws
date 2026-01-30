@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package waf
 
 import (
@@ -196,7 +198,7 @@ func findIPSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.
 	}
 
 	if output == nil || output.IPSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IPSet, nil

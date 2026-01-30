@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package iam
 
 import (
@@ -200,7 +202,7 @@ func findGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.GetGroupP
 	}
 
 	if output == nil || output.PolicyDocument == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.PolicyDocument), nil

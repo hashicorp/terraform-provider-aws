@@ -31,7 +31,7 @@ func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.Client, id string) (
 	}
 
 	if out == nil || out.KeyPair == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.KeyPair, nil
@@ -54,7 +54,7 @@ func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.Client, id st
 	}
 
 	if out == nil || out.RecordingConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.RecordingConfiguration, nil
@@ -77,7 +77,7 @@ func FindChannelByID(ctx context.Context, conn *ivs.Client, arn string) (*awstyp
 	}
 
 	if out == nil || out.Channel == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Channel, nil

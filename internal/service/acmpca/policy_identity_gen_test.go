@@ -32,7 +32,7 @@ func TestAccACMPCAPolicy_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -40,7 +40,7 @@ func TestAccACMPCAPolicy_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
@@ -221,14 +221,14 @@ func TestAccACMPCAPolicy_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy: testAccCheckPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -240,7 +240,7 @@ func TestAccACMPCAPolicy_Identity_ExistingResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -292,7 +292,7 @@ func TestAccACMPCAPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		CheckDestroy: testAccCheckPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -304,7 +304,7 @@ func TestAccACMPCAPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing
 				ConfigDirectory: config.StaticDirectory("testdata/Policy/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -317,7 +317,7 @@ func TestAccACMPCAPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing
 				ConfigDirectory:          config.StaticDirectory("testdata/Policy/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName),
+					testAccCheckPolicyExists(ctx, t, resourceName),
 				),
 			},
 		},

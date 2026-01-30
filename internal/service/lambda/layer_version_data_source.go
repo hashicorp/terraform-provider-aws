@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lambda
 
 import (
@@ -129,7 +131,7 @@ func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, met
 		output, err := conn.ListLayerVersions(ctx, input)
 
 		if err == nil && len(output.LayerVersions) == 0 {
-			err = tfresource.NewEmptyResultError(input)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		if err != nil {

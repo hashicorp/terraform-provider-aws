@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package connect
 
 import (
@@ -33,6 +35,7 @@ const (
 
 // @SDKResource("aws_connect_routing_profile", name="Routing Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoutingProfileCreate,
@@ -438,7 +441,7 @@ func findRoutingProfile(ctx context.Context, conn *connect.Client, input *connec
 	}
 
 	if output == nil || output.RoutingProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RoutingProfile, nil

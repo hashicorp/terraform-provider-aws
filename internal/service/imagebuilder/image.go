@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package imagebuilder
 
 import (
@@ -33,6 +35,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceImage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageCreate,
@@ -471,7 +474,7 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 	}
 
 	if output == nil || output.Image == nil || output.Image.State == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Image, nil
@@ -511,7 +514,7 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, ar
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Image); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.State.Reason)))
 
 		return output, err
 	}

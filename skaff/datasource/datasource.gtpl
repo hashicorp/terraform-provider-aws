@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -19,8 +21,7 @@ package {{ .ServicePackage }}
 //
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
-// it.
-{{- end }}
+// it.{{- end }}
 
 import (
 {{- if .IncludeComments }}
@@ -35,34 +36,23 @@ import (
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
+	// awstypes.<Type Name>.
 {{- end }}
 	"context"
-	"errors"
-	"fmt"
-	"log"
-	"reflect"
-	"regexp"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 {{ if .IncludeComments }}
@@ -72,187 +62,185 @@ import (
 //
 // 1. Package declaration
 // 2. Imports
-// 3. Main data source function with schema
-// 4. Create, read, update, delete functions (in that order)
+// 3. Main data source struct with schema method
+// 4. Read method
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 {{- end }}
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @SDKDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
-func DataSource{{ .DataSource }}() *schema.Resource {
-	return &schema.Resource{
-		{{- if .IncludeComments }}
-		// TIP: ==== ASSIGN CRUD FUNCTIONS ====
-		// Data sources only have a read function.
-		{{- end }}
-		ReadWithoutTimeout:   dataSource{{ .DataSource }}Read,
-		{{ if .IncludeComments }}
-		// TIP: ==== SCHEMA ====
-		// In the schema, add each of the arguments and attributes in snake
-		// case (e.g., delete_automated_backups).
-		// * Alphabetize arguments to make them easier to find.
-		// * Do not add a blank line between arguments/attributes.
-		//
-		// Users can configure argument values while attribute values cannot be
-		// configured and are used as output. Arguments have either:
-		// Required: true,
-		// Optional: true,
-		//
-		// All attributes will be computed and some arguments. If users will
-		// want to read updated information or detect drift for an argument,
-		// it should be computed:
-		// Computed: true,
-		//
-		// You will typically find arguments in the input struct
-		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-		// the modify operation.
-		//
-		// For more about schema options, visit
-		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
-		{{- end }}
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: { {{- if .IncludeComments }} // TIP: Many, but not all, data sources have an `arn` attribute.{{- end }}
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"replace_with_arguments": { {{- if .IncludeComments }} // TIP: Add all your arguments and attributes.{{- end }}
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"complex_argument": { {{- if .IncludeComments }} // TIP: See setting, getting, flattening, expanding examples below for this complex argument.{{- end }}
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"sub_field_one": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 2048),
-						},
-						"sub_field_two": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			{{- if .IncludeTags }}
-			names.AttrTags: tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
-			{{- end }}
-		},
-	}
+// @FrameworkDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
+func new{{ .DataSource }}DataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &{{ .DataSourceLowerCamel }}DataSource{}, nil
 }
 
 const (
 	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }} Data Source"
 )
 
-func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var diags diag.Diagnostics
+type {{ .DataSourceLowerCamel }}DataSource struct {
+	framework.DataSourceWithModel[{{ .DataSourceLowerCamel }}DataSourceModel]
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== SCHEMA ====
+// In the schema, add each of the arguments and attributes in snake
+// case (e.g., delete_automated_backups).
+// * Alphabetize arguments to make them easier to find.
+// * Do not add a blank line between arguments/attributes.
+//
+// Users can configure argument values while attribute values cannot be
+// configured and are used as output. Arguments have either:
+// Required: true,
+// Optional: true,
+//
+// All attributes will be computed and some arguments. If users will
+// want to read updated information or detect drift for an argument,
+// it should be computed:
+// Computed: true,
+//
+// You will typically find arguments in the input struct
+// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
+// they are only in the input struct (e.g., ModifyDBInstanceInput) for
+// the modify operation.
+//
+// For more about schema options, visit
+// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
+{{- end }}
+func (d *{{ .DataSourceLowerCamel }}DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+			},
+			{{- if .IncludeTags }}
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			{{- end }}
+			names.AttrType: schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"complex_argument": schema.ListNestedBlock{
+				{{- if .IncludeComments }}
+				// TIP: ==== CUSTOM TYPES ====
+				// Use a custom type to identify the model type of the tested object
+				{{- end }}
+				CustomType: fwtypes.NewListNestedObjectTypeOf[complexArgumentModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						{{- if .IncludeComments }}
+						// TIP: Attributes that are required on a corresponding resource will be 
+						// computed on the data source (unless required as part of the search criteria).
+						{{- end }}
+						"nested_required": schema.StringAttribute{
+							Computed: true,
+						},
+						"nested_computed": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+{{- if .IncludeComments }}
+// TIP: ==== ASSIGN CRUD METHODS ====
+// Data sources only have a read method.
+{{- end }}
+func (d *{{ .DataSourceLowerCamel }}DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	{{- if .IncludeComments }}
-	// TIP: ==== RESOURCE READ ====
+	// TIP: ==== DATA SOURCE READ ====
 	// Generally, the Read function should do the following things. Make
 	// sure there is a good reason if you don't do one of these.
 	//
 	// 1. Get a client connection to the relevant service
-	// 2. Get information about a resource from AWS
-	// 3. Set the ID
-	// 4. Set the arguments and attributes
+	// 2. Fetch the config
+	// 3. Get information about a resource from AWS
+	// 4. Set the ID, arguments, and attributes
 	// 5. Set the tags
-	// 6. Return diags
+	// 6. Set the state
 	{{- end }}
-	{{- if .IncludeComments }}
 
+	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
+	conn := d.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
-	// TIP: -- 2. Get information about a resource from AWS using an API Get,
-	// List, or Describe-type function, or, better yet, using a finder. Data
-	// sources mostly have attributes, or, in other words, computed schema
-	// elements. However, a data source will have perhaps one or a few arguments
-	// that are key to finding the relevant information, such as 'name' below.
+	// TIP: -- 2. Fetch the config
 	{{- end }}
-	name := d.Get(names.AttrName).(string)
-
-	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
-	if err != nil {
-		smerr.Append(ctx, diags, err, smerr.ID, name)
-		return diags
+	var data {{ .DataSourceLowerCamel }}DataSourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Set the ID
-	//
-	// If you don't set the ID, the data source will not be stored in state. In
-	// fact, that's how a resource can be removed from state - clearing its ID.
-	// 
-	// If this data source is a companion to a resource, often both will use the
-	// same ID. Otherwise, the ID will be a unique identifier such as an AWS
-	// identifier, ARN, or name.
-	{{- end }}	
-	d.SetId(out.ID)
-	{{ if .IncludeComments }}
-	// TIP: -- 4. Set the arguments and attributes
-	//
-	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
-	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set(names.AttrARN, out.Arn) is sufficient. No error or nil checking is
-	// necessary.
-	//
-	// However, there are some situations where more handling is needed.
-	// a. Complex data types (e.g., schema.TypeList, schema.TypeSet)
-	// b. Where errorneous diffs occur. For example, a schema.TypeString may be
-	//    a JSON. AWS may return the JSON in a slightly different order but it
-	//    is equivalent to what is already set. In that case, you may check if
-	//    it is equivalent before setting the different JSON.
+	// TIP: -- 3. Get information about a resource from AWS
 	{{- end }}
-	d.Set(names.AttrARN, out.ARN)
-	d.Set(names.AttrName, out.Name)
-	{{ if .IncludeComments }}
-	// TIP: Setting a complex type.
-	// For more information, see:
-	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-	{{- end }}
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-		return diags
-	}
-	{{ if .IncludeComments }}
-	// TIP: Setting a JSON string to avoid errorneous diffs.
-	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	out, err := find{{ .DataSource }}ByName(ctx, conn, data.Name.ValueString())
 	if err != nil {
-		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-		return diags
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.Name.String())
+		return
 	}
 
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-		return diags
+	{{ if .IncludeComments -}}
+	// TIP: -- 4. Set the ID, arguments, and attributes
+	// Using a field name prefix allows mapping fields such as `{{ .DataSource }}Id` to `ID`
+	{{- end }}
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}")), smerr.ID, data.Name.String())
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	d.Set("policy", p)
-	{{ if .IncludeComments }}
+	{{ if .IncludeComments -}}
 	// TIP: -- 5. Set the tags
-	//
-	// TIP: Not all data sources support tags and tags don't always make sense. If
-	// your data source doesn't need tags, you can remove the tags lines here and
-	// below. Many data sources do include tags so this a reminder to include them
-	// where possible.
 	{{- end }}
 	{{- if .IncludeTags }}
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	{{- end }}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
-		return diags
-	}
+	{{ if .IncludeComments -}}
+	// TIP: -- 6. Set the state
 	{{- end }}
-	{{ if .IncludeComments }}
-	// TIP: -- 6. Return diags
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== DATA STRUCTURES ====
+// With Terraform Plugin-Framework configurations are deserialized into
+// Go types, providing type safety without the need for type assertions.
+// These structs should match the schema definition exactly, and the `tfsdk`
+// tag value should match the attribute name. 
+//
+// Nested objects are represented in their own data struct. These will 
+// also have a corresponding attribute type mapping for use inside flex
+// functions.
+//
+// See more:
+// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
+{{- end }}
+type {{ .DataSourceLowerCamel }}DataSourceModel struct {
+	framework.WithRegionModel
+	ARN             types.String                                          `tfsdk:"arn"`
+	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
+	Description     types.String                                          `tfsdk:"description"`
+	ID              types.String                                          `tfsdk:"id"`
+	Name            types.String                                          `tfsdk:"name"`
+	{{- if .IncludeTags }}
+	Tags            tftags.Map                                            `tfsdk:"tags"`
 	{{- end }}
-	return diags
+	Type            types.String                                          `tfsdk:"type"`
+}
+
+type complexArgumentModel struct {
+	NestedRequired types.String `tfsdk:"nested_required"`
+	NestedOptional types.String `tfsdk:"nested_optional"`
 }

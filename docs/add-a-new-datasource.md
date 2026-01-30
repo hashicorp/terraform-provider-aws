@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <!-- markdownlint-configure-file { "code-block-style": false } -->
-# Adding a New Data Source
+# Adding a New Data Source Type
 
 New data sources are required when AWS adds a new service, or adds new features within an existing service which would require a new data source to allow practitioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a data source, but some are more useful than others.
 

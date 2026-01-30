@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ds
 
 import (
@@ -716,7 +718,7 @@ func waitDirectoryCreated(ctx context.Context, conn *directoryservice.Client, id
 	}()
 
 	if output, ok := outputRaw.(*awstypes.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StageReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StageReason)))
 
 		return output, err
 	}
@@ -744,7 +746,7 @@ func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, id
 	}()
 
 	if output, ok := outputRaw.(*awstypes.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StageReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StageReason)))
 
 		return output, err
 	}
@@ -835,7 +837,7 @@ func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DomainController); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -854,7 +856,7 @@ func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DomainController); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

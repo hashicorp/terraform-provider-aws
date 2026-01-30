@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -27,6 +29,7 @@ import (
 // @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
@@ -206,7 +209,7 @@ func findOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) 
 	}
 
 	if output == nil || output.OwnershipControls == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OwnershipControls, nil

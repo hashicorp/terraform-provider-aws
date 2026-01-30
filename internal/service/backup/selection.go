@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -356,7 +358,7 @@ func findSelection(ctx context.Context, conn *backup.Client, input *backup.GetBa
 	}
 
 	if output == nil || output.BackupSelection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BackupSelection, nil

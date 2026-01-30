@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cognitoidp
 
 import (
@@ -429,7 +431,7 @@ func findManagedLoginBranding(ctx context.Context, conn *cognitoidentityprovider
 	}
 
 	if output == nil || output.ManagedLoginBranding == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ManagedLoginBranding, nil
@@ -450,7 +452,7 @@ func findManagedLoginBrandingByClient(ctx context.Context, conn *cognitoidentity
 	}
 
 	if output == nil || output.ManagedLoginBranding == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ManagedLoginBranding, nil

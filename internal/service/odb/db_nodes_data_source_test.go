@@ -133,7 +133,7 @@ func (dbNodesListDataSourceTest) findVmCluster(ctx context.Context, conn *odb.Cl
 		return nil, err
 	}
 	if output == nil || output.CloudVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return output.CloudVmCluster, nil
 }

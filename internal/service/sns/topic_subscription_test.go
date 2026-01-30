@@ -13,10 +13,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -805,6 +809,46 @@ func TestAccSNSTopicSubscription_disappears_TopicExternal(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/45863.
+func TestAccSNSTopicSubscription_awsManagedTopic(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic_subscription.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicSubscriptionConfig_awsManagedTopic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
@@ -1502,6 +1546,28 @@ resource "aws_sns_topic_subscription" "test" {
 
   protocol = "sqs"
   endpoint = aws_sqs_queue.test.arn
+}
+`, rName)
+}
+
+func testAccTopicSubscriptionConfig_awsManagedTopic(rName string) string { // nosemgrep:ci.aws-in-func-name
+	return fmt.Sprintf(`
+data "aws_wafv2_managed_rule_group" "test" {
+  name        = "AWSManagedRulesCommonRuleSet"
+  scope       = "REGIONAL"
+  vendor_name = "AWS"
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  sqs_managed_sse_enabled = true
+}
+
+resource "aws_sns_topic_subscription" "test" {
+  topic_arn = data.aws_wafv2_managed_rule_group.test.sns_topic_arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.test.arn
 }
 `, rName)
 }

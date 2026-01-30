@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package configservice
 
 import (
@@ -457,7 +459,7 @@ func waitOrganizationConformancePackCreated(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -477,7 +479,7 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -498,7 +500,7 @@ func waitOrganizationConformancePackDeleted(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}

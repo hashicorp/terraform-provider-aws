@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package apigateway
 
 import (
@@ -15,15 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -35,6 +35,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDomainNameOutput")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -165,17 +167,7 @@ func resourceDomainName() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(),
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -193,6 +185,12 @@ func resourceDomainName() *schema.Resource {
 			"regional_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"routing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.RoutingMode](),
 			},
 			"security_policy": {
 				Type:             schema.TypeString,
@@ -261,6 +259,10 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("regional_certificate_name"); ok {
 		input.RegionalCertificateName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("routing_mode"); ok {
+		input.RoutingMode = types.RoutingMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_policy"); ok {
@@ -335,6 +337,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)
 	d.Set("regional_zone_id", output.RegionalHostedZoneId)
+	d.Set("routing_mode", output.RoutingMode)
 	d.Set("security_policy", output.SecurityPolicy)
 
 	setTagsOut(ctx, output.Tags)
@@ -465,6 +468,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			})
 		}
 
+		if d.HasChange("routing_mode") {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/routingMode"),
+				Value: aws.String(d.Get("routing_mode").(string)),
+			})
+		}
+
 		if d.HasChange("security_policy") {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
@@ -566,9 +577,8 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	output, err := conn.GetDomainName(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -577,14 +587,14 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainName(conn *apigateway.Client, domainName, domainNameID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 		if retry.NotFound(err) {
@@ -600,10 +610,10 @@ func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, 
 }
 
 func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.DomainNameStatusUpdating),
 		Target:     enum.Slice(types.DomainNameStatusAvailable),
-		Refresh:    statusDomainName(ctx, conn, domainName, domainNameID),
+		Refresh:    statusDomainName(conn, domainName, domainNameID),
 		Timeout:    timeout,
 		Delay:      1 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -612,7 +622,7 @@ func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainN
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.DomainName); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DomainNameStatusMessage)))
 
 		return err
 	}

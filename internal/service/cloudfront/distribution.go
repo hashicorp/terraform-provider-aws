@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -41,9 +43,22 @@ func resourceDistribution() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Set non API attributes to their Default settings in the schema
+				conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+				output, err := findDistributionByID(ctx, conn, d.Id())
+
+				if err != nil {
+					return nil, err
+				}
+
+				if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode == awstypes.ConnectionModeTenantOnly {
+					return nil, fmt.Errorf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_multitenant_distribution resource instead", d.Id(), connectionMode)
+				}
+
+				// Set non API attributes to their default settings in the schema.
 				d.Set("retain_on_delete", false)
 				d.Set("wait_for_deployment", true)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -1359,7 +1374,7 @@ func findDistribution(ctx context.Context, conn *cloudfront.Client, input *cloud
 	}
 
 	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1605,7 +1620,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["forwarded_values"] = []any{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
-	if len(apiObject.FunctionAssociations.Items) > 0 {
+	if apiObject.FunctionAssociations != nil && len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
@@ -1613,7 +1628,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["grpc_config"] = []any{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
-	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
+	if apiObject.LambdaFunctionAssociations != nil && len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
@@ -1629,11 +1644,11 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["smooth_streaming"] = aws.ToBool(apiObject.SmoothStreaming)
 	}
 
-	if len(apiObject.TrustedKeyGroups.Items) > 0 {
+	if apiObject.TrustedKeyGroups != nil && len(apiObject.TrustedKeyGroups.Items) > 0 {
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
@@ -1755,7 +1770,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["forwarded_values"] = []any{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
-	if len(apiObject.FunctionAssociations.Items) > 0 {
+	if apiObject.FunctionAssociations != nil && len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
@@ -1763,7 +1778,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["grpc_config"] = []any{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
-	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
+	if apiObject.LambdaFunctionAssociations != nil && len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
@@ -1775,11 +1790,11 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["smooth_streaming"] = aws.ToBool(apiObject.SmoothStreaming)
 	}
 
-	if len(apiObject.TrustedKeyGroups.Items) > 0 {
+	if apiObject.TrustedKeyGroups != nil && len(apiObject.TrustedKeyGroups.Items) > 0 {
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 

@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const (
@@ -30,7 +29,7 @@ const (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.ListServicesInput{}
 
@@ -47,7 +46,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 // nosemgrep:ci.servicequotas-in-func-name
 func testAccPreCheckServiceQuotaSet(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
@@ -65,7 +64,7 @@ func testAccPreCheckServiceQuotaSet(ctx context.Context, t *testing.T, serviceCo
 }
 
 func testAccPreCheckServiceQuotaUnset(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
@@ -83,7 +82,7 @@ func testAccPreCheckServiceQuotaUnset(ctx context.Context, t *testing.T, service
 }
 
 func testAccPreCheckServiceQuotaHasUsageMetric(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),

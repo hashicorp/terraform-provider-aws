@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -352,7 +354,7 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -387,7 +389,7 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 
 	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
 		if output.Status == types.TargetGroupStatusCreateFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -408,7 +410,7 @@ func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id str
 
 	if output, ok := outputRaw.(*vpclattice.GetTargetGroupOutput); ok {
 		if output.Status == types.TargetGroupStatusDeleteFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

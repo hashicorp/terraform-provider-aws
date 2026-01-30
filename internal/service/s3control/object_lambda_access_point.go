@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3control
 
 import (
@@ -284,7 +286,7 @@ func findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, c
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Configuration, nil
@@ -310,7 +312,7 @@ func findObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3c
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil

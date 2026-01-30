@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
@@ -271,7 +273,7 @@ func findMemberDetectors(ctx context.Context, client *guardduty.Client, input *g
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MemberDataSourceConfigurations, output.UnprocessedAccounts, nil

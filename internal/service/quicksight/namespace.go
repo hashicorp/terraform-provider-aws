@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package quicksight
 
 import (
@@ -37,6 +39,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.NamespaceInfoV2")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
 
@@ -263,7 +266,7 @@ func findNamespace(ctx context.Context, conn *quicksight.Client, input *quicksig
 	}
 
 	if output == nil || output.Namespace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Namespace, nil

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package inspector2
 
 import (
@@ -189,7 +191,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 	}
 
 	if output == nil || output.AutoEnable == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
