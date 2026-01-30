@@ -30,12 +30,12 @@ resource "aws_mpa_approval_team" "example" {
 
   approver {
     primary_identity_id         = "user-id-1"
-    primary_identity_source_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    primary_identity_source_arn = "arn:aws:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity-source/example"
   }
 
   approver {
     primary_identity_id         = "user-id-2"
-    primary_identity_source_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    primary_identity_source_arn = "arn:aws:mpa:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:identity-source/example"
   }
 
   policy {
