@@ -124,7 +124,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 
 		providerMetas.Lock()
 		meta, ok := providerMetas[testName]
-		defer providerMetas.Unlock()
+		providerMetas.Unlock()
 
 		if ok {
 			return meta, nil
@@ -245,7 +245,16 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			meta = v.(*conns.AWSClient)
 		}
 
+		randomnessSources.Lock()
+		if s, ok := randomnessSources[testName]; ok && s != nil {
+			// Store randomness source in provider meta for use during internal name generation
+			meta.SetRandomnessSource(s.source)
+		}
+		randomnessSources.Unlock()
+
+		providerMetas.Lock()
 		providerMetas[testName] = meta
+		providerMetas.Unlock()
 
 		return meta, diags
 	}
@@ -398,6 +407,9 @@ func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 
 	if vcr.IsEnabled() {
 		if c.ProtoV5ProviderFactories != nil {
+			// Initialize randomness source for VCR.
+			vcrRandomnessSource(t)
+
 			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
 			defer closeVCRRecorder(ctx, t)
 		} else {

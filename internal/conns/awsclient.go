@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"iter"
 	"maps"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"net/http"
 	"os"
 	"strings"
@@ -38,6 +39,7 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
+	randomnessSource          rand.Source // For VCR deterministic randomness.
 	servicePackages           map[string]ServicePackage
 	s3ExpressClient           *s3.Client
 	s3OriginalRegion          string // Original region for S3-compatible storage
@@ -100,6 +102,18 @@ func (c *AWSClient) AccountID(context.Context) string {
 // Partition returns the ID of the configured AWS partition.
 func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
+}
+
+// RandomnessSource returns the VCR randomness source if set.
+func (c *AWSClient) RandomnessSource() rand.Source {
+	return c.randomnessSource
+}
+
+// SetRandomnessSource sets the VCR randomness source.
+//
+// This should only be called during provider configuration for VCR testing.
+func (c *AWSClient) SetRandomnessSource(source rand.Source) {
+	c.randomnessSource = source
 }
 
 // Region returns the ID of the effective AWS Region.
