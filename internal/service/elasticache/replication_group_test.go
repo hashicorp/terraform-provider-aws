@@ -3889,7 +3889,7 @@ func testAccReplicationGroupConfig_uppercase(rName string) string {
 		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = 1
   port                 = 6379
   description          = "test description"
@@ -4246,7 +4246,7 @@ func testAccReplicationGroupConfig_nativeRedisClusterError(rName string) string 
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
   security_group_ids         = [aws_security_group.test.id]
@@ -4336,7 +4336,7 @@ resource "aws_security_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
   security_group_ids         = [aws_security_group.test.id]
@@ -4419,7 +4419,7 @@ func testAccReplicationGroupConfig_useCMKKMSKeyID(rName string) string {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4520,7 +4520,7 @@ func testAccReplicationGroupConfig_transitEncryptionWithAuthToken(rName, authTok
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4542,7 +4542,7 @@ func testAccReplicationGroupConfig_transitEncryptionEnabled5x(rName string) stri
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4563,7 +4563,7 @@ func testAccReplicationGroupConfig_transitEncryptionDisabled5x(rName string) str
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4584,7 +4584,7 @@ func testAccReplicationGroupConfig_transitEncryption7x(rName string, enabled boo
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
   description          = "test description"
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = "1"
   port                 = 6379
   subnet_group_name    = aws_elasticache_subnet_group.test.name
@@ -4607,7 +4607,7 @@ func testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, transitEncr
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
   description          = "test description"
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = "1"
   port                 = 6379
   subnet_group_name    = aws_elasticache_subnet_group.test.name
@@ -4631,7 +4631,7 @@ func testAccReplicationGroupConfig_transitEncryptionDisabled7x(rName string) str
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
   description          = "test description"
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = "1"
   port                 = 6379
   subnet_group_name    = aws_elasticache_subnet_group.test.name
@@ -4657,7 +4657,7 @@ func testAccReplicationGroupConfig_authTokenSetup(rName string) string {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
   description          = "test description"
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = "1"
   port                 = 6379
   subnet_group_name    = aws_elasticache_subnet_group.test.name
@@ -4693,7 +4693,7 @@ func testAccReplicationGroupConfig_authToken(rName string, authToken string, upd
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4732,7 +4732,7 @@ func testAccReplicationGroupConfig_authTokenMigrationBase(rName string) string {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
   description          = "test description"
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = "1"
   port                 = 6379
   subnet_group_name    = aws_elasticache_subnet_group.test.name
@@ -4768,7 +4768,7 @@ func testAccReplicationGroupConfig_authTokenUpdateStrategyMigration(rName string
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4822,7 +4822,7 @@ resource "aws_elasticache_user_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   num_cache_clusters         = "1"
   port                       = 6379
   subnet_group_name          = aws_elasticache_subnet_group.test.name
@@ -4861,7 +4861,7 @@ func testAccReplicationGroupConfig_numberCacheClusters(rName string, numberCache
 		testAccReplicationGroupClusterData(numberCacheClusters),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  node_type            = "cache.t2.micro"
+  node_type            = "cache.t3.micro"
   num_cache_clusters   = %[2]d
   replication_group_id = %[1]q
   description          = "test description"
@@ -5400,7 +5400,7 @@ func testAccReplicationGroupConfig_nodeGroupConfiguration(rName string) string {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   port                       = 6379
   parameter_group_name       = "default.redis7.cluster.on"
   automatic_failover_enabled = true
@@ -5428,7 +5428,7 @@ func testAccReplicationGroupConfig_nodeGroupConfigurationAZ(rName string) string
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t3.micro"
   port                       = 6379
   parameter_group_name       = "default.redis7.cluster.on"
   automatic_failover_enabled = true
