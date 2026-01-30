@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 	ctx := acctest.Context(t)
 	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
@@ -44,9 +43,9 @@ func TestAccIdentityStoreGroupDataSource_groupID(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_identitystore_group.test"
 	dataSourceName := "data.aws_identitystore_group.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckSSOAdminInstances(ctx, t)

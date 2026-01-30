@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -214,9 +213,8 @@ func findBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 	output, err := conn.DescribeBuild(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -231,8 +229,8 @@ func findBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 	return output.Build, nil
 }
 
-func statusBuild(ctx context.Context, conn *gamelift.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBuild(conn *gamelift.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBuildByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -251,10 +249,10 @@ func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*aws
 	const (
 		timeout = 1 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BuildStatusInitialized),
 		Target:  enum.Slice(awstypes.BuildStatusReady),
-		Refresh: statusBuild(ctx, conn, id),
+		Refresh: statusBuild(conn, id),
 		Timeout: timeout,
 	}
 

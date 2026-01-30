@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -245,9 +244,8 @@ func findOutboundConnectionByID(ctx context.Context, conn *opensearch.Client, id
 	}
 
 	if status := output.ConnectionStatus.StatusCode; status == awstypes.OutboundConnectionStatusCodeDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -272,9 +270,8 @@ func findOutboundConnections(ctx context.Context, conn *opensearch.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -288,8 +285,8 @@ func findOutboundConnections(ctx context.Context, conn *opensearch.Client, input
 	return output, nil
 }
 
-func statusOutboundConnection(ctx context.Context, conn *opensearch.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOutboundConnection(conn *opensearch.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOutboundConnectionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -305,7 +302,7 @@ func statusOutboundConnection(ctx context.Context, conn *opensearch.Client, id s
 }
 
 func waitOutboundConnectionCreated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.OutboundConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OutboundConnectionStatusCodeValidating, awstypes.OutboundConnectionStatusCodeProvisioning),
 		Target: enum.Slice(
 			awstypes.OutboundConnectionStatusCodePendingAcceptance,
@@ -314,7 +311,7 @@ func waitOutboundConnectionCreated(ctx context.Context, conn *opensearch.Client,
 			awstypes.OutboundConnectionStatusCodeRejected,
 			awstypes.OutboundConnectionStatusCodeValidationFailed,
 		),
-		Refresh: statusOutboundConnection(ctx, conn, id),
+		Refresh: statusOutboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
@@ -330,7 +327,7 @@ func waitOutboundConnectionCreated(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitOutboundConnectionDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.OutboundConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.OutboundConnectionStatusCodeActive,
 			awstypes.OutboundConnectionStatusCodePendingAcceptance,
@@ -338,7 +335,7 @@ func waitOutboundConnectionDeleted(ctx context.Context, conn *opensearch.Client,
 			awstypes.OutboundConnectionStatusCodeRejecting,
 		),
 		Target:  []string{},
-		Refresh: statusOutboundConnection(ctx, conn, id),
+		Refresh: statusOutboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
