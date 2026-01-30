@@ -4,6 +4,7 @@
 package arcregionswitch
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"slices"
@@ -730,14 +731,11 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	// Use custom Expand method for resourcePlanModel
-	expanded, diags := plan.Expand(ctx)
-	if diags.HasError() {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	var input arcregionswitch.CreatePlanInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	input := expanded.(arcregionswitch.CreatePlanInput)
 
 	// Handle tags - use getTagsIn to get all tags including provider defaults
 	input.Tags = getTagsIn(ctx)
@@ -757,9 +755,13 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	diags = plan.Flatten(ctx, planOutput)
-	if diags.HasError() {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, planOutput, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sortWorkflows(ctx, &plan))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -787,10 +789,13 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Use custom Flatten method for resourcePlanModel
-	diags := state.Flatten(ctx, plan)
-	if diags.HasError() {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, plan, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sortWorkflows(ctx, &state))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -818,14 +823,11 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	// Use custom expand logic (similar to Create)
-	apiObject, diags := plan.Expand(ctx)
-	if diags.HasError() {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	var createInput arcregionswitch.CreatePlanInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &createInput))
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	createInput := apiObject.(arcregionswitch.CreatePlanInput)
 
 	// Convert CreatePlanInput to UpdatePlanInput (only updatable fields)
 	var input arcregionswitch.UpdatePlanInput
@@ -858,9 +860,13 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	diags = plan.Flatten(ctx, planOutput)
-	if diags.HasError() {
-		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, planOutput, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, sortWorkflows(ctx, &plan))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -917,736 +923,6 @@ func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schem
 	return diags
 }
 
-// Custom expand to handle complex nested transformations
-// Expand converts the Terraform resource model to AWS API input.
-// Custom expansion is required because:
-// 1. Union Type Handling: ExecutionBlockConfiguration uses AWS SDK union types that AutoFlex cannot handle automatically
-// 2. Complex Nested Transformations: ScalingResources (list→map[string]map[string]) and RegionAndRoutingControls (list→map[string][]) require manual conversion
-// 3. Conditional Logic: Different execution block types require different field mappings and validations
-// AutoFlex works well for simple field mappings but cannot handle these complex structural transformations.
-func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag.Diagnostics) {
-	var apiObject arcregionswitch.CreatePlanInput
-
-	// Expand basic fields
-	diags.Append(flex.Expand(ctx, m.AssociatedAlarms, &apiObject.AssociatedAlarms)...)
-	diags.Append(flex.Expand(ctx, m.Description, &apiObject.Description)...)
-	diags.Append(flex.Expand(ctx, m.ExecutionRole, &apiObject.ExecutionRole)...)
-	diags.Append(flex.Expand(ctx, m.Name, &apiObject.Name)...)
-	diags.Append(flex.Expand(ctx, m.PrimaryRegion, &apiObject.PrimaryRegion)...)
-	diags.Append(flex.Expand(ctx, m.RecoveryApproach, &apiObject.RecoveryApproach)...)
-	diags.Append(flex.Expand(ctx, m.RecoveryTimeObjectiveMinutes, &apiObject.RecoveryTimeObjectiveMinutes)...)
-	diags.Append(flex.Expand(ctx, m.Regions, &apiObject.Regions)...)
-
-	// Expand workflow
-	if err := m.expandWorkflow(ctx, &apiObject, &diags); err != nil {
-		return nil, diags
-	}
-
-	// Expand triggers
-	if err := m.expandTriggers(ctx, &apiObject, &diags); err != nil {
-		return nil, diags
-	}
-
-	return apiObject, diags
-}
-
-func (m resourcePlanModel) expandWorkflow(ctx context.Context, apiObject *arcregionswitch.CreatePlanInput, diags *fwdiag.Diagnostics) error {
-	if m.Workflows.IsNull() || m.Workflows.IsUnknown() {
-		return nil
-	}
-
-	var workflows []workflowModel
-	diags.Append(m.Workflows.ElementsAs(ctx, &workflows, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand workflow")
-	}
-
-	apiObject.Workflows = make([]awstypes.Workflow, len(workflows))
-	for i, workflow := range workflows {
-		apiWorkflow := awstypes.Workflow{}
-		diags.Append(flex.Expand(ctx, workflow.WorkflowTargetAction, &apiWorkflow.WorkflowTargetAction)...)
-		diags.Append(flex.Expand(ctx, workflow.WorkflowDescription, &apiWorkflow.WorkflowDescription)...)
-		diags.Append(flex.Expand(ctx, workflow.WorkflowTargetRegion, &apiWorkflow.WorkflowTargetRegion)...)
-
-		if err := m.expandWorkflowSteps(ctx, workflow, &apiWorkflow, diags); err != nil {
-			return err
-		}
-
-		apiObject.Workflows[i] = apiWorkflow
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandWorkflowSteps(ctx context.Context, workflow workflowModel, apiWorkflow *awstypes.Workflow, diags *fwdiag.Diagnostics) error {
-	if workflow.Steps.IsNull() || workflow.Steps.IsUnknown() {
-		return nil
-	}
-
-	var steps []stepModel
-	diags.Append(workflow.Steps.ElementsAs(ctx, &steps, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand workflow steps")
-	}
-
-	apiWorkflow.Steps = make([]awstypes.Step, len(steps))
-	for j, step := range steps {
-		apiStep := awstypes.Step{}
-		diags.Append(flex.Expand(ctx, step.Name, &apiStep.Name)...)
-		diags.Append(flex.Expand(ctx, step.Description, &apiStep.Description)...)
-		diags.Append(flex.Expand(ctx, step.ExecutionBlockType, &apiStep.ExecutionBlockType)...)
-
-		if err := m.expandStepExecutionBlockConfiguration(ctx, step, &apiStep, diags); err != nil {
-			return err
-		}
-
-		apiWorkflow.Steps[j] = apiStep
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandStepExecutionBlockConfiguration(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	switch {
-	case !step.ArcRoutingControlConfig.IsNull():
-		return m.expandArcRoutingControlConfig(ctx, step, apiStep, diags)
-	case !step.CustomActionLambdaConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.DocumentDbConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.EC2ASGCapacityIncreaseConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.ECSCapacityIncreaseConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.ExecutionApprovalConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.GlobalAuroraConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.RegionSwitchPlanConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.Route53HealthCheckConfig.IsNull():
-		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
-	case !step.EKSResourceScalingConfig.IsNull():
-		return m.expandEKSConfig(ctx, step, apiStep, diags)
-	case !step.ParallelConfig.IsNull():
-		return m.expandParallelConfig(ctx, step, apiStep, diags)
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandArcRoutingControlConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := step.ArcRoutingControlConfig.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return errors.New("failed to convert ARC routing control config")
-	}
-
-	var apiArcConfig awstypes.ArcRoutingControlConfiguration
-	diags.Append(flex.Expand(ctx, data.CrossAccountRole, &apiArcConfig.CrossAccountRole)...)
-	diags.Append(flex.Expand(ctx, data.ExternalID, &apiArcConfig.ExternalId)...)
-	diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiArcConfig.TimeoutMinutes)...)
-
-	if err := m.expandArcRegionAndRoutingControls(ctx, data, &apiArcConfig, diags); err != nil {
-		return err
-	}
-
-	apiStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig{
-		Value: apiArcConfig,
-	}
-	return nil
-}
-
-// nosemgrep:ci.semgrep.framework.manual-expander-functions -- AutoFlex is used within this helper; manual wrapper needed for AWS union type handling
-func expandSimpleConfig[T any](ctx context.Context, field fwtypes.ListNestedObjectValueOf[T], target any, diags *fwdiag.Diagnostics) error {
-	data, d := field.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return errors.New("failed to convert config")
-	}
-	diags.Append(flex.Expand(ctx, data, target)...)
-	return nil
-}
-
-// General handler for simple AutoFlex configs
-func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	switch {
-	case !step.CustomActionLambdaConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
-		if err := expandSimpleConfig(ctx, step.CustomActionLambdaConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.DocumentDbConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
-		if err := expandSimpleConfig(ctx, step.DocumentDbConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.EC2ASGCapacityIncreaseConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, step.EC2ASGCapacityIncreaseConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.ECSCapacityIncreaseConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, step.ECSCapacityIncreaseConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.ExecutionApprovalConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
-		if err := expandSimpleConfig(ctx, step.ExecutionApprovalConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.GlobalAuroraConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
-		if err := expandSimpleConfig(ctx, step.GlobalAuroraConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.RegionSwitchPlanConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
-		if err := expandSimpleConfig(ctx, step.RegionSwitchPlanConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	case !step.Route53HealthCheckConfig.IsNull():
-		var r awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
-		if err := expandSimpleConfig(ctx, step.Route53HealthCheckConfig, &r.Value, diags); err != nil {
-			return err
-		}
-		apiStep.ExecutionBlockConfiguration = &r
-	}
-	return nil
-}
-func (m resourcePlanModel) expandArcRegionAndRoutingControls(ctx context.Context, data *arcRoutingControlConfigModel, apiArcConfig *awstypes.ArcRoutingControlConfiguration, diags *fwdiag.Diagnostics) error {
-	if data.RegionAndRoutingControls.IsNull() || data.RegionAndRoutingControls.IsUnknown() {
-		return nil
-	}
-
-	var regionControls []regionAndRoutingControlsModel
-	diags.Append(data.RegionAndRoutingControls.ElementsAs(ctx, &regionControls, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand region and routing controls")
-	}
-
-	apiArcConfig.RegionAndRoutingControls = make(map[string][]awstypes.ArcRoutingControlState, len(regionControls))
-	for _, rc := range regionControls {
-		region := rc.Region.ValueString()
-
-		if !rc.RoutingControls.IsNull() && !rc.RoutingControls.IsUnknown() {
-			var controls []routingControlModel
-			diags.Append(rc.RoutingControls.ElementsAs(ctx, &controls, false)...)
-			if diags.HasError() {
-				return errors.New("failed to expand routing controls")
-			}
-
-			states := make([]awstypes.ArcRoutingControlState, len(controls))
-			for i, control := range controls {
-				arn := control.RoutingControlArn.ValueString()
-				states[i] = awstypes.ArcRoutingControlState{
-					RoutingControlArn: &arn,
-					State:             control.State.ValueEnum(),
-				}
-			}
-			apiArcConfig.RegionAndRoutingControls[region] = states
-		}
-	}
-	return nil
-}
-
-// Execution block configuration handlers
-func (m resourcePlanModel) expandEKSConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := step.EKSResourceScalingConfig.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return errors.New("failed to convert EKS config")
-	}
-
-	var apiEKSConfig awstypes.EksResourceScalingConfiguration
-	diags.Append(flex.Expand(ctx, data.CapacityMonitoringApproach, &apiEKSConfig.CapacityMonitoringApproach)...)
-	diags.Append(flex.Expand(ctx, data.TargetPercent, &apiEKSConfig.TargetPercent)...)
-	diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiEKSConfig.TimeoutMinutes)...)
-	diags.Append(flex.Expand(ctx, data.KubernetesResourceType, &apiEKSConfig.KubernetesResourceType)...)
-	diags.Append(flex.Expand(ctx, data.EKSClusters, &apiEKSConfig.EksClusters)...)
-	diags.Append(flex.Expand(ctx, data.Ungraceful, &apiEKSConfig.Ungraceful)...)
-
-	if err := m.expandEKSScalingResources(ctx, data, &apiEKSConfig, diags); err != nil {
-		return err
-	}
-
-	apiStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig{
-		Value: apiEKSConfig,
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandEKSScalingResources(ctx context.Context, data *eksResourceScalingConfigModel, apiEKSConfig *awstypes.EksResourceScalingConfiguration, diags *fwdiag.Diagnostics) error {
-	if data.ScalingResources.IsNull() || data.ScalingResources.IsUnknown() {
-		return nil
-	}
-
-	var scalingResources []scalingResourcesModel
-	diags.Append(data.ScalingResources.ElementsAs(ctx, &scalingResources, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand scaling resources")
-	}
-
-	apiEKSConfig.ScalingResources = make([]map[string]map[string]awstypes.KubernetesScalingResource, len(scalingResources))
-	for k, sr := range scalingResources {
-		namespaceMap := make(map[string]map[string]awstypes.KubernetesScalingResource)
-
-		if !sr.Resources.IsNull() && !sr.Resources.IsUnknown() {
-			var resources []kubernetesScalingResourceModel
-			diags.Append(sr.Resources.ElementsAs(ctx, &resources, false)...)
-			if diags.HasError() {
-				return errors.New("failed to expand kubernetes resources")
-			}
-
-			resourceMap := make(map[string]awstypes.KubernetesScalingResource)
-			for _, res := range resources {
-				resourceMap[res.ResourceName.ValueString()] = awstypes.KubernetesScalingResource{
-					Name:      res.Name.ValueStringPointer(),
-					Namespace: res.Namespace.ValueStringPointer(),
-					HpaName:   res.HpaName.ValueStringPointer(),
-				}
-			}
-			namespaceMap[sr.Namespace.ValueString()] = resourceMap
-		}
-		apiEKSConfig.ScalingResources[k] = namespaceMap
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandParallelConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := step.ParallelConfig.ToPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return errors.New("failed to convert Parallel config")
-	}
-
-	var apiParallelConfig awstypes.ParallelExecutionBlockConfiguration
-	if err := m.expandParallelSteps(ctx, data, &apiParallelConfig, diags); err != nil {
-		return err
-	}
-
-	apiStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberParallelConfig{
-		Value: apiParallelConfig,
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandParallelSteps(ctx context.Context, data *parallelConfigModel, apiParallelConfig *awstypes.ParallelExecutionBlockConfiguration, diags *fwdiag.Diagnostics) error {
-	if data.Step.IsNull() || data.Step.IsUnknown() {
-		return nil
-	}
-
-	var parallelSteps []parallelStepModel
-	diags.Append(data.Step.ElementsAs(ctx, &parallelSteps, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand parallel steps")
-	}
-
-	apiParallelConfig.Steps = make([]awstypes.Step, len(parallelSteps))
-	for k, pStep := range parallelSteps {
-		var apiParallelStep awstypes.Step
-		diags.Append(flex.Expand(ctx, pStep.Name, &apiParallelStep.Name)...)
-		diags.Append(flex.Expand(ctx, pStep.Description, &apiParallelStep.Description)...)
-		diags.Append(flex.Expand(ctx, pStep.ExecutionBlockType, &apiParallelStep.ExecutionBlockType)...)
-
-		if err := m.expandParallelStepExecutionBlockConfig(ctx, pStep, &apiParallelStep, diags); err != nil {
-			return err
-		}
-
-		apiParallelConfig.Steps[k] = apiParallelStep
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Context, pStep parallelStepModel, apiParallelStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	switch {
-	case !pStep.ArcRoutingControlConfig.IsNull():
-		pData, pD := pStep.ArcRoutingControlConfig.ToPtr(ctx)
-		diags.Append(pD...)
-		if diags.HasError() {
-			return errors.New("failed to convert parallel arc routing control config")
-		}
-
-		var apiArcConfig awstypes.ArcRoutingControlConfiguration
-		diags.Append(flex.Expand(ctx, pData.CrossAccountRole, &apiArcConfig.CrossAccountRole)...)
-		diags.Append(flex.Expand(ctx, pData.ExternalID, &apiArcConfig.ExternalId)...)
-		diags.Append(flex.Expand(ctx, pData.TimeoutMinutes, &apiArcConfig.TimeoutMinutes)...)
-
-		if err := m.expandArcRegionAndRoutingControls(ctx, pData, &apiArcConfig, diags); err != nil {
-			return err
-		}
-
-		apiParallelStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig{
-			Value: apiArcConfig,
-		}
-	case !pStep.ExecutionApprovalConfig.IsNull():
-		pData, pD := pStep.ExecutionApprovalConfig.ToPtr(ctx)
-		diags.Append(pD...)
-		if diags.HasError() {
-			return errors.New("failed to convert parallel execution approval config")
-		}
-		var pR awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
-		diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.CustomActionLambdaConfig.IsNull():
-		pData, pD := pStep.CustomActionLambdaConfig.ToPtr(ctx)
-		diags.Append(pD...)
-		if diags.HasError() {
-			return errors.New("failed to convert parallel custom action lambda config")
-		}
-		var pR awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
-		diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.DocumentDbConfig.IsNull():
-		pData, pD := pStep.DocumentDbConfig.ToPtr(ctx)
-		diags.Append(pD...)
-		if diags.HasError() {
-			return errors.New("failed to convert parallel document db config")
-		}
-		var pR awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
-		diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.EC2ASGCapacityIncreaseConfig.IsNull():
-		var pR awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, pStep.EC2ASGCapacityIncreaseConfig, &pR.Value, diags); err != nil {
-			return err
-		}
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.ECSCapacityIncreaseConfig.IsNull():
-		var pR awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, pStep.ECSCapacityIncreaseConfig, &pR.Value, diags); err != nil {
-			return err
-		}
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.EKSResourceScalingConfig.IsNull():
-		pData, pD := pStep.EKSResourceScalingConfig.ToPtr(ctx)
-		diags.Append(pD...)
-		if diags.HasError() {
-			return errors.New("failed to convert parallel EKS resource scaling config")
-		}
-
-		var apiEKSConfig awstypes.EksResourceScalingConfiguration
-		diags.Append(flex.Expand(ctx, pData.CapacityMonitoringApproach, &apiEKSConfig.CapacityMonitoringApproach)...)
-		diags.Append(flex.Expand(ctx, pData.EKSClusters, &apiEKSConfig.EksClusters)...)
-		diags.Append(flex.Expand(ctx, pData.KubernetesResourceType, &apiEKSConfig.KubernetesResourceType)...)
-		diags.Append(flex.Expand(ctx, pData.TargetPercent, &apiEKSConfig.TargetPercent)...)
-		diags.Append(flex.Expand(ctx, pData.TimeoutMinutes, &apiEKSConfig.TimeoutMinutes)...)
-		diags.Append(flex.Expand(ctx, pData.Ungraceful, &apiEKSConfig.Ungraceful)...)
-
-		if err := m.expandEKSScalingResources(ctx, pData, &apiEKSConfig, diags); err != nil {
-			return err
-		}
-
-		apiParallelStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig{
-			Value: apiEKSConfig,
-		}
-	case !pStep.GlobalAuroraConfig.IsNull():
-		var pR awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
-		if err := expandSimpleConfig(ctx, pStep.GlobalAuroraConfig, &pR.Value, diags); err != nil {
-			return err
-		}
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.RegionSwitchPlanConfig.IsNull():
-		var pR awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
-		if err := expandSimpleConfig(ctx, pStep.RegionSwitchPlanConfig, &pR.Value, diags); err != nil {
-			return err
-		}
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	case !pStep.Route53HealthCheckConfig.IsNull():
-		var pR awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
-		if err := expandSimpleConfig(ctx, pStep.Route53HealthCheckConfig, &pR.Value, diags); err != nil {
-			return err
-		}
-		apiParallelStep.ExecutionBlockConfiguration = &pR
-	}
-	return nil
-}
-
-func (m resourcePlanModel) expandTriggers(ctx context.Context, apiObject *arcregionswitch.CreatePlanInput, diags *fwdiag.Diagnostics) error {
-	if m.Triggers.IsNull() || m.Triggers.IsUnknown() {
-		return nil
-	}
-
-	var triggers []triggerModel
-	diags.Append(m.Triggers.ElementsAs(ctx, &triggers, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand triggers")
-	}
-
-	apiObject.Triggers = make([]awstypes.Trigger, len(triggers))
-	for i, trigger := range triggers {
-		diags.Append(flex.Expand(ctx, trigger, &apiObject.Triggers[i])...)
-	}
-	return nil
-}
-
-// Flatten converts AWS API output to Terraform resource model.
-// Custom flattening is required because:
-// 1. Union Type Handling: ExecutionBlockConfiguration union types need manual type switching and field extraction
-// 2. Reverse Complex Transformations: Converting AWS API maps back to Terraform list structures for ScalingResources and RegionAndRoutingControls
-// 3. Workflow Ordering: AWS API returns workflows in non-deterministic order, requiring sorting for consistent Terraform state
-// 4. Nested Parallel Steps: Parallel execution block configurations require recursive flattening with proper initialization
-// AutoFlex cannot handle these reverse transformations and complex nested structures automatically.
-func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Diagnostics) {
-	plan, ok := v.(*awstypes.Plan)
-	if !ok {
-		diags.AddError(
-			"Unexpected Type",
-			"Expected *awstypes.Plan",
-		)
-		return diags
-	}
-
-	if plan == nil {
-		diags.AddError(
-			"Unexpected Response",
-			"Plan is nil",
-		)
-		return diags
-	}
-
-	// Handle simple fields with AutoFlex
-	// Attempting to Flatten the entire structure results in Autoflex errors for parts it can't handle
-	diags.Append(flex.Flatten(ctx, plan.Name, &m.Name)...)
-	diags.Append(flex.Flatten(ctx, plan.ExecutionRole, &m.ExecutionRole)...)
-	diags.Append(flex.Flatten(ctx, plan.RecoveryApproach, &m.RecoveryApproach)...)
-	diags.Append(flex.Flatten(ctx, plan.Regions, &m.Regions)...)
-	diags.Append(flex.Flatten(ctx, plan.Description, &m.Description)...)
-	diags.Append(flex.Flatten(ctx, plan.PrimaryRegion, &m.PrimaryRegion)...)
-	diags.Append(flex.Flatten(ctx, plan.RecoveryTimeObjectiveMinutes, &m.RecoveryTimeObjectiveMinutes)...)
-	diags.Append(flex.Flatten(ctx, plan.Triggers, &m.Triggers)...)
-
-	diags.Append(flex.Flatten(ctx, plan.AssociatedAlarms, &m.AssociatedAlarms)...)
-
-	// Handle Workflows with complex nested transformations
-	if len(plan.Workflows) > 0 {
-		// Sort workflows by target action for consistent ordering (activate before deactivate)
-		slices.SortFunc(plan.Workflows, func(i, j awstypes.Workflow) int {
-			if string(i.WorkflowTargetAction) < string(j.WorkflowTargetAction) {
-				return -1
-			}
-			if string(i.WorkflowTargetAction) > string(j.WorkflowTargetAction) {
-				return 1
-			}
-			return 0
-		})
-
-		workflows := make([]workflowModel, len(plan.Workflows))
-		for i, workflow := range plan.Workflows {
-			diags.Append(flex.Flatten(ctx, workflow.WorkflowTargetAction, &workflows[i].WorkflowTargetAction)...)
-			diags.Append(flex.Flatten(ctx, workflow.WorkflowTargetRegion, &workflows[i].WorkflowTargetRegion)...)
-			diags.Append(flex.Flatten(ctx, workflow.WorkflowDescription, &workflows[i].WorkflowDescription)...)
-
-			// Handle Steps - this is where the complex logic will go
-			if len(workflow.Steps) > 0 {
-				steps := make([]stepModel, len(workflow.Steps))
-				for j, step := range workflow.Steps {
-					// Initialize step with null values for all config fields
-					steps[j] = stepModel{
-						ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
-						CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
-						DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
-						EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
-						ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
-						EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
-						ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
-						GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
-						ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
-						RegionSwitchPlanConfig:       fwtypes.NewListNestedObjectValueOfNull[regionSwitchPlanConfigModel](ctx),
-						Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
-					}
-
-					diags.Append(flex.Flatten(ctx, step.Name, &steps[j].Name)...)
-					diags.Append(flex.Flatten(ctx, step.Description, &steps[j].Description)...)
-					diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &steps[j].ExecutionBlockType)...)
-
-					// Handle ExecutionBlockConfiguration - flatten directly into step fields
-					if step.ExecutionBlockConfiguration != nil {
-						// Handle union type flattening manually (similar to expand logic)
-						switch t := step.ExecutionBlockConfiguration.(type) {
-						case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
-							// Handle ARC RegionAndRoutingControls complex transformation manually
-							var arcConfig arcRoutingControlConfigModel
-							diags.Append(flex.Flatten(ctx, t.Value.CrossAccountRole, &arcConfig.CrossAccountRole)...)
-							diags.Append(flex.Flatten(ctx, t.Value.ExternalId, &arcConfig.ExternalID)...)
-							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &arcConfig.TimeoutMinutes)...)
-
-							// Handle RegionAndRoutingControls: map[string][]ArcRoutingControlState → []regionAndRoutingControlsModel
-							if len(t.Value.RegionAndRoutingControls) > 0 {
-								regionControls := make([]regionAndRoutingControlsModel, 0, len(t.Value.RegionAndRoutingControls))
-								for region, controlStates := range t.Value.RegionAndRoutingControls {
-									var regionModel regionAndRoutingControlsModel
-									regionModel.Region = types.StringValue(region)
-
-									// Convert ArcRoutingControlState slice to routingControlModel slice
-									controls := make([]routingControlModel, len(controlStates))
-									for i, state := range controlStates {
-										controls[i] = routingControlModel{
-											RoutingControlArn: fwtypes.ARNValue(aws.ToString(state.RoutingControlArn)),
-											State:             fwtypes.StringEnumValue(state.State),
-										}
-									}
-
-									var d fwdiag.Diagnostics
-									regionModel.RoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, controls)
-									diags.Append(d...)
-
-									regionControls = append(regionControls, regionModel)
-								}
-
-								var d fwdiag.Diagnostics
-								arcConfig.RegionAndRoutingControls, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, regionControls)
-								diags.Append(d...)
-							}
-
-							steps[j].ArcRoutingControlConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &arcConfig)
-						case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].CustomActionLambdaConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].DocumentDbConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].EC2ASGCapacityIncreaseConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].ECSCapacityIncreaseConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
-							// Handle EKS ScalingResources complex transformation manually
-							var eksConfig eksResourceScalingConfigModel
-							diags.Append(flex.Flatten(ctx, t.Value.CapacityMonitoringApproach, &eksConfig.CapacityMonitoringApproach)...)
-							diags.Append(flex.Flatten(ctx, t.Value.EksClusters, &eksConfig.EKSClusters)...)
-							diags.Append(flex.Flatten(ctx, t.Value.KubernetesResourceType, &eksConfig.KubernetesResourceType)...)
-							diags.Append(flex.Flatten(ctx, t.Value.TargetPercent, &eksConfig.TargetPercent)...)
-							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &eksConfig.TimeoutMinutes)...)
-							diags.Append(flex.Flatten(ctx, t.Value.Ungraceful, &eksConfig.Ungraceful)...)
-
-							// Handle ScalingResources: []map[string]map[string]KubernetesScalingResource → []scalingResourcesModel
-							if len(t.Value.ScalingResources) > 0 {
-								scalingResources := make([]scalingResourcesModel, len(t.Value.ScalingResources))
-								for i, sr := range t.Value.ScalingResources {
-									for namespace, resourceMap := range sr {
-										scalingResources[i].Namespace = types.StringValue(namespace)
-
-										// Convert map[string]KubernetesScalingResource → []kubernetesScalingResourceModel
-										resources := make([]kubernetesScalingResourceModel, 0, len(resourceMap))
-										for resourceName, resource := range resourceMap {
-											var resourceModel kubernetesScalingResourceModel
-											resourceModel.ResourceName = types.StringValue(resourceName)
-											diags.Append(flex.Flatten(ctx, resource.Name, &resourceModel.Name)...)
-											diags.Append(flex.Flatten(ctx, resource.Namespace, &resourceModel.Namespace)...)
-											diags.Append(flex.Flatten(ctx, resource.HpaName, &resourceModel.HpaName)...)
-											resources = append(resources, resourceModel)
-										}
-
-										var d fwdiag.Diagnostics
-										scalingResources[i].Resources, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, resources)
-										diags.Append(d...)
-									}
-								}
-
-								var d fwdiag.Diagnostics
-								eksConfig.ScalingResources, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, scalingResources)
-								diags.Append(d...)
-							}
-
-							steps[j].EKSResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
-						case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].ExecutionApprovalConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].GlobalAuroraConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
-							// Handle ParallelConfig with nested step execution block configurations manually
-							var parallelConfig parallelConfigModel
-
-							if len(t.Value.Steps) > 0 {
-								parallelSteps := make([]parallelStepModel, len(t.Value.Steps))
-								for i, step := range t.Value.Steps {
-									// Initialize with empty values for all fields to avoid nil pointer issues
-									parallelSteps[i] = parallelStepModel{
-										ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
-										CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
-										DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
-										EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
-										ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
-										EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
-										ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
-										GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
-										RegionSwitchPlanConfig:       fwtypes.NewListNestedObjectValueOfNull[regionSwitchPlanConfigModel](ctx),
-										Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
-									}
-
-									diags.Append(flex.Flatten(ctx, step.Name, &parallelSteps[i].Name)...)
-									diags.Append(flex.Flatten(ctx, step.Description, &parallelSteps[i].Description)...)
-									diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &parallelSteps[i].ExecutionBlockType)...)
-
-									// Handle parallel step execution block configurations
-									if step.ExecutionBlockConfiguration != nil {
-										switch pType := step.ExecutionBlockConfiguration.(type) {
-										case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ArcRoutingControlConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].CustomActionLambdaConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].DocumentDbConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].EC2ASGCapacityIncreaseConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ECSCapacityIncreaseConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].EKSResourceScalingConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ExecutionApprovalConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].GlobalAuroraConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].RegionSwitchPlanConfig)...)
-										case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
-											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].Route53HealthCheckConfig)...)
-										}
-									}
-								}
-
-								var d fwdiag.Diagnostics
-								parallelConfig.Step, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, parallelSteps)
-								diags.Append(d...)
-							}
-
-							steps[j].ParallelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &parallelConfig)
-						case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].RegionSwitchPlanConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].Route53HealthCheckConfig)...)
-						}
-					}
-				}
-
-				var d fwdiag.Diagnostics
-				workflows[i].Steps, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, steps)
-				diags.Append(d...)
-			} else {
-				// Set empty list if no steps
-				var d fwdiag.Diagnostics
-				workflows[i].Steps, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []stepModel{})
-				diags.Append(d...)
-			}
-		}
-
-		var d fwdiag.Diagnostics
-		m.Workflows, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, workflows)
-		diags.Append(d...)
-	} else {
-		// Set empty list if no workflows
-		var d fwdiag.Diagnostics
-		m.Workflows, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []workflowModel{})
-		diags.Append(d...)
-	}
-
-	return diags
-}
-
 func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string) (*awstypes.Plan, error) {
 	input := arcregionswitch.GetPlanInput{
 		Arn: aws.String(arn),
@@ -1684,6 +960,28 @@ func findRoute53HealthChecksByARN(ctx context.Context, conn *arcregionswitch.Cli
 	return output.HealthChecks, nil
 }
 
+// sortWorkflows sorts workflows by target action (activate before deactivate) for consistent ordering
+func sortWorkflows(ctx context.Context, m *resourcePlanModel) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	if m.Workflows.IsNull() || m.Workflows.IsUnknown() {
+		return diags
+	}
+
+	workflows, d := m.Workflows.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(workflows) <= 1 {
+		return diags
+	}
+
+	slices.SortFunc(workflows, func(a, b *workflowModel) int {
+		return cmp.Compare(a.WorkflowTargetAction.ValueString(), b.WorkflowTargetAction.ValueString())
+	})
+
+	m.Workflows = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, workflows)
+	return diags
+}
+
 type resourcePlanModel struct {
 	framework.WithRegionModel
 	ARN                          types.String                                         `tfsdk:"arn"`
@@ -1718,28 +1016,327 @@ type workflowModel struct {
 }
 
 type stepModel struct {
-	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
-	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
+	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config" autoflex:"-"`
+	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config" autoflex:"-"`
 	Description                  types.String                                                       `tfsdk:"description"`
-	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
-	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
-	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
-	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
-	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
+	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config" autoflex:"-"`
+	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config" autoflex:"-"`
+	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config" autoflex:"-"`
+	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config" autoflex:"-"`
+	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType           fwtypes.StringEnum[awstypes.ExecutionBlockType]                    `tfsdk:"execution_block_type"`
-	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
+	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config" autoflex:"-"`
 	Name                         types.String                                                       `tfsdk:"name"`
-	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config"`
-	RegionSwitchPlanConfig       fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]       `tfsdk:"region_switch_plan_config"`
-	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
+	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config" autoflex:"-"`
+	RegionSwitchPlanConfig       fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]       `tfsdk:"region_switch_plan_config" autoflex:"-"`
+	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config" autoflex:"-"`
+}
+
+var (
+	_ flex.Expander  = stepModel{}
+	_ flex.Flattener = &stepModel{}
+)
+
+func (m stepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.Step
+	var diags fwdiag.Diagnostics
+
+	// Expand basic step fields first
+	diags.Append(flex.Expand(ctx, m.Name, &result.Name)...)
+	diags.Append(flex.Expand(ctx, m.Description, &result.Description)...)
+	diags.Append(flex.Expand(ctx, m.ExecutionBlockType, &result.ExecutionBlockType)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Handle ExecutionBlockConfiguration union type
+	switch {
+	case !m.ArcRoutingControlConfig.IsNull():
+		config, d := m.ArcRoutingControlConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.CustomActionLambdaConfig.IsNull():
+		config, d := m.CustomActionLambdaConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.DocumentDbConfig.IsNull():
+		config, d := m.DocumentDbConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.EC2ASGCapacityIncreaseConfig.IsNull():
+		config, d := m.EC2ASGCapacityIncreaseConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.ECSCapacityIncreaseConfig.IsNull():
+		config, d := m.ECSCapacityIncreaseConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.EKSResourceScalingConfig.IsNull():
+		config, d := m.EKSResourceScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.ExecutionApprovalConfig.IsNull():
+		config, d := m.ExecutionApprovalConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.GlobalAuroraConfig.IsNull():
+		config, d := m.GlobalAuroraConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.ParallelConfig.IsNull():
+		config, d := m.ParallelConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberParallelConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.RegionSwitchPlanConfig.IsNull():
+		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.Route53HealthCheckConfig.IsNull():
+		config, d := m.Route53HealthCheckConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	}
+
+	return &result, diags
+}
+
+func (m *stepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	step, ok := v.(awstypes.Step)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.Step")
+		return diags
+	}
+
+	// Flatten basic step fields
+	diags.Append(flex.Flatten(ctx, step.Name, &m.Name)...)
+	diags.Append(flex.Flatten(ctx, step.Description, &m.Description)...)
+	diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &m.ExecutionBlockType)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Handle ExecutionBlockConfiguration union type
+	if step.ExecutionBlockConfiguration != nil {
+		switch v := step.ExecutionBlockConfiguration.(type) {
+		case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ArcRoutingControlConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.CustomActionLambdaConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.DocumentDbConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.EC2ASGCapacityIncreaseConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ECSCapacityIncreaseConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.EKSResourceScalingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ParallelConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
+		}
+	}
+
+	return diags
 }
 
 // ARC Routing Control Configuration Models
 type arcRoutingControlConfigModel struct {
 	CrossAccountRole         types.String                                                  `tfsdk:"cross_account_role"`
 	ExternalID               types.String                                                  `tfsdk:"external_id"`
-	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
+	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls" autoflex:"-"`
 	TimeoutMinutes           types.Int32                                                   `tfsdk:"timeout_minutes"`
+}
+
+var (
+	_ flex.Expander  = arcRoutingControlConfigModel{}
+	_ flex.Flattener = &arcRoutingControlConfigModel{}
+)
+
+func (m arcRoutingControlConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.ArcRoutingControlConfiguration
+	var diags fwdiag.Diagnostics
+
+	diags.Append(flex.Expand(ctx, m.CrossAccountRole, &result.CrossAccountRole)...)
+	diags.Append(flex.Expand(ctx, m.ExternalID, &result.ExternalId)...)
+	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.RegionAndRoutingControls.IsNull() && !m.RegionAndRoutingControls.IsUnknown() {
+		var regionControls []regionAndRoutingControlsModel
+		diags.Append(m.RegionAndRoutingControls.ElementsAs(ctx, &regionControls, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result.RegionAndRoutingControls = make(map[string][]awstypes.ArcRoutingControlState, len(regionControls))
+		for _, rc := range regionControls {
+			region := rc.Region.ValueString()
+
+			if !rc.RoutingControls.IsNull() && !rc.RoutingControls.IsUnknown() {
+				var controls []routingControlModel
+				diags.Append(rc.RoutingControls.ElementsAs(ctx, &controls, false)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+
+				states := make([]awstypes.ArcRoutingControlState, len(controls))
+				for i, control := range controls {
+					arn := control.RoutingControlArn.ValueString()
+					states[i] = awstypes.ArcRoutingControlState{
+						RoutingControlArn: &arn,
+						State:             control.State.ValueEnum(),
+					}
+				}
+				result.RegionAndRoutingControls[region] = states
+			}
+		}
+	}
+
+	return &result, diags
+}
+
+func (m *arcRoutingControlConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	config, ok := v.(awstypes.ArcRoutingControlConfiguration)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.ArcRoutingControlConfiguration")
+		return diags
+	}
+
+	diags.Append(flex.Flatten(ctx, config.CrossAccountRole, &m.CrossAccountRole)...)
+	diags.Append(flex.Flatten(ctx, config.ExternalId, &m.ExternalID)...)
+	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if len(config.RegionAndRoutingControls) > 0 {
+		regionControls := make([]regionAndRoutingControlsModel, 0, len(config.RegionAndRoutingControls))
+		for region, controlStates := range config.RegionAndRoutingControls {
+			var regionModel regionAndRoutingControlsModel
+			regionModel.Region = types.StringValue(region)
+
+			controls := make([]routingControlModel, len(controlStates))
+			for i, state := range controlStates {
+				controls[i] = routingControlModel{
+					RoutingControlArn: fwtypes.ARNValue(aws.ToString(state.RoutingControlArn)),
+					State:             fwtypes.StringEnumValue(state.State),
+				}
+			}
+
+			var d fwdiag.Diagnostics
+			regionModel.RoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, controls)
+			diags.Append(d...)
+
+			regionControls = append(regionControls, regionModel)
+		}
+
+		var d fwdiag.Diagnostics
+		m.RegionAndRoutingControls, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, regionControls)
+		diags.Append(d...)
+	}
+
+	return diags
 }
 
 type regionAndRoutingControlsModel struct {
@@ -1829,10 +1426,113 @@ type eksResourceScalingConfigModel struct {
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EksCapacityMonitoringApproach]   `tfsdk:"capacity_monitoring_approach"`
 	EKSClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
 	KubernetesResourceType     fwtypes.ListNestedObjectValueOf[kubernetesResourceTypeModel] `tfsdk:"kubernetes_resource_type"`
-	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources"`
+	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources" autoflex:"-"`
 	TargetPercent              types.Int64                                                  `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                  `tfsdk:"timeout_minutes"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[eksUngracefulModel]          `tfsdk:"ungraceful"`
+}
+
+var (
+	_ flex.Expander  = eksResourceScalingConfigModel{}
+	_ flex.Flattener = &eksResourceScalingConfigModel{}
+)
+
+func (m eksResourceScalingConfigModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.EksResourceScalingConfiguration
+	var diags fwdiag.Diagnostics
+
+	diags.Append(flex.Expand(ctx, m.CapacityMonitoringApproach, &result.CapacityMonitoringApproach)...)
+	diags.Append(flex.Expand(ctx, m.TargetPercent, &result.TargetPercent)...)
+	diags.Append(flex.Expand(ctx, m.TimeoutMinutes, &result.TimeoutMinutes)...)
+	diags.Append(flex.Expand(ctx, m.KubernetesResourceType, &result.KubernetesResourceType)...)
+	diags.Append(flex.Expand(ctx, m.EKSClusters, &result.EksClusters)...)
+	diags.Append(flex.Expand(ctx, m.Ungraceful, &result.Ungraceful)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	if !m.ScalingResources.IsNull() && !m.ScalingResources.IsUnknown() {
+		var scalingResources []scalingResourcesModel
+		diags.Append(m.ScalingResources.ElementsAs(ctx, &scalingResources, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		result.ScalingResources = make([]map[string]map[string]awstypes.KubernetesScalingResource, len(scalingResources))
+		for k, sr := range scalingResources {
+			namespaceMap := make(map[string]map[string]awstypes.KubernetesScalingResource)
+
+			if !sr.Resources.IsNull() && !sr.Resources.IsUnknown() {
+				var resources []kubernetesScalingResourceModel
+				diags.Append(sr.Resources.ElementsAs(ctx, &resources, false)...)
+				if diags.HasError() {
+					return nil, diags
+				}
+
+				resourceMap := make(map[string]awstypes.KubernetesScalingResource)
+				for _, res := range resources {
+					resourceMap[res.ResourceName.ValueString()] = awstypes.KubernetesScalingResource{
+						Name:      res.Name.ValueStringPointer(),
+						Namespace: res.Namespace.ValueStringPointer(),
+						HpaName:   res.HpaName.ValueStringPointer(),
+					}
+				}
+				namespaceMap[sr.Namespace.ValueString()] = resourceMap
+			}
+			result.ScalingResources[k] = namespaceMap
+		}
+	}
+
+	return &result, diags
+}
+
+func (m *eksResourceScalingConfigModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	config, ok := v.(awstypes.EksResourceScalingConfiguration)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.EksResourceScalingConfiguration")
+		return diags
+	}
+
+	diags.Append(flex.Flatten(ctx, config.CapacityMonitoringApproach, &m.CapacityMonitoringApproach)...)
+	diags.Append(flex.Flatten(ctx, config.EksClusters, &m.EKSClusters)...)
+	diags.Append(flex.Flatten(ctx, config.KubernetesResourceType, &m.KubernetesResourceType)...)
+	diags.Append(flex.Flatten(ctx, config.TargetPercent, &m.TargetPercent)...)
+	diags.Append(flex.Flatten(ctx, config.TimeoutMinutes, &m.TimeoutMinutes)...)
+	diags.Append(flex.Flatten(ctx, config.Ungraceful, &m.Ungraceful)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if len(config.ScalingResources) > 0 {
+		scalingResources := make([]scalingResourcesModel, len(config.ScalingResources))
+		for i, sr := range config.ScalingResources {
+			for namespace, resourceMap := range sr {
+				scalingResources[i].Namespace = types.StringValue(namespace)
+
+				resources := make([]kubernetesScalingResourceModel, 0, len(resourceMap))
+				for resourceName, resource := range resourceMap {
+					var resourceModel kubernetesScalingResourceModel
+					resourceModel.ResourceName = types.StringValue(resourceName)
+					diags.Append(flex.Flatten(ctx, resource.Name, &resourceModel.Name)...)
+					diags.Append(flex.Flatten(ctx, resource.Namespace, &resourceModel.Namespace)...)
+					diags.Append(flex.Flatten(ctx, resource.HpaName, &resourceModel.HpaName)...)
+					resources = append(resources, resourceModel)
+				}
+
+				var d fwdiag.Diagnostics
+				scalingResources[i].Resources, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, resources)
+				diags.Append(d...)
+			}
+		}
+
+		var d fwdiag.Diagnostics
+		m.ScalingResources, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, scalingResources)
+		diags.Append(d...)
+	}
+
+	return diags
 }
 
 type kubernetesResourceTypeModel struct {
@@ -1888,19 +1588,209 @@ type parallelConfigModel struct {
 }
 
 type parallelStepModel struct {
-	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
-	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
+	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config" autoflex:"-"`
+	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config" autoflex:"-"`
 	Description                  types.String                                                       `tfsdk:"description"`
-	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
-	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
-	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
-	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
-	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
+	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config" autoflex:"-"`
+	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config" autoflex:"-"`
+	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config" autoflex:"-"`
+	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config" autoflex:"-"`
+	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config" autoflex:"-"`
 	ExecutionBlockType           fwtypes.StringEnum[awstypes.ExecutionBlockType]                    `tfsdk:"execution_block_type"`
-	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
+	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config" autoflex:"-"`
 	Name                         types.String                                                       `tfsdk:"name"`
-	RegionSwitchPlanConfig       fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]       `tfsdk:"region_switch_plan_config"`
-	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
+	RegionSwitchPlanConfig       fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]       `tfsdk:"region_switch_plan_config" autoflex:"-"`
+	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config" autoflex:"-"`
+}
+
+var (
+	_ flex.Expander  = parallelStepModel{}
+	_ flex.Flattener = &parallelStepModel{}
+)
+
+func (m parallelStepModel) Expand(ctx context.Context) (any, fwdiag.Diagnostics) {
+	var result awstypes.Step
+	var diags fwdiag.Diagnostics
+
+	// Expand basic step fields first
+	diags.Append(flex.Expand(ctx, m.Name, &result.Name)...)
+	diags.Append(flex.Expand(ctx, m.Description, &result.Description)...)
+	diags.Append(flex.Expand(ctx, m.ExecutionBlockType, &result.ExecutionBlockType)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Handle ExecutionBlockConfiguration union type
+	switch {
+	case !m.ArcRoutingControlConfig.IsNull():
+		config, d := m.ArcRoutingControlConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.CustomActionLambdaConfig.IsNull():
+		config, d := m.CustomActionLambdaConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.DocumentDbConfig.IsNull():
+		config, d := m.DocumentDbConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.EC2ASGCapacityIncreaseConfig.IsNull():
+		config, d := m.EC2ASGCapacityIncreaseConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.ECSCapacityIncreaseConfig.IsNull():
+		config, d := m.ECSCapacityIncreaseConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.EKSResourceScalingConfig.IsNull():
+		config, d := m.EKSResourceScalingConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.ExecutionApprovalConfig.IsNull():
+		config, d := m.ExecutionApprovalConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.GlobalAuroraConfig.IsNull():
+		config, d := m.GlobalAuroraConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.RegionSwitchPlanConfig.IsNull():
+		config, d := m.RegionSwitchPlanConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	case !m.Route53HealthCheckConfig.IsNull():
+		config, d := m.Route53HealthCheckConfig.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
+		diags.Append(flex.Expand(ctx, config, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		result.ExecutionBlockConfiguration = &r
+	}
+
+	return &result, diags
+}
+
+func (m *parallelStepModel) Flatten(ctx context.Context, v any) fwdiag.Diagnostics {
+	var diags fwdiag.Diagnostics
+
+	step, ok := v.(awstypes.Step)
+	if !ok {
+		diags.AddError("Unexpected Type", "Expected awstypes.Step")
+		return diags
+	}
+
+	// Flatten basic step fields
+	diags.Append(flex.Flatten(ctx, step.Name, &m.Name)...)
+	diags.Append(flex.Flatten(ctx, step.Description, &m.Description)...)
+	diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &m.ExecutionBlockType)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Handle ExecutionBlockConfiguration union type
+	if step.ExecutionBlockConfiguration != nil {
+		switch v := step.ExecutionBlockConfiguration.(type) {
+		case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ArcRoutingControlConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.CustomActionLambdaConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.DocumentDbConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.EC2ASGCapacityIncreaseConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ECSCapacityIncreaseConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.EKSResourceScalingConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.ExecutionApprovalConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.GlobalAuroraConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.RegionSwitchPlanConfig)...)
+		case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
+			diags.Append(flex.Flatten(ctx, &v.Value, &m.Route53HealthCheckConfig)...)
+		}
+	}
+
+	return diags
 }
 
 type route53HealthCheckConfigModel struct {
