@@ -919,12 +919,6 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schema) fwdiag.Diagnostics {
-	var diags fwdiag.Diagnostics
-	// Basic validation is handled by the schema validators
-	return diags
-}
-
 // Custom expand to handle complex nested transformations
 // Expand converts the Terraform resource model to AWS API input.
 // Custom expansion is required because:
@@ -1943,10 +1937,6 @@ type triggerModel struct {
 type conditionModel struct {
 	AssociatedAlarmName types.String                                `tfsdk:"associated_alarm_name"`
 	Condition           fwtypes.StringEnum[awstypes.AlarmCondition] `tfsdk:"condition"`
-}
-
-func (r *resourcePlan) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	// Basic validation is handled by the schema validators
 }
 
 func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn string, timeout time.Duration) (*awstypes.Plan, error) {
