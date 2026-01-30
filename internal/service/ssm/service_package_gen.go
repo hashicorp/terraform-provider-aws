@@ -189,6 +189,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
+			Factory:  resourceParameterVersionLabels,
+			TypeName: "aws_ssm_parameter_version_labels",
+			Name:     "Parameter Version Labels",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
