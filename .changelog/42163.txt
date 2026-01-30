@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_msk_cluster: Fix update behavior when removing a previously set sasl/tls block
+```
+
