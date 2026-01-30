@@ -27,6 +27,43 @@ resource "aws_bedrockagent_data_source" "example" {
 }
 ```
 
+### Multimodal Parsing
+
+```terraform
+resource "aws_bedrockagent_data_source" "example" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.example.id
+  name              = "multimodal-example"
+
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.example.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    chunking_configuration {
+      chunking_strategy = "FIXED_SIZE"
+      fixed_size_chunking_configuration {
+        max_tokens         = 512
+        overlap_percentage = 20
+      }
+    }
+
+    parsing_configuration {
+      parsing_strategy = "BEDROCK_FOUNDATION_MODEL"
+      bedrock_foundation_model_configuration {
+        model_arn        = "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"
+        parsing_modality = "MULTIMODAL"
+        parsing_prompt {
+          parsing_prompt_string = "Extract and transcribe all text and visual content from the document."
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -277,15 +314,23 @@ The `transformation_lambda_configuration` block supports the following arguments
 
 The `parsing_configuration` configuration block supports the following arguments:
 
-* `parsing_strategy` - (Required) Currently only `BEDROCK_FOUNDATION_MODEL` is supported
+* `parsing_strategy` - (Required) The parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
+* `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` block](#bedrock_data_automation_configuration-block) for details.
 * `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` block](#bedrock_foundation_model_configuration-block) for details.
+
+### `bedrock_data_automation_configuration` block
+
+The `bedrock_data_automation_configuration` configuration block supports the following arguments:
+
+* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid value: `MULTIMODAL`.
 
 ### `bedrock_foundation_model_configuration` block
 
 The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
 
-* `model_arn` - (Required) The ARN of the model used to parse documents
-* `parsing_prompt` - (Optional) Instructions for interpreting the contents of the document. See [`parsing_prompt` block](#parsing_prompt-block) for details.
+* `model_arn` - (Required, Forces new resource) The ARN of the model used to parse documents
+* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid values: `MULTIMODAL`.
+* `parsing_prompt` - (Optional, Forces new resource) Instructions for interpreting the contents of the document. See [`parsing_prompt` block](#parsing_prompt-block) for details.
 
 ### `parsing_prompt` block
 

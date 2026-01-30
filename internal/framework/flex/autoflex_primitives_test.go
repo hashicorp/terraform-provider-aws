@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -67,7 +67,7 @@ func TestPrimitivesRoundtrip(t *testing.T) {
 func testStringRoundtrip(t *testing.T) {
 	// Define String-specific type info
 	stringTypeInfo := PrimitiveTypeInfo[string]{
-		TFType:         reflect.TypeOf(types.String{}),
+		TFType:         reflect.TypeFor[types.String](),
 		CreateValue:    func(v string) any { return types.StringValue(v) },
 		CreateNull:     func() any { return types.StringNull() },
 		CreateAWSValue: func(v string) any { return aws.String(v) },
@@ -153,7 +153,7 @@ func testStringRoundtrip(t *testing.T) {
 						}
 					}
 
-					tfStruct, awsStruct := factory(reflect.TypeOf(types.String{}))
+					tfStruct, awsStruct := factory(reflect.TypeFor[types.String]())
 
 					// Set up AWS struct based on omitempty behavior
 					if tc.isNull {
@@ -186,7 +186,7 @@ func testStringRoundtrip(t *testing.T) {
 func testBoolRoundtrip(t *testing.T) {
 	// Define Bool-specific type info
 	boolTypeInfo := PrimitiveTypeInfo[bool]{
-		TFType:         reflect.TypeOf(types.Bool{}),
+		TFType:         reflect.TypeFor[types.Bool](),
 		CreateValue:    func(v bool) any { return types.BoolValue(v) },
 		CreateNull:     func() any { return types.BoolNull() },
 		CreateAWSValue: func(v bool) any { return aws.Bool(v) },
@@ -240,7 +240,7 @@ func testBoolRoundtrip(t *testing.T) {
 func testInt64Roundtrip(t *testing.T) {
 	// Define Int64-specific type info
 	int64TypeInfo := PrimitiveTypeInfo[int64]{
-		TFType:         reflect.TypeOf(types.Int64{}),
+		TFType:         reflect.TypeFor[types.Int64](),
 		CreateValue:    func(v int64) any { return types.Int64Value(v) },
 		CreateNull:     func() any { return types.Int64Null() },
 		CreateAWSValue: func(v int64) any { return aws.Int64(v) },
@@ -288,7 +288,7 @@ func testInt64Roundtrip(t *testing.T) {
 func testInt32Roundtrip(t *testing.T) {
 	// Define Int32-specific type info
 	int32TypeInfo := PrimitiveTypeInfo[int32]{
-		TFType:         reflect.TypeOf(types.Int32{}),
+		TFType:         reflect.TypeFor[types.Int32](),
 		CreateValue:    func(v int32) any { return types.Int32Value(v) },
 		CreateNull:     func() any { return types.Int32Null() },
 		CreateAWSValue: func(v int32) any { return aws.Int32(v) },
@@ -336,7 +336,7 @@ func testInt32Roundtrip(t *testing.T) {
 func testFloat64Roundtrip(t *testing.T) {
 	// Define Float64-specific type info
 	float64TypeInfo := PrimitiveTypeInfo[float64]{
-		TFType:         reflect.TypeOf(types.Float64{}),
+		TFType:         reflect.TypeFor[types.Float64](),
 		CreateValue:    func(v float64) any { return types.Float64Value(v) },
 		CreateNull:     func() any { return types.Float64Null() },
 		CreateAWSValue: func(v float64) any { return aws.Float64(v) },
@@ -390,7 +390,7 @@ func testFloat64Roundtrip(t *testing.T) {
 func testFloat32Roundtrip(t *testing.T) {
 	// Define Float32-specific type info
 	float32TypeInfo := PrimitiveTypeInfo[float32]{
-		TFType:         reflect.TypeOf(types.Float32{}),
+		TFType:         reflect.TypeFor[types.Float32](),
 		CreateValue:    func(v float32) any { return types.Float32Value(v) },
 		CreateNull:     func() any { return types.Float32Null() },
 		CreateAWSValue: func(v float32) any { return aws.Float32(v) },
@@ -661,27 +661,27 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 			fieldValue := reflect.ValueOf(tc.TFStruct).Elem().FieldByName("Field1")
 			fieldType := fieldValue.Type()
 
-			if fieldType == reflect.TypeOf(types.String{}) {
+			if fieldType == reflect.TypeFor[types.String]() {
 				// null -> empty string for legacy string variants
 				expectedTF = reflect.New(reflect.TypeOf(tc.TFStruct).Elem()).Interface()
 				reflect.ValueOf(expectedTF).Elem().FieldByName("Field1").Set(reflect.ValueOf(types.StringValue("")))
-			} else if fieldType == reflect.TypeOf(types.Bool{}) {
+			} else if fieldType == reflect.TypeFor[types.Bool]() {
 				// null -> false for legacy bool variants
 				expectedTF = reflect.New(reflect.TypeOf(tc.TFStruct).Elem()).Interface()
 				reflect.ValueOf(expectedTF).Elem().FieldByName("Field1").Set(reflect.ValueOf(types.BoolValue(false)))
-			} else if fieldType == reflect.TypeOf(types.Int64{}) {
+			} else if fieldType == reflect.TypeFor[types.Int64]() {
 				// null -> 0 for legacy int64 variants
 				expectedTF = reflect.New(reflect.TypeOf(tc.TFStruct).Elem()).Interface()
 				reflect.ValueOf(expectedTF).Elem().FieldByName("Field1").Set(reflect.ValueOf(types.Int64Value(0)))
-			} else if fieldType == reflect.TypeOf(types.Int32{}) {
+			} else if fieldType == reflect.TypeFor[types.Int32]() {
 				// null -> 0 for legacy int32 variants
 				expectedTF = reflect.New(reflect.TypeOf(tc.TFStruct).Elem()).Interface()
 				reflect.ValueOf(expectedTF).Elem().FieldByName("Field1").Set(reflect.ValueOf(types.Int32Value(0)))
-			} else if fieldType == reflect.TypeOf(types.Float64{}) {
+			} else if fieldType == reflect.TypeFor[types.Float64]() {
 				// null -> 0.0 for all float64 variants
 				expectedTF = reflect.New(reflect.TypeOf(tc.TFStruct).Elem()).Interface()
 				reflect.ValueOf(expectedTF).Elem().FieldByName("Field1").Set(reflect.ValueOf(types.Float64Value(0.0)))
-			} else if fieldType == reflect.TypeOf(types.Float32{}) {
+			} else if fieldType == reflect.TypeFor[types.Float32]() {
 				// null -> 0.0 for all float32 variants
 				expectedTF = reflect.New(reflect.TypeOf(tc.TFStruct).Elem()).Interface()
 				reflect.ValueOf(expectedTF).Elem().FieldByName("Field1").Set(reflect.ValueOf(types.Float32Value(0.0)))
@@ -806,18 +806,18 @@ func generateStandardStructs(fieldType reflect.Type) (tf, aws any) {
 	// Create AWS struct based on field type
 	var awsFieldType reflect.Type
 	switch fieldType {
-	case reflect.TypeOf(types.String{}):
-		awsFieldType = reflect.TypeOf("")
-	case reflect.TypeOf(types.Bool{}):
-		awsFieldType = reflect.TypeOf(false)
-	case reflect.TypeOf(types.Int64{}):
-		awsFieldType = reflect.TypeOf(int64(0))
-	case reflect.TypeOf(types.Int32{}):
-		awsFieldType = reflect.TypeOf(int32(0))
-	case reflect.TypeOf(types.Float64{}):
-		awsFieldType = reflect.TypeOf(float64(0))
-	case reflect.TypeOf(types.Float32{}):
-		awsFieldType = reflect.TypeOf(float32(0))
+	case reflect.TypeFor[types.String]():
+		awsFieldType = reflect.TypeFor[string]()
+	case reflect.TypeFor[types.Bool]():
+		awsFieldType = reflect.TypeFor[bool]()
+	case reflect.TypeFor[types.Int64]():
+		awsFieldType = reflect.TypeFor[int64]()
+	case reflect.TypeFor[types.Int32]():
+		awsFieldType = reflect.TypeFor[int32]()
+	case reflect.TypeFor[types.Float64]():
+		awsFieldType = reflect.TypeFor[float64]()
+	case reflect.TypeFor[types.Float32]():
+		awsFieldType = reflect.TypeFor[float32]()
 	default:
 		panic("unsupported field type")
 	}
@@ -848,18 +848,18 @@ func generateLegacyStructs(fieldType reflect.Type) (tf, aws any) {
 	// Create AWS struct with pointer field for legacy behavior
 	var awsFieldType reflect.Type
 	switch fieldType {
-	case reflect.TypeOf(types.String{}):
-		awsFieldType = reflect.TypeOf((*string)(nil))
-	case reflect.TypeOf(types.Bool{}):
-		awsFieldType = reflect.TypeOf((*bool)(nil))
-	case reflect.TypeOf(types.Int64{}):
-		awsFieldType = reflect.TypeOf((*int64)(nil))
-	case reflect.TypeOf(types.Int32{}):
-		awsFieldType = reflect.TypeOf((*int32)(nil))
-	case reflect.TypeOf(types.Float64{}):
-		awsFieldType = reflect.TypeOf((*float64)(nil))
-	case reflect.TypeOf(types.Float32{}):
-		awsFieldType = reflect.TypeOf((*float32)(nil))
+	case reflect.TypeFor[types.String]():
+		awsFieldType = reflect.TypeFor[*string]()
+	case reflect.TypeFor[types.Bool]():
+		awsFieldType = reflect.TypeFor[*bool]()
+	case reflect.TypeFor[types.Int64]():
+		awsFieldType = reflect.TypeFor[*int64]()
+	case reflect.TypeFor[types.Int32]():
+		awsFieldType = reflect.TypeFor[*int32]()
+	case reflect.TypeFor[types.Float64]():
+		awsFieldType = reflect.TypeFor[*float64]()
+	case reflect.TypeFor[types.Float32]():
+		awsFieldType = reflect.TypeFor[*float32]()
 	default:
 		panic("unsupported field type")
 	}
@@ -890,18 +890,18 @@ func generateOmitEmptyStructs(fieldType reflect.Type) (tf, aws any) {
 	// For omitempty, AWS side uses pointer types
 	var awsFieldType reflect.Type
 	switch fieldType {
-	case reflect.TypeOf(types.String{}):
-		awsFieldType = reflect.TypeOf((*string)(nil))
-	case reflect.TypeOf(types.Bool{}):
-		awsFieldType = reflect.TypeOf((*bool)(nil))
-	case reflect.TypeOf(types.Int64{}):
-		awsFieldType = reflect.TypeOf((*int64)(nil))
-	case reflect.TypeOf(types.Int32{}):
-		awsFieldType = reflect.TypeOf((*int32)(nil))
-	case reflect.TypeOf(types.Float64{}):
-		awsFieldType = reflect.TypeOf((*float64)(nil))
-	case reflect.TypeOf(types.Float32{}):
-		awsFieldType = reflect.TypeOf((*float32)(nil))
+	case reflect.TypeFor[types.String]():
+		awsFieldType = reflect.TypeFor[*string]()
+	case reflect.TypeFor[types.Bool]():
+		awsFieldType = reflect.TypeFor[*bool]()
+	case reflect.TypeFor[types.Int64]():
+		awsFieldType = reflect.TypeFor[*int64]()
+	case reflect.TypeFor[types.Int32]():
+		awsFieldType = reflect.TypeFor[*int32]()
+	case reflect.TypeFor[types.Float64]():
+		awsFieldType = reflect.TypeFor[*float64]()
+	case reflect.TypeFor[types.Float32]():
+		awsFieldType = reflect.TypeFor[*float32]()
 	default:
 		panic("unsupported field type")
 	}
@@ -933,18 +933,18 @@ func generateTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) { // no
 	// Create AWS struct with pointer field type
 	var awsFieldType reflect.Type
 	switch fieldType {
-	case reflect.TypeOf(types.String{}):
-		awsFieldType = reflect.TypeOf((*string)(nil))
-	case reflect.TypeOf(types.Bool{}):
-		awsFieldType = reflect.TypeOf((*bool)(nil))
-	case reflect.TypeOf(types.Int64{}):
-		awsFieldType = reflect.TypeOf((*int64)(nil))
-	case reflect.TypeOf(types.Int32{}):
-		awsFieldType = reflect.TypeOf((*int32)(nil))
-	case reflect.TypeOf(types.Float64{}):
-		awsFieldType = reflect.TypeOf((*float64)(nil))
-	case reflect.TypeOf(types.Float32{}):
-		awsFieldType = reflect.TypeOf((*float32)(nil))
+	case reflect.TypeFor[types.String]():
+		awsFieldType = reflect.TypeFor[*string]()
+	case reflect.TypeFor[types.Bool]():
+		awsFieldType = reflect.TypeFor[*bool]()
+	case reflect.TypeFor[types.Int64]():
+		awsFieldType = reflect.TypeFor[*int64]()
+	case reflect.TypeFor[types.Int32]():
+		awsFieldType = reflect.TypeFor[*int32]()
+	case reflect.TypeFor[types.Float64]():
+		awsFieldType = reflect.TypeFor[*float64]()
+	case reflect.TypeFor[types.Float32]():
+		awsFieldType = reflect.TypeFor[*float32]()
 	default:
 		panic("unsupported field type")
 	}
@@ -976,18 +976,18 @@ func generateLegacyTFToAWSPointerStructs(fieldType reflect.Type) (tf, aws any) {
 	// Create AWS struct with pointer field type
 	var awsFieldType reflect.Type
 	switch fieldType {
-	case reflect.TypeOf(types.String{}):
-		awsFieldType = reflect.TypeOf((*string)(nil))
-	case reflect.TypeOf(types.Bool{}):
-		awsFieldType = reflect.TypeOf((*bool)(nil))
-	case reflect.TypeOf(types.Int64{}):
-		awsFieldType = reflect.TypeOf((*int64)(nil))
-	case reflect.TypeOf(types.Int32{}):
-		awsFieldType = reflect.TypeOf((*int32)(nil))
-	case reflect.TypeOf(types.Float64{}):
-		awsFieldType = reflect.TypeOf((*float64)(nil))
-	case reflect.TypeOf(types.Float32{}):
-		awsFieldType = reflect.TypeOf((*float32)(nil))
+	case reflect.TypeFor[types.String]():
+		awsFieldType = reflect.TypeFor[*string]()
+	case reflect.TypeFor[types.Bool]():
+		awsFieldType = reflect.TypeFor[*bool]()
+	case reflect.TypeFor[types.Int64]():
+		awsFieldType = reflect.TypeFor[*int64]()
+	case reflect.TypeFor[types.Int32]():
+		awsFieldType = reflect.TypeFor[*int32]()
+	case reflect.TypeFor[types.Float64]():
+		awsFieldType = reflect.TypeFor[*float64]()
+	case reflect.TypeFor[types.Float32]():
+		awsFieldType = reflect.TypeFor[*float32]()
 	default:
 		panic("unsupported field type")
 	}

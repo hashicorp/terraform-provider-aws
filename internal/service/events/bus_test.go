@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -212,7 +212,7 @@ func TestAccEventsBus_disappears(t *testing.T) {
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceBus(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

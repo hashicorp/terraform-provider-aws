@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -64,7 +64,7 @@ func TestAccIoTThingType_disappears(t *testing.T) {
 				Config: testAccThingTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingType(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceThingType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dsql
 
@@ -19,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -122,7 +123,7 @@ func (r *clusterPeeringResource) Create(ctx context.Context, request resource.Cr
 	output, err = waitClusterPeeringCreated(ctx, conn, data.Identifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err == nil && output.MultiRegionProperties == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -146,7 +147,7 @@ func (r *clusterPeeringResource) Read(ctx context.Context, request resource.Read
 	output, err := findClusterByID(ctx, conn, data.Identifier.ValueString())
 
 	if err == nil && output.MultiRegionProperties == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if retry.NotFound(err) {
@@ -176,10 +177,10 @@ func (r *clusterPeeringResource) ImportState(ctx context.Context, request resour
 }
 
 func waitClusterPeeringCreated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusUpdating, awstypes.ClusterStatusPendingSetup, awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

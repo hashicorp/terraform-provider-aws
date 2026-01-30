@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -153,19 +153,8 @@ func main() {
 			g.Fatalf("accessing config template %q: %w", basicConfigTmplPath, err)
 		}
 
-		tagsConfigTmplFile := fmt.Sprintf("%s_tags.gtpl", sourceName)
-		tagsConfigTmplPath := path.Join("testdata", "tmpl", tagsConfigTmplFile)
 		if configTmplPath == "" {
-			if _, err := os.Stat(tagsConfigTmplPath); err == nil {
-				configTmplFile = tagsConfigTmplFile
-				configTmplPath = tagsConfigTmplPath
-			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", tagsConfigTmplPath, err)
-			}
-		}
-
-		if configTmplPath == "" {
-			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplPath, tagsConfigTmplPath)
+			g.Errorf("no config template found for %q at %q", sourceName, basicConfigTmplPath)
 			continue
 		}
 
@@ -202,9 +191,10 @@ func main() {
 			}
 
 			commonConfig := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				RequiredEnvVars:  resource.RequiredEnvVars,
-				WithRName:        (resource.Generator != ""),
+				AdditionalTfVars:     additionalTfVars,
+				RequiredEnvVars:      resource.RequiredEnvVars,
+				RequiredEnvVarValues: resource.RequiredEnvVarValues,
+				WithRName:            (resource.Generator != ""),
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
@@ -368,11 +358,9 @@ type ResourceDatum struct {
 	arnAttribute             string
 	isARNFormatGlobal        common.TriBoolean
 	IsGlobal                 bool
+	RegionOverrideDeprecated bool
 	HasRegionOverrideTest    bool
 	IDAttrFormat             string
-	HasNoPreExistingResource bool
-	PreIdentityVersion       *version.Version
-	IdentityVersions         map[int64]*version.Version
 	tests.CommonArgs
 	common.ResourceIdentity
 }
@@ -418,30 +406,35 @@ func (d ResourceDatum) IsRegionalSingleton() bool {
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
-	return !d.IsGlobal && d.HasRegionOverrideTest
+	return d.HasRegionAttribute() && d.HasRegionOverrideTest
 }
 
 func (d ResourceDatum) HasInherentRegionImportID() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()
+	return (d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()) && !d.RegionOverrideDeprecated
 }
 
-func (r ResourceDatum) IsARNFormatGlobal() bool {
-	return r.isARNFormatGlobal == common.TriBooleanTrue
+func (d ResourceDatum) IsARNFormatGlobal() bool {
+	return d.isARNFormatGlobal == common.TriBooleanTrue
 }
 
-func (r ResourceDatum) LatestIdentityVersion() int64 {
-	if len(r.IdentityVersions) == 0 {
+func (d ResourceDatum) LatestIdentityVersion() int64 {
+	if len(d.IdentityVersions) == 0 {
 		return 0
 	}
-	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
+	return slices.Max(slices.Collect(maps.Keys(d.IdentityVersions)))
+}
+
+func (d ResourceDatum) HasRegionAttribute() bool {
+	return !d.IsGlobal || d.RegionOverrideDeprecated
 }
 
 type commonConfig struct {
-	AdditionalTfVars  []string
-	WithRName         bool
-	WithRegion        bool
-	ExternalProviders map[string]requiredProvider
-	RequiredEnvVars   []string
+	AdditionalTfVars     []string
+	WithRName            bool
+	WithRegion           bool
+	ExternalProviders    map[string]requiredProvider
+	RequiredEnvVars      []string
+	RequiredEnvVarValues []string
 }
 
 type requiredProvider struct {
@@ -523,11 +516,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
 		HasRegionOverrideTest: true,
-		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
 	skip := false
 	tlsKey := false
 	var tlsKeyCN string
+	isDataSource := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -535,6 +528,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
+				isDataSource = true
 				break
 
 			case "FrameworkResource":
@@ -551,6 +545,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKDataSource":
+				isDataSource = true
 				break
 
 			case "SDKResource":
@@ -597,6 +592,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.IsGlobal = global
 					}
 				}
+				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+					if deprecated, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideDeprecated = deprecated
+					}
+				}
 
 			case "NoImport":
 				d.NoImport = true
@@ -620,6 +622,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["identityTest"]; ok {
+					if isDataSource {
+						v.errs = append(v.errs, fmt.Errorf("identityTest cannot be specified on data source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						skip = true
+						continue
+					}
 					switch attr {
 					case "false":
 						v.g.Infof("Skipping Identity test for %s.%s", v.packageName, v.functionName)
@@ -658,21 +665,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 				}
-				if attr, ok := args.Keyword["preIdentityVersion"]; ok {
-					version, err := version.NewVersion(attr)
-					if err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid preIdentityVersion value: %q at %s. Should be version value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					}
-					d.PreIdentityVersion = version
-				}
-				if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
-					if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasNoPreExistingResource = b
-					}
-				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
 					if b, err := common.ParseBoolAttr("tlsKey", attr); err != nil {
 						v.errs = append(v.errs, err)
@@ -683,26 +675,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
-				}
-				if attr, ok := args.Keyword["identityVersion"]; ok {
-					parts := strings.Split(attr, ";")
-					if len(parts) != 2 {
-						v.errs = append(v.errs, fmt.Errorf("invalid identityVersion value: %q at %s. Should be in format <identity version>;<provider version>.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					}
-					var identityVersion int64
-					if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid identity version value: %q at %s. Should be integer value.", parts[0], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityVersion = i
-					}
-					providerVersion, err := version.NewVersion(parts[1])
-					if err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid provider version value: %q at %s. Should be version value.", parts[1], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					}
-					d.IdentityVersions[identityVersion] = providerVersion
 				}
 
 			default:
@@ -737,12 +709,18 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsGlobal {
+	if d.IsGlobal && !d.RegionOverrideDeprecated {
 		d.HasRegionOverrideTest = false
 	}
 
 	if d.HasResourceIdentity() {
-		if !skip {
+		if isDataSource {
+			v.errs = append(v.errs, fmt.Errorf("resource identity specified on data source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		} else if !skip {
+			if err := d.Validate(); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+			}
+
 			if err := tests.Configure(&d.CommonArgs); err != nil {
 				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 				return
@@ -769,7 +747,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
-					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") && !d.HasImportStateIDAttributes() {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}

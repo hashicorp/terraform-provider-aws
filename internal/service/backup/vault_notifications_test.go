@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -63,7 +63,7 @@ func TestAccBackupVaultNotifications_disappears(t *testing.T) {
 				Config: testAccVaultNotificationsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationsExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultNotifications(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVaultNotifications(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

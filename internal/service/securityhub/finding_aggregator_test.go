@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -82,7 +82,7 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceFindingAggregator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceFindingAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

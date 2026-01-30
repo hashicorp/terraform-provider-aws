@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -59,7 +59,7 @@ func TestAccDirectConnectBGPPeer_disappears(t *testing.T) {
 				Config: testAccBGPPeerConfig_basic(vifID, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBGPPeerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceBGPPeer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceBGPPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

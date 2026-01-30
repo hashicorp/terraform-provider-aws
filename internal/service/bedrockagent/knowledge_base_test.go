@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -41,7 +41,7 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_S3VectorsByIndexARN(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceKnowledgeBase, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceKnowledgeBase, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1147,8 +1147,7 @@ data "aws_iam_policy_document" "test_s3" {
       "s3:PutObject",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}",
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}/*",
+      "*",
     ]
     condition {
       test     = "StringEquals"
@@ -1189,8 +1188,6 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     }
 
     type = "VECTOR"
-
-
   }
 
   storage_configuration {

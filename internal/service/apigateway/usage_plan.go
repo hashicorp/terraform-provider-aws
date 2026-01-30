@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apigateway
 
@@ -9,11 +11,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -29,6 +29,8 @@ import (
 // @SDKResource("aws_api_gateway_usage_plan", name="Usage Plan")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetUsagePlanOutput")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanCreate,
@@ -216,7 +218,8 @@ func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	up, err := findUsagePlanByID(ctx, conn, d.Id())
 
@@ -235,13 +238,7 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "setting api_stages: %s", err)
 		}
 	}
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("/usageplans/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, usagePlanARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, up.Description)
 	d.Set(names.AttrName, up.Name)
 	d.Set("product_code", up.ProductCode)
@@ -518,9 +515,8 @@ func findUsagePlanByID(ctx context.Context, conn *apigateway.Client, id string) 
 	output, err := conn.GetUsagePlan(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -529,7 +525,7 @@ func findUsagePlanByID(ctx context.Context, conn *apigateway.Client, id string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -700,4 +696,8 @@ func flattenThrottleSettingsMap(apiObjects map[string]types.ThrottleSettings) []
 	}
 
 	return tfList
+}
+
+func usagePlanARN(ctx context.Context, c *conns.AWSClient, usagePlanID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/usageplans/%s", usagePlanID))
 }

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless_test
@@ -75,7 +75,7 @@ func TestAccRedshiftServerlessCustomDomainAssociation_disappears(t *testing.T) {
 				Config: testAccCustomDomainAssociationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, resourceName, &customDomainAssociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceCustomDomainAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshiftserverless.ResourceCustomDomainAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

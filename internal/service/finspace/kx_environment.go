@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package finspace
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -404,10 +405,10 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 }
 
 func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.EnvironmentStatusCreateRequested, types.EnvironmentStatusCreating),
 		Target:                    enum.Slice(types.EnvironmentStatusCreated),
-		Refresh:                   statusKxEnvironment(ctx, conn, id),
+		Refresh:                   statusKxEnvironment(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -422,10 +423,10 @@ func waitKxEnvironmentCreated(ctx context.Context, conn *finspace.Client, id str
 }
 
 func waitTransitGatewayConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TgwStatusUpdateRequested, types.TgwStatusUpdating),
 		Target:  enum.Slice(types.TgwStatusSuccessfullyUpdated),
-		Refresh: statusTransitGatewayConfiguration(ctx, conn, id),
+		Refresh: statusTransitGatewayConfiguration(conn, id),
 		Timeout: timeout,
 	}
 
@@ -438,10 +439,10 @@ func waitTransitGatewayConfigurationUpdated(ctx context.Context, conn *finspace.
 }
 
 func waitCustomDNSConfigurationUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DnsStatusUpdateRequested, types.DnsStatusUpdating),
 		Target:  enum.Slice(types.DnsStatusSuccessfullyUpdated),
-		Refresh: statusCustomDNSConfiguration(ctx, conn, id),
+		Refresh: statusCustomDNSConfiguration(conn, id),
 		Timeout: timeout,
 	}
 
@@ -454,10 +455,10 @@ func waitCustomDNSConfigurationUpdated(ctx context.Context, conn *finspace.Clien
 }
 
 func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentStatusDeleteRequested, types.EnvironmentStatusDeleting),
 		Target:  []string{},
-		Refresh: statusKxEnvironment(ctx, conn, id),
+		Refresh: statusKxEnvironment(conn, id),
 		Timeout: timeout,
 	}
 
@@ -469,8 +470,8 @@ func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id str
 	return nil, err
 }
 
-func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKxEnvironment(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -484,8 +485,8 @@ func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) 
 	}
 }
 
-func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTransitGatewayConfiguration(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -499,8 +500,8 @@ func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Clien
 	}
 }
 
-func statusCustomDNSConfiguration(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCustomDNSConfiguration(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -522,9 +523,8 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -532,14 +532,13 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	}
 	// Treat DELETED status as NotFound
 	if out != nil && out.Status == types.EnvironmentStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   errors.New("status is deleted"),
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: errors.New("status is deleted"),
 		}
 	}
 
 	if out == nil || out.EnvironmentArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

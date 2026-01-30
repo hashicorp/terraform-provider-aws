@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -55,7 +55,7 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

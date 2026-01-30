@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -64,7 +64,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffms.ResourceAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

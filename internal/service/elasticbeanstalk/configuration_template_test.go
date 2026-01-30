@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticbeanstalk_test
@@ -58,7 +58,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_disappears(t *testing.T) {
 				Config: testAccConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticbeanstalk.ResourceConfigurationTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceConfigurationTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Disappears_application(t *test
 				Config: testAccConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticbeanstalk.ResourceApplication(), "aws_elastic_beanstalk_application.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceApplication(), "aws_elastic_beanstalk_application.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

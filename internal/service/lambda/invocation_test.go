@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -96,6 +97,32 @@ func TestInvocationResourceIDCreation(t *testing.T) {
 	}
 	if parsedResultHash != resultHash {
 		t.Fatalf("expected result hash: %s, got: %s", resultHash, parsedResultHash)
+	}
+}
+
+// TestBuildInputPanic verifies the fix for panic: assignment to entry in nil map
+// This happens when input is empty and lifecycle_scope is CRUD
+func TestBuildInputPanic(t *testing.T) {
+	t.Parallel()
+
+	// Create ResourceData with empty input and CRUD lifecycle scope
+	resourceSchema := tflambda.ResourceInvocation().Schema
+	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"function_name":   "test-function",
+		"input":           "", // Empty input causes getObjectFromJSONString to return nil
+		"lifecycle_scope": "CRUD",
+		"terraform_key":   "tf",
+	})
+	d.SetId("test-id")
+
+	// This should NOT panic after the fix
+	result, err := tflambda.BuildInput(d, tflambda.InvocationActionDelete)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Error("Expected result, but got nil")
 	}
 }
 

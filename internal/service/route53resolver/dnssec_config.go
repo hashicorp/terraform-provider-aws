@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -173,7 +175,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {

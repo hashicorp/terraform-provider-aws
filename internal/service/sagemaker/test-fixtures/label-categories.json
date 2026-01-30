@@ -1,0 +1,29 @@
+{
+  "document-version": "2018-11-28",
+  "labels": [
+    {
+      "label": "label1",
+      "shortDisplayName": "L1"
+    },
+    {
+      "label": "label2",
+      "shortDisplayName": "L2"
+    },
+    {
+      "label": "label3",
+      "shortDisplayName": "L3"
+    },
+    {
+      "label": "label4",
+      "shortDisplayName": "L4"
+    },
+    {
+      "label": "label5",
+      "shortDisplayName": "L5"
+    }
+  ],
+  "instructions": {
+    "shortInstruction": "<p>Enter description of the labels that workers have to choose from</p><br><p>Add examples to help workers understand the label</p>",
+    "fullInstruction": "<ol><li><strong>Read</strong> the text carefully.</li><li><strong>Highlight</strong> words, phrases, or sections of the text.</li><li><strong>Choose</strong> the label that best matches what you have highlighted.</li><li>To <strong>change</strong> a label, choose highlighted text and select a new label.</li><li>To <strong>remove</strong> a label from highlighted text, choose the X next to the abbreviated label name on the highlighted text.</li><li>You can select all of a previously highlighted text, but not a portion of it.</li></ol>"
+  }
+}

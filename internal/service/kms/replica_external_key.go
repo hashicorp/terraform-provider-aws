@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kms
 
@@ -35,6 +37,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check;key_material_base64")
 // @Testing(altRegionProvider=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicaExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaExternalKeyCreate,
@@ -140,7 +143,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 		input.Policy = aws.String(v.(string))
 	}
 
-	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func(ctx context.Context) (*kms.ReplicateKeyOutput, error) {
 		// Replication is initiated in the primary key's Region.
 		return conn.ReplicateKey(ctx, &input, func(o *kms.Options) {
 			o.Region = primaryKeyARN.Region

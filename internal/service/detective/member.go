@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package detective
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/detective"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/detective/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -246,9 +247,8 @@ func findMembers(ctx context.Context, conn *detective.Client, input *detective.L
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -266,8 +266,8 @@ func findMembers(ctx context.Context, conn *detective.Client, input *detective.L
 	return output, nil
 }
 
-func statusMember(ctx context.Context, conn *detective.Client, graphARN, adminAccountID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMember(conn *detective.Client, graphARN, adminAccountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, adminAccountID)
 
 		if retry.NotFound(err) {
@@ -286,10 +286,10 @@ func waitMemberInvited(ctx context.Context, conn *detective.Client, graphARN, ad
 	const (
 		timeout = 4 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MemberStatusVerificationInProgress),
 		Target:  enum.Slice(awstypes.MemberStatusInvited, awstypes.MemberStatusEnabled),
-		Refresh: statusMember(ctx, conn, graphARN, adminAccountID),
+		Refresh: statusMember(conn, graphARN, adminAccountID),
 		Timeout: timeout,
 	}
 

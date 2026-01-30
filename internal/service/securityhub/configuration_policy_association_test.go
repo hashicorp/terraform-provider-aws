@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -119,7 +119,7 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

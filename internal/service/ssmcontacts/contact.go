@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssmcontacts
 
@@ -27,6 +29,7 @@ import (
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v6.15.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,

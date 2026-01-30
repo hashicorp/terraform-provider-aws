@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
@@ -83,7 +83,7 @@ func main() {
 
 		switch packageName {
 		// TODO: This case should be handled in service data
-		case "costoptimizationhub", "cur", "globalaccelerator", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness":
+		case "costoptimizationhub", "cur", "globalaccelerator", "mpa", "notifications", "notificationscontacts", "route53domains", "route53recoverycontrolconfig", "route53recoveryreadiness":
 			td.OverrideRegionRegionalEndpoint = true
 
 		case "chatbot":

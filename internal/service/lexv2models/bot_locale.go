@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexv2models
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -312,9 +313,8 @@ func findBotLocaleByThreePartKey(ctx context.Context, conn *lexmodelsv2.Client, 
 	output, err := conn.DescribeBotLocale(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -323,14 +323,14 @@ func findBotLocaleByThreePartKey(ctx context.Context, conn *lexmodelsv2.Client, 
 	}
 
 	if output == nil || output.LocaleId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBotLocale(conn *lexmodelsv2.Client, localeID, botID, botVersion string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBotLocaleByThreePartKey(ctx, conn, localeID, botID, botVersion)
 
 		if retry.NotFound(err) {
@@ -346,10 +346,10 @@ func statusBotLocale(ctx context.Context, conn *lexmodelsv2.Client, localeID, bo
 }
 
 func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotLocaleStatusCreating),
 		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
-		Refresh:                   statusBotLocale(ctx, conn, localeID, botID, botVersion),
+		Refresh:                   statusBotLocale(conn, localeID, botID, botVersion),
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
 		ContinuousTargetOccurence: 2,
@@ -358,7 +358,7 @@ func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, localeI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -367,10 +367,10 @@ func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, localeI
 }
 
 func waitBotLocaleUpdated(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotLocaleStatusBuilding),
 		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
-		Refresh:                   statusBotLocale(ctx, conn, localeID, botID, botVersion),
+		Refresh:                   statusBotLocale(conn, localeID, botID, botVersion),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -378,7 +378,7 @@ func waitBotLocaleUpdated(ctx context.Context, conn *lexmodelsv2.Client, localeI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -387,17 +387,17 @@ func waitBotLocaleUpdated(ctx context.Context, conn *lexmodelsv2.Client, localeI
 }
 
 func waitBotLocaleDeleted(ctx context.Context, conn *lexmodelsv2.Client, localeID, botID, botVersion string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BotLocaleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusBotLocale(ctx, conn, localeID, botID, botVersion),
+		Refresh: statusBotLocale(conn, localeID, botID, botVersion),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotLocaleOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}

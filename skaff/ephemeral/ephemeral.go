@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ephemeral
@@ -29,18 +29,19 @@ var ephemeralTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	EphemeralResource          string
-	EphemeralResourceLower     string
-	EphemeralResourceSnake     string
-	IncludeComments            bool
-	HumanFriendlyService       string
-	SDKPackage                 string
-	ServicePackage             string
-	Service                    string
-	ServiceLower               string
-	AWSServiceName             string
-	HumanEphemeralResourceName string
-	ProviderResourceName       string
+	EphemeralResource           string
+	EphemeralResourceLower      string
+	EphemeralResourceLowerCamel string
+	EphemeralResourceSnake      string
+	IncludeComments             bool
+	HumanFriendlyService        string
+	SDKPackage                  string
+	ServicePackage              string
+	Service                     string
+	ServiceLower                string
+	AWSServiceName              string
+	HumanEphemeralResourceName  string
+	ProviderResourceName        string
 }
 
 func Create(ephemeralName, snakeName string, comments, force bool) error {
@@ -73,18 +74,19 @@ func Create(ephemeralName, snakeName string, comments, force bool) error {
 	}
 
 	templateData := TemplateData{
-		EphemeralResource:          ephemeralName,
-		EphemeralResourceLower:     strings.ToLower(ephemeralName),
-		EphemeralResourceSnake:     snakeName,
-		HumanFriendlyService:       service.HumanFriendly(),
-		IncludeComments:            comments,
-		SDKPackage:                 service.GoV2Package(),
-		ServicePackage:             servicePackage,
-		Service:                    service.ProviderNameUpper(),
-		ServiceLower:               strings.ToLower(service.ProviderNameUpper()),
-		AWSServiceName:             service.FullHumanFriendly(),
-		HumanEphemeralResourceName: convert.ToHumanResName(ephemeralName),
-		ProviderResourceName:       convert.ToProviderResourceName(servicePackage, snakeName),
+		EphemeralResource:           ephemeralName,
+		EphemeralResourceLower:      strings.ToLower(ephemeralName),
+		EphemeralResourceLowerCamel: convert.ToLowercasePrefix(ephemeralName),
+		EphemeralResourceSnake:      snakeName,
+		HumanFriendlyService:        service.HumanFriendly(),
+		IncludeComments:             comments,
+		SDKPackage:                  service.GoV2Package(),
+		ServicePackage:              servicePackage,
+		Service:                     service.ProviderNameUpper(),
+		ServiceLower:                strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:              service.FullHumanFriendly(),
+		HumanEphemeralResourceName:  convert.ToHumanResName(ephemeralName),
+		ProviderResourceName:        convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := ephemeralTmpl

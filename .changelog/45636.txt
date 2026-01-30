@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_odb_network: Enhancements to support KMS and STS parameters in CreateOdbNetwork and UpdateOdbNetwork.
+```
+
+```release-note:bug
+resource/aws_odb_network: Fix `delete_associated_resources` being set when value is unknown
+```

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -22,17 +22,17 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutboundConnectionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
@@ -53,17 +53,17 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutboundConnectionConfig_vpcEndpoint(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.0.endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
@@ -85,18 +85,18 @@ func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutboundConnectionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceOutboundConnection(), resourceName),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
+					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceOutboundConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

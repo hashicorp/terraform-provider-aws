@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -70,7 +70,7 @@ func testAccMesh_disappears(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceMesh(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceMesh(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

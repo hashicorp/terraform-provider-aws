@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -9,6 +9,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -72,6 +73,8 @@ func RegisterSweepers() {
 			"aws_redshift_cluster",
 		},
 	})
+
+	awsv2.Register("aws_redshift_idc_application", sweepIDCApplications)
 }
 
 func sweepClusterSnapshots(region string) error {
@@ -480,4 +483,26 @@ func sweepAuthenticationProfiles(region string) error {
 	}
 
 	return nil
+}
+
+func sweepIDCApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := redshift.DescribeRedshiftIdcApplicationsInput{}
+	conn := client.RedshiftClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := redshift.NewDescribeRedshiftIdcApplicationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.RedshiftIdcApplications {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIDCApplicationResource, client,
+				framework.NewAttribute("redshift_idc_application_arn", aws.ToString(v.RedshiftIdcApplicationArn))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

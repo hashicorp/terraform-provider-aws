@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -598,7 +598,7 @@ func TestAccVPCFlowLog_disappears(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceFlowLog(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

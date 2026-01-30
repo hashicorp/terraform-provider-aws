@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -118,7 +118,7 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

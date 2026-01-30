@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssoadmin
 
@@ -308,7 +310,7 @@ func findAccountAssignmentCreationStatus(
 	}
 
 	if output == nil || output.AccountAssignmentCreationStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountAssignmentCreationStatus, nil
@@ -350,7 +352,7 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	}
 
 	if output == nil || output.AccountAssignmentDeletionStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountAssignmentDeletionStatus, nil
@@ -385,7 +387,7 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AccountAssignmentOperationStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -406,7 +408,7 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AccountAssignmentOperationStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
