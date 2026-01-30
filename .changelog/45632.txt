@@ -1,0 +1,2 @@
+release-note:enhancement
+resource/aws_rds_integration: Add in-place update support for `integration_name` and `data_filter` arguments
