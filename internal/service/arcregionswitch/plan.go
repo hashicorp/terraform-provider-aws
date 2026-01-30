@@ -4,6 +4,7 @@
 package arcregionswitch
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"slices"
@@ -974,15 +975,7 @@ func sortWorkflows(ctx context.Context, m *resourcePlanModel) fwdiag.Diagnostics
 	}
 
 	slices.SortFunc(workflows, func(a, b *workflowModel) int {
-		aAction := a.WorkflowTargetAction.ValueString()
-		bAction := b.WorkflowTargetAction.ValueString()
-		if aAction < bAction {
-			return -1
-		}
-		if aAction > bAction {
-			return 1
-		}
-		return 0
+		return cmp.Compare(a.WorkflowTargetAction.ValueString(), b.WorkflowTargetAction.ValueString())
 	})
 
 	m.Workflows = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, workflows)
