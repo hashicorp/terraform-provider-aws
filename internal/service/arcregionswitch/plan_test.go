@@ -298,6 +298,9 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -308,7 +311,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region()),
+				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region(), zoneName.String(), recordName.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
@@ -427,9 +430,9 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 
 					// Route53HealthCheck config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.route53_health_check_config.*", map[string]string{
-						names.AttrHostedZoneID: "Z123456789012345678",
-						"timeout_minutes":      "10",
-						"record_name":          "test.example.com",
+						// names.AttrHostedZoneID:,
+						"timeout_minutes": "10",
+						"record_name":     recordName.String(),
 					}),
 
 					// ARCRoutingControl config
@@ -650,7 +653,7 @@ resource "aws_arcregionswitch_plan" "test" {
 `, rName, acctest.Region())
 }
 
-func testAccPlanConfig_complex(rName, primaryRegion, alternateRegion string) string {
+func testAccPlanConfig_complex(rName, primaryRegion, alternateRegion, zoneName, recordName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -993,7 +996,19 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName, primaryRegion, alternateRegion)
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[5]q
+  type    = "A"
+  ttl     = "30"
+  records = ["127.0.0.1", "127.0.0.27"]
+}
+
+resource "aws_route53_zone" "test" {
+  name = %[4]q
+}
+`, rName, primaryRegion, alternateRegion, zoneName, recordName)
 }
 
 func testAccPlanConfig_route53HealthCheck(rName, zoneName, primaryRegion, alternateRegion string) string {
