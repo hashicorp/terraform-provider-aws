@@ -137,7 +137,12 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds.Crea
 	if d.HasChange(names.AttrEngineVersion) {
 		input.TargetEngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 	}
-	if d.HasChange(names.AttrParameterGroupName) {
+
+	// Check for parameter_group_name from blue_green_update block first
+	if v, ok := d.GetOk("blue_green_update.0.parameter_group_name"); ok && v.(string) != "" {
+		input.TargetDBParameterGroupName = aws.String(v.(string))
+	} else if d.HasChange(names.AttrParameterGroupName) {
+		// Fall back to the main parameter_group_name if not specified in blue_green_update
 		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
 
