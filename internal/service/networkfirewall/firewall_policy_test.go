@@ -1991,3 +1991,52 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 `, rName, deepThreatInspection))
 }
+
+func TestAccNetworkFirewallFirewallPolicy_enableTLSSessionHolding(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v networkfirewall.DescribeFirewallPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyConfig_enableTLSSessionHolding(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallPolicyConfig_enableTLSSessionHolding(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.enable_tls_session_holding", "false"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFirewallPolicyConfig_enableTLSSessionHolding(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+    enable_tls_session_holding         = %[2]t
+  }
+}
+`, rName, enabled)
+}
