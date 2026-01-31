@@ -80,6 +80,41 @@ func TestAccRDSInstanceState_update(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstanceState_update_start(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_instance_state.test"
+	stateAvailable := "available"
+	stateStopped := "stopped"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStateConfig_basic(rName, stateStopped),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
+				),
+			},
+			{
+				Config: testAccInstanceStateConfig_basic(rName, stateAvailable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateAvailable),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceStateExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
