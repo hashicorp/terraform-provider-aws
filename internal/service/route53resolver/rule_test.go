@@ -227,6 +227,50 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverRule_delegationRecord(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule1 awstypes.ResolverRule
+	resourceName := "aws_route53_resolver_rule.test"
+	delegationRecord := acctest.RandomDomainName()
+	ep1ResourceName := "aws_route53_resolver_endpoint.test.0"
+	ep2ResourceName := "aws_route53_resolver_endpoint.test.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_delegationRecord(rName, delegationRecord, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule1),
+					resource.TestCheckResourceAttr(resourceName, "delegation_record", delegationRecord),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "DELEGATE"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_delegationRecord(rName, delegationRecord, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule1),
+					resource.TestCheckResourceAttr(resourceName, "delegation_record", delegationRecord),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "DELEGATE"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep2ResourceName, names.AttrID),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53ResolverRule_forward(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule1, rule2, rule3 awstypes.ResolverRule
@@ -670,6 +714,17 @@ resource "aws_route53_resolver_rule" "test" {
 `, rName, domainName)
 }
 
+func testAccRuleConfig_delegationRecord(rName, delegationRecord string, resolverEndpointId int) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  delegation_record = %[2]q
+  rule_type         = "DELEGATE"
+  name              = %[1]q
+
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[%[3]d].id
+}
+`, rName, delegationRecord, resolverEndpointId))
+}
 func testAccRuleConfig_forward(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {

@@ -55,9 +55,17 @@ func resourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"delegation_record": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringLenBetween(1, 256),
+				ConflictsWith: []string{names.AttrDomainName},
+				StateFunc:     trimTrailingPeriod,
+			},
 			names.AttrDomainName: {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 				StateFunc:    trimTrailingPeriod,
@@ -129,9 +137,16 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	input := &route53resolver.CreateResolverRuleInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
-		DomainName:       aws.String(d.Get(names.AttrDomainName).(string)),
 		RuleType:         awstypes.RuleTypeOption(d.Get("rule_type").(string)),
 		Tags:             getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("delegation_record"); ok {
+		input.DelegationRecord = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrDomainName); ok {
+		input.DomainName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
@@ -178,9 +193,14 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	}
 
 	d.Set(names.AttrARN, rule.Arn)
+	if rule.DelegationRecord != nil {
+		d.Set("delegation_record", trimTrailingPeriod(aws.ToString(rule.DelegationRecord)))
+	}
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
+	if rule.DomainName != nil {
+		d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
+	}
 	d.Set(names.AttrName, rule.Name)
 	d.Set(names.AttrOwnerID, rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
@@ -419,8 +439,8 @@ func flattenRuleTargetIPs(targetAddresses []awstypes.TargetAddress) []any {
 }
 
 // trimTrailingPeriod is used to remove the trailing period
-// of "name" or "domain name" attributes often returned from
-// the Route53 API or provided as user input.
+// of "name", "domain name" or "delegation_record" attributes
+// often returned from the Route53 API or provided as user input.
 // The single dot (".") domain name is returned as-is.
 func trimTrailingPeriod(v any) string {
 	var str string

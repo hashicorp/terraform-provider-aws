@@ -64,8 +64,9 @@ resource "aws_route53_resolver_rule" "fwd" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `domain_name` - (Required) DNS queries for this domain name are forwarded to the IP addresses that are specified using `target_ip`.
-* `rule_type` - (Required) Rule type. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
+* `delegation_record` - (Optional) DNS queries with the delegation records that match this domain name are forwarded to the resolvers on your network.
+* `domain_name` - (Optional) DNS queries for this domain name are forwarded to the IP addresses that are specified using `target_ip`.
+* `rule_type` - (Required) Rule type. Valid values are `DELEGATE`, `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `name` - (Optional) Friendly name that lets you easily find a rule in the Resolver dashboard in the Route 53 console.
 * `resolver_endpoint_id` (Optional) ID of the outbound resolver endpoint that you want to use to route DNS queries to the IP addresses that you specify using `target_ip`.
 This argument should only be specified for `FORWARD` type rules.
