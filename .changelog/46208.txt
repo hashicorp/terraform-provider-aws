@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_mpa_identity_source
+```
+
+```release-note:new-resource
+aws_mpa_approval_team
+```
