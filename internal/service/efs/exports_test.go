@@ -18,4 +18,6 @@ var (
 	FindFileSystemPolicyByID         = findFileSystemPolicyByID
 	FindMountTargetByID              = findMountTargetByID
 	FindReplicationConfigurationByID = findReplicationConfigurationByID
+
+	SuppressReplicationOverwriteProtectionDiff = suppressReplicationOverwriteProtectionDiff
 )
