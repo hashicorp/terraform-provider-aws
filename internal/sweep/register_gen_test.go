@@ -188,6 +188,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
@@ -375,6 +376,7 @@ func registerSweepers() {
 	waf.RegisterSweepers()
 	wafregional.RegisterSweepers()
 	wafv2.RegisterSweepers()
+	workmail.RegisterSweepers()
 	workspaces.RegisterSweepers()
 	xray.RegisterSweepers()
 }
