@@ -117,16 +117,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(naclID)
 
-	// Revoke all default and pre-existing rules on the default network ACL.
-	if err := deleteNetworkACLEntries(ctx, conn, d.Id(), nacl.Entries); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	if err := modifyNetworkACLAttributesOnCreate(ctx, conn, d); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	// Configure tags.
+	// Configure tags first to allow for IAM policies based on tags (issue #44640)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := keyValueTags(ctx, getTagsIn(ctx))
 	oldTags := keyValueTags(ctx, nacl.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
@@ -135,6 +126,15 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default Network ACL (%s) tags: %s", d.Id(), err)
 		}
+	}
+
+	// Revoke all default and pre-existing rules on the default network ACL.
+	if err := deleteNetworkACLEntries(ctx, conn, d.Id(), nacl.Entries); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if err := modifyNetworkACLAttributesOnCreate(ctx, conn, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourceNetworkACLRead(ctx, d, meta)...)
