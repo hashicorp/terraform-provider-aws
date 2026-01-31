@@ -26,7 +26,8 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
-* `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+* `bgp_asn` - (Optional) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration. Valid values are 1-2147483647. Conflicts with `bgp_asn_long`.
+* `bgp_asn_long` - (Optional) The long autonomous system (AS) number for Border Gateway Protocol (BGP) configuration. Valid values are 1-4294967294. Supports both asplain format (e.g., `4200000000`) and asdot format (e.g., `64086.59904`). Conflicts with `bgp_asn`.
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface on which to create the BGP peer.
 * `amazon_address` - (Optional) The IPv4 CIDR address to use to send traffic to Amazon.
 Required for IPv4 BGP peers on public virtual interfaces.
