@@ -1,0 +1,120 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+name: Plugin SDK Monitor
+
+on:
+  pull_request:
+    paths:
+      - 'internal/service/**/service_package_gen.go'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  check-service-additions:
+    name: Check for Resource/Data Source Additions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | grep 'internal/service/.*/service_package_gen.go' >> $GITHUB_OUTPUT || true
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Check for resource/data source additions
+        id: check-additions
+        run: |
+          HAS_CHANGES="false"
+
+          echo "### Plugin SDK Usage Detected" > note.md
+          echo "---" >> note.md
+          echo "" >> note.md
+
+          while IFS= read -r file; do
+            if [ -z "$file" ]; then
+              continue
+            fi
+
+            SERVICE=$(echo "$file" | sed -n 's|internal/service/\([^/]*\)/.*|\1|p')
+
+            # Get the diff for this file
+            DIFF=$(git diff origin/${{ github.base_ref }}...HEAD -- "$file")
+
+            # Count new Factory entries in SDKResources function
+            RESOURCE_BLOCK=$(echo "$DIFF" | awk '
+              /func.*SDKResources/,/^func [^(]/ {
+                if (/^\+.*Factory:/) print
+              }
+            ')
+
+            # Count new Factory entries in SDKDataSources function
+            DATA_SOURCE_BLOCK=$(echo "$DIFF" | awk '
+              /func.*SDKDataSources/,/^func [^(]/ {
+                if (/^\+.*Factory:/) print
+              }
+            ')
+
+            NEW_RESOURCES=0
+            NEW_DATA_SOURCES=0
+
+            if [ -n "$RESOURCE_BLOCK" ]; then
+              NEW_RESOURCES=$(echo "$RESOURCE_BLOCK" | grep -c "Factory:" || echo "0")
+            fi
+
+            if [ -n "$DATA_SOURCE_BLOCK" ]; then
+              NEW_DATA_SOURCES=$(echo "$DATA_SOURCE_BLOCK" | grep -c "Factory:" || echo "0")
+            fi
+
+            if [ "$NEW_RESOURCES" -gt 0 ] || [ "$NEW_DATA_SOURCES" -gt 0 ]; then
+              HAS_CHANGES="true"
+
+              echo "#### Changes detected in \`${SERVICE}\` service" >> note.md
+              echo "" >> note.md
+              echo "**File:** \`${file}\`" >> note.md
+              echo "" >> note.md
+
+              if [ "$NEW_RESOURCES" -gt 0 ]; then
+                echo "**New Plugin SDK Resources ($NEW_RESOURCES):**" >> note.md
+                echo "" >> note.md
+                echo '```diff' >> note.md
+                echo "$RESOURCE_BLOCK" >> note.md
+                echo '```' >> note.md
+                echo "" >> note.md
+              fi
+
+              if [ "$NEW_DATA_SOURCES" -gt 0 ]; then
+                echo "**New Plugin SDK Data Sources ($NEW_DATA_SOURCES):**" >> note.md
+                echo "" >> note.md
+                echo '```diff' >> note.md
+                echo "$DATA_SOURCE_BLOCK" >> note.md
+                echo '```' >> note.md
+                echo "" >> note.md
+              fi
+            fi
+          done <<< "${{ steps.changed-files.outputs.files }}"
+
+          if [ "$HAS_CHANGES" == "true" ]; then
+            echo "---" >> note.md
+            echo "" >> note.md
+            echo ":warning: **New resources and data sources must use [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework).**" >> note.md
+            echo "" >> note.md
+            echo "Rather than copying legacy resources, use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) to generate framework-based implementations." >> note.md
+          fi
+
+          echo "has_changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: steps.check-additions.outputs.has_changes == 'true'
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: note.md
