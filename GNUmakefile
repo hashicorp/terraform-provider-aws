@@ -985,7 +985,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
-	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
+	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt@v0.5.4
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
