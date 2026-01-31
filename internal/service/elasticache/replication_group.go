@@ -1260,19 +1260,36 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	}
 
 	if oldNodeGroupCount > newNodeGroupCount {
-		// Node Group IDs are 1 indexed: 0001 through 0015
-		// Loop from highest old ID until we reach highest new ID
-		nodeGroupsToRemove := []string{}
-		for i := oldNodeGroupCount; i > newNodeGroupCount; i-- {
-			nodeGroupID := fmt.Sprintf("%04d", i)
-			nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupID)
+		// Scaling down scenario.
+
+		nodeGroupIDs := []string{}
+		rg, err := findReplicationGroupByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 		}
-		input.NodeGroupsToRemove = nodeGroupsToRemove
+
+		for _, ng := range rg.NodeGroups {
+			if ng.NodeGroupId != nil {
+				nodeGroupIDs = append(nodeGroupIDs, *ng.NodeGroupId)
+			}
+		}
+		lengthOfNodeGroupIDs := len(nodeGroupIDs)
+
+		if lengthOfNodeGroupIDs > newNodeGroupCount {
+			slices.Sort(nodeGroupIDs)
+
+			nodeGroupsToRemove := []string{}
+
+			for i := lengthOfNodeGroupIDs; i > newNodeGroupCount; i-- {
+				nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupIDs[i-1])
+			}
+
+			input.NodeGroupsToRemove = nodeGroupsToRemove
+		}
 	}
 
-	_, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input)
-
-	if err != nil {
+	if _, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input); err != nil {
 		return fmt.Errorf("modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 	}
 
