@@ -619,6 +619,7 @@ FEATURES:
 
 * **New Data Source:** `aws_ecrpublic_images` ([#44795](https://github.com/hashicorp/terraform-provider-aws/issues/44795))
 * **New Resource:** `aws_lakeformation_identity_center_configuration` ([#44867](https://github.com/hashicorp/terraform-provider-aws/issues/44867))
+* **New Data Source:** `aws_account_name`  ([#44900](https://github.com/hashicorp/terraform-provider-aws/pull/44900))
 
 ENHANCEMENTS:
 

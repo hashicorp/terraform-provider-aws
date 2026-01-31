@@ -56,6 +56,54 @@ func testAccInsight_basic(t *testing.T) {
 	})
 }
 
+func testAccInsight_AwsAccountName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securityhub_insight.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInsightConfig_awsAccountName(rName, "myaccounts", "PREFIX"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_name.*", map[string]string{
+						"comparison":    "PREFIX",
+						names.AttrValue: "myaccounts",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInsightConfig_awsAccountName(rName, "production-account", "EQUALS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_name.*", map[string]string{
+						"comparison":    "EQUALS",
+						names.AttrValue: "production-account",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccInsight_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -451,6 +499,46 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 	})
 }
 
+func testAccInsight_AwsAccountNameMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securityhub_insight.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInsightDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInsightConfig_awsAccountNameMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInsightExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_name.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_name.*", map[string]string{
+						"comparison":    "PREFIX",
+						names.AttrValue: "myaccounts-dev",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_name.*", map[string]string{
+						"comparison":    "PREFIX",
+						names.AttrValue: "myaccounts-int",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_name.*", map[string]string{
+						"comparison":    "PREFIX",
+						names.AttrValue: "myaccounts-prod",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
@@ -724,6 +812,58 @@ resource "aws_securityhub_insight" "test" {
   group_by_attribute = "WorkflowStatus"
 
   name = %q
+
+  depends_on = [aws_securityhub_account.test]
+}
+`, rName)
+}
+
+func testAccInsightConfig_awsAccountName(rName, value, comparison string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
+resource "aws_securityhub_insight" "test" {
+  filters {
+    aws_account_name {
+      comparison = %[2]q
+      value      = %[3]q
+    }
+  }
+
+  group_by_attribute = "AwsAccountId"
+
+  name = %[1]q
+
+  depends_on = [aws_securityhub_account.test]
+}
+`, rName, comparison, value)
+}
+
+func testAccInsightConfig_awsAccountNameMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_securityhub_account" "test" {}
+
+resource "aws_securityhub_insight" "test" {
+  filters {
+    aws_account_name {
+      comparison = "PREFIX"
+      value      = "myaccounts-dev"
+    }
+
+    aws_account_name {
+      comparison = "PREFIX"
+      value      = "myaccounts-int"
+    }
+
+    aws_account_name {
+      comparison = "PREFIX"
+      value      = "myaccounts-prod"
+    }
+  }
+
+  group_by_attribute = "AwsAccountId"
+
+  name = %[1]q
 
   depends_on = [aws_securityhub_account.test]
 }
