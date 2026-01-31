@@ -101,7 +101,8 @@ The `restore_to_point_in_time` block supports the following arguments:
 ### Serverless V2 Scaling Configuration
 
 The `serverless_v2_scaling_configuration` block supports the following arguments.
-Adding this block (i.e. switching to serverless) or removing it (i.e. switching from serverless) will trigger cluster replacement.
+
+~> **NOTE:** Once configured, the serverless scaling configuration cannot be removed without recreating the cluster. If the configuration block is removed from Terraform, the configuration values will remain and continue to be active.
 
 * `max_capacity` - (Required) Maximum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 1 and 256.
 * `min_capacity` - (Required) Minimum number of Amazon DocumentDB capacity units (DCUs) for an instance in an Amazon DocumentDB Serverless cluster. Valid values are multiples of 0.5 between 0.5 and 256.
