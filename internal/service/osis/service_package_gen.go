@@ -35,6 +35,22 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newPipelineEndpointResource,
+			TypeName: "aws_osis_pipeline_endpoint",
+			Name:     "Pipeline Endpoint",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newPipelineResourcePolicyResource,
+			TypeName: "aws_osis_pipeline_resource_policy",
+			Name:     "Pipeline Resource Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN, inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
