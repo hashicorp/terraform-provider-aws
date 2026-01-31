@@ -60,6 +60,45 @@ func TestAccBackupPlan_basic(t *testing.T) {
 	})
 }
 
+func TestAccBackupPlan_no_schedule(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_no_schedule(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"rule_name":                    rName,
+						"target_vault_name":            rName,
+						names.AttrSchedule:             "cron(0 5 ? * * *)",
+						"schedule_expression_timezone": "Etc/UTC",
+						"lifecycle.#":                  "0",
+					}),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBackupPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
@@ -864,6 +903,23 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
+  }
+}
+`, rName)
+}
+
+func testAccPlanConfig_no_schedule(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
   }
 }
 `, rName)
