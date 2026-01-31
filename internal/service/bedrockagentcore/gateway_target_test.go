@@ -957,9 +957,10 @@ func testAccCredentialProvider_oauth() string {
 	return `    oauth {
       provider_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
       scopes       = ["read", "write"]
+	  grant_type  = "AUTHORIZATION_CODE"
+	  default_return_url = "https://example.com/callback"
       custom_parameters = {
         "client_type" = "confidential"
-        "grant_type"  = "authorization_code"
       }
     }`
 }
