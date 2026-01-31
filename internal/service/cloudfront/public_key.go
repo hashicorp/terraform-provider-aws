@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -22,12 +23,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_public_key", name="Public Key")
+// @Testing(importIgnore="has_encoded_key_wo")
 func resourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicKeyCreate,
@@ -49,12 +52,31 @@ func resourcePublicKey() *schema.Resource {
 				Optional: true,
 			},
 			"encoded_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"encoded_key_wo"},
+			},
+			"encoded_key_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ConflictsWith: []string{"encoded_key"},
+				RequiredWith:  []string{"encoded_key_wo_version"},
+			},
+			"encoded_key_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"encoded_key_wo"},
 			},
 			"etag": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"has_encoded_key_wo": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			names.AttrName: {
@@ -86,9 +108,25 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
+
+	var encodedKey string
+	if v, ok := d.GetOk("encoded_key"); ok {
+		encodedKey = v.(string)
+	}
+
+	encodedKeyWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("encoded_key_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if encodedKeyWO != "" {
+		encodedKey = encodedKeyWO
+	}
+
 	input := &cloudfront.CreatePublicKeyInput{
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
-			EncodedKey: aws.String(d.Get("encoded_key").(string)),
+			EncodedKey: aws.String(encodedKey),
 			Name:       aws.String(name),
 		},
 	}
@@ -118,6 +156,17 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
+	hasWriteOnly := flex.HasWriteOnlyValue(d, "encoded_key_wo")
+	encodedKeyWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("encoded_key_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if encodedKeyWO != "" {
+		hasWriteOnly = true
+	}
+
 	output, err := findPublicKeyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -133,10 +182,16 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
 	d.Set(names.AttrComment, publicKeyConfig.Comment)
-	d.Set("encoded_key", publicKeyConfig.EncodedKey)
 	d.Set("etag", output.ETag)
 	d.Set(names.AttrName, publicKeyConfig.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(publicKeyConfig.Name)))
+
+	if hasWriteOnly {
+		d.Set("has_encoded_key_wo", true)
+	} else {
+		d.Set("encoded_key", publicKeyConfig.EncodedKey)
+		d.Set("has_encoded_key_wo", false)
+	}
 
 	return diags
 }
@@ -145,11 +200,26 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
+	var encodedKey string
+	if v, ok := d.GetOk("encoded_key"); ok {
+		encodedKey = v.(string)
+	}
+
+	encodedKeyWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("encoded_key_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if encodedKeyWO != "" {
+		encodedKey = encodedKeyWO
+	}
+
 	input := &cloudfront.UpdatePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
-			EncodedKey: aws.String(d.Get("encoded_key").(string)),
+			EncodedKey: aws.String(encodedKey),
 			Name:       aws.String(d.Get(names.AttrName).(string)),
 		},
 	}

@@ -6,8 +6,10 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,6 +41,7 @@ func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "has_encoded_key_wo", acctest.CtFalse),
 				),
 			},
 			{
@@ -161,6 +164,46 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontPublicKey_encodedKeyWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var publicKey1, publicKey2 cloudfront.GetPublicKeyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_public_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPublicKeyConfig_encodedKeyWriteOnly(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPublicKeyExists(ctx, resourceName),
+					testAccCheckPublicKeyExistsWriteOnly(ctx, resourceName, &publicKey1),
+					testAccCheckPublicKeyEncodedKeyEqual(&publicKey1, "test-fixtures/cloudfront-public-key.pem"),
+					resource.TestCheckResourceAttrSet(resourceName, "caller_reference"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "encoded_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "has_encoded_key_wo", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccPublicKeyConfig_encodedKeyWriteOnly(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPublicKeyExists(ctx, resourceName),
+					testAccCheckPublicKeyExistsWriteOnly(ctx, resourceName, &publicKey2),
+					testAccCheckPublicKeyEncodedKeyEqual(&publicKey2, "test-fixtures/cloudfront-public-key.pem"),
+					resource.TestCheckResourceAttr(resourceName, "has_encoded_key_wo", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPublicKeyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -236,4 +279,55 @@ resource "aws_cloudfront_public_key" "test" {
   name        = %[1]q
 }
 `, rName, comment)
+}
+
+func testAccPublicKeyConfig_encodedKeyWriteOnly(rName string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_public_key" "test" {
+  encoded_key_wo         = file("test-fixtures/cloudfront-public-key.pem")
+  encoded_key_wo_version = %[2]d
+  name                   = %[1]q
+}
+`, rName, version)
+}
+
+func testAccCheckPublicKeyExistsWriteOnly(ctx context.Context, n string, v *cloudfront.GetPublicKeyOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+
+		output, err := tfcloudfront.FindPublicKeyByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckPublicKeyEncodedKeyEqual(publicKey *cloudfront.GetPublicKeyOutput, expectedKeyFile string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// Read the expected key from file
+		expectedKey, err := os.ReadFile(expectedKeyFile)
+		if err != nil {
+			return fmt.Errorf("reading expected key file: %w", err)
+		}
+
+		actualKey := ""
+		if publicKey.PublicKey != nil && publicKey.PublicKey.PublicKeyConfig != nil && publicKey.PublicKey.PublicKeyConfig.EncodedKey != nil {
+			actualKey = *publicKey.PublicKey.PublicKeyConfig.EncodedKey
+		}
+
+		if actualKey != string(expectedKey) {
+			return fmt.Errorf("EncodedKey mismatch: expected key from file %s, but got different value", expectedKeyFile)
+		}
+
+		return nil
+	}
 }
