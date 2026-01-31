@@ -309,6 +309,11 @@ func expandDomainEntryName(name, domainName string) string {
 func flattenDomainEntryName(name, domainName string) string {
 	rn := strings.ToLower(strings.TrimSuffix(name, "."))
 	domainName = strings.TrimSuffix(domainName, ".")
+
+	// AWS Lightsail returns wildcard entries with escaped asterisks (\052)
+	// Convert back to asterisks for consistency with user input
+	rn = strings.ReplaceAll(rn, "\\052", "*")
+
 	if strings.HasSuffix(rn, domainName) {
 		rn = strings.TrimSuffix(rn, fmt.Sprintf(".%s", domainName))
 	}
@@ -383,7 +388,14 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Client, id string)
 	entryExists := false
 
 	for _, n := range out.Domain.DomainEntries {
-		if entryName == aws.ToString(n.Name) && recordType == aws.ToString(n.Type) && recordTarget == aws.ToString(n.Target) {
+		apiName := aws.ToString(n.Name)
+
+		// AWS Lightsail returns wildcard entries with escaped asterisks (\052)
+		// Normalize both names for comparison to handle this encoding
+		normalizedEntryName := strings.ReplaceAll(entryName, "*", "\\052")
+		nameMatches := entryName == apiName || normalizedEntryName == apiName
+
+		if nameMatches && recordType == aws.ToString(n.Type) && recordTarget == aws.ToString(n.Target) {
 			entry = n
 			entryExists = true
 			break
