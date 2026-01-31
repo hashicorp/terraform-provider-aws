@@ -3370,6 +3370,72 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_EngineUpgradeAfterDisassociateGlobalReplicationGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	primaryGroupResourceName := "aws_elasticache_replication_group.primary"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_GlobalReplicationGroup(rName, tfelasticache.EngineValkey, "7.2", "default.valkey7"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, primaryGroupResourceName, &rg),
+					testAccCheckReplicationGroupIsInGlobalGroup(ctx, t, primaryGroupResourceName),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrParameterGroupName, "default.valkey7"),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "1"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_GlobalReplicationGroupExcluded(rName, tfelasticache.EngineValkey, "7.2", "default.valkey7"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, primaryGroupResourceName, &rg),
+					testAccCheckReplicationGroupIsNotInGlobalGroup(ctx, t, primaryGroupResourceName),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestMatchResourceAttr(primaryGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "1"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, primaryGroupResourceName, &rg),
+					testAccCheckReplicationGroupIsNotInGlobalGroup(ctx, t, primaryGroupResourceName),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestMatchResourceAttr(primaryGroupResourceName, names.AttrParameterGroupName, regexache.MustCompile(`^global-datastore-.+$`)),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "1"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccReplicationGroupConfig_GlobalReplicationGroupExcluded(rName, tfelasticache.EngineValkey, "8.0", "default.valkey8"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, primaryGroupResourceName, &rg),
+					testAccCheckReplicationGroupIsNotInGlobalGroup(ctx, t, primaryGroupResourceName),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngine, tfelasticache.EngineValkey),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, names.AttrParameterGroupName, "default.valkey8"),
+					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3411,6 +3477,63 @@ func testAccCheckReplicationGroupDestroy(ctx context.Context, t *testing.T) reso
 			}
 
 			return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
+		}
+		return nil
+	}
+}
+
+func testAccCheckReplicationGroupIsInGlobalGroup(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found in state: %s", resourceName)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+
+		rg, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			if retry.NotFound(err) {
+				return fmt.Errorf("expected replication group (%s) to exist but was not found", rs.Primary.ID)
+			}
+			return err
+		}
+
+		if rg.GlobalReplicationGroupInfo == nil {
+			return fmt.Errorf(
+				"expected replication group (%s) to be part of a global replication group but AWS reports none",
+				rs.Primary.ID,
+			)
+		}
+		return nil
+	}
+}
+
+func testAccCheckReplicationGroupIsNotInGlobalGroup(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+
+		rg, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			if retry.NotFound(err) {
+				return nil
+			}
+			return err
+		}
+
+		if info := rg.GlobalReplicationGroupInfo; info != nil {
+			id := aws.ToString(info.GlobalReplicationGroupId)
+			if id != "" {
+				return fmt.Errorf(
+					"expected replication group (%s) NOT to be in any global replication group, but found it in (%s)",
+					rs.Primary.ID, id,
+				)
+			}
 		}
 		return nil
 	}
@@ -5263,5 +5386,50 @@ resource "aws_elasticache_replication_group" "test" {
   }
 }
 `, rName),
+	)
+}
+
+func testAccReplicationGroupConfig_GlobalReplicationGroup(rName, engine, engineVersion, parameterGroupName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+
+  replication_group_id = "%[1]s-p"
+  description          = "primary"
+  subnet_group_name    = aws_elasticache_subnet_group.primary.name
+  node_type            = "cache.m5.large"
+  engine               = %[2]q
+  engine_version       = %[3]q
+  num_cache_clusters   = 1
+  parameter_group_name = %[4]q
+}
+`, rName, engine, engineVersion, parameterGroupName),
+	)
+}
+
+func testAccReplicationGroupConfig_GlobalReplicationGroupExcluded(rName, engine, engineVersion, parameterGroupName string) string {
+	return acctest.ConfigCompose(
+		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderName, 1),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "primary" {
+
+  replication_group_id = "%[1]s-p"
+  description          = "primary"
+  subnet_group_name    = aws_elasticache_subnet_group.primary.name
+  node_type            = "cache.m5.large"
+  engine               = %[2]q
+  engine_version       = %[3]q
+  num_cache_clusters   = 1
+  parameter_group_name = %[4]q
+  apply_immediately    = true
+}
+`, rName, engine, engineVersion, parameterGroupName),
 	)
 }
