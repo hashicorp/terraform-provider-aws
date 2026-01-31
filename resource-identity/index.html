@@ -1,0 +1,1728 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../regular-expressions/">
+      
+      
+        <link rel="next" href="../retries-and-waiters/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Resource Identity - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#enabling-resource-identity-for-a-resource-type" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Resource Identity
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Add a New AWS Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Add a New Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Add a New Data Source Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-ephemeral-resource/" class="md-nav__link">
+        Add a New Ephemeral Resource Type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Add a New Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        Add a New AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-resource-identity-support/" class="md-nav__link">
+        Add Resource Identity Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Add Resource Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-generation/" class="md-nav__link">
+        Generated Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unit-tests/" class="md-nav__link">
+        Unit Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agents/" class="md-nav__link">
+        AI Agents
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3_3" type="checkbox" id="__nav_3_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_3" tabindex="0" aria-expanded="false">
+          AI Agent Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="AI Agent Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_3">
+          <span class="md-nav__icon md-icon"></span>
+          AI Agent Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/go-vcr-migration/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/list-resource/" class="md-nav__link">
+        List Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/arn-based-resource-identity/" class="md-nav__link">
+        Resource Identity (ARN-based)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/parameterized-resource-identity/" class="md-nav__link">
+        Resource Identity (Parameterized)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-agent-guides/smarterr/" class="md-nav__link">
+        Smarterr
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../enhanced-region-support/" class="md-nav__link">
+        Enhanced Region Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../go-vcr/" class="md-nav__link">
+        Go-VCR
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../id-attributes/" class="md-nav__link">
+        ID Attributes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Resource Identity
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Resource Identity
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#types-of-resource-identity" class="md-nav__link">
+    Types of Resource Identity
+  </a>
+  
+    <nav class="md-nav" aria-label="Types of Resource Identity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arn-identity" class="md-nav__link">
+    ARN Identity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singleton-identity" class="md-nav__link">
+    Singleton Identity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameterized-identity" class="md-nav__link">
+    Parameterized Identity
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameterized Identity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-include-in-resource-identity" class="md-nav__link">
+    What Not to Include in Resource Identity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-identity-attributes" class="md-nav__link">
+    Multiple Identity Attributes
+  </a>
+  
+    <nav class="md-nav" aria-label="Multiple Identity Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-framework" class="md-nav__link">
+    Plugin Framework
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-sdk" class="md-nav__link">
+    Plugin SDK
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-resource-identity-on-new-resource-type" class="md-nav__link">
+    Enabling Resource Identity on New Resource Type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-resource-identity-to-existing-resource-type" class="md-nav__link">
+    Adding Resource Identity to Existing Resource Type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-testing" class="md-nav__link">
+    Acceptance Testing
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manual-tests" class="md-nav__link">
+    Manual Tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-resource-identity-schema" class="md-nav__link">
+    Updating Resource Identity Schema
+  </a>
+  
+    <nav class="md-nav" aria-label="Updating Resource Identity Schema">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-framework-upgrader" class="md-nav__link">
+    Plugin Framework Upgrader
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-sdk-upgrader" class="md-nav__link">
+    Plugin SDK Upgrader
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#types-of-resource-identity" class="md-nav__link">
+    Types of Resource Identity
+  </a>
+  
+    <nav class="md-nav" aria-label="Types of Resource Identity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arn-identity" class="md-nav__link">
+    ARN Identity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singleton-identity" class="md-nav__link">
+    Singleton Identity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameterized-identity" class="md-nav__link">
+    Parameterized Identity
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameterized Identity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-not-to-include-in-resource-identity" class="md-nav__link">
+    What Not to Include in Resource Identity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-identity-attributes" class="md-nav__link">
+    Multiple Identity Attributes
+  </a>
+  
+    <nav class="md-nav" aria-label="Multiple Identity Attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-framework" class="md-nav__link">
+    Plugin Framework
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-sdk" class="md-nav__link">
+    Plugin SDK
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-resource-identity-on-new-resource-type" class="md-nav__link">
+    Enabling Resource Identity on New Resource Type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-resource-identity-to-existing-resource-type" class="md-nav__link">
+    Adding Resource Identity to Existing Resource Type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acceptance-testing" class="md-nav__link">
+    Acceptance Testing
+  </a>
+  
+    <nav class="md-nav" aria-label="Acceptance Testing">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#manual-tests" class="md-nav__link">
+    Manual Tests
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-resource-identity-schema" class="md-nav__link">
+    Updating Resource Identity Schema
+  </a>
+  
+    <nav class="md-nav" aria-label="Updating Resource Identity Schema">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-framework-upgrader" class="md-nav__link">
+    Plugin Framework Upgrader
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugin-sdk-upgrader" class="md-nav__link">
+    Plugin SDK Upgrader
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<h1 id="enabling-resource-identity-for-a-resource-type">Enabling Resource Identity for a Resource Type<a class="headerlink" href="#enabling-resource-identity-for-a-resource-type" title="Permanent link">#</a></h1>
+<p>Terraform version 1.12 introduced the concept of Resource Identity.
+This is structured data which can uniquely identify a resource.</p>
+<h2 id="types-of-resource-identity">Types of Resource Identity<a class="headerlink" href="#types-of-resource-identity" title="Permanent link">#</a></h2>
+<p>There are several categories of Resource Identity in the AWS Provider, depending on how remote resources are identified in the appropriate AWS API.</p>
+<h3 id="arn-identity">ARN Identity<a class="headerlink" href="#arn-identity" title="Permanent link">#</a></h3>
+<p>Many AWS resource types support Amazon Resource Names (ARNs) that can uniquely identify a remote resource within AWS.
+However, a resource type should only use an ARN Identity if the AWS APIs for this resource type take the ARN as the parameter to identify the remote resource.
+Otherwise, the Resource Identity should use a <a href="#parameterized-identity">Parameterized Identity</a>.</p>
+<p>Specify an ARN Identity for a resource type by adding the annotation <code>@ArnIdentity</code> to the resource type's declaration.</p>
+<p>By default, the resource attribute and the Resource Identity attribute are named <code>arn</code>.
+To override this, add the name of the attribute to the <code>@ArnIdentity</code> annotation.
+For example, the resource type <code>aws_acmpca_policy</code> uses the attribute <code>resource_arn</code>,
+so the annotation is <code>@ArnIdentity("resource_arn")</code>.</p>
+<h3 id="singleton-identity">Singleton Identity<a class="headerlink" href="#singleton-identity" title="Permanent link">#</a></h3>
+<p>Some AWS resource types allow only a single instance in a given region,
+or in a single account for global resource types.</p>
+<p>Specify a Singleton Identity for a resource type by adding the annotation <code>@SingletonIdentity</code> to the resource type's declaration.</p>
+<p>The Resource Identity attributes for Singleton Identities cannot be overridden.</p>
+<h3 id="parameterized-identity">Parameterized Identity<a class="headerlink" href="#parameterized-identity" title="Permanent link">#</a></h3>
+<p>Many AWS resource types can be uniquely identified by a combination of one or more attributes, such as a name, within their region (or account for global resource types).</p>
+<p>Specify a Parameterized Identity using one or more <code>@IdentityAttribute("&lt;attribute-name&gt;")</code> annotations to the resource type's declaration.
+The attributes <code>account_id</code> and <code>region</code> are always present in Parameterized Identities, so must not be specified in <code>@IdentityAttribute</code> annotations.</p>
+<p>By default, the names of the Resource Identity attribute and the corresponding attribute on the resource match.
+In some rare cases, the Resource Identity attribute cannot use the same name.
+For example, in the resource type <code>aws_organizations_delegated_administrator</code>, one of the identifying resource attributes is <code>account_id</code>, which is reserved.
+Instead, the Resource Identity attribute is <code>delegated_account_id</code>.
+The annotation is <code>@IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")</code>.</p>
+<p>In some rare cases, an identifying attribute may allow <code>null</code> as a value.
+For example, the resource type <code>aws_route53_record</code> has an optional attribute <code>set_identifier</code> that differentiates between individual records in a set, such as multiple addresses for the same domain name.
+In simple routing cases, <code>set_identifier</code> is unused.
+To specify this, add the annotation parameter <code>optional=true</code> to the <code>@IdentityAttribute</code> annotation.
+As the <code>set_identifier</code> in <code>aws_route53_record</code> is optional,
+the full annotation is <code>@IdentityAttribute("set_identifier", optional="true")</code>.</p>
+<p>If a resource type has optional identifying attributes,
+the default generated test should be the case where all optional values are <code>null</code>.
+For other cases, manually create additional acceptance tests,
+at a minimum the equivalent of the <code>Basic</code> test as well as the <code>ExistingResource</code> test when adding Resource Identity to an existing resource type.</p>
+<p>If it is not possible to create a test case where all optional values are <code>null</code>,
+add the annotation parameter <code>testNotNull=true</code> to the corresponding <code>@IdentityAttribute</code> annotation.</p>
+<h4 id="what-not-to-include-in-resource-identity">What <strong>Not</strong> to Include in Resource Identity<a class="headerlink" href="#what-not-to-include-in-resource-identity" title="Permanent link">#</a></h4>
+<p>The attributes used in Resource Identity should <em>only</em> be those used to uniquely identify a resource.
+In some cases, when adding Resource Identity to an existing resource type, the existing <code>id</code> attribute or the identifier used for importing a resource may include one or more values intended to preserve write-only values when refreshing or importing a resource.
+These should not be included in Resource Identity.</p>
+<p>For example, the resource type <code>aws_s3_bucket_acl</code> has an attribute <code>acl</code> which represents the name of a predefined permissions grant.
+An S3 Bucket can have only one Bucket ACL, and the predefined grant name does not identify a Bucket ACL.
+While the <code>acl</code> value is part of the <code>id</code> attribute, it should not be part of the Resource Identity.</p>
+<h4 id="multiple-identity-attributes">Multiple Identity Attributes<a class="headerlink" href="#multiple-identity-attributes" title="Permanent link">#</a></h4>
+<p>In order to support importing resources by ID from the command line or in <code>import</code> blocks and work with <code>id</code> attributes composed from multiple fields,
+Resource Identities with multiple attributes need a handler struct to perform the mapping.</p>
+<h5 id="plugin-framework">Plugin Framework<a class="headerlink" href="#plugin-framework" title="Permanent link">#</a></h5>
+<p>In order to parse an import ID, Framework-based resource types must define a struct which implements the interface <code>inttypes.ImportIDParser</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">ImportIDParser</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Parse</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The function <code>Parse</code> takes the import ID as a parameter and returns:</p>
+<ol>
+<li>The value to be assigned to the <code>id</code> attribute, if any (see below)</li>
+<li>A <code>map[string]string</code> of the resource attributes to be set</li>
+<li>Any error</li>
+</ol>
+<p>The name of this struct is set in the annotation <code>@ImportIDHandler("&lt;struct name&gt;")</code>.</p>
+<p>For example, the resource type <code>aws_vpc_security_group_vpc_association</code> has an import ID handler as follows:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">inttypes</span><span class="p">.</span><span class="nx">ImportIDParser</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">securityGroupVPCAssociationImportID</span><span class="p">{}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">securityGroupVPCAssociationImportID</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">securityGroupVPCAssociationImportID</span><span class="p">)</span><span class="w"> </span><span class="nx">Parse</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">sgID</span><span class="p">,</span><span class="w"> </span><span class="nx">vpcID</span><span class="p">,</span><span class="w"> </span><span class="nx">found</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Cut</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">intflex</span><span class="p">.</span><span class="nx">ResourceIdSeparator</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">found</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;id \&quot;%s\&quot; should be in the format &lt;security-group-id&gt;&quot;</span><span class="o">+</span><span class="nx">intflex</span><span class="p">.</span><span class="nx">ResourceIdSeparator</span><span class="o">+</span><span class="s">&quot;&lt;vpc-id&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">result</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;security_group_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="nx">sgID</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrVPCID</span><span class="p">:</span><span class="w">     </span><span class="nx">vpcID</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>and has the annotation <code>@ImportIDHandler("securityGroupVPCAssociationImportID")</code>.</p>
+<p>In some cases, the resource import will also need to set an <code>id</code> attribute composed from multiple fields.
+In this case, the import ID parser must also implement the interface <code>inttypes.FrameworkImportIDCreator</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">FrameworkImportIDCreator</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Create</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="nx">tfsdk</span><span class="p">.</span><span class="nx">State</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The function <code>Create</code> takes the state values and returns a single string value.</p>
+<p>This is specified by the annotation parameter <code>setIDAttribute=true</code> on the <code>@ImportIDHandler</code> annotation.</p>
+<p>For example, the resource type <code>aws_cloudfrontkeyvaluestore_key</code>has an import ID handler equivalent to:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="nx">_</span><span class="w"> </span><span class="nx">inttypes</span><span class="p">.</span><span class="nx">ImportIDParser</span><span class="w">           </span><span class="p">=</span><span class="w"> </span><span class="nx">securityGroupVPCAssociationImportID</span><span class="p">{}</span>
+<span class="w">    </span><span class="nx">_</span><span class="w"> </span><span class="nx">inttypes</span><span class="p">.</span><span class="nx">FrameworkImportIDCreator</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">securityGroupVPCAssociationImportID</span><span class="p">{}</span>
+<span class="p">)</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">securityGroupVPCAssociationImportID</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">securityGroupVPCAssociationImportID</span><span class="p">)</span><span class="w"> </span><span class="nx">Parse</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">kvsARN</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">found</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Cut</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">intflex</span><span class="p">.</span><span class="nx">ResourceIdSeparator</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">found</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;id \&quot;%s\&quot; should be in the format &lt;key-value-store-arn&gt;&quot;</span><span class="o">+</span><span class="nx">intflex</span><span class="p">.</span><span class="nx">ResourceIdSeparator</span><span class="o">+</span><span class="s">&quot;&lt;key&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">result</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">        </span><span class="s">&quot;key_value_store_arn&quot;</span><span class="p">:</span><span class="w"> </span><span class="nx">kvsARN</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrKey</span><span class="p">:</span><span class="w">         </span><span class="nx">key</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">securityGroupVPCAssociationImportID</span><span class="p">)</span><span class="w"> </span><span class="nx">Create</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="nx">tfsdk</span><span class="p">.</span><span class="nx">State</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">parts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nb">make</span><span class="p">([]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nx">keyResourceIDPartCount</span><span class="p">)</span>
+
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">attrVal</span><span class="w"> </span><span class="nx">types</span><span class="p">.</span><span class="nx">String</span>
+
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">GetAttribute</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">Root</span><span class="p">(</span><span class="s">&quot;key_value_store_arn&quot;</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">attrVal</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">parts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">parts</span><span class="p">,</span><span class="w"> </span><span class="nx">attrVal</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">())</span>
+
+<span class="w">    </span><span class="nx">state</span><span class="p">.</span><span class="nx">GetAttribute</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">path</span><span class="p">.</span><span class="nx">Root</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrKey</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="nx">attrVal</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">parts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">parts</span><span class="p">,</span><span class="w"> </span><span class="nx">attrVal</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">())</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Join</span><span class="p">(</span><span class="nx">parts</span><span class="p">,</span><span class="w"> </span><span class="nx">intflex</span><span class="p">.</span><span class="nx">ResourceIdSeparator</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>and has the annotation <code>@ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)</code>.</p>
+<h5 id="plugin-sdk">Plugin SDK<a class="headerlink" href="#plugin-sdk" title="Permanent link">#</a></h5>
+<p>For resource types implemented using the Plugin SDK, the import ID handler must both parse the import ID and create the <code>id</code> attribute composed from multiple fields.
+The import ID handler must implement the interface <code>inttypes.SDKv2ImportID</code></p>
+<div class="highlight"><pre><span></span><code><span class="kd">type</span><span class="w"> </span><span class="nx">SDKv2ImportID</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Parse</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">Create</span><span class="p">(</span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The function <code>Parse</code> takes the import ID as a parameter and returns:</p>
+<ol>
+<li>The value to be assigned to the <code>id</code> attribute</li>
+<li>A <code>map[string]string</code> of the resource attributes to be set</li>
+<li>Any error</li>
+</ol>
+<p>The function <code>Create</code> takes the state values and returns a single string value.</p>
+<p>The name of this struct is set in the annotation <code>@ImportIDHandler("&lt;struct name&gt;")</code>.</p>
+<p>For example, a number of resource types associated with S3 Buckets, such as <code>aws_s3_bucket_logging</code> and <code>aws_s3_bucket_versioning</code> share an import ID handler equivalent to:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">_</span><span class="w"> </span><span class="nx">inttypes</span><span class="p">.</span><span class="nx">SDKv2ImportID</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">resourceImportID</span><span class="p">{}</span>
+
+<span class="kd">type</span><span class="w"> </span><span class="nx">resourceImportID</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">resourceImportID</span><span class="p">)</span><span class="w"> </span><span class="nx">Create</span><span class="p">(</span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">)</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">bucket</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrBucket</span><span class="p">).(</span><span class="kt">string</span><span class="p">)</span>
+<span class="w">    </span><span class="nx">expectedBucketOwner</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrExpectedBucketOwner</span><span class="p">).(</span><span class="kt">string</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">expectedBucketOwner</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">bucket</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">parts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">bucket</span><span class="p">,</span><span class="w"> </span><span class="nx">expectedBucketOwner</span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Join</span><span class="p">(</span><span class="nx">parts</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceIDSeparator</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">resourceImportID</span><span class="p">)</span><span class="w"> </span><span class="nx">Parse</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">bucket</span><span class="p">,</span><span class="w"> </span><span class="nx">expectedBucketOwner</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">parseResourceID</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="nx">results</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{</span>
+<span class="w">        </span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrBucket</span><span class="p">:</span><span class="w"> </span><span class="nx">bucket</span><span class="p">,</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">expectedBucketOwner</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">results</span><span class="p">[</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrExpectedBucketOwner</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">expectedBucketOwner</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">results</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">parseResourceID</span><span class="p">(</span><span class="nx">id</span><span class="w"> </span><span class="kt">string</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">string</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">parts</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strings</span><span class="p">.</span><span class="nx">Split</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceIDSeparator</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">parts</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">parts</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;unexpected format for ID (%[1]s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceIDSeparator</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="enabling-resource-identity-on-new-resource-type">Enabling Resource Identity on New Resource Type<a class="headerlink" href="#enabling-resource-identity-on-new-resource-type" title="Permanent link">#</a></h2>
+<p>New resource types with Resource Identity support are indicated by the annotation <code>@Testing(hasNoPreExistingResource=true)</code>.
+This will exclude the <a href="#acceptance-testing">generation of tests</a> related to adding Identity data to an existing resource.</p>
+<p>Using the <a href="../skaff/"><code>skaff</code></a> provider scaffolding tool, as recommended, to create a new resource type will add suggested annotations.</p>
+<h2 id="adding-resource-identity-to-existing-resource-type">Adding Resource Identity to Existing Resource Type<a class="headerlink" href="#adding-resource-identity-to-existing-resource-type" title="Permanent link">#</a></h2>
+<p>When adding Resource Identity to an existing resource type, there are several annotations to add to the resource type declaration.
+See the <a href="../add-resource-identity-support/">Adding Resource Identity Support Guide</a> for steps to take.</p>
+<p>In order to <a href="#acceptance-testing">generate tests</a> related to adding Identity data to an existing resource, we need to indicate the last version of the provider before Resource Identity was enabled on the resource type.
+Add the annotation <code>@Testing(preIdentityVersion="&lt;version&gt;")</code>, where version is the last version of the provider <strong>before</strong> Resource Identity is added to the resource type.
+For example, Resource Identity was added to <code>aws_batch_job_definition</code> in version 6.5.0, so the annotation is <code>preIdentityVersion="v6.4.0"</code>.</p>
+<p>In some cases, even though a resource type has an ARN Identity or Singleton Identity, it also has an <code>id</code> attribute that is set to the same value.
+Specify this by adding the annotation parameter <code>identityDuplicateAttributes="id"</code> to the identity annotation.
+(This will always be the case for resource types implemented with the Plugin SDK, so setting <code>identityDuplicateAttributes="id"</code> is not necessary for those resource types.)
+For example, the resource type <code>aws_rds_integration</code> has an <code>id</code> attribute that duplicates the <code>arn</code>.
+The annotation is <code>@ArnIdentity(identityDuplicateAttributes="id")</code>.</p>
+<p>In some rare cases, there will be multiple attributes that match the Identity attribute.
+Specify this with the annotation parameter <code>identityDuplicateAttributes="&lt;attr&gt;[;&lt;attr&gt;]"</code>.
+For example, the resource type <code>aws_ssoadmin_application</code> has both an <code>id</code> attribute and a deprecated alternate ARN attribute <code>application_arn</code>.
+The annotation is <code>@ArnIdentity(identityDuplicateAttributes="id;application_arn")</code>.</p>
+<h2 id="acceptance-testing">Acceptance Testing<a class="headerlink" href="#acceptance-testing" title="Permanent link">#</a></h2>
+<p>Acceptance tests for Resource Identity are generated, as they follow the same pattern but have some subtleties.
+See the <a href="../acc-test-generation/">acceptance test generation documentation</a> for more information on generating Resource Identity tests.
+Some common annotations are documented below.</p>
+<p>By convention, the <code>Exists</code> check function returns a value from an API call for the remote resource.
+This type is specified using the annotation <code>@Testing(existsType=&lt;reference&gt;)</code>.
+This references a Go type and package path with optional package alias, using the format
+<code>&lt;package path&gt;;[&lt;package alias&gt;;]&lt;type&gt;</code>.
+For example, the S3 Object uses</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// @Testing(existsType=&quot;github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput&quot;)</span>
+</code></pre></div>
+<p>Many acceptance tests make use of <code>PreCheck</code> functions.
+The default <code>acctest.PreCheck</code> function is always included.
+To specify other <code>PreCheck</code> functions, specify either
+<code>@Testing(preCheck=&lt;reference&gt;)</code> if the function has the signature <code>func(ctx context.Context, t *testing.T)</code>, or
+<code>Testing(preCheckWithRegion=&lt;reference&gt;)</code> if the function has the signature <code>func(ctx context.Context, t *testing.T, region string)</code>.</p>
+<p>Some acceptance tests must ignore attribute differences when importing a resource.
+Specify this with the annotation <code>@Testing(importIgnore="...")</code> with a list of the attribute names separated by semi-colons (<code>;</code>).</p>
+<h3 id="manual-tests">Manual Tests<a class="headerlink" href="#manual-tests" title="Permanent link">#</a></h3>
+<p>In some rare cases, generating the Resource Identity acceptance tests cannot be done.
+As much as possible, try to use the test setup created by the generator.
+Add the annotation <code>@Testing(identityTest=false)</code> and add a comment above the annotation indicating why the generated acceptance tests could not be used.
+If there are missing configuration or configuration variable annotations, consider creating a GitHub issue indicating what is missing.</p>
+<p>If not using the generated tests, rename the test file to remove <code>gen</code> from the name to indicate that it is not generated.</p>
+<h2 id="updating-resource-identity-schema">Updating Resource Identity Schema<a class="headerlink" href="#updating-resource-identity-schema" title="Permanent link">#</a></h2>
+<p>In some rare cases, it will be necessary to change the Resource Identity schema.
+This may be due to changes in the AWS API,
+but also may be due to implementation issues.
+It should be avoided.</p>
+<p>Resource Identity schemas are versioned starting from 0, so the first updated schema version will be version 1.
+The current version of the Resource Identity schema is indicated by the annotation <code>@IdentityVersion(&lt;version number&gt;)</code>.</p>
+<p>When updating the Resource Identity schema version, new acceptance tests are generated to ensure that existing resources can update their Resource Identity.
+This is specified by adding one <code>@Testing(identityVersion="&lt;identity-schema-version&gt;;&lt;provider-version&gt;")</code> annotation per Resource Identity schema version.
+See the <a href="../acc-test-generation/#adding-a-new-resource-identity-schema-version">acceptance test generation documentation</a> for more details.</p>
+<p>If a Resource Identity attribute is being added or renamed, the resource type will also need an Identity Upgrader.
+Removing an attribute does not require an Identity Upgrader.</p>
+<h3 id="plugin-framework-upgrader">Plugin Framework Upgrader<a class="headerlink" href="#plugin-framework-upgrader" title="Permanent link">#</a></h3>
+<p>Identity Upgraders are currently not implemented for Plugin-Framework-based resource types, as there has not been need for it.
+It is tracked by <a href="https://github.com/hashicorp/terraform-provider-aws/issues/44863">GitHub Issue #44863</a>.</p>
+<h3 id="plugin-sdk-upgrader">Plugin SDK Upgrader<a class="headerlink" href="#plugin-sdk-upgrader" title="Permanent link">#</a></h3>
+<p>In the Plugin SDK, each schema version defines a <code>schema.IdentityUpgrader</code> which upgrades the Resource Identity from a given version to the next.
+The upgrade function has the signature <code>func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error)</code>.
+By convention, the upgrader name is <code>&lt;resource name&gt;IdentityUpgradeV&lt;source version&gt;</code>.</p>
+<p>For the version which is the target of the upgrader, add the parameter <code>sdkV2IdentityUpgraders="&lt;function name&gt;"</code> to the <code>@IdentityVersion</code> annotation.</p>
+<p>For example, the Resource Identity for the resource type <code>aws_ec2_image_block_public_access</code> was updated to add the attribute <code>region</code> in version 6.21.0 of the provider.
+The annotations are</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// @IdentityVersion(1, sdkV2IdentityUpgraders=&quot;imageBlockPublicAccessIdentityUpgradeV0&quot;)</span>
+<span class="c1">// @Testing(identityVersion=&quot;0;v6.0.0&quot;)</span>
+<span class="c1">// @Testing(identityVersion=&quot;1;v6.21.0&quot;)</span>
+</code></pre></div>
+<p>The upgrader is</p>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">imageBlockPublicAccessIdentityUpgradeV0</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">schema</span><span class="p">.</span><span class="nx">IdentityUpgrader</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Version</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">Upgrade</span><span class="p">:</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">rawState</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kt">any</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">any</span><span class="p">,</span><span class="w"> </span><span class="kt">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">rawState</span><span class="p">[</span><span class="nx">names</span><span class="p">.</span><span class="nx">AttrRegion</span><span class="p">]</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">Region</span><span class="p">(</span><span class="nx">ctx</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">rawState</span><span class="p">,</span><span class="w"> </span><span class="kc">nil</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      IBM Corp.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
