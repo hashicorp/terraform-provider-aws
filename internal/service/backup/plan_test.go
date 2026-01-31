@@ -583,6 +583,95 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 	})
 }
 
+func TestAccBackupPlan_advancedBackupSettingS3(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_advancedSettingS3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":                "2",
+						"backup_options.BackupObjectTags": names.AttrEnabled,
+						"backup_options.BackupACLs":       names.AttrEnabled,
+						names.AttrResourceType:            "S3",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPlanConfig_advancedSettingS3Updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":                "2",
+						"backup_options.BackupObjectTags": "disabled",
+						"backup_options.BackupACLs":       "disabled",
+						names.AttrResourceType:            "S3",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBackupPlan_advancedBackupSettingMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_advancedSettingMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":          "1",
+						"backup_options.WindowsVSS": names.AttrEnabled,
+						names.AttrResourceType:      "EC2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":                "2",
+						"backup_options.BackupObjectTags": names.AttrEnabled,
+						"backup_options.BackupACLs":       names.AttrEnabled,
+						names.AttrResourceType:            "S3",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
@@ -1263,6 +1352,108 @@ resource "aws_backup_plan" "test" {
     }
 
     resource_type = "EC2"
+  }
+}
+`, rName)
+}
+
+func testAccPlanConfig_advancedSettingS3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+  }
+
+  advanced_backup_setting {
+    backup_options = {
+      BackupObjectTags = "enabled"
+      BackupACLs       = "enabled"
+    }
+
+    resource_type = "S3"
+  }
+}
+`, rName)
+}
+
+func testAccPlanConfig_advancedSettingS3Updated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+  }
+
+  advanced_backup_setting {
+    backup_options = {
+      BackupObjectTags = "disabled"
+      BackupACLs       = "disabled"
+    }
+
+    resource_type = "S3"
+  }
+}
+`, rName)
+}
+
+func testAccPlanConfig_advancedSettingMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+  }
+
+  advanced_backup_setting {
+    backup_options = {
+      WindowsVSS = "enabled"
+    }
+    resource_type = "EC2"
+  }
+
+  advanced_backup_setting {
+    backup_options = {
+      BackupObjectTags = "enabled"
+      BackupACLs       = "enabled"
+    }
+    resource_type = "S3"
   }
 }
 `, rName)
