@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix updates to tags during resource updates. Previusly changes to tags were ignored.
+```

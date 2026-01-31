@@ -6212,6 +6212,73 @@ resource "aws_ecs_service" "test" {
 `, rName)
 }
 
+func TestAccECSService_Tags_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_tags(rName, map[string]string{"env": "dev"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_tags(rName, map[string]string{"env": "prod"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "prod"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_tags(rName, map[string]string{}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+				),
+			},
+		},
+	})
+}
+func testAccServiceConfig_tags(rName string, tags map[string]string) string {
+	tagsHCL := ""
+	if len(tags) > 0 {
+		tagsHCL = "tags = {\n"
+		for k, v := range tags {
+			tagsHCL += fmt.Sprintf("%q = %q\n", k, v)
+		}
+		tagsHCL += "}\n"
+	}
+
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  %s
+}
+`, rName, tagsHCL)
+}
+
 func testAccServiceConfig_clusterName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
