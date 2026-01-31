@@ -143,10 +143,11 @@ func resourceInstance() *schema.Resource {
 				Default:  true,
 			},
 			names.AttrAvailabilityZone: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAvailabilityZoneName,
 			},
 			"backup_retention_period": {
 				Type:         schema.TypeInt,
@@ -1649,7 +1650,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (restore to point-in-time) (%s): %s", identifier, err)
 		}
@@ -1872,7 +1872,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): %s", identifier, err)
 		}
@@ -1907,7 +1906,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
 
 		_, err := conn.ModifyDBInstance(ctx, modifyDbInstanceInput)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", identifier, err)
 		}
@@ -1921,7 +1919,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		_, err := conn.RebootDBInstance(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(identifier),
 		})
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "rebooting RDS DB Instance (%s): %s", identifier, err)
 		}
@@ -2125,7 +2122,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			_, err := conn.PromoteReadReplica(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "promoting RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
@@ -2197,7 +2193,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 
 				_, err = conn.DeleteBlueGreenDeployment(ctx, input)
-
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: %s", d.Get(names.AttrIdentifier).(string), err)
 					return
@@ -2259,7 +2254,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 
 				err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
-
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: disabling deletion protection: %s", d.Get(names.AttrIdentifier).(string), err)
 				}
@@ -2290,7 +2284,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					return false, err
 				},
 			)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
@@ -2336,7 +2329,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
-
 			if err != nil {
 				// Handle virtual attribute
 				if input.ManageMasterUserPassword != nil {
@@ -2443,7 +2435,6 @@ func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *r
 			return conn.CreateDBInstanceReadReplica(ctx, input)
 		},
 		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
-
 	if err != nil {
 		return nil, err
 	}
@@ -2737,7 +2728,6 @@ func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, 
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return err
 	}
@@ -2844,7 +2834,6 @@ func findDBInstanceByID(ctx context.Context, conn *rds.Client, id string, optFns
 
 func findDBInstance(ctx context.Context, conn *rds.Client, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*types.DBInstance], optFns ...func(*rds.Options)) (*types.DBInstance, error) {
 	output, err := findDBInstances(ctx, conn, input, filter, optFns...)
-
 	if err != nil {
 		return nil, err
 	}
@@ -3025,7 +3014,6 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 	}
 
 	output, err := findBlueGreenDeployment(ctx, conn, input, tfslices.PredicateTrue[*types.BlueGreenDeployment]())
-
 	if err != nil {
 		return nil, err
 	}
@@ -3042,7 +3030,6 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 
 func findBlueGreenDeployment(ctx context.Context, conn *rds.Client, input *rds.DescribeBlueGreenDeploymentsInput, filter tfslices.Predicate[*types.BlueGreenDeployment]) (*types.BlueGreenDeployment, error) {
 	output, err := findBlueGreenDeployments(ctx, conn, input, filter)
-
 	if err != nil {
 		return nil, err
 	}
@@ -3215,7 +3202,6 @@ func startInstance(ctx context.Context, conn *rds.Client, id string, timeout tim
 	_, err = conn.StartDBInstance(ctx, &rds.StartDBInstanceInput{
 		DBInstanceIdentifier: &id,
 	})
-
 	if err != nil {
 		return fmt.Errorf("starting RDS Instance (%s): %w", id, err)
 	}
@@ -3234,7 +3220,6 @@ func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time
 	_, err := conn.StopDBInstance(ctx, &rds.StopDBInstanceInput{
 		DBInstanceIdentifier: &id,
 	})
-
 	if err != nil {
 		return fmt.Errorf("stopping RDS Instance (%s): %w", id, err)
 	}
