@@ -401,6 +401,90 @@ func resourceCatalogTable() *schema.Resource {
 					},
 				},
 			},
+			"view_definition": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"representations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dialect": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"REDSHIFT",
+											"ATHENA",
+											"SPARK",
+										}, false),
+									},
+									"dialect_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"validation_connection": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"view_original_text": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 409600),
+									},
+									"view_expanded_text": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 409600),
+									},
+								},
+							},
+						},
+						"is_protected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"definer": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sub_objects": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"sub_object_version_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+						"view_version_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"view_version_token": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"last_refresh_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"FULL",
+								"INCREMENTAL",
+							}, false),
+						},
+						"refresh_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -660,6 +744,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 
 	if v, ok := d.GetOk("target_table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tableInput.TargetTable = expandTableTargetTable(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("view_definition"); ok {
+		tableInput.ViewDefinition = expandViewDefinition(v.([]any))
 	}
 
 	return tableInput
@@ -1174,4 +1262,62 @@ func flattenNonManagedParameters(table *awstypes.Table) map[string]string {
 		delete(allParameters, "metadata_location")
 	}
 	return allParameters
+}
+
+func expandViewDefinition(l []any) *awstypes.ViewDefinitionInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	s := l[0].(map[string]any)
+	viewDefinition := &awstypes.ViewDefinitionInput{}
+
+	if v, ok := s["definer"]; ok && v != nil && v != "" {
+		viewDefinition.Definer = aws.String(v.(string))
+	}
+
+	if v, ok := s["is_protected"]; ok && v != nil && v != "" {
+		viewDefinition.IsProtected = aws.Bool(v.(bool))
+	}
+
+	if v, ok := s["representations"]; ok && v != nil {
+		viewDefinition.Representations = expandViewRepresentationInput(v.([]any))
+	}
+
+	if v, ok := s["sub_objects"]; ok && v != nil {
+		viewDefinition.SubObjects = flex.ExpandStringValueList(v.([]any))
+	}
+
+	return viewDefinition
+}
+
+func expandViewRepresentationInput(l []any) []awstypes.ViewRepresentationInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	s := l[0].(map[string]any)
+	viewRepresentationInput := awstypes.ViewRepresentationInput{}
+
+	if v, ok := s["dialect"]; ok && v != nil && v != "" {
+		viewRepresentationInput.Dialect = awstypes.ViewDialect(v.(string))
+	}
+
+	if v, ok := s["dialect_version"]; ok && v != nil && v != "" {
+		viewRepresentationInput.DialectVersion = aws.String(v.(string))
+	}
+
+	if v, ok := s["validation_connection"]; ok && v != nil && v != "" {
+		viewRepresentationInput.ValidationConnection = aws.String(v.(string))
+	}
+
+	if v, ok := s["view_expanded_text"]; ok && v != nil && v != "" {
+		viewRepresentationInput.ViewExpandedText = aws.String(v.(string))
+	}
+
+	if v, ok := s["view_original_text"]; ok && v != nil && v != "" {
+		viewRepresentationInput.ViewOriginalText = aws.String(v.(string))
+	}
+
+	return []awstypes.ViewRepresentationInput{viewRepresentationInput}
 }
