@@ -1336,24 +1336,19 @@ func suffixFromARN(arn *string) string {
 	return ""
 }
 
-// Load balancers of type 'network' cannot have their subnets updated,
-// cannot have security groups added if none are present, and cannot have
-// all security groups removed. If the type is 'network' and any of these
-// conditions are met, mark the diff as a ForceNew operation.
+// Load balancers of type 'network' cannot have security groups added if none
+// are present, and cannot have all security groups removed. If the type is
+// 'network' and any of these conditions are met, mark the diff as a ForceNew operation.
 func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")
-	// - there are subnet removals
-	//   OR security groups are being added where none currently exist
+	// - security groups are being added where none currently exist
 	//   OR all security groups are being removed
 	//   OR secondary IPv4 addresses are being decreased
 	//
-	// Any other combination should be treated as normal. At this time, subnet
-	// handling is the only known difference between Network Load Balancers and
-	// Application Load Balancers, so the logic below is simple individual checks.
-	// If other differences arise we'll want to refactor to check other
-	// conditions in combinations, but for now all we handle is subnets
+	// Note: As of February 2025, AWS supports full subnet management for NLBs,
+	// including adding and removing subnets, matching ALB capabilities.
 	if lbType := awstypes.LoadBalancerTypeEnum(diff.Get("load_balancer_type").(string)); lbType != awstypes.LoadBalancerTypeEnumNetwork {
 		return nil
 	}
@@ -1376,11 +1371,15 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 			switch {
 			case deltaN == 0:
 				// No change in number of subnet mappings, but one of the mappings did change.
-				fallthrough
-			case deltaN < 0:
-				// Subnet mappings removed.
 				if err := diff.ForceNew("subnet_mapping"); err != nil {
 					return err
+				}
+			case deltaN < 0:
+				// Subnet mappings removed. Ensure that the remaining mappings didn't change.
+				if os.Intersection(ns).Len() != ns.Len() {
+					if err := diff.ForceNew("subnet_mapping"); err != nil {
+						return err
+					}
 				}
 			case deltaN > 0:
 				// Subnet mappings added. Ensure that the previous mappings didn't change.
@@ -1397,18 +1396,6 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 		}
 	}
 	if hasSubnetsChanges {
-		if v := config.GetAttr(names.AttrSubnets); v.IsWhollyKnown() {
-			o, n := diff.GetChange(names.AttrSubnets)
-			os, ns := o.(*schema.Set), n.(*schema.Set)
-
-			// In-place increase in number of subnets only.
-			if deltaN := ns.Len() - os.Len(); deltaN <= 0 {
-				if err := diff.ForceNew(names.AttrSubnets); err != nil {
-					return err
-				}
-			}
-		}
-
 		if err := diff.SetNewComputed("subnet_mapping"); err != nil {
 			return err
 		}
