@@ -232,7 +232,7 @@ The following arguments are optional:
   When `engine` is `redis`, default is `false`.
   When `engine` is `valkey`, default is `true`.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
-* `auth_token_update_strategy` - (Optional) Strategy used when modifying `auth_token` on an existing replication group. Not used during initial create. Valid values are `SET`, `ROTATE`, and `DELETE`. If omitted during an auth token change, AWS defaults to `ROTATE`.
+* `auth_token_update_strategy` - (Optional) Strategy used when modifying `auth_token` on an existing replication group. Not used during initial create. Valid values are `SET`, `ROTATE`, and `DELETE`. If omitted during an auth token change, AWS defaults to `ROTATE`. If value is `DELETE` then `auth_token` must be omitted.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine types `"redis"` and `"valkey"` and if the engine version is 6 or higher.
   Defaults to `true`.
