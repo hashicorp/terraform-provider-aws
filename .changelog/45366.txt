@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_imagebuilder_component: Add latest version ARN attributes
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Add latest version ARN attributes
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add latest version ARN attributes
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Add latest version ARN attributes
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_workflow: Add latest version ARN attributes
+```

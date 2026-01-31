@@ -287,6 +287,22 @@ func resourceImage() *schema.Resource {
 					},
 				},
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -345,6 +361,13 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(output.ImageBuildVersionArn))
 
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
+
 	if _, err := waitImageStatusAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) create: %s", d.Id(), err)
 	}
@@ -356,7 +379,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	image, err := findImageByARN(ctx, conn, d.Id())
+	output, err := findImageByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image (%s) not found, removing from state", d.Id())
@@ -368,6 +391,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", d.Id(), err)
 	}
 
+	image := output.Image
 	d.Set(names.AttrARN, image.Arn)
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
@@ -422,6 +446,13 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("workflow", nil)
 	}
 
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
+
 	setTagsOut(ctx, image.Tags)
 
 	return diags
@@ -455,7 +486,7 @@ func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Image, error) {
+func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*imagebuilder.GetImageOutput, error) {
 	input := &imagebuilder.GetImageInput{
 		ImageBuildVersionArn: aws.String(arn),
 	}
@@ -477,7 +508,7 @@ func findImageByARN(ctx context.Context, conn *imagebuilder.Client, arn string) 
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Image, nil
+	return output, nil
 }
 
 func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) sdkretry.StateRefreshFunc {
@@ -492,7 +523,7 @@ func statusImage(ctx context.Context, conn *imagebuilder.Client, arn string) sdk
 			return nil, "", err
 		}
 
-		return output, string(output.State.Status), nil
+		return output.Image, string(output.Image.State.Status), nil
 	}
 }
 

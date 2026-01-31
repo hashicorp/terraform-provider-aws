@@ -105,6 +105,22 @@ func resourceWorkflow() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`), "valid semantic version must be provided"),
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -150,6 +166,13 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(aws.ToString(output.WorkflowBuildVersionArn))
 
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
+
 	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
@@ -157,7 +180,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	workflow, err := findWorkflowByARN(ctx, conn, d.Id())
+	output, err := findWorkflowByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Workflow (%s) not found, removing from state", d.Id())
@@ -169,6 +192,8 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Workflow (%s): %s", d.Id(), err)
 	}
 
+	workflow := output.Workflow
+
 	d.Set(names.AttrARN, workflow.Arn)
 	d.Set("change_description", workflow.ChangeDescription)
 	d.Set("data", workflow.Data)
@@ -179,6 +204,13 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrOwner, workflow.Owner)
 	d.Set(names.AttrType, workflow.Type)
 	d.Set(names.AttrVersion, workflow.Version)
+
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 
 	setTagsOut(ctx, workflow.Tags)
 
@@ -213,7 +245,7 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta an
 	return diags
 }
 
-func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Workflow, error) {
+func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*imagebuilder.GetWorkflowOutput, error) {
 	input := &imagebuilder.GetWorkflowInput{
 		WorkflowBuildVersionArn: aws.String(arn),
 	}
@@ -235,5 +267,5 @@ func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn strin
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Workflow, nil
+	return output, nil
 }

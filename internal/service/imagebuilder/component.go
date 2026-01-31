@@ -130,6 +130,22 @@ func resourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
+			"latest_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_major_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_minor_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"latest_patch_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -187,6 +203,13 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(aws.ToString(output.ComponentBuildVersionArn))
 
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
+
 	return append(diags, resourceComponentRead(ctx, d, meta)...)
 }
 
@@ -194,7 +217,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	component, err := findComponentByARN(ctx, conn, d.Id())
+	output, err := findComponentByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Component (%s) not found, removing from state", d.Id())
@@ -206,6 +229,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Component (%s): %s", d.Id(), err)
 	}
 
+	component := output.Component
 	d.Set(names.AttrARN, component.Arn)
 	d.Set("change_description", component.ChangeDescription)
 	d.Set("data", component.Data)
@@ -219,6 +243,13 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("supported_os_versions", component.SupportedOsVersions)
 	d.Set(names.AttrType, component.Type)
 	d.Set(names.AttrVersion, component.Version)
+
+	if output.LatestVersionReferences != nil {
+		d.Set("latest_version_arn", aws.ToString(output.LatestVersionReferences.LatestVersionArn))
+		d.Set("latest_major_version_arn", aws.ToString(output.LatestVersionReferences.LatestMajorVersionArn))
+		d.Set("latest_minor_version_arn", aws.ToString(output.LatestVersionReferences.LatestMinorVersionArn))
+		d.Set("latest_patch_version_arn", aws.ToString(output.LatestVersionReferences.LatestPatchVersionArn))
+	}
 
 	setTagsOut(ctx, component.Tags)
 
@@ -258,7 +289,7 @@ func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta a
 	return diags
 }
 
-func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.Component, error) {
+func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*imagebuilder.GetComponentOutput, error) {
 	input := &imagebuilder.GetComponentInput{
 		ComponentBuildVersionArn: aws.String(arn),
 	}
@@ -280,5 +311,5 @@ func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn stri
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Component, nil
+	return output, nil
 }
