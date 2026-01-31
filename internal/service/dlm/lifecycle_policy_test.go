@@ -500,6 +500,7 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 					checkLifecyclePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_data_volume_tags.test", "exclude"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
 				),
 			},
@@ -1380,6 +1381,9 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
     parameters {
       exclude_boot_volume = true
+	  exclude_data_volume_tags = {
+        test = "exclude"
+	  }
     }
 
     schedule {

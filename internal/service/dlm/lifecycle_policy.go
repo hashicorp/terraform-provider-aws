@@ -248,6 +248,11 @@ func resourceLifecyclePolicy() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
+									"exclude_data_volume_tags": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 									"no_reboot": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -1508,6 +1513,10 @@ func expandParameters(tfList []any, policyType awstypes.PolicyTypeValues) *awsty
 		apiObject.ExcludeBootVolume = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["exclude_data_volume_tags"].(map[string]any); ok && policyType == awstypes.PolicyTypeValuesEbsSnapshotManagement {
+		apiObject.ExcludeDataVolumeTags = expandTags(v)
+	}
+
 	if v, ok := tfMap["no_reboot"].(bool); ok && policyType == awstypes.PolicyTypeValuesImageManagement {
 		apiObject.NoReboot = aws.Bool(v)
 	}
@@ -1519,6 +1528,9 @@ func flattenParameters(apiObject *awstypes.Parameters) []any {
 	tfMap := make(map[string]any)
 	if apiObject.ExcludeBootVolume != nil {
 		tfMap["exclude_boot_volume"] = aws.ToBool(apiObject.ExcludeBootVolume)
+	}
+	if apiObject.ExcludeDataVolumeTags != nil {
+		tfMap["exclude_data_volume_tags"] = flattenTags(apiObject.ExcludeDataVolumeTags)
 	}
 	if apiObject.NoReboot != nil {
 		tfMap["no_reboot"] = aws.ToBool(apiObject.NoReboot)
