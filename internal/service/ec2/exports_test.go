@@ -310,6 +310,7 @@ var (
 	VPCMigrateState                                             = vpcMigrateState
 	VPNGatewayRoutePropagationParseID                           = vpnGatewayRoutePropagationParseID
 	WaitVolumeAttachmentCreated                                 = waitVolumeAttachmentCreated
+	WaitVPCCreated                                              = waitVPCCreated
 )
 
 type (

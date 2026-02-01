@@ -27,9 +27,9 @@ func TestAccEC2DeleteDefaultVPCAction_serial(t *testing.T) { // nosemgrep: ci.vp
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":        testAccEC2DeleteDefaultVPCAction_basic,
-		"noDefaultVPC": testAccEC2DeleteDefaultVPCAction_noDefaultVPC,
-		"trigger":      testAccEC2DeleteDefaultVPCAction_trigger,
+		acctest.CtBasic: testAccEC2DeleteDefaultVPCAction_basic,
+		"noDefaultVPC":  testAccEC2DeleteDefaultVPCAction_noDefaultVPC,
+		"trigger":       testAccEC2DeleteDefaultVPCAction_trigger,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 5*time.Second)
@@ -181,7 +181,7 @@ func testAccDefaultVPCExists(ctx context.Context, t *testing.T) bool {
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("isDefault"),
-				Values: []string{"true"},
+				Values: []string{acctest.CtTrue},
 			},
 		},
 	}
@@ -207,7 +207,7 @@ func testAccDeleteDefaultVPCPreCheckDefaultVPCExists(ctx context.Context, t *tes
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("isDefault"),
-				Values: []string{"true"},
+				Values: []string{acctest.CtTrue},
 			},
 		},
 	}
@@ -219,15 +219,16 @@ func testAccDeleteDefaultVPCPreCheckDefaultVPCExists(ctx context.Context, t *tes
 
 	if len(output.Vpcs) == 0 {
 		// Create default VPC
-		_, err := conn.CreateDefaultVpc(ctx, &ec2.CreateDefaultVpcInput{})
+		createInput := ec2.CreateDefaultVpcInput{}
+		createOutput, err := conn.CreateDefaultVpc(ctx, &createInput)
 		if err != nil {
 			t.Fatalf("Error creating default VPC for test: %s", err)
 		}
-		t.Log("Created default VPC for test")
+		vpcID := aws.ToString(createOutput.Vpc.VpcId)
+		t.Logf("Created default VPC for test: %s", vpcID)
 
 		// Wait for VPC to become available
-		waiter := ec2.NewVpcAvailableWaiter(conn)
-		if err := waiter.Wait(ctx, input, 5*time.Minute); err != nil {
+		if _, err := tfec2.WaitVPCCreated(ctx, conn, vpcID); err != nil {
 			t.Logf("Warning: error waiting for default VPC to become available: %s", err)
 		}
 	}
@@ -243,7 +244,7 @@ func testAccDeleteDefaultVPCIfExists(ctx context.Context, t *testing.T) {
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("isDefault"),
-				Values: []string{"true"},
+				Values: []string{acctest.CtTrue},
 			},
 		},
 	}
@@ -266,9 +267,10 @@ func testAccDeleteDefaultVPCIfExists(ctx context.Context, t *testing.T) {
 		}
 
 		// Delete the VPC itself
-		_, err := conn.DeleteVpc(ctx, &ec2.DeleteVpcInput{
+		deleteInput := ec2.DeleteVpcInput{
 			VpcId: aws.String(vpcID),
-		})
+		}
+		_, err := conn.DeleteVpc(ctx, &deleteInput)
 		if err != nil {
 			t.Logf("Warning: failed to delete default VPC %s: %v", vpcID, err)
 		}
@@ -284,7 +286,7 @@ func testAccCheckDefaultVPCExists(ctx context.Context) resource.TestCheckFunc {
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("isDefault"),
-					Values: []string{"true"},
+					Values: []string{acctest.CtTrue},
 				},
 			},
 		}
@@ -311,7 +313,7 @@ func testAccCheckDefaultVPCDeleted(ctx context.Context) resource.TestCheckFunc {
 			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("isDefault"),
-					Values: []string{"true"},
+					Values: []string{acctest.CtTrue},
 				},
 			},
 		}
@@ -348,7 +350,7 @@ func restoreDefaultVPC(t *testing.T, hadDefaultVPC *bool) {
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("isDefault"),
-				Values: []string{"true"},
+				Values: []string{acctest.CtTrue},
 			},
 		},
 	}
@@ -366,7 +368,8 @@ func restoreDefaultVPC(t *testing.T, hadDefaultVPC *bool) {
 
 	// Create default VPC
 	t.Log("Restoring default VPC after test...")
-	createOutput, err := conn.CreateDefaultVpc(ctx, &ec2.CreateDefaultVpcInput{})
+	createInput := ec2.CreateDefaultVpcInput{}
+	createOutput, err := conn.CreateDefaultVpc(ctx, &createInput)
 	if err != nil {
 		t.Errorf("ERROR: Failed to restore default VPC after test: %v", err)
 		return
@@ -376,8 +379,7 @@ func restoreDefaultVPC(t *testing.T, hadDefaultVPC *bool) {
 	t.Logf("Created default VPC: %s", vpcID)
 
 	// Wait for VPC to become available
-	waiter := ec2.NewVpcAvailableWaiter(conn)
-	if err := waiter.Wait(ctx, describeInput, 5*time.Minute); err != nil {
+	if _, err := tfec2.WaitVPCCreated(ctx, conn, vpcID); err != nil {
 		t.Errorf("ERROR: Default VPC %s was created but failed to become available: %v", vpcID, err)
 		return
 	}

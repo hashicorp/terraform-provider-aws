@@ -90,18 +90,18 @@ func (a *deleteDefaultVPCAction) Invoke(ctx context.Context, req action.InvokeRe
 	// Find default VPC
 	vpcID, err := a.findDefaultVPC(ctx, conn)
 	if err != nil {
-		if retry.NotFound(err) {
-			resp.SendProgress(action.InvokeProgressEvent{
-				Message: "No default VPC found in this region",
-			})
-			tflog.Info(ctx, "No default VPC found, nothing to delete")
+		if !retry.NotFound(err) {
+			resp.Diagnostics.AddError(
+				"Failed to Find Default VPC",
+				fmt.Sprintf("Could not find default VPC: %s", err),
+			)
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			"Failed to Find Default VPC",
-			fmt.Sprintf("Could not find default VPC: %s", err),
-		)
+		resp.SendProgress(action.InvokeProgressEvent{
+			Message: "No default VPC found in this region",
+		})
+		tflog.Info(ctx, "No default VPC found, nothing to delete")
 		return
 	}
 
@@ -277,10 +277,11 @@ func deleteVPCInternetGateways(ctx context.Context, conn *ec2.Client, vpcID stri
 		igwID := aws.ToString(igw.InternetGatewayId)
 
 		// Detach from VPC
-		_, err := conn.DetachInternetGateway(ctx, &ec2.DetachInternetGatewayInput{
+		detachInput := ec2.DetachInternetGatewayInput{
 			InternetGatewayId: aws.String(igwID),
 			VpcId:             aws.String(vpcID),
-		})
+		}
+		_, err := conn.DetachInternetGateway(ctx, &detachInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidInternetGatewayIDNotFound) {
 				continue
@@ -289,9 +290,10 @@ func deleteVPCInternetGateways(ctx context.Context, conn *ec2.Client, vpcID stri
 		}
 
 		// Delete IGW
-		_, err = conn.DeleteInternetGateway(ctx, &ec2.DeleteInternetGatewayInput{
+		deleteInput := ec2.DeleteInternetGatewayInput{
 			InternetGatewayId: aws.String(igwID),
-		})
+		}
+		_, err = conn.DeleteInternetGateway(ctx, &deleteInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidInternetGatewayIDNotFound) {
 				continue
@@ -323,9 +325,10 @@ func deleteVPCSubnets(ctx context.Context, conn *ec2.Client, vpcID string, progr
 	for _, subnet := range output.Subnets {
 		subnetID := aws.ToString(subnet.SubnetId)
 
-		_, err := conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
+		input := ec2.DeleteSubnetInput{
 			SubnetId: aws.String(subnetID),
-		})
+		}
+		_, err := conn.DeleteSubnet(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
 				continue
@@ -372,9 +375,10 @@ func deleteVPCRouteTables(ctx context.Context, conn *ec2.Client, vpcID string, p
 		// Disassociate from subnets first
 		for _, assoc := range rt.Associations {
 			if assoc.RouteTableAssociationId != nil && !aws.ToBool(assoc.Main) {
-				_, err := conn.DisassociateRouteTable(ctx, &ec2.DisassociateRouteTableInput{
+				disassociateInput := ec2.DisassociateRouteTableInput{
 					AssociationId: assoc.RouteTableAssociationId,
-				})
+				}
+				_, err := conn.DisassociateRouteTable(ctx, &disassociateInput)
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 						continue
@@ -385,9 +389,10 @@ func deleteVPCRouteTables(ctx context.Context, conn *ec2.Client, vpcID string, p
 		}
 
 		// Delete route table
-		_, err := conn.DeleteRouteTable(ctx, &ec2.DeleteRouteTableInput{
+		deleteInput := ec2.DeleteRouteTableInput{
 			RouteTableId: aws.String(rtID),
-		})
+		}
+		_, err := conn.DeleteRouteTable(ctx, &deleteInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 				continue
@@ -426,10 +431,11 @@ func deleteVPCSecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string
 
 		// Revoke all ingress rules
 		if len(sg.IpPermissions) > 0 {
-			_, err := conn.RevokeSecurityGroupIngress(ctx, &ec2.RevokeSecurityGroupIngressInput{
+			ingressInput := ec2.RevokeSecurityGroupIngressInput{
 				GroupId:       aws.String(sgID),
 				IpPermissions: sg.IpPermissions,
-			})
+			}
+			_, err := conn.RevokeSecurityGroupIngress(ctx, &ingressInput)
 			if err != nil {
 				if !tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
 					return fmt.Errorf("revoking ingress rules for security group %s: %w", sgID, err)
@@ -439,10 +445,11 @@ func deleteVPCSecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string
 
 		// Revoke all egress rules
 		if len(sg.IpPermissionsEgress) > 0 {
-			_, err := conn.RevokeSecurityGroupEgress(ctx, &ec2.RevokeSecurityGroupEgressInput{
+			egressInput := ec2.RevokeSecurityGroupEgressInput{
 				GroupId:       aws.String(sgID),
 				IpPermissions: sg.IpPermissionsEgress,
-			})
+			}
+			_, err := conn.RevokeSecurityGroupEgress(ctx, &egressInput)
 			if err != nil {
 				if !tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
 					return fmt.Errorf("revoking egress rules for security group %s: %w", sgID, err)
@@ -451,9 +458,10 @@ func deleteVPCSecurityGroups(ctx context.Context, conn *ec2.Client, vpcID string
 		}
 
 		// Delete security group
-		_, err := conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
+		deleteInput := ec2.DeleteSecurityGroupInput{
 			GroupId: aws.String(sgID),
-		})
+		}
+		_, err := conn.DeleteSecurityGroup(ctx, &deleteInput)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
 				continue
@@ -491,9 +499,10 @@ func deleteVPCNetworkACLs(ctx context.Context, conn *ec2.Client, vpcID string, p
 		naclID := aws.ToString(nacl.NetworkAclId)
 
 		// Delete network ACL
-		_, err := conn.DeleteNetworkAcl(ctx, &ec2.DeleteNetworkAclInput{
+		input := ec2.DeleteNetworkAclInput{
 			NetworkAclId: aws.String(naclID),
-		})
+		}
+		_, err := conn.DeleteNetworkAcl(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound) {
 				continue
