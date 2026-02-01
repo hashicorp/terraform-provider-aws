@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2DeleteDefaultVPCAction_serial(t *testing.T) {
+func TestAccEC2DeleteDefaultVPCAction_serial(t *testing.T) { // nosemgrep: ci.vpc-in-test-name
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
@@ -40,7 +40,6 @@ func testAccEC2DeleteDefaultVPCAction_basic(t *testing.T) {
 	var hadDefaultVPC bool
 	var initialStateCaptured bool
 
-	// Use t.Cleanup to ensure VPC is restored - CheckDestroy doesn't run for action blocks
 	t.Cleanup(func() {
 		restoreDefaultVPC(t, &hadDefaultVPC)
 	})
@@ -91,7 +90,6 @@ func testAccEC2DeleteDefaultVPCAction_noDefaultVPC(t *testing.T) {
 	var hadDefaultVPC bool
 	var initialStateCaptured bool
 
-	// Use t.Cleanup to ensure VPC is restored - CheckDestroy doesn't run for action blocks
 	t.Cleanup(func() {
 		restoreDefaultVPC(t, &hadDefaultVPC)
 	})
@@ -130,7 +128,6 @@ func testAccEC2DeleteDefaultVPCAction_trigger(t *testing.T) {
 	var hadDefaultVPC bool
 	var initialStateCaptured bool
 
-	// Use t.Cleanup to ensure VPC is restored - CheckDestroy doesn't run for action blocks
 	t.Cleanup(func() {
 		restoreDefaultVPC(t, &hadDefaultVPC)
 	})

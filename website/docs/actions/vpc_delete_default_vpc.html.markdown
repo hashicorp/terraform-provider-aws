@@ -26,7 +26,7 @@ action "aws_vpc_delete_default_vpc" "example" {
 }
 ```
 
-### Multi-Region Cleanup with 
+### Multi-Region Cleanup
 
 ```terraform
 # Get all available AWS regions
