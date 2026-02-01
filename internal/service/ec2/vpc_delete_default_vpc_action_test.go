@@ -293,7 +293,7 @@ func testAccCheckDefaultVPCExists(ctx context.Context) resource.TestCheckFunc {
 
 		output, err := conn.DescribeVpcs(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error describing VPCs: %s", err)
+			return fmt.Errorf("error describing VPCs: %w", err)
 		}
 
 		if len(output.Vpcs) == 0 {
@@ -320,7 +320,7 @@ func testAccCheckDefaultVPCDeleted(ctx context.Context) resource.TestCheckFunc {
 
 		output, err := conn.DescribeVpcs(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error describing VPCs: %s", err)
+			return fmt.Errorf("error describing VPCs: %w", err)
 		}
 
 		if len(output.Vpcs) > 0 {
