@@ -193,7 +193,12 @@ func testAccDefaultVPCExists(ctx context.Context, t *testing.T) bool {
 	}
 
 	exists := len(output.Vpcs) > 0
-	t.Logf("Default VPC already exists")
+	if exists {
+		t.Logf("Default VPC already exists")
+	} else {
+		t.Logf("Default VPC does not exists")
+	}
+
 	return exists
 }
 
@@ -259,7 +264,7 @@ func testAccDeleteDefaultVPCIfExists(ctx context.Context, t *testing.T) {
 
 		// Delete VPC dependencies using the action implementation
 		progressFn := func(msg string) {
-			t.Logf("Progress: %s", msg)
+			t.Logf("Test progress: %s", msg)
 		}
 
 		if err := tfec2.DeleteDefaultVPCDependencies(ctx, conn, vpcID, progressFn); err != nil {
