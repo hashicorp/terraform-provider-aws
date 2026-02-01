@@ -30,6 +30,12 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 			Name:     "Stop Instance",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newDeleteDefaultVPCAction,
+			TypeName: "aws_vpc_delete_default_vpc",
+			Name:     "Delete Default VPC",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
