@@ -82,6 +82,26 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 						"Can also be configured using the `AWS_CA_BUNDLE` environment variable. " +
 						"(Setting `ca_bundle` in the shared config file is not supported.)",
 				},
+				"client_certificate": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Description: "File containing the client certificate for mTLS authentication. " +
+						"Can also be configured using the `TF_AWS_CLIENT_CERTIFICATE_PATH` environment variable.",
+				},
+				"client_private_key": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+					Description: "File containing the client private key for mTLS authentication. " +
+						"Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PATH` environment variable.",
+				},
+				"client_private_key_passphrase": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+					Description: "Passphrase for the client private key file. " +
+						"Can also be configured using the `TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE` environment variable.",
+				},
 				"default_tags": {
 					Type:        schema.TypeList,
 					Optional:    true,
@@ -366,6 +386,9 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
+		ClientCertificate:              d.Get("client_certificate").(string),
+		ClientPrivateKey:               d.Get("client_private_key").(string),
+		ClientPrivateKeyPassphrase:     d.Get("client_private_key_passphrase").(string),
 		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
@@ -393,6 +416,22 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 		config.RetryMode = mode
+	}
+
+	if config.ClientCertificate == "" {
+		if v := os.Getenv("TF_AWS_CLIENT_CERTIFICATE_PATH"); v != "" {
+			config.ClientCertificate = v
+		}
+	}
+	if config.ClientPrivateKey == "" {
+		if v := os.Getenv("TF_AWS_CLIENT_PRIVATE_KEY_PATH"); v != "" {
+			config.ClientPrivateKey = v
+		}
+	}
+	if config.ClientPrivateKeyPassphrase == "" {
+		if v := os.Getenv("TF_AWS_CLIENT_PRIVATE_KEY_PASSPHRASE"); v != "" {
+			config.ClientPrivateKeyPassphrase = v
+		}
 	}
 
 	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
