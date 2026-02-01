@@ -69,6 +69,9 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 				ForceNew:         true,
 				ValidateFunc:     validOpenIDURL,
 				DiffSuppressFunc: suppressOpenIDURL,
+				StateFunc: func(v any) string {
+					return normalizeOpenIDURL(v.(string))
+				},
 			},
 		},
 	}
@@ -81,7 +84,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	input := &iam.CreateOpenIDConnectProviderInput{
 		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
 		Tags:         getTagsIn(ctx),
-		Url:          aws.String(d.Get(names.AttrURL).(string)),
+		Url:          aws.String(normalizeOpenIDURL(d.Get(names.AttrURL).(string))),
 	}
 
 	if v, ok := d.GetOk("thumbprint_list"); ok {
@@ -140,7 +143,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrARN, d.Id())
 	d.Set("client_id_list", output.ClientIDList)
 	d.Set("thumbprint_list", output.ThumbprintList)
-	d.Set(names.AttrURL, output.Url)
+	d.Set(names.AttrURL, normalizeOpenIDURL(aws.ToString(output.Url)))
 
 	setTagsOut(ctx, output.Tags)
 

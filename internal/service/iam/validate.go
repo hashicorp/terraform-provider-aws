@@ -42,17 +42,33 @@ var validAccountAlias = validation.All(
 )
 
 var validOpenIDURL = validation.All(
-	validation.IsURLWithHTTPS,
 	func(v any, k string) (ws []string, es []error) {
-		value := v.(string)
+		raw := v.(string)
+
+		// Normalize: allow scheme-less issuer URL by assuming https
+		value := normalizeOpenIDURL(raw)
+
 		u, err := url.Parse(value)
 		if err != nil {
-			// validation.IsURLWithHTTPS will already have returned an error for an invalid URL
+			es = append(es, fmt.Errorf("%q must be a valid URL: %v", k, err))
 			return
 		}
+
+		// Enforce https (OIDC issuer URLs must be https)
+		if u.Scheme != "https" {
+			es = append(es, fmt.Errorf("%q must use https scheme", k))
+		}
+
+		// Require host
+		if u.Host == "" {
+			es = append(es, fmt.Errorf("%q must include a host", k))
+		}
+
+		// Keep existing rule: no query params
 		if len(u.Query()) > 0 {
 			es = append(es, fmt.Errorf("%q cannot contain query parameters per the OIDC standard", k))
 		}
+
 		return
 	},
 )
