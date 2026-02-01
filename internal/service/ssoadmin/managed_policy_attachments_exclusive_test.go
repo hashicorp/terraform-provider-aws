@@ -6,7 +6,6 @@ package ssoadmin_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,7 +45,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "instance_arn",
 			},
@@ -80,7 +79,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "instance_arn", "permission_set_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "instance_arn",
 			},
@@ -191,29 +190,6 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_outOfBandAddition(t *testi
 			},
 		},
 	})
-}
-
-func testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		instanceARN := rs.Primary.Attributes["instance_arn"]
-		permissionSetARN := rs.Primary.Attributes["permission_set_arn"]
-
-		if instanceARN == "" || permissionSetARN == "" {
-			return "", fmt.Errorf("instance_arn or permission_set_arn is empty. instance_arn=%q, permission_set_arn=%q, all attributes: %v", instanceARN, permissionSetARN, rs.Primary.Attributes)
-		}
-
-		parts := []string{
-			instanceARN,
-			permissionSetARN,
-		}
-
-		return strings.Join(parts, intflex.ResourceIdSeparator), nil
-	}
 }
 
 func testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {

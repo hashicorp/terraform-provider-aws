@@ -675,6 +675,8 @@ service "arcregionswitch" {
   provider_package_correct = "arcregionswitch"
   doc_prefix               = ["arcregionswitch_"]
   brand                    = "Amazon"
+
+  is_global = true
 }
 
 service "arczonalshift" {

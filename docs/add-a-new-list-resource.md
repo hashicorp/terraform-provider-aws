@@ -16,7 +16,7 @@ List Resources are dependent on [resource identity](https://developer.hashicorp.
 
 Naming of a new List Resource should be identical to the target resource. For example, if adding a new list resource for `aws_batch_job_definition`, the list resource should be named `aws_batch_job_definition`.
 
-Always use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
+Always use the [`skaff`](skaff.md) provider scaffolding tool to generate new list resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
 
 ### SDK resources
 

@@ -42,8 +42,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsTakesT=false)
 // @Testing(checkDestroyNoop=true)
-// @Testing(importStateIdFunc=testAccManagedPolicyAttachmentsExclusiveImportStateIDFunc)
-// @Testing(importStateIdAttribute="instance_arn")
+// @Testing(importStateIdAttributes="instance_arn;permission_set_arn", importStateIdAttributesSep="flex.ResourceIdSeparator")
 func newManagedPolicyAttachmentsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &managedPolicyAttachmentsExclusiveResource{}
 

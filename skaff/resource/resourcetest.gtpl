@@ -33,7 +33,7 @@ import (
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .SDKPackage }}/types package. If so, you'll
+	// using the service/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}

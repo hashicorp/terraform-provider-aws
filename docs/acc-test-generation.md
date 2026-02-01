@@ -73,11 +73,11 @@ Multiple `@Testing(preCheckWithRegion)` annotations are allowed.
 #### Required Environment Variables
 
 If a test should be skipped unless an environment variable is set, but the value is not used in the test,
-set the annotation `@Testing(requireEnvVar="<name>)`.
+set the annotation `@Testing(requireEnvVar="<name>")`.
 Multiple `@Testing(requireEnvVar)` annotations are allowed.
 
 If a test should be skipped unless an environment variable is set, and the value is used in the test,
-set the annotation `@Testing(requireEnvVarValue="<name>)`.
+set the annotation `@Testing(requireEnvVarValue="<name>")`.
 This will add a Terraform variable with the same name to the generated test configuration.
 Multiple `@Testing(requireEnvVarValue)` annotations are allowed.
 
@@ -95,7 +95,7 @@ This will add the `PreCheck` function `acctest.PreCheckMultipleRegion` as well a
 #### Exists and Destroy Checks
 
 Most `Exists` functions used in acceptance tests take a pointer to the returned API object.
-To specify the type of this parameter, use the annotion `@Testing(existsType=<reference>)`.
+To specify the type of this parameter, use the annotation `@Testing(existsType=<reference>)`.
 This references a Go type and package path with optional package alias, using the format
 `<package path>;[<package alias>;]<function call>`.
 For example, the S3 Object uses
@@ -236,7 +236,7 @@ add the annotation `@Testing(hasNoPreExistingResource=true)`.
 
 In some circumstances, a resource type requires an updated Resource Identity schema version.
 This requires additional testing to ensure that the Resource Identity can be correctly updated to the new schema.
-THis is specified by adding one `@Testing(identityVersion="<identity-schema-version>;<provider-version>")` annotation per Resource Identity schema version.
+This is specified by adding one `@Testing(identityVersion="<identity-schema-version>;<provider-version>")` annotation per Resource Identity schema version.
 Schema versions are zero-indexed.
 Note that, unlike the `@Testing(preIdentityVersion)` annotation, `identityVersion` uses the **actual** provider version.
 For example, Resource Identity was added to the resource type `aws_sqs_queue` in provider version 6.10.0 and the schema was updated in provider version 6.19.0. The annotations are:
@@ -268,7 +268,7 @@ add the annotation `@Testing(plannableImportAction="Replace")`.
 Consider opening an issue in the provider's GitHub repository reporting that the resource type causes recreation when importing.
 
 If you are creating a new resource type, consider how the resource type can be support importing without recreating the resource.
-If it is not possible, disable import support using the annotion `@NoImport`.
+If it is not possible, disable import support using the annotation `@NoImport`.
 
 #### Error Cases
 
@@ -312,7 +312,7 @@ If a resource type is also needed for the `listTags` function, also specify the 
 
 The generated acceptance tests use `ConfigDirectory` to specify the test configurations in a directory of Terraform `.tf` files.
 The configuration files are generated from a [Go template](https://pkg.go.dev/text/template) file located in `testdata/tmpl/<name>_basic.gtpl`,
-where `name` is the name of the resource type's implementation file wihtout the `.go` extension.
+where `name` is the name of the resource type's implementation file without the `.go` extension.
 For example, the ELB v2 Load Balancer's implementation file is `load_balancer.go`, so the template is `testdata/tmpl/load_balancer_basic.gtpl`.
 
 To generate a configuration for a data source test, the generator reuses the configuration for the corresponding resource type.
