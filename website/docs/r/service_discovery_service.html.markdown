@@ -84,6 +84,10 @@ This resource supports the following arguments:
 * `health_check_custom_config` - (Optional, **Deprecated**, Forces new resource) Please use `health_check_config` instead. See [`health_check_custom_config` Block](#health_check_custom_config-block) for details.
 * `namespace_id` - (Optional) The ID of the namespace that you want to use to create the service.
 * `type` - (Optional) If present, specifies that the service instances are only discoverable using the `DiscoverInstances` API operation. No DNS records is registered for the service instances. The only valid value is `HTTP`.
+~> **Note:** The `type` argument is an instruction to the upstream `CreateService` API and is **not** a complete enumeration of all possible service types. Only `HTTP` is accepted as an input value.
+When `type` is omitted, AWS determines the service type based on the rest of the configuration (for example, `dns_config` and health checks). The resulting value is then populated in Terraform state as a computed attribute.
+In these cases, values such as `DNS_HTTP` may appear in state, even though they are not valid configuration values.
+For most DNS-based use cases, omitting `type` is the expected and recommended approach.
 * `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `dns_config` Block
