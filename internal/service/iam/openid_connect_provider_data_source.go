@@ -56,7 +56,10 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     validOpenIDURL,
 				DiffSuppressFunc: suppressOpenIDURL,
-				ExactlyOneOf:     []string{names.AttrARN, names.AttrURL},
+				StateFunc: func(v any) string {
+					return normalizeOpenIDURL(v.(string))
+				},
+				ExactlyOneOf: []string{names.AttrARN, names.AttrURL},
 			},
 		},
 	}
@@ -93,7 +96,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrARN, arn)
 	d.Set("client_id_list", output.ClientIDList)
 	d.Set("thumbprint_list", output.ThumbprintList)
-	d.Set(names.AttrURL, output.Url)
+	d.Set(names.AttrURL, normalizeOpenIDURL(aws.ToString(output.Url)))
 
 	setTagsOut(ctx, output.Tags)
 
