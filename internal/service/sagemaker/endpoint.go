@@ -271,11 +271,10 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		_, err = waitEndpointInService(ctx, conn, name)
 
-		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
-		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
-			d := resourceEndpoint().Data(nil)
-			d.SetId(name)
-			if diags := resourceEndpointDelete(ctx, d, meta); diags.HasError() {
+		if errs.Contains(err, `execution role ARN`) && errs.Contains(err, `invalid`) {
+			tempData := resourceEndpoint().Data(nil)
+			tempData.SetId(name)
+			if diags := resourceEndpointDelete(ctx, tempData, meta); diags.HasError() {
 				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
 			}
 
