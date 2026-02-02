@@ -477,7 +477,7 @@ github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0 h1:oeu8VPlOre74lBA/PMhxa5vewaMIM
 github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0/go.mod h1:5jggDlZ2CLQhwJBiZJb4vfk4f0GxWdEDruWKEJ1xOdo=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.68.0 h1:UX8fZnLiWEvLGcnSW7jyayNVQroVw/Z3DNHEZSgT/MM=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.68.0/go.mod h1:wgiqMLAEVr17L0H9z57nWjg95g44NVm61jjGxEEVuxw=
->>>>>>> 5eab9b9b958 (feat(s3): add UpdateObjectEncryption support)
+
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.8 h1:b3TU6VjP7rEdBDxpKOIyDXWnLiQoPqcre8yXVMu110M=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.8/go.mod h1:+foB3xkeOt/CjHITHzX/GtG2mFZt43gxZkqha0Fxx8k=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.2 h1:fTNZrC4c+B6oBFw1bQSs1RE64+TAN2XLIa2Koen+JQk=
