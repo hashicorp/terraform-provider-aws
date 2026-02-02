@@ -34,7 +34,7 @@ func TestAccPaymentCryptographyKey_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -42,7 +42,7 @@ func TestAccPaymentCryptographyKey_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Key/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -243,14 +243,14 @@ func TestAccPaymentCryptographyKey_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Key/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -262,7 +262,7 @@ func TestAccPaymentCryptographyKey_Identity_ExistingResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Key/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -316,7 +316,7 @@ func TestAccPaymentCryptographyKey_Identity_ExistingResource_NoRefresh_NoChange(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -328,7 +328,7 @@ func TestAccPaymentCryptographyKey_Identity_ExistingResource_NoRefresh_NoChange(
 				ConfigDirectory: config.StaticDirectory("testdata/Key/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &v),
+					testAccCheckKeyExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -220,9 +219,8 @@ func findSIPRuleByID(ctx context.Context, conn *chimesdkvoice.Client, id string)
 	resp, err := conn.GetSipRule(ctx, in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

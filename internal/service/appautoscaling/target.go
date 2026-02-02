@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,7 +31,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types;awstypes;awstypes.ScalableTarget")
 // @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
 // @Testing(skipEmptyTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
@@ -265,9 +263,7 @@ func findTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 	}
 
 	if aws.ToString(target.ResourceId) != resourceID || string(target.ScalableDimension) != dimension || string(target.ServiceNamespace) != namespace {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: &input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return target, nil

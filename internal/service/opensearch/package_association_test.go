@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,16 +24,16 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 	packageResourceName := "aws_opensearch_package.test"
 	domainResourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackageAssociationExists(ctx, resourceName),
+					testAccCheckPackageAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, names.AttrID),
 				),
@@ -49,16 +48,16 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPackageAssociationExists(ctx, resourceName),
+					testAccCheckPackageAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackageAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -67,14 +66,14 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPackageAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPackageAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
 		_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 
@@ -82,14 +81,14 @@ func testAccCheckPackageAssociationExists(ctx context.Context, n string) resourc
 	}
 }
 
-func testAccCheckPackageAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPackageAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearch_package_association" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
 			_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 

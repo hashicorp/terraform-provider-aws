@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -43,7 +42,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehub;resiliencehub.DescribeResiliencyPolicyOutput")
 // @Testing(importStateIdAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResiliencyPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resiliencyPolicyResource{}
 
@@ -437,10 +435,10 @@ const (
 )
 
 func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
-		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
+		Refresh:                   statusResiliencyPolicy(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -455,10 +453,10 @@ func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client
 }
 
 func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusCompleted},
-		Refresh:                   statusResiliencyPolicy(ctx, conn, arn),
+		Refresh:                   statusResiliencyPolicy(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -473,10 +471,10 @@ func waitResiliencyPolicyUpdated(ctx context.Context, conn *resiliencehub.Client
 }
 
 func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{},
-		Refresh: statusResiliencyPolicy(ctx, conn, arn),
+		Refresh: statusResiliencyPolicy(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -488,8 +486,8 @@ func waitResiliencyPolicyDeleted(ctx context.Context, conn *resiliencehub.Client
 	return nil, err
 }
 
-func statusResiliencyPolicy(ctx context.Context, conn *resiliencehub.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResiliencyPolicy(conn *resiliencehub.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findResiliencyPolicyByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -511,9 +509,8 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	out, err := conn.DescribeResiliencyPolicy(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

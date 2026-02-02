@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -224,9 +223,8 @@ func findResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.Client, arn 
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -251,9 +249,8 @@ func findResourceShares(ctx context.Context, conn *ram.Client, input *ram.GetRes
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -267,8 +264,8 @@ func findResourceShares(ctx context.Context, conn *ram.Client, input *ram.GetRes
 	return output, nil
 }
 
-func statusResourceShareOwnerSelf(ctx context.Context, conn *ram.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceShareOwnerSelf(conn *ram.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourceShareOwnerSelfByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -284,10 +281,10 @@ func statusResourceShareOwnerSelf(ctx context.Context, conn *ram.Client, arn str
 }
 
 func waitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShare, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareStatusPending),
 		Target:  enum.Slice(awstypes.ResourceShareStatusActive),
-		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
+		Refresh: statusResourceShareOwnerSelf(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -303,10 +300,10 @@ func waitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.Client, a
 }
 
 func waitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShare, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareStatusDeleting),
 		Target:  []string{},
-		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
+		Refresh: statusResourceShareOwnerSelf(conn, arn),
 		Timeout: timeout,
 	}
 

@@ -26,7 +26,7 @@ jobs:
   providerlint:
     runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-      - uses: actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -42,7 +42,7 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
           restore-keys: |
             ${{ runner.os }}-go-build-
-      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         continue-on-error: true
         timeout-minutes: 2
         with:

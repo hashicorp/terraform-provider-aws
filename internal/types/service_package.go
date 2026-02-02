@@ -22,6 +22,7 @@ import (
 type ServicePackageResourceRegion struct {
 	IsOverrideEnabled             bool // Is per-resource Region override supported?
 	IsValidateOverrideInPartition bool // Is the per-resource Region override value validated againt the configured partition?
+	IsOverrideDeprecated          bool // Is per-resource Region override deprecated? i.e. the resource type is actually global
 }
 
 // ResourceRegionDefault returns the default resource region configuration.
@@ -36,6 +37,15 @@ func ResourceRegionDefault() ServicePackageResourceRegion {
 // ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
 func ResourceRegionDisabled() ServicePackageResourceRegion {
 	return ServicePackageResourceRegion{}
+}
+
+// ResourceRegionDeprecatedOverride returns the resource region configuration indicating that per-resource Region override is enabled but deprecated.
+func ResourceRegionDeprecatedOverride() ServicePackageResourceRegion {
+	return ServicePackageResourceRegion{
+		IsOverrideEnabled:             true,
+		IsValidateOverrideInPartition: true,
+		IsOverrideDeprecated:          true,
+	}
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.

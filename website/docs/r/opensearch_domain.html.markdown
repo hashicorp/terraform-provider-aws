@@ -361,6 +361,7 @@ The following arguments are optional:
 
 * `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
 * `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
+* `serverless_vector_acceleration` - (Optional) Configuration block for parameters required to enable GPU-accelerated vector search on the specified domain.
 
 #### natural_language_query_generation_options
 
@@ -369,6 +370,10 @@ The following arguments are optional:
 #### s3_vectors_engine
 
 * `enabled` - (Optional) Enables S3 vectors engine features.
+
+#### serverless_vector_acceleration
+
+* `enabled` - (Optional) Enables GPU-accelerated vector search for improved performance on vector workloads.
 
 ### auto_tune_options
 

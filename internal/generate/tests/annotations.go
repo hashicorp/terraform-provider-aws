@@ -34,12 +34,14 @@ type CommonArgs struct {
 	existsTakesNoT bool
 
 	// Import
-	NoImport               bool
-	ImportStateID          string
-	importStateIDAttribute string
-	ImportStateIDFunc      string
-	ImportIgnore           []string
-	plannableImportAction  importAction
+	NoImport                   bool
+	ImportStateID              string
+	importStateIDAttribute     string
+	importStateIDAttributes    []string
+	importStateIDAttributesSep string
+	ImportStateIDFunc          string
+	ImportIgnore               []string
+	plannableImportAction      importAction
 
 	// Serialization
 	Serialize              bool
@@ -88,6 +90,46 @@ func (c CommonArgs) ImportStateIDAttribute() string {
 
 func (c *CommonArgs) SetImportStateIDAttribute(attrName string) {
 	c.importStateIDAttribute = attrName
+}
+
+func (c CommonArgs) HasImportStateIDAttributes() bool {
+	return len(c.importStateIDAttributes) > 0
+}
+
+func (c CommonArgs) ImportStateIDAttributes() string {
+	quoted := make([]string, len(c.importStateIDAttributes))
+	for i, attr := range c.importStateIDAttributes {
+		quoted[i] = namesgen.ConstOrQuote(attr)
+	}
+	return strings.Join(quoted, ", ")
+}
+
+func (c CommonArgs) ImportStateIDAttributesFirst() string {
+	if len(c.importStateIDAttributes) > 0 {
+		return namesgen.ConstOrQuote(c.importStateIDAttributes[0])
+	}
+	return ""
+}
+
+func (c CommonArgs) ImportStateIDAttributesSep() string {
+	if c.importStateIDAttributesSep == "" {
+		return namesgen.ConstOrQuote(",")
+	}
+	sep := c.importStateIDAttributesSep
+	// Check if it looks like a package-qualified constant (e.g., "intflex.ResourceIdSeparator")
+	if strings.Contains(sep, ".") {
+		return sep // Return as-is (constant reference)
+	}
+	// Check if it starts with uppercase (unqualified constant)
+	if len(sep) > 0 && sep[0] >= 'A' && sep[0] <= 'Z' {
+		return sep // Return as-is (constant reference)
+	}
+	return namesgen.ConstOrQuote(sep) // Quote it (string literal)
+}
+
+func (c *CommonArgs) SetImportStateIDAttributes(attrNames []string, sep string) {
+	c.importStateIDAttributes = attrNames
+	c.importStateIDAttributesSep = sep
 }
 
 func (c CommonArgs) HasImportIgnore() bool {
@@ -228,6 +270,30 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
 		stuff.importStateIDAttribute = attr
+	}
+
+	if attr, ok := args.Keyword["importStateIdAttributes"]; ok {
+		attrs := strings.Split(attr, ";")
+		for i, a := range attrs {
+			attrs[i] = strings.TrimSpace(a)
+		}
+		sep := ","
+		if s, ok := args.Keyword["importStateIdAttributesSep"]; ok {
+			sep = s
+			// If separator references intflex, add the import
+			switch {
+			case strings.Contains(sep, "intflex."):
+				stuff.GoImports = append(stuff.GoImports, common.GoImport{
+					Path:  "github.com/hashicorp/terraform-provider-aws/internal/flex",
+					Alias: "intflex",
+				})
+			case strings.Contains(sep, "flex."):
+				stuff.GoImports = append(stuff.GoImports, common.GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/flex",
+				})
+			}
+		}
+		stuff.SetImportStateIDAttributes(attrs, sep)
 	}
 
 	if attr, ok := args.Keyword["importStateIdFunc"]; ok {

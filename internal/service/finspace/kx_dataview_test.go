@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,22 +26,22 @@ func TestAccFinSpaceKxDataview_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxDataviewStatusActive)),
 				),
@@ -64,22 +62,22 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxDataview(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,22 +93,22 @@ func TestAccFinSpaceKxDataview_readWrite(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDataviewConfig_readWrite(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -125,22 +123,22 @@ func TestAccFinSpaceKxDataview_onDemand(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDataviewConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -155,22 +153,22 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDataviewConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -185,7 +183,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 			{
 				Config: testAccKxDataviewConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -195,7 +193,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 			{
 				Config: testAccKxDataviewConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -212,22 +210,22 @@ func TestAccFinSpaceKxDataview_withKxVolume(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var dataview finspace.GetKxDataviewOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_dataview.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxDataviewConfig_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					testAccCheckKxDataviewExists(ctx, t, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxDataviewStatusActive)),
 				),
@@ -236,7 +234,7 @@ func TestAccFinSpaceKxDataview_withKxVolume(t *testing.T) {
 	})
 }
 
-func testAccCheckKxDataviewExists(ctx context.Context, name string, dataview *finspace.GetKxDataviewOutput) resource.TestCheckFunc {
+func testAccCheckKxDataviewExists(ctx context.Context, t *testing.T, name string, dataview *finspace.GetKxDataviewOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -247,7 +245,7 @@ func testAccCheckKxDataviewExists(ctx context.Context, name string, dataview *fi
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxDataview, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 
 		resp, err := tffinspace.FindKxDataviewById(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -260,14 +258,14 @@ func testAccCheckKxDataviewExists(ctx context.Context, name string, dataview *fi
 	}
 }
 
-func testAccCheckKxDataviewDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKxDataviewDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_dataview" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 
 			_, err := tffinspace.FindKxDataviewById(ctx, conn, rs.Primary.ID)
 			if err != nil {

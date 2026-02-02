@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -238,9 +237,8 @@ func findGroup(ctx context.Context, conn *identitystore.Client, input *identitys
 	output, err := conn.DescribeGroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

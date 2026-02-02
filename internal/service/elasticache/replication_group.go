@@ -89,7 +89,6 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-				RequiredWith:     []string{"auth_token"},
 			},
 			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
@@ -477,6 +476,7 @@ func resourceReplicationGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
+			authTokenUpdateStrategyValidate,
 			customizeDiffEngineForceNewOnDowngrade(),
 			customdiff.ForceNewIf("node_group_configuration", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 				// Only force new if user explicitly configured node_group_configuration and made meaningful changes
@@ -1077,6 +1077,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			add, del := ns.Difference(os), os.Difference(ns)
 
 			if add.Len() > 0 {
+				if d.HasChanges("auth_token", "auth_token_update_strategy") && awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+					// Transitioning to RBAC.
+					input.AuthTokenUpdateStrategy = awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string))
+				}
 				input.UserGroupIdsToAdd = flex.ExpandStringValueSet(add)
 				requestUpdate = true
 			}
@@ -1103,25 +1107,28 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChanges("auth_token", "auth_token_update_strategy") {
-			authInput := elasticache.ModifyReplicationGroupInput{
-				ApplyImmediately:        aws.Bool(true),
-				AuthToken:               aws.String(d.Get("auth_token").(string)),
-				AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
-				ReplicationGroupId:      aws.String(d.Id()),
-			}
+			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
+			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
+				authInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:        aws.Bool(true),
+					AuthToken:               aws.String(d.Get("auth_token").(string)),
+					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
+					ReplicationGroupId:      aws.String(d.Id()),
+				}
 
-			updateFuncs = append(updateFuncs, func() error {
-				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
-				// modifying to match out of band operations may result in this error
-				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+				updateFuncs = append(updateFuncs, func() error {
+					_, err := conn.ModifyReplicationGroup(ctx, &authInput)
+					// modifying to match out of band operations may result in this error
+					if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+						return nil
+					}
+
+					if err != nil {
+						return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %w", d.Id(), err)
+					}
 					return nil
-				}
-
-				if err != nil {
-					return fmt.Errorf("modifying ElastiCache Replication Group (%s) authentication: %w", d.Id(), err)
-				}
-				return nil
-			})
+				})
+			}
 		}
 
 		if d.HasChange("num_cache_clusters") {
@@ -1260,19 +1267,36 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	}
 
 	if oldNodeGroupCount > newNodeGroupCount {
-		// Node Group IDs are 1 indexed: 0001 through 0015
-		// Loop from highest old ID until we reach highest new ID
-		nodeGroupsToRemove := []string{}
-		for i := oldNodeGroupCount; i > newNodeGroupCount; i-- {
-			nodeGroupID := fmt.Sprintf("%04d", i)
-			nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupID)
+		// Scaling down scenario.
+
+		nodeGroupIDs := []string{}
+		rg, err := findReplicationGroupByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 		}
-		input.NodeGroupsToRemove = nodeGroupsToRemove
+
+		for _, ng := range rg.NodeGroups {
+			if ng.NodeGroupId != nil {
+				nodeGroupIDs = append(nodeGroupIDs, *ng.NodeGroupId)
+			}
+		}
+		lengthOfNodeGroupIDs := len(nodeGroupIDs)
+
+		if lengthOfNodeGroupIDs > newNodeGroupCount {
+			slices.Sort(nodeGroupIDs)
+
+			nodeGroupsToRemove := []string{}
+
+			for i := lengthOfNodeGroupIDs; i > newNodeGroupCount; i-- {
+				nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupIDs[i-1])
+			}
+
+			input.NodeGroupsToRemove = nodeGroupsToRemove
+		}
 	}
 
-	_, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input)
-
-	if err != nil {
+	if _, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input); err != nil {
 		return fmt.Errorf("modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
 	}
 
@@ -1594,6 +1618,23 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 		return nil
 	}
 	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
+}
+
+func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
+	_, tokenOk := diff.GetOk("auth_token")
+
+	if strategyOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
+		if tokenOk {
+			return errors.New(`"auth_token" must not be specified when "auth_token_update_strategy" is "DELETE"`)
+		}
+		return nil
+	}
+	if strategyOk && !tokenOk {
+		return errors.New(`"auth_token_update_strategy": "auth_token" must be specified`)
+	}
+
+	return nil
 }
 
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/schemas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -157,9 +156,8 @@ func findDiscovererByID(ctx context.Context, conn *schemas.Client, id string) (*
 	output, err := conn.DescribeDiscoverer(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

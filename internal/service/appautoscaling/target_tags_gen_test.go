@@ -33,7 +33,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -90,7 +90,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -139,7 +139,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -181,7 +181,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -223,7 +223,7 @@ func TestAccAppAutoScalingTarget_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -235,7 +235,7 @@ func TestAccAppAutoScalingTarget_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -295,7 +295,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -305,7 +305,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -363,7 +363,7 @@ func TestAccAppAutoScalingTarget_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -373,7 +373,7 @@ func TestAccAppAutoScalingTarget_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -397,7 +397,7 @@ func TestAccAppAutoScalingTarget_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -451,7 +451,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -463,7 +463,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -504,7 +504,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -548,7 +548,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -560,7 +560,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -592,7 +592,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -639,7 +639,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -693,7 +693,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -705,7 +705,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -736,7 +736,7 @@ func TestAccAppAutoScalingTarget_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -787,7 +787,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -800,7 +800,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -845,7 +845,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -892,7 +892,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -933,7 +933,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -976,7 +976,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -991,7 +991,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1046,7 +1046,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1100,7 +1100,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1143,7 +1143,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1158,7 +1158,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1212,7 +1212,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1270,7 +1270,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1326,7 +1326,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_updateToProviderOnly(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1338,7 +1338,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_updateToProviderOnly(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1371,7 +1371,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1421,7 +1421,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_updateToResourceOnly(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1434,7 +1434,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1462,7 +1462,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_updateToResourceOnly(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1517,7 +1517,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1532,7 +1532,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1589,7 +1589,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1602,7 +1602,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1651,7 +1651,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nullOverlappingResourceTag(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1666,7 +1666,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nullOverlappingResourceTag(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1718,7 +1718,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nullNonOverlappingResourceTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1733,7 +1733,7 @@ func TestAccAppAutoScalingTarget_tags_DefaultTags_nullNonOverlappingResourceTag(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1785,7 +1785,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1795,7 +1795,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1845,7 +1845,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1857,7 +1857,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1889,7 +1889,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1947,7 +1947,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1959,7 +1959,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1989,7 +1989,7 @@ func TestAccAppAutoScalingTarget_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2039,7 +2039,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2058,7 +2058,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2107,7 +2107,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2156,7 +2156,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2205,7 +2205,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
-		CheckDestroy: testAccCheckTargetDestroy(ctx),
+		CheckDestroy: testAccCheckTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2222,7 +2222,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2285,7 +2285,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2348,7 +2348,7 @@ func TestAccAppAutoScalingTarget_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetExists(ctx, resourceName, &v),
+					testAccCheckTargetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

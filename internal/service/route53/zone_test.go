@@ -15,7 +15,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -47,6 +51,11 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_accelerated_recovery", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -144,6 +153,11 @@ func TestAccRoute53Zone_comment(t *testing.T) {
 					testAccCheckZoneExists(ctx, resourceName, &zone),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "comment1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccZoneConfig_comment(zoneName, "comment2"),
@@ -151,6 +165,11 @@ func TestAccRoute53Zone_comment(t *testing.T) {
 					testAccCheckZoneExists(ctx, resourceName, &zone),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "comment2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -255,12 +274,20 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccZoneConfig_tags1(zoneName, "tag1key", "tag1value"),
+				Config: testAccZoneConfig_tags1(zoneName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1value"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -269,21 +296,37 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccZoneConfig_tags2(zoneName, "tag1key", "tag1valueupdated", "tag2key", "tag2value"),
+				Config: testAccZoneConfig_tags2(zoneName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1valueupdated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
-				Config: testAccZoneConfig_tags1(zoneName, "tag2key", "tag2value"),
+				Config: testAccZoneConfig_tags1(zoneName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -377,6 +420,11 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccZoneConfig_vpcMultiple(rName, zoneName),
@@ -386,6 +434,11 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 					testAccCheckZoneAssociatesVPC(vpcResourceName2, &zone),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
@@ -394,6 +447,11 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -573,6 +631,12 @@ func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
+				ResourceName:            resourceName2,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
 				// Disable accelerated recovery
 				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName1, zoneName2, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -592,6 +656,47 @@ func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName1, "enable_accelerated_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName2, "enable_accelerated_recovery", acctest.CtTrue),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone1, zone2 route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	zoneName1 := acctest.RandomDomainName()
+	zoneName2 := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccZoneConfig_basic(zoneName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})

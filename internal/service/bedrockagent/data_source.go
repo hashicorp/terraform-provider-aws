@@ -30,8 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -748,6 +747,26 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 									},
 								},
 								Blocks: map[string]schema.Block{
+									"bedrock_data_automation_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockDataAutomationConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"parsing_modality": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ParsingModality](),
+													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
 									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelConfigurationModel](ctx),
 										PlanModifiers: []planmodifier.List{
@@ -761,6 +780,13 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 												"model_arn": schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+												"parsing_modality": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ParsingModality](),
+													Optional:   true,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
@@ -805,16 +831,16 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.CreateDataSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var input bedrockagent.CreateDataSourceInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateDataSource(ctx, input)
+		return conn.CreateDataSource(ctx, &input)
 	}, errCodeValidationException, "cannot assume role")
 
 	if err != nil {
@@ -823,18 +849,21 @@ func (r *dataSourceResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	data.DataSourceID = fwflex.StringToFramework(ctx, outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource.DataSourceId)
+	ds := outputRaw.(*bedrockagent.CreateDataSourceOutput).DataSource
+	dataSourceID := aws.ToString(ds.DataSourceId)
+	data.DataSourceID = fwflex.StringValueToFramework(ctx, dataSourceID)
 	id, err := data.setID()
 	if err != nil {
 		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Data Source", err.Error())
 		return
 	}
-	data.ID = types.StringValue(id)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
 
-	ds, err := waitDataSourceCreated(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
+	ds, err = waitDataSourceCreated(ctx, conn, dataSourceID, knowledgeBaseID, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) create", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) create", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
@@ -859,7 +888,8 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	ds, err := findDataSourceByTwoPartKey(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString())
+	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.DataSourceID), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
+	ds, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -869,7 +899,7 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Data Source (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
@@ -895,18 +925,19 @@ func (r *dataSourceResource) Update(ctx context.Context, request resource.Update
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.UpdateDataSourceInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, new.DataSourceID), fwflex.StringValueFromFramework(ctx, new.KnowledgeBaseID)
+	var input bedrockagent.UpdateDataSourceInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.UpdateDataSource(ctx, input)
+		return conn.UpdateDataSource(ctx, &input)
 	}, errCodeValidationException, "cannot assume role")
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s)", new.DataSourceID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
@@ -923,9 +954,10 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
+	dataSourceID, knowledgeBaseID := fwflex.StringValueFromFramework(ctx, data.DataSourceID), fwflex.StringValueFromFramework(ctx, data.KnowledgeBaseID)
 	input := bedrockagent.DeleteDataSourceInput{
-		DataSourceId:    data.DataSourceID.ValueStringPointer(),
-		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
+		DataSourceId:    aws.String(dataSourceID),
+		KnowledgeBaseId: aws.String(knowledgeBaseID),
 	}
 	_, err := conn.DeleteDataSource(ctx, &input)
 
@@ -934,30 +966,33 @@ func (r *dataSourceResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Data Source (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Data Source (%s,%s)", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
 
-	if _, err := waitDataSourceDeleted(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s) delete", data.ID.ValueString()), err.Error())
+	if _, err := waitDataSourceDeleted(ctx, conn, dataSourceID, knowledgeBaseID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Data Source (%s,%s) delete", dataSourceID, knowledgeBaseID), err.Error())
 
 		return
 	}
 }
 
 func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) (*awstypes.DataSource, error) {
-	input := &bedrockagent.GetDataSourceInput{
+	input := bedrockagent.GetDataSourceInput{
 		DataSourceId:    aws.String(dataSourceID),
 		KnowledgeBaseId: aws.String(knowledgeBaseID),
 	}
 
+	return findDataSource(ctx, conn, &input)
+}
+
+func findDataSource(ctx context.Context, conn *bedrockagent.Client, input *bedrockagent.GetDataSourceInput) (*awstypes.DataSource, error) {
 	output, err := conn.GetDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -972,8 +1007,8 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	return output.DataSource, nil
 }
 
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataSource(conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
 		if retry.NotFound(err) {
@@ -989,10 +1024,10 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSource
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
-		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
 		Timeout: timeout,
 	}
 
@@ -1008,10 +1043,10 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
+		Refresh: statusDataSource(conn, dataSourceID, knowledgeBaseID),
 		Timeout: timeout,
 	}
 
@@ -1112,6 +1147,7 @@ type vectorIngestionConfigurationModel struct {
 
 type parsingConfigurationModel struct {
 	ParsingStrategy                     fwtypes.StringEnum[awstypes.ParsingStrategy]                              `tfsdk:"parsing_strategy"`
+	BedrockDataAutomationConfiguration  fwtypes.ListNestedObjectValueOf[bedrockDataAutomationConfigurationModel]  `tfsdk:"bedrock_data_automation_configuration"`
 	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
 }
 
@@ -1138,12 +1174,17 @@ type transformationFunctionModel struct {
 }
 
 type transformationLambdaConfigurationModel struct {
-	LambdaArn fwtypes.ARN `tfsdk:"lambda_arn"`
+	LambdaARN fwtypes.ARN `tfsdk:"lambda_arn"`
+}
+
+type bedrockDataAutomationConfigurationModel struct {
+	ParsingModality fwtypes.StringEnum[awstypes.ParsingModality] `tfsdk:"parsing_modality"`
 }
 
 type bedrockFoundationModelConfigurationModel struct {
-	ModelArn      fwtypes.ARN                                         `tfsdk:"model_arn"`
-	ParsingPrompt fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
+	ModelARN        fwtypes.ARN                                         `tfsdk:"model_arn"`
+	ParsingModality fwtypes.StringEnum[awstypes.ParsingModality]        `tfsdk:"parsing_modality"`
+	ParsingPrompt   fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
 }
 
 type parsingPromptModel struct {

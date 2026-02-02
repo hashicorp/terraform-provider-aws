@@ -37,7 +37,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(generator=false)
-// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationsAccount")
 // @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceOrganization() *schema.Resource {
 	return &schema.Resource{
@@ -179,6 +179,10 @@ func resourceOrganization() *schema.Resource {
 					},
 				},
 			},
+			"return_organization_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"roots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -278,6 +282,16 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, org.Arn)
+	d.Set("feature_set", org.FeatureSet)
+	d.Set("master_account_arn", org.MasterAccountArn)
+	d.Set("master_account_email", org.MasterAccountEmail)
+	d.Set("master_account_id", org.MasterAccountId)
+
+	if _, ok := d.GetOk("return_organization_only"); ok {
+		return diags
+	}
+
 	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
 
 	if err != nil {
@@ -304,11 +318,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set(names.AttrARN, org.Arn)
-	d.Set("feature_set", org.FeatureSet)
-	d.Set("master_account_arn", org.MasterAccountArn)
-	d.Set("master_account_email", org.MasterAccountEmail)
-	d.Set("master_account_id", org.MasterAccountId)
+
 	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
@@ -414,9 +424,7 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	identitySpec := importer.IdentitySpec(ctx)
-
-	if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
 

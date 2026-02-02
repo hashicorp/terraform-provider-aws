@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -99,20 +97,20 @@ func TestAccElasticsearchVPCEndpoint_basic(t *testing.T) {
 	}
 
 	var v awstypes.VpcEndpoint
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
@@ -137,20 +135,20 @@ func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 	}
 
 	var v awstypes.VpcEndpoint
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -166,20 +164,20 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 	}
 
 	var v awstypes.VpcEndpoint
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_elasticsearch_vpc_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
@@ -191,7 +189,7 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConfig_updated(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
@@ -204,14 +202,14 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, t *testing.T, n string, v *awstypes.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElasticsearchClient(ctx)
 
 		output, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -225,14 +223,14 @@ func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.Vp
 	}
 }
 
-func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticsearch_vpc_endpoint" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ElasticsearchClient(ctx)
 
 			_, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 

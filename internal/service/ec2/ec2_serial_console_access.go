@@ -24,6 +24,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
+// Generated tests have several issues: (todo: list them)
 // @Testing(identityTest=false)
 // @Testing(identityVersion="0;v6.0.0")
 // @Testing(identityVersion="1;v6.21.0")

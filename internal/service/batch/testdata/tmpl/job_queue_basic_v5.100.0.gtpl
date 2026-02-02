@@ -58,7 +58,7 @@ resource "aws_iam_role" "ecs_instance" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+          "Service": "ec2.${data.aws_partition.current.dns_suffix}"
         }
     }
   ]

@@ -21,7 +21,6 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -198,6 +197,21 @@ func resourceDomain() *schema.Resource {
 							},
 						},
 						"s3_vectors_engine": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"serverless_vector_acceleration": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -1369,9 +1383,8 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 	output, err := conn.DescribeDomain(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

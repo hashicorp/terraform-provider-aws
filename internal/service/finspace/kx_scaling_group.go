@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -228,9 +227,8 @@ func FindKxScalingGroupById(ctx context.Context, conn *finspace.Client, id strin
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -244,10 +242,10 @@ func FindKxScalingGroupById(ctx context.Context, conn *finspace.Client, id strin
 }
 
 func waitKxScalingGroupCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxScalingGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.KxScalingGroupStatusCreating),
 		Target:                    enum.Slice(types.KxScalingGroupStatusActive),
-		Refresh:                   statusKxScalingGroup(ctx, conn, id),
+		Refresh:                   statusKxScalingGroup(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -262,10 +260,10 @@ func waitKxScalingGroupCreated(ctx context.Context, conn *finspace.Client, id st
 }
 
 func waitKxScalingGroupDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxScalingGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.KxScalingGroupStatusDeleting),
 		Target:  enum.Slice(types.KxScalingGroupStatusDeleted),
-		Refresh: statusKxScalingGroup(ctx, conn, id),
+		Refresh: statusKxScalingGroup(conn, id),
 		Timeout: timeout,
 	}
 
@@ -277,8 +275,8 @@ func waitKxScalingGroupDeleted(ctx context.Context, conn *finspace.Client, id st
 	return nil, err
 }
 
-func statusKxScalingGroup(ctx context.Context, conn *finspace.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKxScalingGroup(conn *finspace.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindKxScalingGroupById(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil

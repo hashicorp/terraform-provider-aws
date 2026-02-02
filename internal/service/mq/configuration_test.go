@@ -9,21 +9,19 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMQConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
@@ -36,7 +34,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TfAccTest MQ Configuration"),
@@ -54,7 +52,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_descriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -69,10 +67,10 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 
 func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
@@ -85,7 +83,7 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_activeData(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -105,10 +103,10 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 
 func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
@@ -121,7 +119,7 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_activeLdapData(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TfAccTest MQ Configuration"),
@@ -142,10 +140,10 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 
 func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
@@ -158,7 +156,7 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_rabbitData(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
@@ -179,10 +177,10 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 
 func TestAccMQConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
@@ -195,7 +193,7 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -208,7 +206,7 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -217,7 +215,7 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationExists(ctx, resourceName),
+					testAccCheckConfigurationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -226,14 +224,14 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MQClient(ctx)
 
 		_, err := tfmq.FindConfigurationByID(ctx, conn, rs.Primary.ID)
 

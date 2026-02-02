@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkeyalias "github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,23 +19,23 @@ import (
 
 func TestAccPaymentCryptographyKeyAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("alias/")
+	rName := acctest.RandomWithPrefix(t, "alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
 	var v awstypes.Alias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -53,23 +51,23 @@ func TestAccPaymentCryptographyKeyAlias_basic(t *testing.T) {
 
 func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("alias/")
+	rName := acctest.RandomWithPrefix(t, "alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
 	var v awstypes.Alias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkeyalias.ResourceKeyAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,23 +78,23 @@ func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 
 func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("alias/")
+	rName := acctest.RandomWithPrefix(t, "alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
 	var v awstypes.Alias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -109,7 +107,7 @@ func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 			{
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -120,24 +118,24 @@ func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 
 func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rOldName := sdkacctest.RandomWithPrefix("alias/")
-	rNewName := sdkacctest.RandomWithPrefix("alias/")
+	rOldName := acctest.RandomWithPrefix(t, "alias/")
+	rNewName := acctest.RandomWithPrefix(t, "alias/")
 	resourceName := "aws_paymentcryptography_key_alias.test"
 	var v awstypes.Alias
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyAliasConfig_updateName(rOldName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rOldName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -150,7 +148,7 @@ func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 			{
 				Config: testAccKeyAliasConfig_updateName(rNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyAliasExists(ctx, resourceName, &v),
+					testAccCheckKeyAliasExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias_name", rNewName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_arn"),
 				),
@@ -159,9 +157,9 @@ func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PaymentCryptographyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_paymentcryptography_key_alias" {
@@ -185,14 +183,14 @@ func testAccCheckKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyAliasExists(ctx context.Context, n string, v *awstypes.Alias) resource.TestCheckFunc {
+func testAccCheckKeyAliasExists(ctx context.Context, t *testing.T, n string, v *awstypes.Alias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PaymentCryptographyClient(ctx)
 
 		output, err := tfkeyalias.FindKeyAliasByName(ctx, conn, rs.Primary.ID)
 

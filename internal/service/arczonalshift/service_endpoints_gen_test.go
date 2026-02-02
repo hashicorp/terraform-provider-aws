@@ -346,7 +346,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving Application Recovery Controller Zonal Shift default endpoint: %s", err)
+		t.Fatalf("resolving ARC (Application Recovery Controller) Zonal Shift default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -360,7 +360,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving Application Recovery Controller Zonal Shift FIPS endpoint: %s", err)
+		t.Fatalf("resolving ARC (Application Recovery Controller) Zonal Shift FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -376,7 +376,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	} else if err != nil && errors.Is(err, context.DeadlineExceeded) {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up Application Recovery Controller Zonal Shift endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up ARC (Application Recovery Controller) Zonal Shift endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

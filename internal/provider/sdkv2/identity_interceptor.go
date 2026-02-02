@@ -155,7 +155,7 @@ func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	}
 }
 
-func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import) *schema.ResourceImporter {
+func newParameterizedIdentityImporter(identitySpec inttypes.Identity, importSpec inttypes.SDKv2Import) *schema.ResourceImporter {
 	if identitySpec.IsSingleParameter {
 		if identitySpec.IsGlobalResource {
 			return &schema.ResourceImporter{
@@ -232,7 +232,7 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 		// Historically, we haven't validated *any* Import ID value for Global Singletons
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.GlobalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
+				if err := importer.GlobalSingleton(ctx, rd, identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -242,7 +242,7 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 	} else {
 		return &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleton(ctx, rd, &identity, meta.(importer.AWSClient)); err != nil {
+				if err := importer.RegionalSingleton(ctx, rd, identity, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 

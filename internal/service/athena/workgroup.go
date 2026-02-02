@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -576,6 +575,15 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					input.ConfigurationUpdates.EnableMinimumEncryptionConfiguration = aws.Bool(false)
 				}
 			}
+
+			if d.HasChange("configuration.0.result_configuration.0.encryption_configuration") {
+				// encryption_option is required if result_configuration is set.
+				// we can remove the configuration if unset
+				if input.ConfigurationUpdates == nil || (input.ConfigurationUpdates.ResultConfigurationUpdates == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration == nil || input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration.EncryptionOption == "") {
+					input.ConfigurationUpdates.ResultConfigurationUpdates = &types.ResultConfigurationUpdates{}
+					input.ConfigurationUpdates.ResultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+				}
+			}
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -634,9 +642,8 @@ func findWorkGroupByName(ctx context.Context, conn *athena.Client, name string) 
 	output, err := conn.GetWorkGroup(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "is not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

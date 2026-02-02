@@ -1035,6 +1035,10 @@ func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfList []any)
 }
 
 func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfList []any) *coreNetworkPolicyAttachmentRoutingPolicyRuleAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
 	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &coreNetworkPolicyAttachmentRoutingPolicyRuleAction{}
