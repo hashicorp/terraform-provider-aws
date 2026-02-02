@@ -21,6 +21,7 @@ var (
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceMlflowApp                              = resourceMlflowApp
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
 	ResourceModelCard                              = newModelCardResource
@@ -53,6 +54,7 @@ var (
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
 	FindLabelingJobByName                     = findLabelingJobByName
+	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
 	FindModelCardByName                       = findModelCardByName

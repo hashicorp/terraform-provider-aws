@@ -1,0 +1,4 @@
+```release-note:new-resource
+aws_sagemaker_mlflow_app
+```
+
