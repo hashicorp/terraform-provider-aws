@@ -171,8 +171,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4 h1:jaGFoZKK9tTDdUw
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4/go.mod h1:VhgQsYcslaHvaIHhKTEK6v/qJdxsqBJC+YM3w7WVzwE=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0 h1:n4XSHVt0MI30M6QO/WtDr9jyoOjDtuD4KE3co8NaaQg=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0/go.mod h1:NBQSTR2wDKdpLcDuX9ksjWgQfUtGeEhlPwa6CCmVOlY=
-github.com/aws/aws-sdk-go-v2/service/connect v1.159.0 h1:KZgejk31BA5nV+PobEb+f6fWSmFD8fCKVJlDegYbRNA=
-github.com/aws/aws-sdk-go-v2/service/connect v1.159.0/go.mod h1:S6hWyUp+Fr+gC6VXtGHO8m1hvi6Obr+3y2F0wodhW+I=
+github.com/aws/aws-sdk-go-v2/service/connect v1.160.0 h1:lc8Pa5dCCM4YEcFjeTKo1XO40loVMwwOLcQ0meXpVP0=
+github.com/aws/aws-sdk-go-v2/service/connect v1.160.0/go.mod h1:S6hWyUp+Fr+gC6VXtGHO8m1hvi6Obr+3y2F0wodhW+I=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0 h1:CU5j4d2Q4SF7sA2V7UnoBc35osq4WpToEQfgw415ZKw=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0/go.mod h1:jcFVRdIFKNMC3WR5TF31O5LQV6o2QkTHayjpGq1GgPs=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 h1:nyWkyh61ytkcmG/yy6KEBaylR21Zf+PQRir1zFSokkc=
@@ -271,8 +271,8 @@ github.com/aws/aws-sdk-go-v2/service/gamelift v1.50.0 h1:knUB4jZTiIYcMQpdK4J6nk6
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.50.0/go.mod h1:JPSMCIr4USXQl0z5PXj7m9JFbb74k+U1L/QHzovpMMY=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.32.2 h1:2+IZIiMimqdB4pECDNnQRGK55wWsyItpJFwoMrl6YCI=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.32.2/go.mod h1:D/vUNw25tT/3hQLJx9S4i6+Ve/kmfkAMMkb6PXnzWxI=
-github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.10 h1:jrCwGO6OAv7e8NldkD7bha0P5ycRKIPrcwBQ3gBSlno=
-github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.10/go.mod h1:Hzu4FMuPwTHEigK/DAFx2cOTNqRKFmIm+YQiOcmI7oA=
+github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.11 h1:4eqAOfI1HxSdRcJ6k9+0yBRvkyAqf7bIN1QoJY9Jql0=
+github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.11/go.mod h1:Hzu4FMuPwTHEigK/DAFx2cOTNqRKFmIm+YQiOcmI7oA=
 github.com/aws/aws-sdk-go-v2/service/glue v1.136.1 h1:yezTrSee8k1HbxiSe1sBZAGP5K3MWTVhRuIhz9ZNncM=
 github.com/aws/aws-sdk-go-v2/service/glue v1.136.1/go.mod h1:B6g7dsUUg4QUcH6zou32L1LDXjgtk/YjVFcu09jXv10=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.32.11 h1:97nPW/vyCbabK//tR3dfOTyOKMR2BOfyg9Sl15G+nwk=
@@ -431,8 +431,8 @@ github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.1 h1:gYdLKsE4UBvwaM0LIuOTD5
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.1/go.mod h1:2BDHFljgz4Etg6vhG3UHq8IOpfRAF/S/l7mfEDaXiwM=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2 h1:tSctQisNHgXnDmyoOdLXkSQmHYo5yPQuvYK+4c4QiNI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2/go.mod h1:m6bmXbLs5XiGnTLcgKn9eNk5+GCO5e/wHQsIuN7d1Tw=
-github.com/aws/aws-sdk-go-v2/service/quicksight v1.101.0 h1:cUKzI15VzJ3wa5fBNUBRvesNaNyE2+Z84rbbMVSy4bY=
-github.com/aws/aws-sdk-go-v2/service/quicksight v1.101.0/go.mod h1:9wJnT41qapN2WEomaN7ZW+G3qBWrptggi/y3jQC4Hwo=
+github.com/aws/aws-sdk-go-v2/service/quicksight v1.102.0 h1:H1lK1DTSvoO4Cu+wzaMBaitM+v+0xcNPgI6+NatuH38=
+github.com/aws/aws-sdk-go-v2/service/quicksight v1.102.0/go.mod h1:9wJnT41qapN2WEomaN7ZW+G3qBWrptggi/y3jQC4Hwo=
 github.com/aws/aws-sdk-go-v2/service/ram v1.34.19 h1:KgzHjJvrAw5RQ5tXEyUX1B9zcPuWiCs7h/aT0Q6XYTE=
 github.com/aws/aws-sdk-go-v2/service/ram v1.34.19/go.mod h1:wHbYtm0qUAphMlG61fmCj0qJyVFgYJaHyYcI1sxvLxI=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5 h1:EpJ7TZAbqFMwJjpwLXregdlMkg/eUEZHyVMWHJhFU+E=
