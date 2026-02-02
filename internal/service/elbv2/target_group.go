@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,7 +46,7 @@ import (
 // @Testing(plannableImportAction="NoOp")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
@@ -962,9 +961,7 @@ func findTargetGroupByARN(ctx context.Context, conn *elasticloadbalancingv2.Clie
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupArn) != arn {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -983,9 +980,7 @@ func findTargetGroupByName(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -1009,9 +1004,8 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1033,9 +1027,8 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	output, err := conn.DescribeTargetGroupAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
