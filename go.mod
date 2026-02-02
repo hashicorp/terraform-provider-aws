@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
-	github.com/aws/aws-sdk-go-v2/service/connect v1.159.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.160.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
@@ -130,7 +130,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.3
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.10
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.11
 	github.com/aws/aws-sdk-go-v2/service/glue v1.136.1
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.11
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.17
@@ -205,7 +205,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.11
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.101.0
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.102.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0
@@ -279,7 +279,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.17
 	github.com/aws/smithy-go v1.24.0
 	github.com/beevik/etree v1.6.0
-	github.com/cedar-policy/cedar-go v1.4.0
+	github.com/cedar-policy/cedar-go v1.4.1
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/gertd/go-pluralize v0.2.1
