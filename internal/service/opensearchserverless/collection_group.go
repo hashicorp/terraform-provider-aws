@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -213,6 +214,9 @@ func (r *collectionGroupResource) Read(ctx context.Context, req resource.ReadReq
 	out, err := findCollectionGroupByID(ctx, conn, state.ID.ValueString())
 	if err != nil {
 		if retry.NotFound(err) {
+			tflog.Warn(ctx, "OpenSearchServerless CollectionGroup not found, removing from state", map[string]interface{}{
+				"id": state.ID.ValueString(),
+			})
 			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			resp.State.RemoveResource(ctx)
 			return
@@ -225,6 +229,9 @@ func (r *collectionGroupResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	if out == nil {
+		tflog.Warn(ctx, "OpenSearchServerless CollectionGroup response is nil, removing from state", map[string]interface{}{
+			"id": state.ID.ValueString(),
+		})
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(nil))
 		resp.State.RemoveResource(ctx)
 		return
