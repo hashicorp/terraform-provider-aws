@@ -7,6 +7,7 @@ package opensearchserverless
 var (
 	ResourceAccessPolicy    = newAccessPolicyResource
 	ResourceCollection      = newCollectionResource
+	ResourceCollectionGroup = newCollectionGroupResource
 	ResourceLifecyclePolicy = newLifecyclePolicyResource
 	ResourceSecurityConfig  = newSecurityConfigResource
 	ResourceSecurityPolicy  = newSecurityPolicyResource
