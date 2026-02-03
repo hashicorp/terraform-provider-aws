@@ -106,9 +106,9 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.test.id
-  key    = "updateable-key"
-  content = %[2]q
+  bucket                 = aws_s3_bucket.test.id
+  key                    = "updateable-key"
+  content                = %[2]q
   server_side_encryption = %[3]q
   %[4]s
 }
