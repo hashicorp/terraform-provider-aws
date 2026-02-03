@@ -59,7 +59,7 @@ func TestAccS3Object_encryptionUpdate_Versioned(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create object with default encryption (none/AES256)
 			{
-				Config: testAccObjectConfig_updateable_kms(rName, "content", "AES256", false),
+				Config: testAccObjectConfig_updateable_kms(rName, names.AttrContent, "AES256", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
@@ -68,7 +68,7 @@ func TestAccS3Object_encryptionUpdate_Versioned(t *testing.T) {
 			// Step 2: Update to SSE-KMS Encryption
 			// This IS supported by UpdateObjectEncryption and should be in-place.
 			{
-				Config: testAccObjectConfig_updateable_kms(rName, "content", "aws:kms", true),
+				Config: testAccObjectConfig_updateable_kms(rName, names.AttrContent, "aws:kms", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectSSE(ctx, resourceName, "aws:kms"),
