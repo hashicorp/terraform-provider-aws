@@ -288,6 +288,8 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{acl}"),
 				),
 			},
 			{
@@ -507,6 +509,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "acl", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 				),
 			},
 			{
@@ -845,6 +848,64 @@ func TestAccS3BucketACL_Identity_ExistingResource_CannedACL(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketACL_cannedACL_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketACLConfig_cannedACL_expectedBucketOwner(bucketName, string(types.BucketCannedACLPrivate)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner},{acl}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketACL_grant_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketACLConfig_grant_expectedBucketOwner(bucketName, string(types.BucketAccelerateStatusEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketACLExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1075,4 +1136,70 @@ resource "aws_s3_bucket_acl" "test" {
   acl    = %[1]q
 }
 `, acl))
+}
+
+func testAccBucketACLConfig_cannedACL_expectedBucketOwner(rName, acl string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_acl" "test" {
+  bucket                = aws_s3_bucket.test.bucket
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  acl = %[2]q
+
+  depends_on = [aws_s3_bucket_ownership_controls.test]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, rName, acl)
+}
+
+func testAccBucketACLConfig_grant_expectedBucketOwner(rName, acl string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_acl" "test" {
+  bucket                = aws_s3_bucket.test.bucket
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  access_control_policy {
+    grant {
+      grantee {
+        id   = data.aws_canonical_user_id.current.id
+        type = "CanonicalUser"
+      }
+      permission = "FULL_CONTROL"
+    }
+
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
+  }
+
+  depends_on = [aws_s3_bucket_ownership_controls.test]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+data "aws_canonical_user_id" "current" {}
+
+data "aws_caller_identity" "current" {}
+`, rName, acl)
 }

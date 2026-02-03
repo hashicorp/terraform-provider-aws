@@ -37,6 +37,7 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
@@ -448,6 +449,35 @@ func TestAccS3BucketLogging_withTargetObjectKeyFormat(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLogging_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketLogging_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -704,6 +734,21 @@ resource "aws_s3_bucket_logging" "test" {
     simple_prefix {}
   }
 }
+`)
+}
+
+func testAccBucketLoggingConfig_expectedBucketOwner(rName string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), `
+resource "aws_s3_bucket_logging" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+
+data "aws_caller_identity" "current" {}
 `)
 }
 

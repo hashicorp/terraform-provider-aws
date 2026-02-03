@@ -103,7 +103,7 @@ func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input
 				return nil, err
 			}
 
-			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary, primary.ConfigureContextFunc, t.Name())
+			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary, primary.ConfigureContextFunc, t)
 
 			return providerServerFactory(), nil
 		}
@@ -118,13 +118,14 @@ func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input
 // This is necessary as ConfigureContextFunc is called multiple times for a given test,
 // each time creating a new HTTP client. VCR requires a single HTTP client to handle all
 // interactions.
-func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
+func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, t *testing.T) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		var diags diag.Diagnostics
+		testName := t.Name()
 
 		providerMetas.Lock()
 		meta, ok := providerMetas[testName]
-		defer providerMetas.Unlock()
+		providerMetas.Unlock()
 
 		if ok {
 			return meta, nil
@@ -245,7 +246,15 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			meta = v.(*conns.AWSClient)
 		}
 
+		s, err := vcrRandomnessSource(t)
+		if err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
+		}
+		meta.SetRandomnessSource(s.source)
+
+		providerMetas.Lock()
 		providerMetas[testName] = meta
+		providerMetas.Unlock()
 
 		return meta, diags
 	}
@@ -262,7 +271,7 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 
 	randomnessSources.Lock()
 	s, ok := randomnessSources[testName]
-	defer randomnessSources.Unlock()
+	randomnessSources.Unlock()
 
 	if ok {
 		return s, nil
@@ -296,7 +305,9 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 		t.FailNow()
 	}
 
+	randomnessSources.Lock()
 	randomnessSources[testName] = s
+	randomnessSources.Unlock()
 
 	return s, nil
 }

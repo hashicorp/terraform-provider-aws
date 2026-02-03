@@ -1210,7 +1210,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
 		if err := createTags(ctx, conn, vol, svcTags(tftags.New(ctx, blockDeviceTags))); err != nil {
-			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Failed to create tags for EBS volume %s", vol),
+				Detail:   err.Error(),
+			})
 		}
 	}
 

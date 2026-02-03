@@ -1,7 +1,23 @@
 ## 6.31.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_s3_bucket_abac: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_accelerate_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_acl: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_cors_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_lifecycle_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_logging: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_metadata_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_object_lock_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_request_payment_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_versioning: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+* resource/aws_s3_bucket_website_configuration: Deprecates `expected_bucket_owner` attribute. ([#46262](https://github.com/hashicorp/terraform-provider-aws/issues/46262))
+
 FEATURES:
 
+* **New Data Source:** `aws_account_regions` ([#41746](https://github.com/hashicorp/terraform-provider-aws/issues/41746))
 * **New Ephemeral Resource:** `aws_ecrpublic_authorization_token` ([#45841](https://github.com/hashicorp/terraform-provider-aws/issues/45841))
 * **New Resource:** `aws_ssoadmin_customer_managed_policy_attachments_exclusive` ([#46191](https://github.com/hashicorp/terraform-provider-aws/issues/46191))
 
@@ -12,6 +28,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_elasticache_replication_group: Fixed AUTH to RBAC migration. Previously, `auth_token_update_strategy` always required `auth_token`, which caused an error when migrating from AUTH to RBAC. Now, `auth_token_update_strategy` still requires `auth_token` except when `auth_token_update_strategy` is `DELETE`. ([#45518](https://github.com/hashicorp/terraform-provider-aws/issues/45518))
+* resource/aws_elasticache_replication_group: Fixed an issue with downscaling `aws_elasticache_replication_group` when `cluster_mode="enabled"` and `num_node_groups` is reduced. Previously, downscaling could fail in certain scenarios; for example, if nodes `0001`, `0002`, `0003`, `0004`, and `0005` exist, and a user manually removes `0003` and `0005`, then sets `num_node_groups = 2`, terraform would attempt to delete `0003`, `0004`, and `0005`. This is now fixed, after this fix terraform will retrieve the current node groups before resizing. ([#45893](https://github.com/hashicorp/terraform-provider-aws/issues/45893))
+* resource/aws_elasticache_serverless_cache: Fix `user_group_id` removal during modification. ([#45571](https://github.com/hashicorp/terraform-provider-aws/issues/45571))
+* resource/aws_elasticache_serverless_cache: Fix forced replacement when upgrading Valkey major version or switching engine between redis and valkey ([#45087](https://github.com/hashicorp/terraform-provider-aws/issues/45087))
 * resource/aws_network_interface: Fix `UnauthorizedOperation` error when detaching resource that does not have an attachment ([#46211](https://github.com/hashicorp/terraform-provider-aws/issues/46211))
 
 ## 6.30.0 (January 28, 2026)

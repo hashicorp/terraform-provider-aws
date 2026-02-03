@@ -55,6 +55,7 @@ func resourceBucketVersioning() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"mfa": {
 				Type:     schema.TypeString,
@@ -121,7 +122,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 	// supported within the aws_s3_bucket resource of the 3.x version of the provider.
 	// Thus, we essentially bring existing bucket versioning into adoption.
 	if string(versioningConfiguration.Status) != bucketVersioningStatusDisabled {
-		input := &s3.PutBucketVersioningInput{
+		input := s3.PutBucketVersioningInput{
 			Bucket:                  aws.String(bucket),
 			VersioningConfiguration: versioningConfiguration,
 		}
@@ -134,7 +135,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.PutBucketVersioning(ctx, input)
+			return conn.PutBucketVersioning(ctx, &input)
 		}, errCodeNoSuchBucket)
 
 		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -202,7 +203,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketVersioningInput{
+	input := s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]any)),
 	}
@@ -214,7 +215,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 		input.MFA = aws.String(v.(string))
 	}
 
-	_, err = conn.PutBucketVersioning(ctx, input)
+	_, err = conn.PutBucketVersioning(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Versioning (%s): %s", d.Id(), err)
@@ -241,7 +242,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketVersioningInput{
+	input := s3.PutBucketVersioningInput{
 		Bucket: aws.String(bucket),
 		VersioningConfiguration: &types.VersioningConfiguration{
 			// Status must be provided thus to "remove" this resource,
@@ -253,7 +254,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketVersioning(ctx, input)
+	_, err = conn.PutBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return diags
@@ -316,14 +317,14 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []any {
 }
 
 func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	input := &s3.GetBucketVersioningInput{
+	input := s3.GetBucketVersioningInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketVersioning(ctx, input)
+	output, err := conn.GetBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return nil, &sdkretry.NotFoundError{

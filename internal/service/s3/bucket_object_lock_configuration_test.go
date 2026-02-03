@@ -35,6 +35,9 @@ func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
 				Config: testAccBucketObjectLockConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
@@ -212,6 +215,35 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObjectLockConfiguration_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_object_lock_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectLockConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectLockConfigurationConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketObjectLockConfiguration_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -342,6 +374,32 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
   bucket = aws_s3_bucket.test.id
 }
 `, bucketName)
+}
+
+func testAccBucketObjectLockConfigurationConfig_expectedBucketOwner(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  rule {
+    default_retention {
+      mode = %[2]q
+      days = 3
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, bucketName, types.ObjectLockRetentionModeCompliance)
 }
 
 func testAccBucketObjectLockConfigurationConfig_directoryBucket(bucketName string) string {

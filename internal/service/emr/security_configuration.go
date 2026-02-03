@@ -77,7 +77,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-emr-sc-"),
-	).Generate()
+	).Generate(ctx)
 	input := &emr.CreateSecurityConfigurationInput{
 		Name:                  aws.String(name),
 		SecurityConfiguration: aws.String(d.Get(names.AttrConfiguration).(string)),

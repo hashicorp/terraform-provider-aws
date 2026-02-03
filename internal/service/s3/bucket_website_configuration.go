@@ -66,6 +66,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"index_document": {
 				Type:     schema.TypeList,
@@ -219,7 +220,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketWebsiteInput{
+	input := s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
 		WebsiteConfiguration: websiteConfig,
 	}
@@ -228,7 +229,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketWebsite(ctx, input)
+		return conn.PutBucketWebsite(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "WebsiteConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -325,7 +326,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	websiteConfig := &types.WebsiteConfiguration{}
+	websiteConfig := types.WebsiteConfiguration{}
 
 	if v, ok := d.GetOk("error_document"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		websiteConfig.ErrorDocument = expandErrorDocument(v.([]any))
@@ -364,15 +365,15 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	input := &s3.PutBucketWebsiteInput{
+	input := s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
-		WebsiteConfiguration: websiteConfig,
+		WebsiteConfiguration: &websiteConfig,
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketWebsite(ctx, input)
+	_, err = conn.PutBucketWebsite(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Website Configuration (%s): %s", d.Id(), err)
@@ -394,14 +395,14 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.DeleteBucketWebsiteInput{
+	input := s3.DeleteBucketWebsiteInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.DeleteBucketWebsite(ctx, input)
+	_, err = conn.DeleteBucketWebsite(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchWebsiteConfiguration) {
 		return diags
@@ -423,14 +424,14 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 }
 
 func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketWebsiteOutput, error) {
-	input := &s3.GetBucketWebsiteInput{
+	input := s3.GetBucketWebsiteInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketWebsite(ctx, input)
+	output, err := conn.GetBucketWebsite(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchWebsiteConfiguration) {
 		return nil, &sdkretry.NotFoundError{

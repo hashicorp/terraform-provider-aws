@@ -709,7 +709,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 
 	// get write-only value from configuration
 	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))

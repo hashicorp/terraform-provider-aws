@@ -29,6 +29,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,6 +101,9 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
+		if s := c.RandomnessSource(); s != nil {
+			ctx = vcr.NewContext(ctx, s)
+		}
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 

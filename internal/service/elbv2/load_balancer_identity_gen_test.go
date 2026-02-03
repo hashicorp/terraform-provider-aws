@@ -35,7 +35,7 @@ func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccELBV2LoadBalancer_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &v),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -241,7 +241,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx),
+		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -250,7 +250,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &v),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -264,7 +264,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &v),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -320,7 +320,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource_NoRefresh_NoChange(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx),
+		CheckDestroy: testAccCheckLoadBalancerDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -334,7 +334,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource_NoRefresh_NoChange(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &v),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -349,7 +349,7 @@ func TestAccELBV2LoadBalancer_Identity_ExistingResource_NoRefresh_NoChange(t *te
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &v),
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

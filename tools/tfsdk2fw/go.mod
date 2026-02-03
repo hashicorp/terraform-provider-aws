@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 go 1.25.6
 
 require (
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.2
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
 )
 
@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.4.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19 // indirect
@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.53.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.17.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.18.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.17 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.59.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.8 // indirect
@@ -128,10 +128,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.19 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.32.18 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.39.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.45.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evs v1.6.0 // indirect
@@ -192,7 +192,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mpa v1.5.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mpa v1.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.5 // indirect
@@ -299,7 +299,7 @@ require (
 	github.com/aws/smithy-go v1.24.0 // indirect
 	github.com/beevik/etree v1.6.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/cedar-policy/cedar-go v1.4.0 // indirect
+	github.com/cedar-policy/cedar-go v1.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -368,10 +368,10 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/zclconf/go-cty v1.17.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.64.0 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.65.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect

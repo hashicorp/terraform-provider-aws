@@ -144,6 +144,7 @@ func resourceBucketACL() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 		},
 
@@ -170,7 +171,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	acl := d.Get("acl").(string)
-	input := &s3.PutBucketAclInput{
+	input := s3.PutBucketAclInput{
 		Bucket: aws.String(bucket),
 	}
 	if acl != "" {
@@ -185,7 +186,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketAcl(ctx, input)
+		return conn.PutBucketAcl(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) {
@@ -257,7 +258,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketAclInput{
+	input := s3.PutBucketAclInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
@@ -273,7 +274,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		input.ACL = types.BucketCannedACL(acl)
 	}
 
-	_, err = conn.PutBucketAcl(ctx, input)
+	_, err = conn.PutBucketAcl(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 bucket ACL (%s): %s", d.Id(), err)
@@ -288,14 +289,14 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketAclOutput, error) {
-	input := &s3.GetBucketAclInput{
+	input := s3.GetBucketAclInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketAcl(ctx, input)
+	output, err := conn.GetBucketAcl(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return nil, &sdkretry.NotFoundError{

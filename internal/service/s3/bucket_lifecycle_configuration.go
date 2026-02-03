@@ -95,6 +95,7 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 				Validators: []validator.String{
 					fwvalidators.AWSAccountID(),
 				},
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			"transition_default_minimum_object_size": schema.StringAttribute{

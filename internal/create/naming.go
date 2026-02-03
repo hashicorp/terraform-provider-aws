@@ -4,15 +4,18 @@
 package create
 
 import (
+	"context"
 	"fmt"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
 // Name returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
-func Name(name string, namePrefix string) string {
-	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate()
+func Name(ctx context.Context, name string, namePrefix string) string {
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix)).Generate(ctx)
 }
 
 // hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
@@ -105,7 +108,7 @@ func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
 }
 
 // Generate generates a new name.
-func (g *nameGenerator) Generate() string {
+func (g *nameGenerator) Generate(ctx context.Context) string {
 	if g.configuredName != "" {
 		return g.configuredName
 	}
@@ -114,5 +117,19 @@ func (g *nameGenerator) Generate() string {
 	if g.configuredPrefix != "" {
 		prefix = g.configuredPrefix
 	}
-	return id.PrefixedUniqueId(prefix) + g.suffix
+	return prefixedUniqueId(ctx, prefix) + g.suffix
+}
+
+// prefixedUniqueId generates a unique ID with the given prefix
+//
+// This is a VCR-aware variant of the Plugin SDK V2 id.PrefixUniqueId function.
+// If context contains a VCR randomness source, it uses that for deterministic ID
+// generation. Otherwise, it falls back to id.PrefixedUniqueId.
+func prefixedUniqueId(ctx context.Context, prefix string) string {
+	if s, ok := vcr.FromContext(ctx); ok && s != nil {
+		rng := rand.New(s)
+		// Pad the generated int64 to match the length of the id.PrefixUniqueId (26 characters)
+		return fmt.Sprintf("%s%026x", prefix, rng.Int63())
+	}
+	return id.PrefixedUniqueId(prefix)
 }

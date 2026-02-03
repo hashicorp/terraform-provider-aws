@@ -36,6 +36,8 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 					resource.TestCheckResourceAttrSet(resourceName, "website_domain"),
@@ -538,6 +540,35 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleWithChang
 	})
 }
 
+func TestAccS3BucketWebsiteConfiguration_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_website_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketWebsiteConfigurationConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketWebsiteConfiguration_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -937,6 +968,26 @@ resource "aws_s3_bucket_website_configuration" "test" {
     }
   }
 }
+`, rName)
+}
+
+func testAccBucketWebsiteConfigurationConfig_expectedBucketOwner(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  index_document {
+    suffix = "index.html"
+  }
+}
+
+data "aws_caller_identity" "current" {}
 `, rName)
 }
 

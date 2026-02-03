@@ -422,7 +422,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing

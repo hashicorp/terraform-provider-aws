@@ -67,6 +67,7 @@ func (r *resourceBucketABAC) Schema(ctx context.Context, req resource.SchemaRequ
 				Validators: []validator.String{
 					fwvalidators.AWSAccountID(),
 				},
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 		},
 		Blocks: map[string]schema.Block{

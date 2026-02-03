@@ -102,7 +102,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
 * `target_prefix` - (Required) Prefix for all log object keys.
 * `target_grant` - (Optional) Set of configuration blocks with information for granting permissions. [See below](#target_grant).

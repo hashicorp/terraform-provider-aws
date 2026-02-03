@@ -385,7 +385,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
-	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
+	nodeGroupName := create.Name(ctx, d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	input := &eks.CreateNodegroupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),

@@ -93,7 +93,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -119,7 +122,10 @@ func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:        config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -143,7 +149,10 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:        config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -174,7 +183,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -211,7 +223,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -248,7 +263,10 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					{{ template "AdditionalTfVars" . }}
+					{{ template "AdditionalTfVars" . -}}
+					{{ if .AlternateRegionTfVars -}}
+						"secondary_region": config.StringVariable(acctest.AlternateRegion()),
+					{{ end -}}
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),

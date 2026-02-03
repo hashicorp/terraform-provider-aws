@@ -121,7 +121,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := iam.CreatePolicyInput{
 		Description:    aws.String(d.Get(names.AttrDescription).(string)),
 		Path:           aws.String(d.Get(names.AttrPath).(string)),

@@ -36,6 +36,8 @@ func TestAccS3BucketRequestPaymentConfiguration_Basic_BucketOwner(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 					resource.TestCheckResourceAttr(resourceName, "payer", string(types.PayerBucketOwner)),
 				),
 			},
@@ -177,6 +179,35 @@ func TestAccS3BucketRequestPaymentConfiguration_migrate_withChange(t *testing.T)
 	})
 }
 
+func TestAccS3BucketRequestPaymentConfiguration_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_request_payment_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketRequestPaymentConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketRequestPaymentConfigurationConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketRequestPaymentConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketRequestPaymentConfiguration_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -264,6 +295,24 @@ resource "aws_s3_bucket_request_payment_configuration" "test" {
   payer  = %[2]q
 }
 `, rName, payer)
+}
+
+func testAccBucketRequestPaymentConfigurationConfig_expectedBucketOwner(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_request_payment_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  payer = %[2]q
+}
+
+data "aws_caller_identity" "current" {}
+`, rName, types.PayerBucketOwner)
 }
 
 func testAccBucketRequestPaymentConfigurationConfig_directoryBucket(rName, payer string) string {

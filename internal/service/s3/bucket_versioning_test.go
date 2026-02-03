@@ -36,6 +36,8 @@ func TestAccS3BucketVersioning_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
@@ -483,6 +485,35 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketVersioning_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_versioning.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketVersioningConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketVersioningExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketVersioning_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -619,6 +650,26 @@ resource "aws_s3_bucket_versioning" "test" {
   }
 }
 `, rName, mfaDelete)
+}
+
+func testAccBucketVersioningConfig_expectedBucketOwner(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, rName)
 }
 
 func testAccBucketVersioningConfig_directoryBucket(rName, status string) string {
