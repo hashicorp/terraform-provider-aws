@@ -1,12 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_partition" "current" {}
-
-resource "aws_sns_topic" "test" {
-  name = var.rName
-}
-
 resource "aws_sns_topic_data_protection_policy" "test" {
   arn = aws_sns_topic.test.arn
   policy = jsonencode(
@@ -31,6 +25,12 @@ resource "aws_sns_topic_data_protection_policy" "test" {
       "Version" = "2021-06-01"
     }
   )
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_sns_topic" "test" {
+  name = var.rName
 }
 
 variable "rName" {

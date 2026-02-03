@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sns
 
 import (
@@ -27,6 +29,7 @@ import (
 // @SDKResource("aws_sns_topic_data_protection_policy", name="Topic Data Protection Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,

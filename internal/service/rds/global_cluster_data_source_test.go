@@ -46,15 +46,14 @@ func TestAccRDSGlobalClusterDataSource_basic(t *testing.T) {
 
 func testAccGlobalClusterDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_rds_global_cluster" "test" {
+  identifier = aws_rds_global_cluster.test.global_cluster_identifier
+}
+
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   engine                    = "aurora-postgresql"
-  engine_version            = "15.5"
   database_name             = "example_db"
-}
-
-data "aws_rds_global_cluster" "test" {
-  identifier = aws_rds_global_cluster.test.global_cluster_identifier
 }
 `, rName)
 }

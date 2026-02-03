@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudwatch
 
 import (
@@ -33,6 +35,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_stream", name="Metric Stream")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMetricStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricStreamCreate,

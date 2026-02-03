@@ -75,6 +75,10 @@ resource "aws_launch_template" "foo" {
     enabled = true
   }
 
+  network_performance_options {
+    bandwidth_weighting = "vpc-1"
+  }
+
   network_interfaces {
     associate_public_ip_address = true
   }
@@ -405,6 +409,12 @@ The `monitoring` block supports the following:
 
 * `enabled` - If `true`, the launched EC2 instance will have detailed monitoring enabled.
 
+### Network Performance Options
+
+The `network_performance_options` block supports the following:
+
+* `bandwidth_weighting` - (Optional) Specify the bandwidth weighting option to boost the associated type of baseline bandwidth. Valid values: `default`, `vpc-1`, `ebs-1`. Default value is `default`. Setting `vpc-1` boosts networking baseline bandwidth and reduces EBS baseline bandwidth. Setting `ebs-1` boosts EBS baseline bandwidth and reduces networking baseline bandwidth. Only supported on select instance types. See [AWS Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configure-bandwidth-weighting.html) for more information.
+
 ### Network Interfaces
 
 Attaches one or more [Network Interfaces](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html) to the instance.
@@ -450,8 +460,8 @@ NOTE: ENA Express requires [specific instance types](https://docs.aws.amazon.com
 The `connection_tracking_specification` block supports the following:
 
 * `tcp_established_timeout` - (Optional) Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Default: 432000 seconds. Recommended: Less than 432000 seconds.
-* `udp_stream_timeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
-* `udp_timeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
+* `udp_stream_timeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
+* `udp_timeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
 
 ### Placement
 

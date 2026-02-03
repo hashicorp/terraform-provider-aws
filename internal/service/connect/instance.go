@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package connect
 
 import (
@@ -50,6 +52,7 @@ var (
 // @Testing(preIdentityVersion="6.14.1")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,

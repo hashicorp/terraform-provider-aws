@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lakeformation
 
 import (
@@ -34,6 +36,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="catalog_id")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceIdentityCenterConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIdentityCenterConfiguration{}
 

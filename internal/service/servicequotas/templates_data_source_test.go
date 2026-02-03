@@ -17,7 +17,7 @@ func testAccTemplatesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_templates.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
@@ -46,7 +46,7 @@ func testAccTemplatesDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_templates.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)

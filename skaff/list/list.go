@@ -38,18 +38,19 @@ var queryTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	ListResource          string
-	ListResourceLower     string
-	ListResourceSnake     string
-	IncludeComments       bool
-	HumanFriendlyService  string
-	SDKPackage            string
-	ServicePackage        string
-	Service               string
-	ServiceLower          string
-	AWSServiceName        string
-	HumanListResourceName string
-	ProviderResourceName  string
+	ListResource           string
+	ListResourceLower      string
+	ListResourceLowerCamel string
+	ListResourceSnake      string
+	IncludeComments        bool
+	HumanFriendlyService   string
+	SDKPackage             string
+	ServicePackage         string
+	Service                string
+	ServiceLower           string
+	AWSServiceName         string
+	HumanListResourceName  string
+	ProviderResourceName   string
 }
 
 func Create(listName, snakeName string, comments, framework, force bool) error {
@@ -82,18 +83,19 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 	}
 
 	templateData := TemplateData{
-		ListResource:          listName,
-		ListResourceLower:     strings.ToLower(listName),
-		ListResourceSnake:     snakeName,
-		HumanFriendlyService:  service.HumanFriendly(),
-		IncludeComments:       comments,
-		SDKPackage:            service.GoV2Package(),
-		ServicePackage:        servicePackage,
-		Service:               service.ProviderNameUpper(),
-		ServiceLower:          strings.ToLower(service.ProviderNameUpper()),
-		AWSServiceName:        service.FullHumanFriendly(),
-		HumanListResourceName: convert.ToHumanResName(listName),
-		ProviderResourceName:  convert.ToProviderResourceName(servicePackage, snakeName),
+		ListResource:           listName,
+		ListResourceLower:      strings.ToLower(listName),
+		ListResourceLowerCamel: convert.ToLowercasePrefix(listName),
+		ListResourceSnake:      snakeName,
+		HumanFriendlyService:   service.HumanFriendly(),
+		IncludeComments:        comments,
+		SDKPackage:             service.GoV2Package(),
+		ServicePackage:         servicePackage,
+		Service:                service.ProviderNameUpper(),
+		ServiceLower:           strings.ToLower(service.ProviderNameUpper()),
+		AWSServiceName:         service.FullHumanFriendly(),
+		HumanListResourceName:  convert.ToHumanResName(listName),
+		ProviderResourceName:   convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := listTmplFramework

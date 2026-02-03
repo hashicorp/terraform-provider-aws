@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
@@ -783,6 +785,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -52,6 +54,7 @@ import (
 // @Testing(importIgnore="force_destroy")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,

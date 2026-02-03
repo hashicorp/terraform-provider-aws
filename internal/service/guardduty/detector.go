@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
@@ -30,6 +32,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,

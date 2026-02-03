@@ -23,7 +23,7 @@ func TestAccElasticsearchDomainDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -67,7 +67,7 @@ func TestAccElasticsearchDomainDataSource_advanced(t *testing.T) {
 	datasourceName := "data.aws_elasticsearch_domain.test"
 	resourceName := "aws_elasticsearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

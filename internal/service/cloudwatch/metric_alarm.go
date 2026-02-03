@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudwatch
 
 import (
@@ -36,6 +38,7 @@ import (
 // @IdentityAttribute("alarm_name")
 // @Testing(idAttrDuplicates="alarm_name")
 // @Testing(preIdentityVersion="v6.7.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

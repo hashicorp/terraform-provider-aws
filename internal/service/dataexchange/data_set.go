@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dataexchange
 
 import (
@@ -27,6 +29,7 @@ import (
 // @SDKResource("aws_dataexchange_data_set", name="Data Set")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,

@@ -21,6 +21,7 @@ func TestAccECRAccountSetting_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:       testAccAccountSetting_basic,
+		"blobMounting":        testAccAccountSetting_blobMounting,
 		"registryPolicyScope": testAccAccountSetting_registryPolicyScope,
 	}
 
@@ -94,6 +95,42 @@ func testAccAccountSetting_registryPolicyScope(t *testing.T) {
 					testAccCheckAccountSettingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "V2")),
+			},
+		},
+	})
+}
+
+func testAccAccountSetting_blobMounting(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecr_account_setting.test"
+	rName := "BLOB_MOUNTING"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingConfig_basic(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "ENABLED")),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateId:                        rName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccAccountSettingConfig_basic(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountSettingExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "DISABLED")),
 			},
 		},
 	})

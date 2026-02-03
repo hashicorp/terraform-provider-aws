@@ -12,11 +12,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
@@ -30,11 +28,11 @@ func testAccBaseline_basic(t *testing.T) {
 	}
 
 	var baseline types.EnabledBaselineDetails
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
 	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
@@ -42,12 +40,12 @@ func testAccBaseline_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBaselineConfig_basic(rName, baselineARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, "baseline_version", "4.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "baseline_identifier"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "controltower", regexache.MustCompile(`enabledbaseline/+.`)),
@@ -72,11 +70,11 @@ func testAccBaseline_disappears(t *testing.T) {
 	}
 
 	var baseline types.EnabledBaselineDetails
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
 	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
@@ -84,12 +82,12 @@ func testAccBaseline_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBaselineConfig_basic(rName, baselineARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcontroltower.ResourceBaseline, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,11 +103,11 @@ func testAccBaseline_tags(t *testing.T) {
 	}
 
 	var baseline types.EnabledBaselineDetails
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_controltower_baseline.test"
 	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
@@ -117,12 +115,12 @@ func testAccBaseline_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBaselineDestroy(ctx),
+		CheckDestroy:             testAccCheckBaselineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBaselineConfig_tags1(rName, baselineARN, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -138,7 +136,7 @@ func testAccBaseline_tags(t *testing.T) {
 			{
 				Config: testAccBaselineConfig_tags2(rName, baselineARN, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -147,7 +145,7 @@ func testAccBaseline_tags(t *testing.T) {
 			{
 				Config: testAccBaselineConfig_tags1(rName, baselineARN, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBaselineExists(ctx, resourceName, &baseline),
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -156,9 +154,9 @@ func testAccBaseline_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBaselineDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_controltower_baseline" {
@@ -183,7 +181,7 @@ func testAccCheckBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBaselineExists(ctx context.Context, name string, baseline *types.EnabledBaselineDetails) resource.TestCheckFunc {
+func testAccCheckBaselineExists(ctx context.Context, t *testing.T, name string, baseline *types.EnabledBaselineDetails) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -195,7 +193,7 @@ func testAccCheckBaselineExists(ctx context.Context, name string, baseline *type
 		}
 
 		arn := rs.Primary.Attributes[names.AttrARN]
-		resp, err := tfcontroltower.FindBaselineByID(ctx, acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx), arn)
+		resp, err := tfcontroltower.FindBaselineByID(ctx, acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx), arn)
 
 		if err != nil {
 			return create.Error(names.ControlTower, create.ErrActionCheckingExistence, tfcontroltower.ResNameBaseline, arn, err)
@@ -208,7 +206,7 @@ func testAccCheckBaselineExists(ctx context.Context, name string, baseline *type
 }
 
 func testAccEnabledBaselinesPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
 	input := &controltower.ListEnabledBaselinesInput{}
 	_, err := conn.ListEnabledBaselines(ctx, input)

@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,7 +27,7 @@ import (
 
 // Regions are hard coded due to limited availability of Bedrock service
 const (
-	foundationModelARN = "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
+	foundationModelARN = "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
 )
 
 func TestAccBedrockInferenceProfile_basic(t *testing.T) {
@@ -67,9 +68,17 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
+				},
+			},
+			// Validate a replacement is not planned following import.
+			// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/45705
+			{
+				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 			},
 		},
@@ -100,6 +109,14 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -134,9 +151,7 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 			{
@@ -145,15 +160,18 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"model_source.#",
-					"model_source.0.%",
-					"model_source.0.copy_from",
+					"model_source",
 				},
 			},
 		},

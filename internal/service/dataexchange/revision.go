@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dataexchange
 
 import (
@@ -26,6 +28,7 @@ import (
 // @SDKResource("aws_dataexchange_revision", name="Revision")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRevision() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRevisionCreate,

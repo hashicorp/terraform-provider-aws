@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dms
 
 import (
@@ -29,6 +31,7 @@ import (
 // @SDKResource("aws_dms_replication_instance", name="Replication Instance")
 // @Tags(identifierAttribute="replication_instance_arn")
 // @Testing(importIgnore="apply_immediately")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationInstanceCreate,

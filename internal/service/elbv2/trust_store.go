@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package elbv2
 
 import (
@@ -33,6 +35,7 @@ import (
 // @Testing(importIgnore="ca_certificates_bundle_s3_bucket;ca_certificates_bundle_s3_key")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,

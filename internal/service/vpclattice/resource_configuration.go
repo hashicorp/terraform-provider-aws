@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package vpclattice
 
 import (
@@ -45,6 +47,7 @@ import (
 // @FrameworkResource("aws_vpclattice_resource_configuration", name="Resource Configuration")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceConfigurationResource{}
 

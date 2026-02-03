@@ -62,7 +62,7 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +74,7 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -120,7 +120,7 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -170,7 +170,7 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -213,7 +213,7 @@ func testAccMediaPackageV2ChannelGroup_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -256,7 +256,7 @@ func testAccMediaPackageV2ChannelGroup_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -268,7 +268,7 @@ func testAccMediaPackageV2ChannelGroup_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -324,7 +324,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -334,7 +334,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -380,7 +380,7 @@ func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -390,7 +390,7 @@ func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -413,7 +413,7 @@ func testAccMediaPackageV2ChannelGroup_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -466,7 +466,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -478,7 +478,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -521,7 +521,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -564,7 +564,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -576,7 +576,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -608,7 +608,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -658,7 +658,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -711,7 +711,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckChannelGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -723,7 +723,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -754,7 +754,7 @@ func testAccMediaPackageV2ChannelGroup_tags_EmptyTag_OnUpdate_Replace(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -807,7 +807,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -820,7 +820,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -866,7 +866,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -914,7 +914,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -956,7 +956,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1000,7 +1000,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1015,7 +1015,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1071,7 +1071,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1126,7 +1126,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nonOverlapping(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1170,7 +1170,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1185,7 +1185,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1240,7 +1240,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1299,7 +1299,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_overlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1356,7 +1356,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1368,7 +1368,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1401,7 +1401,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToProviderOnly(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1452,7 +1452,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1465,7 +1465,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1493,7 +1493,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_updateToResourceOnly(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1547,7 +1547,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1562,7 +1562,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyResourceTag(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1619,7 +1619,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyProviderOnlyTag(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1632,7 +1632,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_emptyProviderOnlyTag(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1683,7 +1683,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1698,7 +1698,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullOverlappingResourceT
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1758,7 +1758,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1773,7 +1773,7 @@ func testAccMediaPackageV2ChannelGroup_tags_DefaultTags_nullNonOverlappingResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1835,7 +1835,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1845,7 +1845,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1896,7 +1896,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1908,7 +1908,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1940,7 +1940,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Add(t *testing.
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1999,7 +1999,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2011,7 +2011,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2041,7 +2041,7 @@ func testAccMediaPackageV2ChannelGroup_tags_ComputedTag_OnUpdate_Replace(t *test
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2092,7 +2092,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2111,7 +2111,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2160,7 +2160,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2209,7 +2209,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2258,7 +2258,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.MediaPackageV2ServiceID),
-		CheckDestroy: testAccCheckChannelGroupDestroy(ctx),
+		CheckDestroy: testAccCheckChannelGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2275,7 +2275,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2333,7 +2333,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2390,7 +2390,7 @@ func testAccMediaPackageV2ChannelGroup_tags_IgnoreTags_Overlap_ResourceTag(t *te
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckChannelGroupExists(ctx, resourceName, &v),
+					testAccCheckChannelGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

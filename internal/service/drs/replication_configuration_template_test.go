@@ -10,11 +10,9 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdrs "github.com/hashicorp/terraform-provider-aws/internal/service/drs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,22 +34,22 @@ func TestAccDRSReplicationConfigurationTemplate_serial(t *testing.T) {
 
 func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_drs_replication_configuration_template.test"
 	var rct awstypes.ReplicationConfigurationTemplate
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckReplicationConfigurationTemplateDestroy(ctx),
+			testAccCheckReplicationConfigurationTemplateDestroy(ctx, t),
 		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
+					testAccCheckReplicationConfigurationTemplateExists(ctx, t, resourceName, &rct),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "drs", "replication-configuration-template/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "associate_default_security_group", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth_throttling", "12"),
@@ -99,20 +97,20 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 
 func testAccReplicationConfigurationTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_drs_replication_configuration_template.test"
 	var rct awstypes.ReplicationConfigurationTemplate
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
+					testAccCheckReplicationConfigurationTemplateExists(ctx, t, resourceName, &rct),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -121,14 +119,14 @@ func testAccReplicationConfigurationTemplate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationConfigurationTemplateExists(ctx context.Context, n string, v *awstypes.ReplicationConfigurationTemplate) resource.TestCheckFunc {
+func testAccCheckReplicationConfigurationTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReplicationConfigurationTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DRSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DRSClient(ctx)
 
 		output, err := tfdrs.FindReplicationConfigurationTemplateByID(ctx, conn, rs.Primary.ID)
 
@@ -142,9 +140,9 @@ func testAccCheckReplicationConfigurationTemplateExists(ctx context.Context, n s
 	}
 }
 
-func testAccCheckReplicationConfigurationTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReplicationConfigurationTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DRSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DRSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_drs_replication_configuration_template" {

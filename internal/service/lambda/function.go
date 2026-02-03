@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lambda
 
 import (
@@ -49,6 +51,7 @@ const (
 // @Testing(idAttrDuplicates="function_name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @CustomImport
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -64,8 +67,7 @@ func resourceFunction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-				if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 				d.Set("function_name", d.Id())
@@ -363,7 +365,7 @@ func resourceFunction() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      128,
-				ValidateFunc: validation.IntBetween(128, 10240),
+				ValidateFunc: validation.IntBetween(128, 32768),
 			},
 			"package_type": {
 				Type:             schema.TypeString,

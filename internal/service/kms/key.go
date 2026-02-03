@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kms
 
 import (
@@ -38,6 +40,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -611,6 +612,44 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				ImportStateVerifyIgnore: []string{
 					"call_as",
 					"template_url",
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSet_AutoDeployment_administrationRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet1 awstypes.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_permissionModel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "permission_model", "SERVICE_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "administration_role_arn"),
+				),
+			},
+			{
+				Config: testAccStackSetConfig_permissionModel(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
 				},
 			},
 		},

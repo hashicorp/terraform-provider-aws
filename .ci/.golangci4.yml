@@ -13,7 +13,10 @@ linters:
     - nosprintfhostport
     - paralleltest
     - perfsprint
+    # Standard SDK flattener patterns causes noise.
+    # - prealloc
     - predeclared
+    - reassign
     - revive
     - staticcheck
   settings:
@@ -135,6 +138,10 @@ linters:
           - staticcheck
         path: internal/service/ecr/
         text: 'SA1019: \w+\.\w+ is deprecated: This field is deprecated.'
+      - linters:
+          - staticcheck
+        path: internal/service/evidently/
+        text: 'SA1019: \w+\.\w+ is deprecated: AWS CloudWatch Evidently has been deprecated since 11/17/2025'
       - linters:
           - staticcheck
         path: internal/service/firehose/

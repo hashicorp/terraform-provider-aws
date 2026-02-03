@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package directconnect
 
 import (
@@ -25,6 +27,7 @@ import (
 
 // @SDKResource("aws_dx_hosted_transit_virtual_interface_accepter", name="Hosted Transit Virtual Interface Accepter")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedTransitVirtualInterfaceAccepterCreate,

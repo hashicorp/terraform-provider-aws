@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package backup
 
 import (
@@ -35,6 +37,7 @@ const (
 // @SDKResource("aws_backup_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.GetBackupPlanOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlanCreate,

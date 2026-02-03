@@ -33,6 +33,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 				Config: testAccWindowsFileSystemDataSourceConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "active_directory_id", resourceName, "active_directory_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "aliases.#", resourceName, "aliases.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "audit_log_configuration.#", resourceName, "audit_log_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "automatic_backup_retention_days", resourceName, "automatic_backup_retention_days"),
@@ -61,7 +62,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 }
 
 func testAccWindowsFileSystemDataSourceConfig_basic(rName, domain string) string {
-	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_basic(rName, domain), `
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_aliases1(rName, domain, "filesystem1.example.com"), `
 data "aws_fsx_windows_file_system" "test" {
   id = aws_fsx_windows_file_system.test.id
 }

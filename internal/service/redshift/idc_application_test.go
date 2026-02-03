@@ -11,11 +11,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -25,18 +23,18 @@ import (
 func TestAccRedshiftIDCApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "idc_display_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "idc_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
@@ -58,18 +56,18 @@ func TestAccRedshiftIDCApplication_basic(t *testing.T) {
 func TestAccRedshiftIDCApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfredshift.ResourceIdcApplication, resourceName, IDCApplicationDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,18 +79,18 @@ func TestAccRedshiftIDCApplication_disappears(t *testing.T) {
 func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_authorizedTokenIssuerList(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authorized_token_issuer.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorized_token_issuer.0.trusted_token_issuer_arn", "aws_ssoadmin_trusted_token_issuer.test", names.AttrARN),
@@ -114,18 +112,18 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_serviceIntegrationsLakehouse(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.lake_formation.#", "1"),
@@ -146,18 +144,18 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
 func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_serviceIntegrationsRshift(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.redshift.#", "1"),
@@ -178,18 +176,18 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 func TestAccRedshiftIDCApplication_serviceIntegrationsS3AccessGrants(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_serviceIntegrationsS3AccessGrants(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.#", "1"),
@@ -210,18 +208,18 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsS3AccessGrants(t *testing.
 func TestAccRedshiftIDCApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdcApplicationConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -236,7 +234,7 @@ func TestAccRedshiftIDCApplication_tags(t *testing.T) {
 			{
 				Config: testAccIdcApplicationConfig_tags(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIDCApplicationExists(ctx, resourceName),
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -245,9 +243,9 @@ func TestAccRedshiftIDCApplication_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIDCApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIDCApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_idc_application" {
@@ -273,7 +271,7 @@ func testAccCheckIDCApplicationDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckIDCApplicationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckIDCApplicationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -286,7 +284,7 @@ func testAccCheckIDCApplicationExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Redshift IDC Application is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindRedshiftIDCApplicationByARN(ctx, conn, arn)
 

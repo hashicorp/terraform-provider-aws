@@ -63,17 +63,17 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @FrameworkListResource("{{ .ProviderResourceName }}")
 func new{{ .ListResource }}ResourceAsListResource() list.ListResourceWithConfigure {
-	return &listResource{{ .ListResource }}{}
+	return &{{ .ListResourceLowerCamel }}ListResource{}
 }
 
-var _ list.ListResource = &listResource{{ .ListResource }}{}
+var _ list.ListResource = &{{ .ListResourceLowerCamel }}ListResource{}
 
-type listResource{{ .ListResource }} struct {
-	resource{{ .ListResource }}
+type {{ .ListResourceLowerCamel }}ListResource struct {
+	{{ .ListResourceLowerCamel }}Resource
 	framework.WithList
 }
 
-func (r *listResource{{ .ListResource }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
 	// TIP: ==== LIST RESOURCE LIST ====
 	// Generally, the List function should do the following things. Make

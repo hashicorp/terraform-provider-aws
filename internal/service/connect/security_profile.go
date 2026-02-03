@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package connect
 
 import (
@@ -28,6 +30,7 @@ import (
 
 // @SDKResource("aws_connect_security_profile", name="Security Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityProfileCreate,

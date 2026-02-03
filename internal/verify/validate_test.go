@@ -177,6 +177,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                                                         // lintignore:AWSAT005          // CloudWatch Alarm
 		"arn:aws:imagebuilder:eu-central-1:aws-marketplace:component/crowdstrike-falcon-install-linux-prod-nhzsem4gwwfja/1.2.2/1", // lintignore:AWSAT003,AWSAT005 // EC2 image builder marketplace subscription ARN
 		"arn:aws-eusc:acm-pca:eusc-de-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012",             // lintignore:AWSAT003,AWSAT005 // ESC ACMPCA ARN
+		"arn:aws:network-firewall:us-east-1:partner-managed:stateful-rulegroup/Trend-MalwareBlockStrictOrder",                     // lintignore:AWSAT003,AWSAT005 // Network Firewall partner-managed rule group
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")
@@ -230,57 +231,6 @@ func TestValidCIDRNetworkAddress(t *testing.T) {
 				t.Fatalf("%d/%d: Expected err: %q, to include %q",
 					i+1, len(cases), errs[0], tc.ExpectedErrSubstr)
 			}
-		}
-	}
-}
-
-func TestValidIPv4CIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", true},
-		{"10.2.2.0/1234", false},
-		{"10/24", false},
-		{"10.2.2.2/24", false},
-		{"::/0", false},
-		{"2000::/15", false},
-		{"", false},
-	} {
-		err := ValidateIPv4CIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
-		}
-	}
-}
-
-func TestValidIPv6CIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", false},
-		{"10.2.2.0/1234", false},
-		{"::/0", true},
-		{"::0/0", true},
-		{"2000::/15", true},
-		{"2001::/15", false},
-		{"2001:db8::/122", true},
-		{"", false},
-	} {
-		err := ValidateIPv6CIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
 		}
 	}
 }

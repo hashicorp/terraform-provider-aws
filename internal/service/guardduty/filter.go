@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package guardduty
 
 import (
@@ -34,6 +36,7 @@ import (
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/guardduty;guardduty.GetFilterOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFilterCreate,

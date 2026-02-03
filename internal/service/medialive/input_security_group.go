@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package medialive
 
 import (
@@ -30,6 +32,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,

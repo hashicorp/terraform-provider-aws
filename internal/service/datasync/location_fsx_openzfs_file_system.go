@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datasync
 
 import (
@@ -36,6 +38,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOpenZfsOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdFunc="testAccLocationFSxOpenZFSImportStateID")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxOpenZFSFileSystemCreate,

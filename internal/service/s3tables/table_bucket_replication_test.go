@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ import (
 func TestAccS3TablesTableBucketReplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3tables.GetTableBucketReplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket_replication.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketReplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketReplicationExists(ctx, resourceName, &v),
+					testAccCheckTableBucketReplicationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -61,22 +59,22 @@ func TestAccS3TablesTableBucketReplication_basic(t *testing.T) {
 func TestAccS3TablesTableBucketReplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3tables.GetTableBucketReplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket_replication.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketReplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketReplicationExists(ctx, resourceName, &v),
+					testAccCheckTableBucketReplicationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTableBucketReplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,22 +94,22 @@ func TestAccS3TablesTableBucketReplication_disappears(t *testing.T) {
 func TestAccS3TablesTableBucketReplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v s3tables.GetTableBucketReplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket_replication.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckTableBucketReplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketReplicationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketReplicationExists(ctx, resourceName, &v),
+					testAccCheckTableBucketReplicationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -122,7 +120,7 @@ func TestAccS3TablesTableBucketReplication_update(t *testing.T) {
 			{
 				Config: testAccTableBucketReplicationConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketReplicationExists(ctx, resourceName, &v),
+					testAccCheckTableBucketReplicationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -134,9 +132,9 @@ func TestAccS3TablesTableBucketReplication_update(t *testing.T) {
 	})
 }
 
-func testAccCheckTableBucketReplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTableBucketReplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3tables_table_bucket_replication" {
@@ -160,14 +158,14 @@ func testAccCheckTableBucketReplicationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckTableBucketReplicationExists(ctx context.Context, n string, v *s3tables.GetTableBucketReplicationOutput) resource.TestCheckFunc {
+func testAccCheckTableBucketReplicationExists(ctx context.Context, t *testing.T, n string, v *s3tables.GetTableBucketReplicationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
 
 		output, err := tfs3tables.FindTableBucketReplicationByARN(ctx, conn, rs.Primary.Attributes["table_bucket_arn"])
 

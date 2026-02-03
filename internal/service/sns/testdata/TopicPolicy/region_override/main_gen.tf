@@ -1,12 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_sns_topic" "test" {
-  region = var.region
-
-  name = var.rName
-}
-
 resource "aws_sns_topic_policy" "test" {
   region = var.region
 
@@ -33,6 +27,12 @@ resource "aws_sns_topic_policy" "test" {
   ]
 }
 POLICY
+}
+
+resource "aws_sns_topic" "test" {
+  region = var.region
+
+  name = var.rName
 }
 
 variable "rName" {

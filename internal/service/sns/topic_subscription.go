@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sns
 
 import (
@@ -134,6 +136,7 @@ var (
 // @Testing(existsType="map[string]string")
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,

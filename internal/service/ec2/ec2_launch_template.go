@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -886,6 +888,20 @@ func resourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"network_performance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bandwidth_weighting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
+						},
+					},
+				},
+			},
 			"placement": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1140,6 +1156,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"metadata_options",
 		"monitoring",
 		"network_interfaces",
+		"network_performance_options",
 		"placement",
 		"private_dns_name_options",
 		"ram_disk_id",
@@ -1336,6 +1353,10 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 
 	if v, ok := d.GetOk("network_interfaces"); ok && len(v.([]any)) > 0 {
 		apiObject.NetworkInterfaces = expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(v.([]any))
+	}
+
+	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -2049,6 +2070,20 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []
 	return apiObjects
 }
 
+func expandLaunchTemplateNetworkPerformanceOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateNetworkPerformanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LaunchTemplateNetworkPerformanceOptionsRequest{}
+
+	if v, ok := tfMap["bandwidth_weighting"].(string); ok && v != "" {
+		apiObject.BandwidthWeighting = awstypes.InstanceBandwidthWeighting(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.LaunchTemplatePlacementRequest {
 	if tfMap == nil {
 		return nil
@@ -2265,6 +2300,13 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	}
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("setting network_interfaces: %w", err)
+	}
+	if apiObject.NetworkPerformanceOptions != nil {
+		if err := d.Set("network_performance_options", []any{flattenLaunchTemplateNetworkPerformanceOptions(apiObject.NetworkPerformanceOptions)}); err != nil {
+			return fmt.Errorf("setting network_performance_options: %w", err)
+		}
+	} else {
+		d.Set("network_performance_options", nil)
 	}
 	if apiObject.Placement != nil {
 		if err := d.Set("placement", []any{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
@@ -2955,6 +2997,20 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []aw
 	}
 
 	return tfList
+}
+
+func flattenLaunchTemplateNetworkPerformanceOptions(apiObject *awstypes.LaunchTemplateNetworkPerformanceOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.BandwidthWeighting; v != "" {
+		tfMap["bandwidth_weighting"] = v
+	}
+
+	return tfMap
 }
 
 func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement) map[string]any {

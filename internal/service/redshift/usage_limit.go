@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package redshift
 
 import (
@@ -23,6 +25,7 @@ import (
 
 // @SDKResource("aws_redshift_usage_limit", name="Usage Limit")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsageLimitCreate,

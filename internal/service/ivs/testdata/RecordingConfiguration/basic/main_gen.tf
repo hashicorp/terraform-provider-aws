@@ -4,7 +4,7 @@
 resource "aws_ivs_recording_configuration" "test" {
   destination_configuration {
     s3 {
-      bucket_name = aws_s3_bucket.test.id
+      bucket_name = aws_s3_bucket.test.bucket
     }
   }
 }

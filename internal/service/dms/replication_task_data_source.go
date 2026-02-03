@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dms
 
 import (
@@ -17,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_dms_replication_task", name="Replication Task")
 // @Tags(identifierAttribute="replication_task_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationTaskRead,

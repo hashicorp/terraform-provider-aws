@@ -4792,7 +4792,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   handler       = "index.handler"
   runtime       = "python3.14"
-  memory_size   = 2048
+  memory_size   = 32768
 
   publish    = true
   publish_to = "LATEST_PUBLISHED"

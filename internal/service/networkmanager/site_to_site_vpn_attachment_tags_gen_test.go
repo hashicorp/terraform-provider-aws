@@ -27,7 +27,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -234,7 +234,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -316,7 +316,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -394,7 +394,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -492,7 +492,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -600,7 +600,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -758,7 +758,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -862,7 +862,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1068,7 +1068,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1249,7 +1249,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1446,7 +1446,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1551,7 +1551,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1657,7 +1657,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1737,7 +1737,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1807,7 +1807,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1882,7 +1882,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -1957,7 +1957,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -2025,7 +2025,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -2137,7 +2137,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -2239,7 +2239,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
@@ -2416,7 +2416,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
 	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)

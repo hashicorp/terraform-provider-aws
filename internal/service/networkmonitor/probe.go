@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmonitor
 
 import (
@@ -38,6 +40,7 @@ import (
 
 // @FrameworkResource("aws_networkmonitor_probe", name="Probe")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &probeResource{}, nil
 }

@@ -20,17 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.CloudFrontServiceID, testAccErrorCheckSkipFunction)
-}
-
-func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"InvalidParameterValueException: Unsupported source arn",
-		"AccessDenied",
-	)
-}
-
 func TestAccCloudFrontFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf cloudfront.DescribeFunctionOutput

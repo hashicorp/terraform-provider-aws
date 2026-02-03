@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetDeploymentOutput
 	resourceName := "aws_apigatewayv2_deployment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &v),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployed", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
 				),
@@ -49,7 +47,7 @@ func TestAccAPIGatewayV2Deployment_basic(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_basic(rName, "Test description updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &v),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployed", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
 				),
@@ -62,18 +60,18 @@ func TestAccAPIGatewayV2Deployment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetDeploymentOutput
 	resourceName := "aws_apigatewayv2_deployment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &v),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceDeployment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,18 +84,18 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var deployment1, deployment2, deployment3, deployment4 apigatewayv2.GetDeploymentOutput
 	resourceName := "aws_apigatewayv2_deployment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_triggers(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment1),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment1),
 				),
 				// Due to how the Terraform state is handled for resources during creation,
 				// any SHA1 of whole resources will change after first apply, then stabilize.
@@ -106,14 +104,14 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_triggers(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment2),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment2),
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_triggers(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment3),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment3),
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
 				),
 			},
@@ -127,7 +125,7 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 			{
 				Config: testAccDeploymentConfig_triggers(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment4),
+					testAccCheckDeploymentExists(ctx, t, resourceName, &deployment4),
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
 				),
 			},
@@ -135,9 +133,9 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDeploymentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_deployment" {
@@ -161,14 +159,14 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, t *testing.T, n string, v *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 

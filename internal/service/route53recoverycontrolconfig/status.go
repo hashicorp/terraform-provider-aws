@@ -7,12 +7,11 @@ import (
 	"context"
 
 	r53rcc "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *r53rcc.Client, clusterArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByARN(ctx, conn, clusterArn)
 
 		if retry.NotFound(err) {
@@ -27,8 +26,8 @@ func statusCluster(ctx context.Context, conn *r53rcc.Client, clusterArn string) 
 	}
 }
 
-func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingControlArn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRoutingControl(conn *r53rcc.Client, routingControlArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRoutingControlByARN(ctx, conn, routingControlArn)
 
 		if retry.NotFound(err) {
@@ -43,8 +42,8 @@ func statusRoutingControl(ctx context.Context, conn *r53rcc.Client, routingContr
 	}
 }
 
-func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelArn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusControlPanel(conn *r53rcc.Client, controlPanelArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findControlPanelByARN(ctx, conn, controlPanelArn)
 
 		if retry.NotFound(err) {
@@ -59,8 +58,8 @@ func statusControlPanel(ctx context.Context, conn *r53rcc.Client, controlPanelAr
 	}
 }
 
-func statusSafetyRule(ctx context.Context, conn *r53rcc.Client, safetyRuleArn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSafetyRule(conn *r53rcc.Client, safetyRuleArn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSafetyRuleByARN(ctx, conn, safetyRuleArn)
 
 		if retry.NotFound(err) {

@@ -22,9 +22,7 @@ func createResourceID(bucket, expectedBucketOwner string) string {
 	}
 
 	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join(parts, resourceIDSeparator)
-
-	return id
+	return strings.Join(parts, resourceIDSeparator)
 }
 
 // parseResourceID is a generic method for parsing an ID string

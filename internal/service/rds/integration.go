@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package rds
 
 import (
@@ -39,6 +41,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Integration")
 // @Testing(tagsTest=false)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 

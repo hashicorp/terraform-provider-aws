@@ -4,6 +4,7 @@
 variable "partition_labels" {
   default = [
     "aws-cn",
+    "aws-eusc",
     "aws-iso",
     "aws-iso-b",
     "aws-us-gov",

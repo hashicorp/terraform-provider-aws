@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package apprunner
 
 import (
@@ -26,6 +28,7 @@ import (
 
 // @SDKResource("aws_apprunner_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,

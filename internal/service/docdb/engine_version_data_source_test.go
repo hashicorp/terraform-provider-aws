@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,11 +36,13 @@ func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
-					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parameter_group_family"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_description"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("exportable_log_types"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})

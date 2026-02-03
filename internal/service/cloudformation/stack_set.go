@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudformation
 
 import (
@@ -322,7 +324,11 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
-	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
+	// Only set administration_role_arn if auto_deployment is not configured.
+	// AWS returns this field for SERVICE_MANAGED StackSets, but it conflicts with auto_deployment.
+	if _, ok := d.GetOk("auto_deployment"); !ok {
+		d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
+	}
 	d.Set(names.AttrARN, stackSet.StackSetARN)
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)

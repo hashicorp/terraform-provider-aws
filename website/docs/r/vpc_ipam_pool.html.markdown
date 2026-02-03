@@ -10,6 +10,8 @@ description: |-
 
 Provides an IP address pool resource for IPAM.
 
+~> **NOTE:** When provisioning resource planning IPAM pools, it can take upto 30 minutes for the CIDR to be managed by IPAM.
+
 ## Example Usage
 
 Basic usage:
@@ -65,6 +67,49 @@ resource "aws_vpc_ipam_pool_cidr" "child_test" {
 }
 ```
 
+Resource Planning Pools:
+
+```terraform
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "example" {
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.parent.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -85,7 +130,15 @@ within the CIDR range in the pool.
 * `publicly_advertisable` - (Optional) Defines whether or not IPv6 pool space is publicly advertisable over the internet. This argument is required if `address_family = "ipv6"` and `public_ip_source = "byoip"`, default is `false`. This option is not available for IPv4 pool space or if `public_ip_source = "amazon"`. Setting this argument to `true` when it is not available may result in erroneous differences being reported.
 * `public_ip_source` - (Optional) The IP address source for pools in the public scope. Only used for provisioning IP address CIDRs to pools in the public scope. Valid values are `byoip` or `amazon`. Default is `byoip`.
 * `source_ipam_pool_id` - (Optional) The ID of the source IPAM pool. Use this argument to create a child pool within an existing pool.
+* `source_resource` - (Optional) Resource to use to use to configure a resource planning IPAM Pool. If configured, the `locale` of the parent pool must match the region that the vpc resides in.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### source_resource
+
+* `resource_id` - (Required) ID of the resource.
+* `resource_owner` - (Required) Owner of the resource.
+* `resource_region` - (Required) Region where the resource exists. Must match the `locale` of the parent IPAM Pool.
+* `resource_type` - (Required) Type of the resource. (`vpc`)
 
 ## Attribute Reference
 
@@ -95,6 +148,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the IPAM
 * `state` - The ID of the IPAM
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `35m`)
+* `update` - (Default `3m`)
+* `delete` - (Default `3m`)
 
 ## Import
 

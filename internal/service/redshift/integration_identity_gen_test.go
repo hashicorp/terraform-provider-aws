@@ -34,7 +34,7 @@ func TestAccRedshiftIntegration_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
-		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -44,7 +44,7 @@ func TestAccRedshiftIntegration_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -241,7 +241,7 @@ func TestAccRedshiftIntegration_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServiceID),
-		CheckDestroy: testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy: testAccCheckIntegrationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -250,7 +250,7 @@ func TestAccRedshiftIntegration_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -297,7 +297,7 @@ func TestAccRedshiftIntegration_Identity_ExistingResource_NoRefresh_NoChange(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.RedshiftServiceID),
-		CheckDestroy: testAccCheckIntegrationDestroy(ctx),
+		CheckDestroy: testAccCheckIntegrationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -311,7 +311,7 @@ func TestAccRedshiftIntegration_Identity_ExistingResource_NoRefresh_NoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

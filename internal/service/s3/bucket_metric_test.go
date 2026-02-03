@@ -6,7 +6,7 @@ package s3_test
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Test code generating random account IDs
 	"testing"
 
 	"github.com/YakDriver/regexache"

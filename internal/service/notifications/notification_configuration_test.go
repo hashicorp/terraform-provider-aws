@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notifications/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,11 +27,11 @@ import (
 func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v notifications.GetNotificationConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rDescription := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_notifications_notification_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -41,12 +39,12 @@ func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfigurationConfig_basic(rName, rDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+					testAccCheckNotificationConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -75,11 +73,11 @@ func TestAccNotificationsNotificationConfiguration_basic(t *testing.T) {
 func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v notifications.GetNotificationConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rDescription := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_notifications_notification_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -87,12 +85,12 @@ func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfigurationConfig_basic(rName, rDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+					testAccCheckNotificationConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceNotificationConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,13 +107,13 @@ func TestAccNotificationsNotificationConfiguration_disappears(t *testing.T) {
 func TestAccNotificationsNotificationConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v notifications.GetNotificationConfigurationOutput
-	rNameOne := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameTwo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescriptionOne := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescriptionTwo := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameOne := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameTwo := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rDescriptionOne := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rDescriptionTwo := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_notifications_notification_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -123,12 +121,12 @@ func TestAccNotificationsNotificationConfiguration_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfigurationConfig_all(rNameOne, rDescriptionOne, string(types.AggregationDurationShort)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+					testAccCheckNotificationConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -166,11 +164,11 @@ func TestAccNotificationsNotificationConfiguration_update(t *testing.T) {
 func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v notifications.GetNotificationConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rDescription := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_notifications_notification_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
@@ -178,12 +176,12 @@ func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckNotificationConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNotificationConfigurationConfig_tags1(rName, rDescription, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+					testAccCheckNotificationConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -206,7 +204,7 @@ func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccNotificationConfigurationConfig_tags2(rName, rDescription, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+					testAccCheckNotificationConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -223,7 +221,7 @@ func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccNotificationConfigurationConfig_tags1(rName, rDescription, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNotificationConfigurationExists(ctx, resourceName, &v),
+					testAccCheckNotificationConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -240,9 +238,9 @@ func TestAccNotificationsNotificationConfiguration_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckNotificationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNotificationConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_notifications_notification_configuration" {
@@ -266,14 +264,14 @@ func testAccCheckNotificationConfigurationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckNotificationConfigurationExists(ctx context.Context, n string, v *notifications.GetNotificationConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckNotificationConfigurationExists(ctx context.Context, t *testing.T, n string, v *notifications.GetNotificationConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NotificationsClient(ctx)
 
 		output, err := tfnotifications.FindNotificationConfigurationByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 

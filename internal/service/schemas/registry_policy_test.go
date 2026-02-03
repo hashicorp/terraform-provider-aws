@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 
 func TestAccSchemasRegistryPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &schemas.GetResourcePolicyOutput{}),
 				),
 			},
 			{
@@ -50,19 +48,19 @@ func TestAccSchemasRegistryPolicy_basic(t *testing.T) {
 
 func TestAccSchemasRegistryPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &schemas.GetResourcePolicyOutput{}),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfschemas.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,20 +71,20 @@ func TestAccSchemasRegistryPolicy_disappears(t *testing.T) {
 
 func TestAccSchemasRegistryPolicy_disappears_Registry(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	parentResourceName := "aws_schemas_registry.test"
 	resourceName := "aws_schemas_registry_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &schemas.GetResourcePolicyOutput{}),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfschemas.ResourceRegistry(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -97,41 +95,41 @@ func TestAccSchemasRegistryPolicy_disappears_Registry(t *testing.T) {
 
 func TestAccSchemasRegistryPolicy_Policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_policy(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
-					testAccCheckRegistryPolicy(ctx, resourceName, "test1"),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &schemas.GetResourcePolicyOutput{}),
+					testAccCheckRegistryPolicy(ctx, t, resourceName, "test1"),
 				),
 			},
 			{
 				Config: testAccRegistryPolicyConfig_policy(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
-					testAccCheckRegistryPolicy(ctx, resourceName, "test2"),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &schemas.GetResourcePolicyOutput{}),
+					testAccCheckRegistryPolicy(ctx, t, resourceName, "test2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRegistryPolicyExists(ctx context.Context, name string, v *schemas.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyExists(ctx context.Context, t *testing.T, name string, v *schemas.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SchemasClient(ctx)
 
 		output, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -145,9 +143,9 @@ func testAccCheckRegistryPolicyExists(ctx context.Context, name string, v *schem
 	}
 }
 
-func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SchemasClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_schemas_registry_policy" {
@@ -171,7 +169,7 @@ func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid string) resource.TestCheckFunc {
+func testAccCheckRegistryPolicy(ctx context.Context, t *testing.T, name string, expectedSid string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		partition := acctest.Partition()
 		region := acctest.Region()
@@ -201,7 +199,7 @@ func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid st
 			]
 		}`, expectedSid, partition, region, account_id, rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SchemasClient(ctx)
 
 		output, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
 

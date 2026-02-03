@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appmesh
 
 import (
@@ -33,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualRouterData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualRouterImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

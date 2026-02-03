@@ -46,7 +46,7 @@ func testAccOrganizationsOrganization_Identity_Basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
@@ -122,7 +122,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		CheckDestroy: testAccCheckOrganizationDestroy(ctx),
@@ -177,7 +177,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource_NoRefresh_NoChan
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		CheckDestroy: testAccCheckOrganizationDestroy(ctx),

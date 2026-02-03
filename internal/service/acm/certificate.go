@@ -1,11 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package acm
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for backward compatibility with older provider state normalization, not cryptographic security
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -61,8 +63,6 @@ const (
 // @Testing(tlsKey=true)
 // @Testing(importIgnore="certificate_body;private_key)
 // @Testing(generator=false)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -790,7 +790,7 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw any) bool {
 		return c[:i]
 	}
 
-	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
+	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new)))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- SHA1 used for backward compatibility with older provider state normalization, not cryptographic security
 	return hex.EncodeToString(newCleanVal[:]) == old
 }
 

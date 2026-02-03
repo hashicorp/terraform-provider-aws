@@ -224,22 +224,6 @@ func statusSpace(ctx context.Context, conn *sagemaker.Client, domainId, name str
 	}
 }
 
-func statusMonitoringSchedule(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findMonitoringScheduleByName(ctx, conn, name)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.MonitoringScheduleStatus), nil
-	}
-}
-
 func statusMlflowTrackingServer(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMlflowTrackingServerByName(ctx, conn, name)

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package directconnect
 
 import (
@@ -27,6 +29,7 @@ import (
 
 // @SDKResource("aws_dx_public_virtual_interface", name="Public Virtual Interface")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicVirtualInterfaceCreate,

@@ -32,6 +32,7 @@ type TemplateData struct {
 	Resource             string
 	ResourceAWS          string
 	ResourceLower        string
+	ResourceLowerCamel   string
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
@@ -78,6 +79,7 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 		Resource:             resName,
 		ResourceAWS:          capitalizeForAWS(resName),
 		ResourceLower:        strings.ToLower(resName),
+		ResourceLowerCamel:   convert.ToLowercasePrefix(resName),
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,

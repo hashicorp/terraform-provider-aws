@@ -1523,3 +1523,129 @@ resource "aws_fsx_windows_file_system" "test" {
 }
 `, rName, iops))
 }
+func TestAccFSxWindowsFileSystem_selfManagedActiveDirectoryWithSecret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectoryWithSecret(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "self_managed_active_directory.0.domain_join_service_account_secret", "aws_secretsmanager_secret.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					"self_managed_active_directory",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+func testAccWindowsFileSystemConfig_selfManagedActiveDirectoryWithSecret(rName, domain string) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = "KMS key for FSx Secret"
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow FSx to use the KMS key"
+        Effect = "Allow"
+        Principal = {
+          Service = "fsx.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name        = %[1]q
+  kms_key_id  = aws_kms_key.test.arn
+  description = "FSx AD Credentials"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME = "Admin"
+    CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD = aws_directory_service_directory.test.password
+  })
+}
+
+resource "aws_secretsmanager_secret_policy" "test" {
+  secret_arn = aws_secretsmanager_secret.test.arn
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "fsx.amazonaws.com"
+        }
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = aws_secretsmanager_secret.test.arn
+      }
+    ]
+  })
+}
+
+resource "aws_fsx_windows_file_system" "test" {
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
+
+  self_managed_active_directory {
+    dns_ips                            = aws_directory_service_directory.test.dns_ip_addresses
+    domain_name                        = aws_directory_service_directory.test.name
+    domain_join_service_account_secret = aws_secretsmanager_secret.test.arn
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_secretsmanager_secret_policy.test]
+}
+`, rName))
+}

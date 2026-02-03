@@ -38,10 +38,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			acctest.CtDisappears: testAccConfigurationRecorderStatus_disappears,
 		},
 		"ConfigurationRecorder": {
-			acctest.CtBasic:      testAccConfigurationRecorder_basic,
-			"allParams":          testAccConfigurationRecorder_allParams,
-			"recordStrategy":     testAccConfigurationRecorder_recordStrategy,
-			acctest.CtDisappears: testAccConfigurationRecorder_disappears,
+			acctest.CtBasic:            testAccConfigurationRecorder_basic,
+			"allParams":                testAccConfigurationRecorder_allParams,
+			"exclusionsToAllSupported": testAccConfigurationRecorder_exclusionsToAllSupported,
+			"recordStrategy":           testAccConfigurationRecorder_recordStrategy,
+			acctest.CtDisappears:       testAccConfigurationRecorder_disappears,
 		},
 		"ConformancePack": {
 			acctest.CtBasic:             testAccConformancePack_basic,

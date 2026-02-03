@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package cloudfront
 
 import (
@@ -30,6 +32,7 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("realtime-log-config/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.RealtimeLogConfig")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,

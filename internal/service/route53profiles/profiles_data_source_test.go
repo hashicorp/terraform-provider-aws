@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,16 +22,16 @@ func TestAccRoute53ProfilesProfilesDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_route53profiles_profiles.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfilesDestroy(ctx),
+		CheckDestroy:             testAccCheckProfilesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfilesDataSourceConfig_basic(rName),
@@ -45,9 +43,9 @@ func TestAccRoute53ProfilesProfilesDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckProfilesDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProfilesDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53ProfilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53profiles_profile" {

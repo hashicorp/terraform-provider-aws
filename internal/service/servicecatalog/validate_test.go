@@ -26,6 +26,10 @@ func TestValidSharePrincipal(t *testing.T) {
 		"arn:aws:organizations::111122223333:organization/o-abcdefghijkl",             // lintignore:AWSAT005    // organization
 		"arn:aws:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh",        // lintignore:AWSAT005    // ou
 		"arn:aws-us-gov:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh", // lintignore:AWSAT005    // GovCloud ou
+		"o-abcdefghijkl",     // organization ID
+		"ou-ab00-cdefgh",     // OU ID
+		"o-1234567890abcdef", // organization ID (different format)
+		"ou-1234-abcdefgh",   // OU ID (different format)
 	}
 	for _, v := range validNames {
 		_, errors := tfsc.ValidSharePrincipal(v, names.AttrARN)
@@ -56,6 +60,14 @@ func TestValidSharePrincipal(t *testing.T) {
 		"arn:aws:iam::111122223333:saml-provider/idp1:group/data-scientists",               // lintignore:AWSAT005          // SAML group
 		"arn:aws:iam::111122223333:saml-provider/idp1:user/Paul",                           // lintignore:AWSAT005          // SAML user
 		"arn:aws:quicksight:us-east-1:111122223333:group/default/data_scientists",          // lintignore:AWSAT003,AWSAT005 // quicksight group
+		"o-",           // too short
+		"ou-",          // too short
+		"o-abc",        // too short
+		"ou-abc",       // missing second part
+		"o-UPPERCASE",  // uppercase not allowed
+		"ou-ABCD-efgh", // uppercase not allowed
+		"o-!!!invalid", // invalid characters
+		"ou-1234-!!!",  // invalid characters
 	}
 	for _, v := range invalidNames {
 		_, errors := tfsc.ValidSharePrincipal(v, names.AttrARN)

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appsync
 
 import (
@@ -37,6 +39,7 @@ const (
 // @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.GraphqlApi")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGraphQLAPI() *schema.Resource {
 	validateAuthorizerResultTTLInSeconds := validation.IntBetween(0, 3600)
 
