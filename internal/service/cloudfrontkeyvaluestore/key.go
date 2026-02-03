@@ -38,7 +38,6 @@ import (
 // @IdentityAttribute("key")
 // @ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 

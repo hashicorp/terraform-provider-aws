@@ -57,7 +57,6 @@ var (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.15.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

@@ -55,7 +55,6 @@ const (
 // @ImportIDHandler("globalSecondaryIndexImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.GlobalSecondaryIndexDescription")
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(existsTakesT=true, destroyTakesT=true)
 // @Testing(importStateIdFunc=testAccGlobalSecondaryIndexImportStateIdFunc)
 // @Testing(importStateIdAttribute="arn")
 // @Testing(requireEnvVar="TF_AWS_EXPERIMENT_dynamodb_global_secondary_index")
