@@ -21,7 +21,7 @@ Follow the steps below to add a new List Resource.
 ```
 
 - After creating the commit, create a pull request with the changes. Use the Pull Request template provided by the repository. Fill the `Description` section with a summary of the changes. Also, add the test output from the commit message to `Output from Acceptance Testing` section.
-- Create a new CHANGELOG entry in the `.changelog/` folder. The filename will be `<pr-number.txt`. Replace `<pr-number>` with the pull request number. The content of the file should be as follows, replacing `aws_<service-name>_<resource-name>` with the name of the new List Resource added.
+- Create a new CHANGELOG entry in the `.changelog/` folder. The filename will be `<pr-number>.txt`. Replace `<pr-number>` with the pull request number. The content of the file should be as follows, replacing `aws_<service-name>_<resource-name>` with the name of the new List Resource added.
 
 ```release-note:new-list-resource
 aws_<service-name>_<resource-name>

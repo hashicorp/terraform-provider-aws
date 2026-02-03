@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,10 +20,10 @@ import (
 
 func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -33,12 +31,12 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gameservergroup/.+`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "auto_scaling_group_arn", "autoscaling", regexache.MustCompile(`autoScalingGroup:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.#", "0"),
@@ -60,10 +58,10 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -71,12 +69,12 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_autoScalingPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.0.estimated_instance_warmup", "60"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.0.target_tracking_configuration.0.target_value", "77.7"),
 				),
@@ -93,10 +91,10 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -104,12 +102,12 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t 
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_autoScalingPolicyEstimatedInstanceWarmup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.0.estimated_instance_warmup", "66"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.0.target_tracking_configuration.0.target_value", "77.7"),
 				),
@@ -126,10 +124,10 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t 
 
 func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -137,12 +135,12 @@ func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_balancingStrategy(rName, string(awstypes.BalancingStrategySpotOnly)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", string(awstypes.BalancingStrategySpotOnly)),
 				),
 			},
@@ -162,10 +160,10 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -173,12 +171,12 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_name(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "game_server_group_name", rName),
 				),
 			},
@@ -191,7 +189,7 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_name(rName, rName+"-new"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "game_server_group_name", rName+"-new"),
 				),
 			},
@@ -201,10 +199,10 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -212,12 +210,12 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_instanceDefinition(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
 				),
 			},
@@ -230,7 +228,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_instanceDefinition(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "3"),
 				),
 			},
@@ -240,10 +238,10 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -251,12 +249,12 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.0.weighted_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.1.weighted_capacity", "1"),
@@ -271,7 +269,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 			{
 				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.0.weighted_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.1.weighted_capacity", "2"),
@@ -283,10 +281,10 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 
 func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -294,12 +292,12 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_launchTemplateID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
@@ -317,10 +315,10 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -328,12 +326,12 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_launchTemplateName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
@@ -351,10 +349,10 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -362,12 +360,12 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_launchTemplateVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "1"),
@@ -385,10 +383,10 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -396,12 +394,12 @@ func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_protectionPolicy(rName, string(awstypes.GameServerProtectionPolicyFullProtection)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", string(awstypes.GameServerProtectionPolicyFullProtection)),
 				),
 			},
@@ -421,10 +419,10 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -432,12 +430,12 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_maxSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "1"),
 				),
 			},
@@ -450,7 +448,7 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_maxSize(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "2"),
 				),
 			},
@@ -464,10 +462,10 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -475,12 +473,12 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_minSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
 				),
 			},
@@ -493,7 +491,7 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_minSize(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
 				),
 			},
@@ -503,10 +501,10 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -514,12 +512,12 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_roleARN(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test1`, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test1", names.AttrARN),
 				),
@@ -533,7 +531,7 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_roleARN(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test2`, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
@@ -548,10 +546,10 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -559,12 +557,12 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_vpcSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -576,7 +574,7 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_vpcSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -585,10 +583,10 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 
 func TestAccGameLiftGameServerGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_gamelift_game_server_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GameLiftEndpointID)
@@ -596,12 +594,12 @@ func TestAccGameLiftGameServerGroup_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGameServerGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -615,7 +613,7 @@ func TestAccGameLiftGameServerGroup_tags(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -624,7 +622,7 @@ func TestAccGameLiftGameServerGroup_tags(t *testing.T) {
 			{
 				Config: testAccGameServerGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGameServerGroupExists(ctx, resourceName),
+					testAccCheckGameServerGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -633,9 +631,9 @@ func TestAccGameLiftGameServerGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckGameServerGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGameServerGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GameLiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_game_server_group" {
@@ -659,14 +657,14 @@ func testAccCheckGameServerGroupDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckGameServerGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckGameServerGroupExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("resource %s not found", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GameLiftClient(ctx)
 
 		_, err := tfgamelift.FindGameServerGroupByName(ctx, conn, rs.Primary.ID)
 

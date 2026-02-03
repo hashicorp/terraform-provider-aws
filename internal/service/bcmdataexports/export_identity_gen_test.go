@@ -35,7 +35,7 @@ func TestAccBCMDataExportsExport_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
-		CheckDestroy:             testAccCheckExportDestroy(ctx),
+		CheckDestroy:             testAccCheckExportDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccBCMDataExportsExport_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &v),
+					testAccCheckExportExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -118,7 +118,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV5(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
-		CheckDestroy: testAccCheckExportDestroy(ctx),
+		CheckDestroy: testAccCheckExportDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -127,7 +127,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV5(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &v),
+					testAccCheckExportExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -142,7 +142,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV5(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &v),
+					testAccCheckExportExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -176,7 +176,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV6(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
-		CheckDestroy: testAccCheckExportDestroy(ctx),
+		CheckDestroy: testAccCheckExportDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create in v6.0
 			{
@@ -185,7 +185,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV6(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &v),
+					testAccCheckExportExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -203,7 +203,7 @@ func TestAccBCMDataExportsExport_Identity_ExistingResource_fromV6(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &v),
+					testAccCheckExportExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

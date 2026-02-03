@@ -106,6 +106,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
 		return true
 	}
+	// Example (athena): InvalidRequestException: Not authorized to make this request.
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "Not authorized to make this request") {
+		return true
+	}
 	// Example (GovCloud): InvalidSignatureException: Credential should be scoped to a valid region
 	if tfawserr.ErrMessageContains(err, "InvalidSignatureException", "Credential should be scoped to a valid region") {
 		return true

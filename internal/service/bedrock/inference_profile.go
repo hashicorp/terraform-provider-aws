@@ -125,7 +125,20 @@ func (r *inferenceProfileResource) Schema(ctx context.Context, req resource.Sche
 			"model_source": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileModelModelSource](ctx),
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.RequiresReplaceIf(
+						func(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							// model_source is not returned from the AWS API.
+							// If state is null (such as after import), don't force replacement.
+							if req.StateValue.IsNull() {
+								resp.RequiresReplace = false
+								return
+							}
+							// When state is non-null, require replacement for any changes
+							resp.RequiresReplace = !req.PlanValue.Equal(req.StateValue)
+						},
+						"If the value of this attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+						"If the value of this attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+					),
 				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),

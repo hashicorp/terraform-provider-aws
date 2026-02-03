@@ -15,3 +15,17 @@ rules:
                 - pattern: names.AttrARN
                 # - pattern-regex: _arn
     severity: ERROR
+
+  - id: arn-matchresourceattr
+    languages: [go]
+    message: Use one of the `acctest` ARN value checks or TestCheckResourceAttrPair
+    patterns:
+      - pattern: |
+          resource.TestMatchResourceAttr($NAME, $ATTR, regexache.MustCompile(...))
+      - metavariable-pattern:
+          metavariable: $ATTR
+          patterns:
+            - pattern-either:
+                - pattern: names.AttrARN
+                # - pattern-regex: _arn
+    severity: ERROR

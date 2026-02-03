@@ -213,10 +213,11 @@ type ResourceDatum struct {
 	Name                              string // Friendly name (without service name), e.g. "Topic", not "SNS Topic"
 	IsGlobal                          bool
 	regionOverrideEnabled             bool
+	RegionOverrideDeprecated          bool
+	ValidateRegionOverrideInPartition bool
 	TransparentTagging                bool
 	TagsIdentifierAttribute           string
 	TagsResourceType                  string
-	ValidateRegionOverrideInPartition bool
 	isARNFormatGlobal                 arnFormatState
 	wrappedImport                     common.TriBoolean
 	CustomImport                      bool
@@ -381,6 +382,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideEnabled value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					} else {
 						d.regionOverrideEnabled = enabled
+					}
+				}
+				if attr, ok := args.Keyword["overrideDeprecated"]; ok {
+					if deprecated, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid Region/overrideDeprecated value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					} else {
+						d.RegionOverrideDeprecated = deprecated
 					}
 				}
 				if attr, ok := args.Keyword["validateOverrideInPartition"]; ok {

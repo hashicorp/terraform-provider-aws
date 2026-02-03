@@ -29,13 +29,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
 		},
 		{
 			Factory:  newRoute53HealthChecksDataSource,
 			TypeName: "aws_arcregionswitch_route53_health_checks",
 			Name:     "Route53 Health Checks",
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
 		},
 	}
 }
@@ -49,7 +49,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: unique.Make(inttypes.ResourceRegionDeprecatedOverride()),
 		},
 	}
 }

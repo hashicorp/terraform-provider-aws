@@ -55,7 +55,7 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+		interceptors = append(interceptors, dataSourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, dataSourceValidateRegion())
 		}
@@ -544,7 +544,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, resourceInjectRegionAttribute())
+		interceptors = append(interceptors, resourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, resourceValidateRegion())
 		}

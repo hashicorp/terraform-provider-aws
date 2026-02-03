@@ -140,6 +140,10 @@ linters:
         text: 'SA1019: \w+\.\w+ is deprecated: This field is deprecated.'
       - linters:
           - staticcheck
+        path: internal/service/evidently/
+        text: 'SA1019: \w+\.\w+ is deprecated: AWS CloudWatch Evidently has been deprecated since 11/17/2025'
+      - linters:
+          - staticcheck
         path: internal/service/firehose/
         text: 'SA1019: \w+\.\w+ is deprecated: (\w+) has been deprecated'
       - linters:

@@ -11,12 +11,20 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,6 +60,7 @@ func TestAccVPCRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -150,6 +159,7 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -214,6 +224,7 @@ func TestAccVPCRoute_ipv6ToInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -261,6 +272,7 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -308,6 +320,7 @@ func TestAccVPCRoute_IPv6ToNetworkInterface_unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -355,6 +368,7 @@ func TestAccVPCRoute_ipv6ToVPCPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -402,6 +416,7 @@ func TestAccVPCRoute_ipv6ToVPNGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -449,6 +464,7 @@ func TestAccVPCRoute_ipv4ToVPNGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -496,6 +512,7 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -543,6 +560,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -591,6 +609,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -640,6 +659,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -663,6 +683,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -710,6 +731,7 @@ func TestAccVPCRoute_ipv4ToVPCPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -757,6 +779,7 @@ func TestAccVPCRoute_ipv4ToNatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -804,6 +827,7 @@ func TestAccVPCRoute_ipv6ToNatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -887,6 +911,7 @@ func TestAccVPCRoute_ipv4ToTransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -938,6 +963,7 @@ func TestAccVPCRoute_ipv6ToTransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -985,6 +1011,7 @@ func TestAccVPCRoute_ipv4ToCarrierGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -1032,6 +1059,7 @@ func TestAccVPCRoute_ipv4ToLocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, names.AttrID),
@@ -1079,6 +1107,7 @@ func TestAccVPCRoute_ipv6ToLocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, names.AttrID),
@@ -1176,6 +1205,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -1199,6 +1229,7 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -1370,6 +1401,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -1393,6 +1425,7 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -2268,6 +2301,299 @@ func TestAccVPCRoute_duplicate(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_Identity_ToIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.Route
+	resourceName := "aws_route.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/ipv6_from_instance/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": knownvalue.NotNull(),
+						"destination_prefix_list_id":  knownvalue.Null(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_ipv6_cidr_block")),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/Route/ipv6_from_instance/"),
+				ConfigVariables:   config.Variables{},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/Route/ipv6_from_instance/"),
+				ConfigVariables:   config.Variables{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/ipv6_from_instance/"),
+				ConfigVariables: config.Variables{},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.10.0
+func TestAccVPCRoute_Identity_ToIPv6_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.Route
+	resourceName := "aws_route.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/ipv6_from_instance_v6.10.0/"),
+				ConfigVariables: config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Route/ipv6_from_instance/"),
+				ConfigVariables:          config.Variables{},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": knownvalue.NotNull(),
+						"destination_prefix_list_id":  knownvalue.Null(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_ipv6_cidr_block")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccVPCRoute_Identity_ToPrefixList(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/prefix_list_to_instance/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": knownvalue.Null(),
+						"destination_prefix_list_id":  knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_prefix_list_id")),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/prefix_list_to_instance/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/prefix_list_to_instance/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/prefix_list_to_instance/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.10.0
+func TestAccVPCRoute_Identity_ToPrefixList_ExistingResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v awstypes.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Route/prefix_list_to_instance_v6.10.0/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRouteExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Route/prefix_list_to_instance/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID:           tfknownvalue.AccountID(),
+						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
+						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.Null(),
+						"destination_ipv6_cidr_block": knownvalue.Null(),
+						"destination_prefix_list_id":  knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("destination_prefix_list_id")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckRouteExists(ctx context.Context, n string, v *awstypes.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2520,9 +2846,9 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_ipv6Instance(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t4g.nano", "t4g.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -2545,7 +2871,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -4026,9 +4352,9 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_prefixListInstance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t4g.nano", "t4g.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -4049,7 +4375,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
