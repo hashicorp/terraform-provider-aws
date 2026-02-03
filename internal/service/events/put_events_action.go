@@ -57,7 +57,7 @@ func (a *putEventsAction) Schema(ctx context.Context, req action.SchemaRequest, 
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"detail": schema.StringAttribute{
-							Description: "A valid JSON string. There is no other schema imposed.",
+							Description: "A valid JSON string. There is no other schema imposed. The total size of the event entry (including detail) must be less than 1 MB.",
 							Optional:    true,
 						},
 						"detail_type": schema.StringAttribute{
