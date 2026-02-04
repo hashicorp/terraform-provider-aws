@@ -180,7 +180,7 @@ locals {
   }
 
   # Convert to JSON and automatically split for inline policies
-  policy_json = jsonencode(local.comprehensive_policy)
+  policy_json  = jsonencode(local.comprehensive_policy)
   split_result = provider::aws::iam_policy_split(local.policy_json, "inline")
 }
 
@@ -352,7 +352,7 @@ locals {
       # ... many statements that exceed 2048 bytes
     ]
   }
-  
+
   # Function automatically handles splitting and attachment
   split_policies = provider::aws::iam_policy_split(jsonencode(local.my_app_permissions), "inline")
 }
@@ -379,7 +379,7 @@ Use different service types to understand how a policy would need to be split fo
 # Check if a policy needs splitting for different service types
 locals {
   policy_json = jsonencode(local.my_policy)
-  
+
   inline_split   = provider::aws::iam_policy_split(local.policy_json, "inline")
   managed_split  = provider::aws::iam_policy_split(local.policy_json, "managed")
   resource_split = provider::aws::iam_policy_split(local.policy_json, "resource-based")
