@@ -389,11 +389,11 @@ func TestIAMPolicySplit_SplitPolicy_OutputPolicyCompleteness(t *testing.T) {
 		if i > 0 {
 			builder.WriteString(",")
 		}
-		builder.WriteString(fmt.Sprintf(`{
+		fmt.Fprintf(&builder, `{
 			"Effect": "Allow",
 			"Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
 			"Resource": "arn:aws:s3:::very-long-bucket-name-for-testing-purposes-%d/*"
-		}`, i))
+		}`, i)
 	}
 
 	builder.WriteString(`]}`)
@@ -495,11 +495,11 @@ func TestIAMPolicySplit_SplitPolicy_MetadataGeneration(t *testing.T) {
 		if i > 0 {
 			builder.WriteString(",")
 		}
-		builder.WriteString(fmt.Sprintf(`{
+		fmt.Fprintf(&builder, `{
 			"Effect": "Allow",
 			"Action": ["s3:GetObject", "s3:PutObject"],
 			"Resource": "arn:aws:s3:::bucket-%d/*"
-		}`, i))
+		}`, i)
 	}
 
 	builder.WriteString(`]}`)
@@ -806,7 +806,6 @@ func TestIAMPolicySplit_Comprehensive_BoundaryConditions(t *testing.T) {
 }
 
 func TestIAMPolicySplit_Comprehensive_AllServiceTypeLimits(t *testing.T) {
-	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -820,6 +819,7 @@ func TestIAMPolicySplit_Comprehensive_AllServiceTypeLimits(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.serviceType, func(t *testing.T) {
+			t.Parallel()
 			// Test policy just under limit
 			policy := generatePolicyOfSize(tc.sizeLimit-200, tc.serviceType)
 			actualSize := CalculatePolicySize(policy)
@@ -870,7 +870,6 @@ func TestIAMPolicySplit_Comprehensive_AllServiceTypeLimits(t *testing.T) {
 }
 
 func TestIAMPolicySplit_Comprehensive_StatementTypes(t *testing.T) {
-	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -926,6 +925,7 @@ func TestIAMPolicySplit_Comprehensive_StatementTypes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			result, err := f.splitPolicy(tc.policy, "inline")
 			if err != nil {
 				t.Fatalf("Expected no error for %s, got: %v", tc.name, err)
@@ -939,7 +939,6 @@ func TestIAMPolicySplit_Comprehensive_StatementTypes(t *testing.T) {
 }
 
 func TestIAMPolicySplit_Comprehensive_ErrorScenarios(t *testing.T) {
-	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -1004,6 +1003,7 @@ func TestIAMPolicySplit_Comprehensive_ErrorScenarios(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			_, err := f.splitPolicy(tc.policy, tc.serviceType)
 			if err == nil {
 				t.Fatalf("Expected error for %s, got nil", tc.name)
