@@ -223,7 +223,7 @@ resource "aws_iam_instance_profile" "example" {
 }
 ```
 
-This example demonstrates the key benefit: **the Terraform practitioner writes one comprehensive policy and the function automatically handles the splitting and attachment process**. 
+This example demonstrates the key benefit: **the Terraform practitioner writes one comprehensive policy and the function automatically handles the splitting and attachment process**.
 
 ### Different Service Types
 
@@ -287,10 +287,10 @@ The function returns an object with the following attributes:
 - `count` (Number) - Number of policies generated from the split operation.
 - `total_size_reduction` (Number) - Total size difference in bytes between the original policy and all split policies combined. May be negative if splitting adds overhead.
 - `metadata` (Object) - Additional information about the splitting operation:
-  - `original_size` (Number) - Size of the original policy in bytes
-  - `average_size` (Number) - Average size of split policies in bytes
-  - `largest_policy` (Number) - Size of the largest split policy in bytes
-  - `smallest_policy` (Number) - Size of the smallest split policy in bytes
+    - `original_size` (Number) - Size of the original policy in bytes
+    - `average_size` (Number) - Average size of split policies in bytes
+    - `largest_policy` (Number) - Size of the largest split policy in bytes
+    - `smallest_policy` (Number) - Size of the smallest split policy in bytes
 
 ## Behavior
 

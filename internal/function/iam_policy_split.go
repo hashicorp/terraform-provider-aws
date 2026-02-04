@@ -6,7 +6,9 @@ package function
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -133,15 +135,15 @@ type PolicyDocument struct {
 
 // Statement represents an individual IAM policy statement
 type Statement struct {
-	Sid          string                 `json:"Sid,omitempty"`
-	Effect       string                 `json:"Effect"`
-	Action       interface{}            `json:"Action,omitempty"`
-	NotAction    interface{}            `json:"NotAction,omitempty"`
-	Resource     interface{}            `json:"Resource,omitempty"`
-	NotResource  interface{}            `json:"NotResource,omitempty"`
-	Principal    interface{}            `json:"Principal,omitempty"`
-	NotPrincipal interface{}            `json:"NotPrincipal,omitempty"`
-	Condition    map[string]interface{} `json:"Condition,omitempty"`
+	Sid          string         `json:"Sid,omitempty"`
+	Effect       string         `json:"Effect"`
+	Action       any            `json:"Action,omitempty"`
+	NotAction    any            `json:"NotAction,omitempty"`
+	Resource     any            `json:"Resource,omitempty"`
+	NotResource  any            `json:"NotResource,omitempty"`
+	Principal    any            `json:"Principal,omitempty"`
+	NotPrincipal any            `json:"NotPrincipal,omitempty"`
+	Condition    map[string]any `json:"Condition,omitempty"`
 }
 
 // Validate checks if the policy document has required fields
@@ -202,10 +204,12 @@ func ParsePolicyDocument(jsonStr string) (*PolicyDocument, error) {
 
 	if err := json.Unmarshal([]byte(jsonStr), &policy); err != nil {
 		// Provide more descriptive JSON parsing errors
-		if syntaxErr, ok := err.(*json.SyntaxError); ok {
+		var syntaxErr *json.SyntaxError
+		if errors.As(err, &syntaxErr) {
 			return nil, fmt.Errorf("JSON syntax error at position %d: %w", syntaxErr.Offset, err)
 		}
-		if typeErr, ok := err.(*json.UnmarshalTypeError); ok {
+		var typeErr *json.UnmarshalTypeError
+		if errors.As(err, &typeErr) {
 			return nil, fmt.Errorf("JSON type error: expected %s but got %s for field %s", typeErr.Type, typeErr.Value, typeErr.Field)
 		}
 		return nil, fmt.Errorf("failed to parse JSON: %w", err)
@@ -228,13 +232,11 @@ func ParsePolicyDocument(jsonStr string) (*PolicyDocument, error) {
 func ValidateServiceType(serviceType string) error {
 	validTypes := []string{"inline", "managed", "resource-based"}
 
-	for _, valid := range validTypes {
-		if serviceType == valid {
-			return nil
-		}
+	if !slices.Contains(validTypes, serviceType) {
+		return fmt.Errorf("invalid service_type '%s': must be one of %s", serviceType, strings.Join(validTypes, ", "))
 	}
 
-	return fmt.Errorf("invalid service_type '%s': must be one of %s", serviceType, strings.Join(validTypes, ", "))
+	return nil
 }
 
 // GetSizeLimitForServiceType returns the size limit in bytes for the given service type
@@ -533,22 +535,15 @@ func (f iamPolicySplitFunction) calculateMetadata(originalSize int, policySizes 
 func validatePolicyStructure(policy *PolicyDocument) error {
 	// Check for supported version
 	supportedVersions := []string{"2012-10-17", "2008-10-17"}
-	versionSupported := false
-	for _, version := range supportedVersions {
-		if policy.Version == version {
-			versionSupported = true
-			break
-		}
-	}
 
-	if !versionSupported {
+	if !slices.Contains(supportedVersions, policy.Version) {
 		return fmt.Errorf("unsupported policy version '%s': supported versions are %s",
 			policy.Version, strings.Join(supportedVersions, ", "))
 	}
 
 	// Validate each statement more thoroughly
 	for i, stmt := range policy.Statement {
-		if err := validateStatementStructure(stmt, i); err != nil {
+		if err := validateStatementStructure(stmt); err != nil {
 			return fmt.Errorf("statement %d: %w", i, err)
 		}
 	}
@@ -557,7 +552,7 @@ func validatePolicyStructure(policy *PolicyDocument) error {
 }
 
 // validateStatementStructure performs detailed validation of individual statements
-func validateStatementStructure(stmt Statement, index int) error {
+func validateStatementStructure(stmt Statement) error {
 	// Check Effect field
 	if stmt.Effect != "Allow" && stmt.Effect != "Deny" {
 		return fmt.Errorf("invalid Effect '%s': must be 'Allow' or 'Deny'", stmt.Effect)
@@ -608,7 +603,7 @@ func validateStatementStructure(stmt Statement, index int) error {
 }
 
 // validateActionField validates that Action/NotAction fields are properly formatted
-func validateActionField(action interface{}, fieldName string) error {
+func validateActionField(action any, fieldName string) error {
 	if action == nil {
 		return fmt.Errorf("%s field cannot be null", fieldName)
 	}
@@ -618,7 +613,7 @@ func validateActionField(action interface{}, fieldName string) error {
 		if strings.TrimSpace(v) == "" {
 			return fmt.Errorf("%s field cannot be empty string", fieldName)
 		}
-	case []interface{}:
+	case []any:
 		if len(v) == 0 {
 			return fmt.Errorf("%s field cannot be empty array", fieldName)
 		}

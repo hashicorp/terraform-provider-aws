@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func TestParsePolicyDocument_Valid(t *testing.T) {
+func TestIAMPolicySplit_ParsePolicyDocument_Valid(t *testing.T) {
+	t.Parallel()
 	validPolicy := `{
 		"Version": "2012-10-17",
 		"Statement": [
@@ -41,7 +42,8 @@ func TestParsePolicyDocument_Valid(t *testing.T) {
 	}
 }
 
-func TestParsePolicyDocument_InvalidJSON(t *testing.T) {
+func TestIAMPolicySplit_ParsePolicyDocument_InvalidJSON(t *testing.T) {
+	t.Parallel()
 	invalidJSON := `{"Version": "2012-10-17", "Statement": [`
 
 	_, err := ParsePolicyDocument(invalidJSON)
@@ -54,7 +56,8 @@ func TestParsePolicyDocument_InvalidJSON(t *testing.T) {
 	}
 }
 
-func TestParsePolicyDocument_MissingVersion(t *testing.T) {
+func TestIAMPolicySplit_ParsePolicyDocument_MissingVersion(t *testing.T) {
+	t.Parallel()
 	policyMissingVersion := `{
 		"Statement": [
 			{
@@ -75,7 +78,8 @@ func TestParsePolicyDocument_MissingVersion(t *testing.T) {
 	}
 }
 
-func TestParsePolicyDocument_EmptyStatements(t *testing.T) {
+func TestIAMPolicySplit_ParsePolicyDocument_EmptyStatements(t *testing.T) {
+	t.Parallel()
 	policyEmptyStatements := `{
 		"Version": "2012-10-17",
 		"Statement": []
@@ -91,7 +95,8 @@ func TestParsePolicyDocument_EmptyStatements(t *testing.T) {
 	}
 }
 
-func TestValidateServiceType_Valid(t *testing.T) {
+func TestIAMPolicySplit_ValidateServiceType_Valid(t *testing.T) {
+	t.Parallel()
 	validTypes := []string{"inline", "managed", "resource-based"}
 
 	for _, serviceType := range validTypes {
@@ -102,7 +107,8 @@ func TestValidateServiceType_Valid(t *testing.T) {
 	}
 }
 
-func TestValidateServiceType_Invalid(t *testing.T) {
+func TestIAMPolicySplit_ValidateServiceType_Invalid(t *testing.T) {
+	t.Parallel()
 	err := ValidateServiceType("invalid")
 	if err == nil {
 		t.Fatal("Expected error for invalid service type, got nil")
@@ -113,7 +119,8 @@ func TestValidateServiceType_Invalid(t *testing.T) {
 	}
 }
 
-func TestGetSizeLimitForServiceType(t *testing.T) {
+func TestIAMPolicySplit_GetSizeLimitForServiceType(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		serviceType string
 		expected    int
@@ -132,7 +139,8 @@ func TestGetSizeLimitForServiceType(t *testing.T) {
 	}
 }
 
-func TestCalculatePolicySize(t *testing.T) {
+func TestIAMPolicySplit_CalculatePolicySize(t *testing.T) {
+	t.Parallel()
 	policy := `{"Version":"2012-10-17","Statement":[]}`
 	size := CalculatePolicySize(policy)
 	expected := len([]byte(policy))
@@ -142,7 +150,8 @@ func TestCalculatePolicySize(t *testing.T) {
 	}
 }
 
-func TestValidatePolicySize(t *testing.T) {
+func TestIAMPolicySplit_ValidatePolicySize(t *testing.T) {
+	t.Parallel()
 	smallPolicy := `{"Version":"2012-10-17","Statement":[]}`
 
 	// Should pass for inline (small policy)
@@ -187,7 +196,8 @@ func generateLargeStatement(size int) string {
 
 	return `{"Effect":"Allow",` + action + `,"Resource":"arn:aws:s3:::bucket/*"}`
 }
-func TestSplitPolicy_SmallPolicy(t *testing.T) {
+func TestIAMPolicySplit_SplitPolicy_SmallPolicy(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	smallPolicy := `{
@@ -217,7 +227,8 @@ func TestSplitPolicy_SmallPolicy(t *testing.T) {
 	}
 }
 
-func TestSplitPolicy_LargePolicy(t *testing.T) {
+func TestIAMPolicySplit_SplitPolicy_LargePolicy(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Create a policy with many statements that will exceed inline limit
@@ -227,7 +238,7 @@ func TestSplitPolicy_LargePolicy(t *testing.T) {
 		"Statement": [`
 
 	// Add many statements to exceed the 2048 byte limit for inline policies
-	for i := 0; i < 50; i++ { // Increased from 20 to 50
+	for i := range 50 { // Increased from 20 to 50
 		if i > 0 {
 			largePolicy += ","
 		}
@@ -263,7 +274,8 @@ func TestSplitPolicy_LargePolicy(t *testing.T) {
 	t.Logf("Size reduction: %d bytes (negative means overhead from splitting)", result.TotalSizeReduction.ValueInt64())
 }
 
-func TestGenerateUniqueId(t *testing.T) {
+func TestIAMPolicySplit_GenerateUniqueId(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	tests := []struct {
@@ -286,7 +298,8 @@ func TestGenerateUniqueId(t *testing.T) {
 	}
 }
 
-func TestSplitPolicy_OversizedSingleStatement(t *testing.T) {
+func TestIAMPolicySplit_SplitPolicy_OversizedSingleStatement(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Create a policy with a single statement that's too large for inline limit
@@ -326,7 +339,8 @@ func TestSplitPolicy_OversizedSingleStatement(t *testing.T) {
 	}
 }
 
-func TestGeneratePolicyOfSize(t *testing.T) {
+func TestIAMPolicySplit_GeneratePolicyOfSize(t *testing.T) {
+	t.Parallel()
 	// Test generating a policy that should exceed inline limit
 	policy := generatePolicyOfSize(2500, "inline")
 	actualSize := CalculatePolicySize(policy)
@@ -359,41 +373,31 @@ func TestGeneratePolicyOfSize(t *testing.T) {
 	t.Logf("Inline limit: %d bytes", inlineLimit)
 	t.Logf("Reformatted size exceeds limit: %v", reformattedSize > inlineLimit)
 }
-
-// Helper function to generate a large action array
-func generateLargeAction(size int) interface{} {
-	actions := []string{"s3:GetObject"}
-	actionStr := "s3:GetObject"
-
-	// Keep adding actions until we reach the desired size
-	for len(fmt.Sprintf("%v", actions)) < size {
-		actions = append(actions, actionStr)
-	}
-
-	return actions
-}
-func TestSplitPolicy_OutputPolicyCompleteness(t *testing.T) {
+func TestIAMPolicySplit_SplitPolicy_OutputPolicyCompleteness(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Create a policy that will be split
-	largePolicy := `{
+	var builder strings.Builder
+	builder.WriteString(`{
 		"Version": "2012-10-17",
 		"Id": "test-policy",
-		"Statement": [`
+		"Statement": [`)
 
 	// Add enough statements to force splitting
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		if i > 0 {
-			largePolicy += ","
+			builder.WriteString(",")
 		}
-		largePolicy += fmt.Sprintf(`{
+		builder.WriteString(fmt.Sprintf(`{
 			"Effect": "Allow",
 			"Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
 			"Resource": "arn:aws:s3:::very-long-bucket-name-for-testing-purposes-%d/*"
-		}`, i)
+		}`, i))
 	}
 
-	largePolicy += `]}`
+	builder.WriteString(`]}`)
+	largePolicy := builder.String()
 
 	result, err := f.splitPolicy(largePolicy, "inline")
 	if err != nil {
@@ -475,28 +479,31 @@ func TestSplitPolicy_OutputPolicyCompleteness(t *testing.T) {
 		}
 	}
 }
-func TestSplitPolicy_MetadataGeneration(t *testing.T) {
+func TestIAMPolicySplit_SplitPolicy_MetadataGeneration(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Create a policy that will be split
-	largePolicy := `{
+	var builder strings.Builder
+	builder.WriteString(`{
 		"Version": "2012-10-17",
 		"Id": "test-policy",
-		"Statement": [`
+		"Statement": [`)
 
 	// Add enough statements to force splitting
-	for i := 0; i < 40; i++ {
+	for i := range 40 {
 		if i > 0 {
-			largePolicy += ","
+			builder.WriteString(",")
 		}
-		largePolicy += fmt.Sprintf(`{
+		builder.WriteString(fmt.Sprintf(`{
 			"Effect": "Allow",
 			"Action": ["s3:GetObject", "s3:PutObject"],
 			"Resource": "arn:aws:s3:::bucket-%d/*"
-		}`, i)
+		}`, i))
 	}
 
-	largePolicy += `]}`
+	builder.WriteString(`]}`)
+	largePolicy := builder.String()
 
 	result, err := f.splitPolicy(largePolicy, "inline")
 	if err != nil {
@@ -540,7 +547,8 @@ func TestSplitPolicy_MetadataGeneration(t *testing.T) {
 	t.Logf("Metadata - Original: %d, Average: %d, Largest: %d, Smallest: %d",
 		originalSize, averageSize, largestPolicy, smallestPolicy)
 }
-func TestEnhancedErrorHandling_UnsupportedVersion(t *testing.T) {
+func TestIAMPolicySplit_EnhancedErrorHandling_UnsupportedVersion(t *testing.T) {
+	t.Parallel()
 	policyWithUnsupportedVersion := `{
 		"Version": "2020-01-01",
 		"Statement": [
@@ -562,7 +570,8 @@ func TestEnhancedErrorHandling_UnsupportedVersion(t *testing.T) {
 	}
 }
 
-func TestEnhancedErrorHandling_InvalidEffect(t *testing.T) {
+func TestIAMPolicySplit_EnhancedErrorHandling_InvalidEffect(t *testing.T) {
+	t.Parallel()
 	policyWithInvalidEffect := `{
 		"Version": "2012-10-17",
 		"Statement": [
@@ -584,7 +593,8 @@ func TestEnhancedErrorHandling_InvalidEffect(t *testing.T) {
 	}
 }
 
-func TestEnhancedErrorHandling_BothActionAndNotAction(t *testing.T) {
+func TestIAMPolicySplit_EnhancedErrorHandling_BothActionAndNotAction(t *testing.T) {
+	t.Parallel()
 	policyWithBothActions := `{
 		"Version": "2012-10-17",
 		"Statement": [
@@ -607,7 +617,8 @@ func TestEnhancedErrorHandling_BothActionAndNotAction(t *testing.T) {
 	}
 }
 
-func TestEnhancedErrorHandling_EmptyAction(t *testing.T) {
+func TestIAMPolicySplit_EnhancedErrorHandling_EmptyAction(t *testing.T) {
+	t.Parallel()
 	policyWithEmptyAction := `{
 		"Version": "2012-10-17",
 		"Statement": [
@@ -629,7 +640,8 @@ func TestEnhancedErrorHandling_EmptyAction(t *testing.T) {
 	}
 }
 
-func TestEnhancedErrorHandling_InvalidActionArray(t *testing.T) {
+func TestIAMPolicySplit_EnhancedErrorHandling_InvalidActionArray(t *testing.T) {
+	t.Parallel()
 	policyWithInvalidActionArray := `{
 		"Version": "2012-10-17",
 		"Statement": [
@@ -651,7 +663,8 @@ func TestEnhancedErrorHandling_InvalidActionArray(t *testing.T) {
 	}
 }
 
-func TestDetectImpossibleConstraints_BasePolicyTooLarge(t *testing.T) {
+func TestIAMPolicySplit_DetectImpossibleConstraints_BasePolicyTooLarge(t *testing.T) {
+	t.Parallel()
 	// Create a policy with a very long ID that makes the base policy too large
 	longId := strings.Repeat("very-long-policy-id-", 200) // This will make base policy > 2048 bytes
 	policy := &PolicyDocument{
@@ -680,7 +693,8 @@ func TestDetectImpossibleConstraints_BasePolicyTooLarge(t *testing.T) {
 	}
 }
 
-func TestGenerateHelpfulErrorMessage_SizeLimit(t *testing.T) {
+func TestIAMPolicySplit_GenerateHelpfulErrorMessage_SizeLimit(t *testing.T) {
+	t.Parallel()
 	originalErr := fmt.Errorf("policy size (3000 bytes) exceeds inline service limit (2048 bytes)")
 
 	helpfulMsg := generateHelpfulErrorMessage(originalErr, "inline")
@@ -690,7 +704,8 @@ func TestGenerateHelpfulErrorMessage_SizeLimit(t *testing.T) {
 	}
 }
 
-func TestGenerateHelpfulErrorMessage_JSONSyntax(t *testing.T) {
+func TestIAMPolicySplit_GenerateHelpfulErrorMessage_JSONSyntax(t *testing.T) {
+	t.Parallel()
 	originalErr := fmt.Errorf("JSON syntax error at position 10")
 
 	helpfulMsg := generateHelpfulErrorMessage(originalErr, "inline")
@@ -700,7 +715,8 @@ func TestGenerateHelpfulErrorMessage_JSONSyntax(t *testing.T) {
 	}
 }
 
-func TestGenerateHelpfulErrorMessage_MissingField(t *testing.T) {
+func TestIAMPolicySplit_GenerateHelpfulErrorMessage_MissingField(t *testing.T) {
+	t.Parallel()
 	originalErr := fmt.Errorf("policy document missing required field: Version")
 
 	helpfulMsg := generateHelpfulErrorMessage(originalErr, "inline")
@@ -710,7 +726,8 @@ func TestGenerateHelpfulErrorMessage_MissingField(t *testing.T) {
 	}
 }
 
-func TestSplitPolicy_EnhancedErrorHandling(t *testing.T) {
+func TestIAMPolicySplit_SplitPolicy_EnhancedErrorHandling(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Test with malformed JSON
@@ -739,7 +756,8 @@ func TestSplitPolicy_EnhancedErrorHandling(t *testing.T) {
 
 // Comprehensive test suite for boundary conditions and edge cases
 
-func TestComprehensive_BoundaryConditions(t *testing.T) {
+func TestIAMPolicySplit_Comprehensive_BoundaryConditions(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Test policy that should not be split (under limit after reformatting)
@@ -787,7 +805,8 @@ func TestComprehensive_BoundaryConditions(t *testing.T) {
 	}
 }
 
-func TestComprehensive_AllServiceTypeLimits(t *testing.T) {
+func TestIAMPolicySplit_Comprehensive_AllServiceTypeLimits(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -850,7 +869,8 @@ func TestComprehensive_AllServiceTypeLimits(t *testing.T) {
 	}
 }
 
-func TestComprehensive_StatementTypes(t *testing.T) {
+func TestIAMPolicySplit_Comprehensive_StatementTypes(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -918,7 +938,8 @@ func TestComprehensive_StatementTypes(t *testing.T) {
 	}
 }
 
-func TestComprehensive_ErrorScenarios(t *testing.T) {
+func TestIAMPolicySplit_Comprehensive_ErrorScenarios(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -995,7 +1016,8 @@ func TestComprehensive_ErrorScenarios(t *testing.T) {
 	}
 }
 
-func TestComprehensive_MetadataAccuracy(t *testing.T) {
+func TestIAMPolicySplit_Comprehensive_MetadataAccuracy(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Create a policy that will definitely be split
@@ -1044,14 +1066,15 @@ func TestComprehensive_MetadataAccuracy(t *testing.T) {
 	}
 }
 
-func TestComprehensive_PolicyIntegrity(t *testing.T) {
+func TestIAMPolicySplit_Comprehensive_PolicyIntegrity(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Create a policy with multiple statements that will be split - use compact JSON
 	originalPolicy := `{"Version":"2012-10-17","Id":"TestPolicy","Statement":[`
 
 	// Add many statements with different properties
-	for i := 0; i < 30; i++ {
+	for i := range 30 {
 		if i > 0 {
 			originalPolicy += ","
 		}
@@ -1201,7 +1224,8 @@ func generatePolicyOfSize(targetSize int, serviceType string) string {
 
 	return basePolicy
 }
-func TestActualSplitting(t *testing.T) {
+func TestIAMPolicySplit_ActualSplitting(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	// Generate a policy that should definitely be split after reformatting
