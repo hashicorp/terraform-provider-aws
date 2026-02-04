@@ -1064,7 +1064,6 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 
 			}
-
 			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
 			requestUpdate = true
 		}
