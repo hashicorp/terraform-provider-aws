@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -351,159 +352,80 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
-	checkCapacityChange := func(key string) (bool, int, int) {
-		o, n := d.GetChange(key)
-		oldCapacity, newCapacity := o.(int), n.(int)
-		hasCapacityChange := newCapacity != oldCapacity
-		return hasCapacityChange, oldCapacity, newCapacity
-	}
-
-	// You can't update multiple workgroup parameters in one request.
-	// This is particularly important when adjusting base_capacity and max_capacity due to their interdependencies:
-	// - base_capacity cannot be increased to a value greater than the current max_capacity.
-	// - max_capacity cannot be decreased to a value smaller than the current base_capacity.
-	// The value 0 of max_capacity in the state signifies "not set".
-	// Sending max_capacity value of -1 to AWS API removes max_capacity limit, but -1 cannot be used as max_capacity in the state,
-	// because AWS API never returns -1 as the value of unset max_capacity. There would be a diff on subsequent apply,
-	// resulting in errors due to the lack of AWS API idempotency.
-	// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are deferred to the AWS API.
-
-	hasBaseCapacityChange, _, newBaseCapacity := checkCapacityChange("base_capacity")
-	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange(names.AttrMaxCapacity)
-
-	switch {
-	case hasMaxCapacityChange && newMaxCapacity == 0:
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int32(-1), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	case hasBaseCapacityChange && hasMaxCapacityChange && (oldMaxCapacity == 0 || newBaseCapacity <= oldMaxCapacity):
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int32(int32(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int32(int32(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	case hasBaseCapacityChange && hasMaxCapacityChange && newBaseCapacity > oldMaxCapacity:
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int32(int32(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int32(int32(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	case hasBaseCapacityChange:
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int32(int32(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	case hasMaxCapacityChange:
-		if err :=
-			updateWorkgroup(ctx, conn,
-				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int32(int32(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
-				d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("price_performance_target") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			PricePerformanceTarget: expandPerformanceTarget(d.Get("price_performance_target").([]any)),
-			WorkgroupName:          aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
+	updateOps := prepareCapacityUpdates(d)
 
 	if d.HasChange("config_parameter") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			ConfigParameters: expandConfigParameters(d.Get("config_parameter").(*schema.Set).List()),
-			WorkgroupName:    aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		updateOps = append(updateOps, updateOp{
+			name: "update config_parameter",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				ConfigParameters: expandConfigParameters(d.Get("config_parameter").(*schema.Set).List()),
+				WorkgroupName:    aws.String(d.Id()),
+			},
+		})
 	}
 
 	if d.HasChange("enhanced_vpc_routing") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
-			WorkgroupName:      aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		updateOps = append(updateOps, updateOp{
+			name: "update enhanced_vpc_routing",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
+				WorkgroupName:      aws.String(d.Id()),
+			},
+		})
 	}
 
 	if d.HasChange(names.AttrPort) {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			Port:          aws.Int32(int32(d.Get(names.AttrPort).(int))),
-			WorkgroupName: aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		updateOps = append(updateOps, updateOp{
+			name: "update port",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				Port:          aws.Int32(int32(d.Get(names.AttrPort).(int))),
+				WorkgroupName: aws.String(d.Id()),
+			},
+		})
 	}
 
 	if d.HasChange(names.AttrPubliclyAccessible) {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			PubliclyAccessible: aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			WorkgroupName:      aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		updateOps = append(updateOps, updateOp{
+			name: "update publicly_accessible",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				PubliclyAccessible: aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+				WorkgroupName:      aws.String(d.Id()),
+			},
+		})
 	}
 
 	if d.HasChange(names.AttrSecurityGroupIDs) {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			SecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
-			WorkgroupName:    aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		updateOps = append(updateOps, updateOp{
+			name: "update security_group_ids",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				SecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
+				WorkgroupName:    aws.String(d.Id()),
+			},
+		})
 	}
 
 	if d.HasChange(names.AttrSubnetIDs) {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			SubnetIds:     flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
-			WorkgroupName: aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
+		updateOps = append(updateOps, updateOp{
+			name: "update subnet_ids",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				SubnetIds:     flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+				WorkgroupName: aws.String(d.Id()),
+			},
+		})
 	}
 
 	if d.HasChange("track_name") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			TrackName:     aws.String(d.Get("track_name").(string)),
-			WorkgroupName: aws.String(d.Id()),
-		}
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		updateOps = append(updateOps, updateOp{
+			name: "update track_name",
+			input: &redshiftserverless.UpdateWorkgroupInput{
+				TrackName:     aws.String(d.Get("track_name").(string)),
+				WorkgroupName: aws.String(d.Id()),
+			},
+		})
+	}
+
+	for _, op := range updateOps {
+		if err := updateWorkgroup(ctx, conn, op.input, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -541,6 +463,151 @@ func resourceWorkgroupDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	return diags
+}
+
+type updateOp struct {
+	name  string
+	input *redshiftserverless.UpdateWorkgroupInput
+}
+
+// prepareCapacityUpdates handles sequencing update requests related to workgroup capacity
+//
+// You can't update multiple workgroup parameters in one request.
+//
+// This is particularly important when adjusting base_capacity, max_capacity, and price_performance_target
+// due to their interdependencies:
+// - base_capacity cannot be increased to a value greater than the current max_capacity.
+// - max_capacity cannot be decreased to a value smaller than the current base_capacity.
+// - base_capacity cannot be updated when price_performance_target is enabled.
+// - price_performance_target cannot be enabled when base_capacity is set.
+//
+// In state a max_capacity value of 0 signifies "not set". Sending a max_capacity value of -1
+// to the AWS API removes the max_capacity limit, but the AWS API does not return this value.
+// For this reason -1 cannot be set in state without a persistent diff, and we rely on 0 having
+// special significance instead.
+//
+// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are
+// deferred to the AWS API.
+func prepareCapacityUpdates(d *schema.ResourceData) []updateOp {
+	const (
+		opDisablePricePerformanceTarget = "disable price_performance_target"
+		opEnablePricePerformanceTarget  = "enable price_performance_target"
+		opUpdateBaseCapacity            = "update base_capacity"
+		opUpdateMaxCapacity             = "update max_capacity"
+		opRemoveMaxCapacity             = "remove max_capacity"
+	)
+
+	var ops []updateOp
+
+	checkCapacityChange := func(key string) (bool, int, int) {
+		o, n := d.GetChange(key)
+		oldCapacity, newCapacity := o.(int), n.(int)
+		hasCapacityChange := newCapacity != oldCapacity
+		return hasCapacityChange, oldCapacity, newCapacity
+	}
+
+	checkPricePerformanceChange := func(hasBaseChange bool) (bool, bool, *awstypes.PerformanceTarget) {
+		ppt := expandPerformanceTarget(d.Get("price_performance_target").([]any))
+
+		hasChange := d.HasChange("price_performance_target")
+		hasPPTDisabledChange := hasChange && ppt != nil && ppt.Status == awstypes.PerformanceTargetStatusDisabled && hasBaseChange
+		hasPPTEnabledChange := hasChange && ppt != nil && ppt.Status == awstypes.PerformanceTargetStatusEnabled
+
+		return hasPPTDisabledChange, hasPPTEnabledChange, ppt
+	}
+
+	// Fetch all capacity and price performance related changes
+	hasBaseChange, _, newBase := checkCapacityChange("base_capacity")
+	hasMaxChange, oldMax, newMax := checkCapacityChange(names.AttrMaxCapacity)
+	hasPPTDisabledChange, hasPPTEnabledChange, newPPT := checkPricePerformanceChange(hasBaseChange)
+
+	// Plan capacity and price performance related changes
+	//
+	// 1. price_performance_target is disabled and base capacity is changed
+	if hasPPTDisabledChange {
+		// When disabling price_performance_target, base_capacity must be sent
+		// in the same request to avoid a ValidationException.
+		//
+		//   ValidationException: You must set a base capacity when disabling pricePerformanceTargetStatus.
+		ops = append(ops, updateOp{opDisablePricePerformanceTarget, &redshiftserverless.UpdateWorkgroupInput{
+			PricePerformanceTarget: newPPT,
+			BaseCapacity:           aws.Int32(int32(newBase)),
+			WorkgroupName:          aws.String(d.Id()),
+		}})
+	}
+
+	// 2. Various combinations of base_capacity and max_capacity changes
+	if hasBaseChange && hasMaxChange {
+		// When both change, order matters depending on relative values
+		if newMax == 0 {
+			ops = append(ops,
+				updateOp{opUpdateBaseCapacity, &redshiftserverless.UpdateWorkgroupInput{
+					BaseCapacity:  aws.Int32(int32(newBase)),
+					WorkgroupName: aws.String(d.Id()),
+				}},
+				updateOp{opRemoveMaxCapacity, &redshiftserverless.UpdateWorkgroupInput{
+					MaxCapacity:   aws.Int32(-1),
+					WorkgroupName: aws.String(d.Id()),
+				}},
+			)
+		} else if newBase > oldMax && oldMax != 0 {
+			ops = append(ops,
+				updateOp{opUpdateMaxCapacity, &redshiftserverless.UpdateWorkgroupInput{
+					MaxCapacity:   aws.Int32(int32(newMax)),
+					WorkgroupName: aws.String(d.Id()),
+				}},
+				updateOp{opUpdateBaseCapacity, &redshiftserverless.UpdateWorkgroupInput{
+					BaseCapacity:  aws.Int32(int32(newBase)),
+					WorkgroupName: aws.String(d.Id()),
+				}},
+			)
+		} else {
+			ops = append(ops,
+				updateOp{opUpdateBaseCapacity, &redshiftserverless.UpdateWorkgroupInput{
+					BaseCapacity:  aws.Int32(int32(newBase)),
+					WorkgroupName: aws.String(d.Id()),
+				}},
+				updateOp{opUpdateMaxCapacity, &redshiftserverless.UpdateWorkgroupInput{
+					MaxCapacity:   aws.Int32(int32(newMax)),
+					WorkgroupName: aws.String(d.Id()),
+				}},
+			)
+		}
+	} else if hasBaseChange {
+		ops = append(ops, updateOp{opUpdateBaseCapacity, &redshiftserverless.UpdateWorkgroupInput{
+			BaseCapacity:  aws.Int32(int32(newBase)),
+			WorkgroupName: aws.String(d.Id()),
+		}})
+	} else if hasMaxChange {
+		if newMax == 0 {
+			ops = append(ops, updateOp{opRemoveMaxCapacity, &redshiftserverless.UpdateWorkgroupInput{
+				MaxCapacity:   aws.Int32(-1),
+				WorkgroupName: aws.String(d.Id()),
+			}})
+		} else {
+			ops = append(ops, updateOp{opUpdateMaxCapacity, &redshiftserverless.UpdateWorkgroupInput{
+				MaxCapacity:   aws.Int32(int32(newMax)),
+				WorkgroupName: aws.String(d.Id()),
+			}})
+		}
+	}
+
+	// 3. price_performance_target is enabled
+	if hasPPTEnabledChange {
+		// Enable price_performance_target last (after capacity cleared)
+		ops = append(ops, updateOp{opEnablePricePerformanceTarget, &redshiftserverless.UpdateWorkgroupInput{
+			PricePerformanceTarget: newPPT,
+			WorkgroupName:          aws.String(d.Id()),
+		}})
+	}
+
+	ops = slices.DeleteFunc(ops, func(op updateOp) bool {
+		// When disabling price_performance_target, base_capacity is already set in the same
+		// request. Remove any duplicate base_capacity-only operations
+		return hasPPTDisabledChange && op.name == opUpdateBaseCapacity
+	})
+
+	return ops
 }
 
 func updateWorkgroup(ctx context.Context, conn *redshiftserverless.Client, input *redshiftserverless.UpdateWorkgroupInput, timeout time.Duration) error {

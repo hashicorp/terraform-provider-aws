@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ import (
 func TestAccAuditManagerFramework_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework types.Framework
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control_sets.0.name", rName),
@@ -58,22 +56,22 @@ func TestAccAuditManagerFramework_basic(t *testing.T) {
 func TestAccAuditManagerFramework_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework types.Framework
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceFramework, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,22 +83,22 @@ func TestAccAuditManagerFramework_disappears(t *testing.T) {
 func TestAccAuditManagerFramework_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework types.Framework
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -114,7 +112,7 @@ func TestAccAuditManagerFramework_tags(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -124,7 +122,7 @@ func TestAccAuditManagerFramework_tags(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -137,22 +135,22 @@ func TestAccAuditManagerFramework_tags(t *testing.T) {
 func TestAccAuditManagerFramework_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework types.Framework
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_optional(rName, "text1", "text1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compliance_type", "text1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text1"),
@@ -166,7 +164,7 @@ func TestAccAuditManagerFramework_optional(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_optional(rName, "text2", "text2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compliance_type", "text2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text2"),
@@ -176,9 +174,9 @@ func TestAccAuditManagerFramework_optional(t *testing.T) {
 	})
 }
 
-func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFrameworkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_framework" {
@@ -202,14 +200,14 @@ func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFrameworkExists(ctx context.Context, n string, v *types.Framework) resource.TestCheckFunc {
+func testAccCheckFrameworkExists(ctx context.Context, t *testing.T, n string, v *types.Framework) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AuditManagerClient(ctx)
 
 		output, err := tfauditmanager.FindFrameworkByID(ctx, conn, rs.Primary.ID)
 

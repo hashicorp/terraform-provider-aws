@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -166,7 +165,7 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("terraform_"),
-	).Generate()
+	).Generate(ctx)
 	input := &signer.PutSigningProfileInput{
 		PlatformId:  aws.String(d.Get("platform_id").(string)),
 		ProfileName: aws.String(name),
@@ -347,9 +346,8 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	output, err := conn.GetSigningProfile(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-			LastError:   err,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -362,9 +360,8 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	}
 
 	if status := output.Status; status == types.SigningProfileStatusCanceled {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 

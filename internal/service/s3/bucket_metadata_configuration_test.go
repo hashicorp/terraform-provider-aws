@@ -48,6 +48,7 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metadata_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDestination: knownvalue.ListExact([]knownvalue.Check{
@@ -222,6 +223,41 @@ func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketMetadataConfiguration_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.MetadataConfigurationResult
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_metadata_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketMetadataConfigurationConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), tfknownvalue.AccountID()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrBucket),
+				ImportStateVerifyIdentifierAttribute: names.AttrBucket,
+				ImportStateVerifyIgnore: []string{
+					names.AttrExpectedBucketOwner,
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckBucketMetadataConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -359,5 +395,33 @@ resource "aws_s3_bucket_metadata_configuration" "test" {
     }
   }
 }
+`, rName)
+}
+
+func testAccBucketMetadataConfigurationConfig_expectedBucketOwner(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_metadata_configuration" "test" {
+  bucket                = aws_s3_bucket.test.bucket
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  metadata_configuration {
+    inventory_table_configuration {
+      configuration_state = "DISABLED"
+    }
+
+    journal_table_configuration {
+      record_expiration {
+        days       = 7
+        expiration = "ENABLED"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+data "aws_caller_identity" "current" {}
 `, rName)
 }

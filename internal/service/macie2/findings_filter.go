@@ -150,7 +150,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := macie2.CreateFindingsFilterInput{
 		Action:      awstypes.FindingsFilterAction(d.Get(names.AttrAction).(string)),
 		ClientToken: aws.String(id.UniqueId()),
@@ -250,7 +250,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		if d.HasChanges(names.AttrName, names.AttrNamePrefix) {
-			input.Name = aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string)))
+			input.Name = aws.String(create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string)))
 		}
 
 		if d.HasChange("position") {

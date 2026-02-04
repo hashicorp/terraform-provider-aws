@@ -67,6 +67,7 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 		},
 		Blocks: map[string]schema.Block{

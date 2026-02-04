@@ -140,6 +140,22 @@ linters:
         text: 'SA1019: \w+\.\w+ is deprecated: This field is deprecated.'
       - linters:
           - staticcheck
+        path: internal/service/elastictranscoder/
+        text: 'SA1019: "github.com/aws/aws-sdk-go-v2/service/elastictranscoder" is deprecated:'
+      - linters:
+          - staticcheck
+        path: internal/service/elastictranscoder/
+        text: 'SA1019: \w+\.\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
+      - linters:
+          - staticcheck
+        path: internal/service/elastictranscoder/
+        text: 'SA1019: \w+\.\w+\.\w+ is deprecated: AWS has deprecated this service. It is no longer available for use.'
+      - linters:
+          - staticcheck
+        path: internal/service/evidently/
+        text: 'SA1019: \w+\.\w+ is deprecated: AWS CloudWatch Evidently has been deprecated since 11/17/2025'
+      - linters:
+          - staticcheck
         path: internal/service/firehose/
         text: 'SA1019: \w+\.\w+ is deprecated: (\w+) has been deprecated'
       - linters:

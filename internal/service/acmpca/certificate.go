@@ -45,8 +45,6 @@ import (
 // @CustomImport
 // @Testing(importIgnore="certificate_signing_request;signing_algorithm;template_arn;validity")
 // @Testing(plannableImportAction="Replace")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -57,9 +55,7 @@ func resourceCertificate() *schema.Resource {
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-
-				if err := importer.RegionalARN(ctx, d, identitySpec); err != nil {
+				if err := importer.Import(ctx, d, meta); err != nil {
 					return nil, err
 				}
 

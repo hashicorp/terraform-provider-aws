@@ -22,7 +22,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,7 +45,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.LoadBalancer")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -414,7 +412,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
-	).Generate()
+	).Generate(ctx)
 	exist, err := findLoadBalancer(ctx, conn, &elasticloadbalancingv2.DescribeLoadBalancersInput{
 		Names: []string{name},
 	})
@@ -1053,9 +1051,8 @@ func findLoadBalancers(ctx context.Context, conn *elasticloadbalancingv2.Client,
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1082,9 +1079,7 @@ func findLoadBalancerByARN(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.LoadBalancerArn) != arn {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -1098,9 +1093,8 @@ func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalan
 	output, err := conn.DescribeLoadBalancerAttributes(ctx, &input)
 
 	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1123,9 +1117,8 @@ func findCapacityReservationByARN(ctx context.Context, conn *elasticloadbalancin
 	output, err := conn.DescribeCapacityReservation(ctx, &input)
 
 	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1140,8 +1133,8 @@ func findCapacityReservationByARN(ctx context.Context, conn *elasticloadbalancin
 	return output, nil
 }
 
-func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLoadBalancer(conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLoadBalancerByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1156,8 +1149,8 @@ func statusLoadBalancer(ctx context.Context, conn *elasticloadbalancingv2.Client
 	}
 }
 
-func statusCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCapacityReservation(conn *elasticloadbalancingv2.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCapacityReservationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1180,10 +1173,10 @@ func statusCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2
 }
 
 func waitLoadBalancerActive(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, timeout time.Duration) (*awstypes.LoadBalancer, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.LoadBalancerStateEnumProvisioning, awstypes.LoadBalancerStateEnumFailed),
 		Target:     enum.Slice(awstypes.LoadBalancerStateEnumActive),
-		Refresh:    statusLoadBalancer(ctx, conn, arn),
+		Refresh:    statusLoadBalancer(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1228,7 +1221,7 @@ func waitForALBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 					}
 
 					if len(output) == 0 {
-						return nil, &sdkretry.NotFoundError{}
+						return nil, &retry.NotFoundError{}
 					}
 
 					return output, nil
@@ -1266,10 +1259,10 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, 
 }
 
 func waitCapacityReservationProvisioned(ctx context.Context, conn *elasticloadbalancingv2.Client, lbArn string, timeout time.Duration) (*elasticloadbalancingv2.DescribeCapacityReservationOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CapacityReservationStateEnumPending, awstypes.CapacityReservationStateEnumFailed, awstypes.CapacityReservationStateEnumRebalancing),
 		Target:     enum.Slice(awstypes.CapacityReservationStateEnumProvisioned),
-		Refresh:    statusCapacityReservation(ctx, conn, lbArn),
+		Refresh:    statusCapacityReservation(conn, lbArn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

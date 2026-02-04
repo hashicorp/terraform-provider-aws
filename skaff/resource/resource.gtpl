@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package {{ .ServicePackage }}
 
 {{ if .IncludeComments -}}
@@ -87,6 +89,43 @@ import (
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
+{{ if .IncludeComments }}
+// TIP: ==== RESOURCE IDENTITY ====
+// Identify which attributes can be used to uniquely identify the resource.
+// 
+// * If the AWS APIs for the resource take the ARN as an identifier, use
+// ARN Identity.
+// * If the resource is a singleton (i.e., there is only one instance per region, or account for global resource types), use Singleton Identity.
+// * Otherwise, use Parameterized Identity with one or more identity attributes.
+//
+// For more information about resource identity, see
+// https://hashicorp.github.io/terraform-provider-aws/resource-identity/
+//
+// Keep one of the following sets of annotations as appropriate:
+//
+// * ARN Identity
+// @ArnIdentity
+// or
+// @ArnIdentity("arn_attribute")
+//
+// * Singleton Identity
+// @SingletonIdentity
+//
+// * Parameterized Identity
+// @IdentityAttribute("id_attribute")
+// // @IdentityAttribute("another_id_attribute")
+//
+// TIP: ==== GENERATED ACCEPTANCE TESTS ====
+// Resource Identity and tagging make use of automatically generated acceptance tests.
+// For more information about automatically generated acceptance tests, see
+// https://hashicorp.github.io/terraform-provider-aws/acc-test-generation/
+//
+// Some common annotations are included below:
+{{- end }}
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }};{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(importIgnore="...;...")
+// @Testing(hasNoPreExistingResource=true)
 func new{{ .Resource }}Resource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &{{ .ResourceLowerCamel }}Resource{}
 
@@ -111,6 +150,7 @@ const (
 type {{ .ResourceLowerCamel }}Resource struct {
 	framework.ResourceWithModel[{{ .ResourceLowerCamel }}ResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 {{ if .IncludeComments }}
@@ -535,16 +575,19 @@ func (r *{{ .ResourceLowerCamel }}Resource) Delete(ctx context.Context, req reso
 }
 {{ if .IncludeComments }}
 // TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
+// The built-in import function, and Import ID Handler, if any, should handle populating the required
+// attributes from the Import ID or Resource Identity.
+// In some cases, additional attributes must be set when importing.
+// Adding a custom ImportState function can handle those.
 //
 // See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
+// https://hashicorp.github.io/terraform-provider-aws/add-resource-identity-support/
 {{- end }}
-func (r *{{ .ResourceLowerCamel }}Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+// func (r *{{ .ResourceLowerCamel }}Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	r.WithImportByIdentity.ImportState(ctx, req, resp)
+// 
+// 	// Set needed attribute values here
+// }
 
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
@@ -716,6 +759,38 @@ type {{ .ResourceLowerCamel }}ResourceModel struct {
 type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== IMPORT ID HANDLER ====
+// When a resource type has a Resource Identity with multiple attributes, it needs a handler to
+// parse the Import ID used for the `terraform import` command or an `import` block with the `id` parameter.
+//
+// The parser takes the string value of the Import ID and returns:
+// * A string value that is typically ignored. See documentation for more details.
+// * A map of the resource attributes derived from the Import ID.
+// * An error value if there are parsing errors.
+//
+// For more information, see https://hashicorp.github.io/terraform-provider-aws/resource-identity/#plugin-framework
+{{- end }}
+var (
+	_ inttypes.ImportIDParser = {{ .ResourceLowerCamel }}ImportID{}
+)
+
+type {{ .ResourceLowerCamel }}ImportID struct{}
+
+func ({{ .ResourceLowerCamel }}ImportID) Parse(id string) (string, map[string]string, error) {
+	someValue, anotherValue, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <some-value>"+intflex.ResourceIdSeparator+"<another-value>", id)
+	}
+
+	result := map[string]string{
+		"some-value":    someValue,
+		"another-value": anotherValue,
+	}
+
+	return id, result, nil
 }
 
 {{ if .IncludeComments }}

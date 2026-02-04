@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,7 +29,7 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -38,13 +37,13 @@ func testAccSubscriberNotification_sqs_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					testAccCheckSubscriberExists(ctx, subscriberResourceName, &subscriber),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
+					testAccCheckSubscriberExists(ctx, t, subscriberResourceName, &subscriber),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "0"),
@@ -73,7 +72,7 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -81,12 +80,12 @@ func testAccSubscriberNotification_https_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_https_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -121,7 +120,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -129,12 +128,12 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceSubscriberNotification, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -152,7 +151,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -160,12 +159,12 @@ func testAccSubscriberNotification_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_sqs_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "0"),
@@ -180,7 +179,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 			{
 				Config: testAccSubscriberNotificationConfig_https_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -202,7 +201,7 @@ func testAccSubscriberNotification_update(t *testing.T) {
 			{
 				Config: testAccSubscriberNotificationConfig_https_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -234,7 +233,7 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -242,12 +241,12 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, "example-key"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -267,7 +266,7 @@ func testAccSubscriberNotification_https_apiKeyNameOnly(t *testing.T) {
 			{
 				Config: testAccSubscriberNotificationConfig_https_apiKeyNameOnly(rName, "example-key-updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -297,7 +296,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -305,12 +304,12 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key", "example-value"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -331,7 +330,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 			{
 				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key", "example-value-updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -352,7 +351,7 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 			{
 				Config: testAccSubscriberNotificationConfig_https_apiKey(rName, "example-key-updated", "example-value-three"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					testAccCheckSubscriberNotificationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
@@ -374,9 +373,9 @@ func testAccSubscriberNotification_https_apiKey(t *testing.T) {
 	})
 }
 
-func testAccCheckSubscriberNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSubscriberNotificationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityLakeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securitylake_subscriber_notification" {
@@ -400,14 +399,14 @@ func testAccCheckSubscriberNotificationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSubscriberNotificationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SecurityLakeClient(ctx)
 
 		_, err := tfsecuritylake.FindSubscriberNotificationBySubscriberID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
 

@@ -97,7 +97,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	kName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	kName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	var pubKey string
 	var op *types.Operation
 	if pubKeyInterface, ok := d.GetOk(names.AttrPublicKey); ok {

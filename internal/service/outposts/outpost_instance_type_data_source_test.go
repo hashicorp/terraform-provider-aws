@@ -16,7 +16,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,7 +36,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *test
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_outposts_outpost_instance_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -57,7 +57,6 @@ var (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.15.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -416,8 +415,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	identitySpec := importer.IdentitySpec(ctx)
-	if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+	if err := importer.Import(ctx, d, meta); err != nil {
 		return nil, err
 	}
 

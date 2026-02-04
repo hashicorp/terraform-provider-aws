@@ -35,7 +35,7 @@ func TestAccELBV2TargetGroup_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccELBV2TargetGroup_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &v),
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -251,7 +251,7 @@ func TestAccELBV2TargetGroup_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
+		CheckDestroy: testAccCheckTargetGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -260,7 +260,7 @@ func TestAccELBV2TargetGroup_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &v),
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -307,7 +307,7 @@ func TestAccELBV2TargetGroup_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
+		CheckDestroy: testAccCheckTargetGroupDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -321,7 +321,7 @@ func TestAccELBV2TargetGroup_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &v),
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

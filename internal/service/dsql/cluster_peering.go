@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -178,10 +177,10 @@ func (r *clusterPeeringResource) ImportState(ctx context.Context, request resour
 }
 
 func waitClusterPeeringCreated(ctx context.Context, conn *dsql.Client, id string, timeout time.Duration) (*dsql.GetClusterOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusUpdating, awstypes.ClusterStatusPendingSetup, awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

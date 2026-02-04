@@ -36,7 +36,7 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
-		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccAppFlowConnectorProfile_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "appflow", "connectorprofile/{name}"),
@@ -228,7 +228,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV5(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFlowServiceID),
-		CheckDestroy: testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -237,7 +237,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV5(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -252,7 +252,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV5(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -288,7 +288,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV6(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppFlowServiceID),
-		CheckDestroy: testAccCheckConnectorProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConnectorProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create in v6.0
 			{
@@ -297,7 +297,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV6(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -317,7 +317,7 @@ func TestAccAppFlowConnectorProfile_Identity_ExistingResource_fromV6(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectorProfileExists(ctx, resourceName, &v),
+					testAccCheckConnectorProfileExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

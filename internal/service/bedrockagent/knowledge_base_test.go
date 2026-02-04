@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,20 +25,20 @@ import (
 func testAccKnowledgeBase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_S3VectorsByIndexARN(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourceKnowledgeBase, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -60,20 +58,20 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 func testAccKnowledgeBase_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -94,7 +92,7 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 			{
 				Config: testAccKnowledgeBaseConfig_tags2(rName, foundationModel, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -111,7 +109,7 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -138,11 +136,11 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v1"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
@@ -154,12 +152,12 @@ func testAccKnowledgeBase_RDS_basic(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_RDS_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -203,20 +201,20 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	collectionName := skipIfOSSCollectionNameEnvVarNotSet(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_OpenSearchServerless_basic(rName, collectionName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -259,20 +257,20 @@ func testAccKnowledgeBase_OpenSearchServerless_basic(t *testing.T) {
 func testAccKnowledgeBase_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_description(rName, foundationModel, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -293,7 +291,7 @@ func testAccKnowledgeBase_update(t *testing.T) {
 			{
 				Config: testAccKnowledgeBaseConfig_description(rName, foundationModel, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -317,11 +315,11 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v1"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -331,12 +329,12 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 				VersionConstraint: "3.2.2",
 			},
 		},
-		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_RDS_supplementalDataStorage(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -382,21 +380,21 @@ func testAccKnowledgeBase_RDS_supplementalDataStorage(t *testing.T) {
 func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	// Index should be created with the "GEN_AI_ENTERPRISE_EDITION" edition and be "ACTIVE".
 	kendraIndexARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_KENDRA_INDEX_ARN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_Kendra_basic(rName, kendraIndexARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -421,11 +419,11 @@ func testAccKnowledgeBase_Kendra_basic(t *testing.T) {
 func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice.amazonaws.com")
@@ -438,12 +436,12 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 				VersionConstraint: "~> 2.2.0",
 			},
 		},
-		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -481,15 +479,15 @@ func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 	foundationModel := "amazon.titan-embed-text-v2:0"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_S3VectorsByIndexARN(rName, foundationModel),
@@ -499,7 +497,7 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("knowledge_base_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -538,7 +536,7 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -563,19 +561,19 @@ func testAccKnowledgeBase_S3Vectors_update(t *testing.T) {
 func testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_StructuredDataStore_redshiftProvisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -623,19 +621,19 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned(t *testing.T) 
 func testAccKnowledgeBase_StructuredDataStore_redshiftServerless(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_StructuredDataStore_redshiftServerless(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -683,19 +681,19 @@ func testAccKnowledgeBase_StructuredDataStore_redshiftServerless(t *testing.T) {
 func testAccKnowledgeBase_NeptuneAnalytics_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var knowledgebase awstypes.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_knowledge_base.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_NeptuneAnalytics_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					testAccCheckKnowledgeBaseExists(ctx, t, resourceName, &knowledgebase),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -730,9 +728,9 @@ func testAccKnowledgeBase_NeptuneAnalytics_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKnowledgeBaseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagent_knowledge_base" {
@@ -756,14 +754,14 @@ func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *awstypes.KnowledgeBase) resource.TestCheckFunc {
+func testAccCheckKnowledgeBaseExists(ctx context.Context, t *testing.T, n string, v *awstypes.KnowledgeBase) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentClient(ctx)
 
 		output, err := tfbedrockagent.FindKnowledgeBaseByID(ctx, conn, rs.Primary.ID)
 
@@ -1147,8 +1145,7 @@ data "aws_iam_policy_document" "test_s3" {
       "s3:PutObject",
     ]
     resources = [
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}",
-      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}/*",
+      "*",
     ]
     condition {
       test     = "StringEquals"
@@ -1189,8 +1186,6 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     }
 
     type = "VECTOR"
-
-
   }
 
   storage_configuration {

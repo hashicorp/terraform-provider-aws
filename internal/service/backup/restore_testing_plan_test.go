@@ -11,11 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,21 +24,21 @@ func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("restore-testing-plan:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
@@ -65,21 +63,21 @@ func TestAccBackupRestoreTestingPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceRestoreTestingPlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,20 +90,20 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	resource.ParallelTest(t, resource.TestCase{
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -120,7 +118,7 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 			{
 				Config: testAccRestoreTestingPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -129,7 +127,7 @@ func TestAccBackupRestoreTestingPlan_tags(t *testing.T) {
 			{
 				Config: testAccRestoreTestingPlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -142,20 +140,20 @@ func TestAccBackupRestoreTestingPlan_includeVaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	resource.ParallelTest(t, resource.TestCase{
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_includeVaults(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("restore-testing-plan:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
@@ -180,20 +178,20 @@ func TestAccBackupRestoreTestingPlan_excludeVaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	resource.ParallelTest(t, resource.TestCase{
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_excludeVaults(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("restore-testing-plan:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
@@ -218,20 +216,20 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	resource.ParallelTest(t, resource.TestCase{
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_additionals("365", "cron(0 12 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("restore-testing-plan:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
@@ -258,20 +256,20 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingPlanForGet
 	resourceName := "aws_backup_restore_testing_plan.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	resource.ParallelTest(t, resource.TestCase{
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingPlanConfig_additionals("365", "cron(0 1 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("restore-testing-plan:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
@@ -293,7 +291,7 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 			{
 				Config: testAccRestoreTestingPlanConfig_additionals("1", "cron(0 12 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingPlanExists(ctx, t, resourceName, &restoretestingplan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("restore-testing-plan:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
@@ -309,9 +307,9 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckRestoreTestingPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRestoreTestingPlanDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_restore_testing_plan" {
@@ -335,14 +333,14 @@ func testAccCheckRestoreTestingPlanDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckRestoreTestingPlanExists(ctx context.Context, n string, v *awstypes.RestoreTestingPlanForGet) resource.TestCheckFunc {
+func testAccCheckRestoreTestingPlanExists(ctx context.Context, t *testing.T, n string, v *awstypes.RestoreTestingPlanForGet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindRestoreTestingPlanByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

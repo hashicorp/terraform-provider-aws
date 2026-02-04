@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,10 +29,10 @@ import (
 func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -41,12 +40,12 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -71,10 +70,10 @@ func TestAccBedrockAgentCoreMemory_basic(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -82,12 +81,12 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceMemory, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -107,10 +106,10 @@ func TestAccBedrockAgentCoreMemory_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -118,12 +117,12 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_description(rName, "desc1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -142,7 +141,7 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 			{
 				Config: testAccMemoryConfig_description(rName, "desc2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -160,10 +159,10 @@ func TestAccBedrockAgentCoreMemory_description(t *testing.T) {
 func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var m awstypes.Memory
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_memory.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -171,12 +170,12 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemoryDestroy(ctx),
+		CheckDestroy:             testAccCheckMemoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemoryConfig_memoryExecutionRole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMemoryExists(ctx, resourceName, &m),
+					testAccCheckMemoryExists(ctx, t, resourceName, &m),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -196,9 +195,9 @@ func TestAccBedrockAgentCoreMemory_memoryExecutionRole(t *testing.T) {
 	})
 }
 
-func testAccCheckMemoryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMemoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_memory" {
@@ -221,14 +220,14 @@ func testAccCheckMemoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMemoryExists(ctx context.Context, n string, v *awstypes.Memory) resource.TestCheckFunc {
+func testAccCheckMemoryExists(ctx context.Context, t *testing.T, n string, v *awstypes.Memory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindMemoryByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -242,7 +241,7 @@ func testAccCheckMemoryExists(ctx context.Context, n string, v *awstypes.Memory)
 }
 
 func testAccPreCheckMemories(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListMemoriesInput{}
 
@@ -319,5 +318,5 @@ resource "aws_bedrockagentcore_memory" "test" {
 }
 
 func randomMemoryName() string {
-	return strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	return strings.ReplaceAll(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10)), "-", "_")
 }

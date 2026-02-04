@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -194,9 +193,8 @@ func findResourceAssociationByTwoPartKey(ctx context.Context, conn *ram.Client, 
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -221,9 +219,8 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -237,8 +234,8 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 	return output, nil
 }
 
-func statusResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceAssociation(conn *ram.Client, resourceShareARN, resourceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
 		if retry.NotFound(err) {
@@ -257,10 +254,10 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:  enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
-		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
+		Refresh: statusResourceAssociation(conn, resourceShareARN, resourceARN),
 		Timeout: timeout,
 	}
 
@@ -279,10 +276,10 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resou
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
 		Target:  []string{},
-		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
+		Refresh: statusResourceAssociation(conn, resourceShareARN, resourceARN),
 		Timeout: timeout,
 	}
 

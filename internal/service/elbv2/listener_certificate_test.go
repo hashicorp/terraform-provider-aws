@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,18 +23,18 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, resourceName),
+					testAccCheckListenerCertificateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, iamServerCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
@@ -58,18 +56,18 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 	iamServerCertificateResourceName := "aws_iam_server_certificate.test"
 	lbListenerResourceName := "aws_lb_listener.test"
 	resourceName := "aws_lb_listener_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, resourceName),
+					testAccCheckListenerCertificateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, iamServerCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
@@ -92,21 +90,21 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(t, keys[i], "example.com")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_certificate.default"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_2"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
@@ -123,10 +121,10 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_multipleAddNew(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_2"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_3"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_3"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
@@ -140,9 +138,9 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 			{
 				Config: testAccListenerCertificateConfig_multiple(rName, keys, certificates),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.default"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_1"),
-					testAccCheckListenerCertificateExists(ctx, "aws_lb_listener_certificate.additional_2"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.default"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_1"),
+					testAccCheckListenerCertificateExists(ctx, t, "aws_lb_listener_certificate.additional_2"),
 					testAccCheckListenerCertificateNotExists("aws_lb_listener_certificate.additional_3"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
@@ -161,18 +159,18 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_listener_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, resourceName),
+					testAccCheckListenerCertificateExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListenerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -187,18 +185,18 @@ func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_lb_listener_certificate.test"
 	listenerResourceName := "aws_lb_listener.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerCertificateExists(ctx, resourceName),
+					testAccCheckListenerCertificateExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListener(), listenerResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -207,9 +205,9 @@ func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
 	})
 }
 
-func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckListenerCertificateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener_certificate" && rs.Type != "aws_alb_listener_certificate" {
@@ -233,14 +231,14 @@ func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckListenerCertificateExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckListenerCertificateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 		_, err := tfelbv2.FindListenerCertificateByTwoPartKey(ctx, conn, rs.Primary.Attributes["listener_arn"], rs.Primary.Attributes[names.AttrCertificateARN])
 

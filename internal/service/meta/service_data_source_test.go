@@ -19,7 +19,7 @@ func TestAccMetaServiceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 	serviceID := "ec2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +45,7 @@ func TestAccMetaServiceDataSource_irregularServiceID(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 	serviceID := "resource-explorer-2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -70,7 +70,7 @@ func TestAccMetaServiceDataSource_irregularServiceIDUnsupported(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 	serviceID := "resourceexplorer2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +95,7 @@ func TestAccMetaServiceDataSource_byReverseDNSName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -118,7 +118,7 @@ func TestAccMetaServiceDataSource_byDNSName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -141,7 +141,7 @@ func TestAccMetaServiceDataSource_byParts(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -162,7 +162,7 @@ func TestAccMetaServiceDataSource_unsupported(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

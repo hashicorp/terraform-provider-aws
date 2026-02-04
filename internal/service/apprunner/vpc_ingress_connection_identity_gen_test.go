@@ -33,7 +33,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -238,7 +238,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -247,7 +247,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource(t *testing.T
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -261,7 +261,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource(t *testing.T
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -316,7 +316,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource_NoRefresh_No
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCIngressConnectionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -330,7 +330,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource_NoRefresh_No
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -345,7 +345,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource_NoRefresh_No
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
+					testAccCheckVPCIngressConnectionExists(ctx, t, resourceName),
 				),
 			},
 		},

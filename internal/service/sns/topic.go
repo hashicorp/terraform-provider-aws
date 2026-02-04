@@ -239,7 +239,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	name := topicName(d)
+	name := topicName(ctx, d)
 	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -376,7 +376,7 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+func resourceTopicCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
 	fifoTopicThroughputScope := diff.Get("fifo_throughput_scope").(string)
 	archivePolicy := diff.Get("archive_policy").(string)
@@ -384,7 +384,7 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 
 	if diff.Id() == "" {
 		// Create.
-		name := topicName(diff)
+		name := topicName(ctx, diff)
 		var re *regexp.Regexp
 
 		if fifoTopic {
@@ -469,12 +469,12 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 	return nil
 }
 
-func topicName(d sdkv2.ResourceDiffer) string {
+func topicName(ctx context.Context, d sdkv2.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
 	if d.Get("fifo_topic").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}
-	return create.NewNameGenerator(optFns...).Generate()
+	return create.NewNameGenerator(optFns...).Generate(ctx)
 }
 
 // findTopicAttributesWithValidAWSPrincipalsByARN returns topic attributes, ensuring that any Policy field

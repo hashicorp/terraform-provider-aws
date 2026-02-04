@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -180,9 +179,8 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 	output, err := conn.DescribeWorkerConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -197,8 +195,8 @@ func findWorkerConfigurationByARN(ctx context.Context, conn *kafkaconnect.Client
 	return output, nil
 }
 
-func statusWorkerConfiguration(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkerConfiguration(conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkerConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -214,10 +212,10 @@ func statusWorkerConfiguration(ctx context.Context, conn *kafkaconnect.Client, a
 }
 
 func waitWorkerConfigurationDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeWorkerConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkerConfigurationStateDeleting),
 		Target:  []string{},
-		Refresh: statusWorkerConfiguration(ctx, conn, arn),
+		Refresh: statusWorkerConfiguration(conn, arn),
 		Timeout: timeout,
 	}
 

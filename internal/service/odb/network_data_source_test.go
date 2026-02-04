@@ -119,6 +119,8 @@ resource "aws_odb_network" "test_resource" {
   backup_subnet_cidr   = "10.2.1.0/24"
   s3_access            = "DISABLED"
   zero_etl_access      = "DISABLED"
+  sts_access           = "DISABLED"
+  kms_access           = "DISABLED"
   tags = {
     "env" = "dev"
   }

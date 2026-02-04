@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -200,9 +199,8 @@ func findDefaultServiceQuotas(ctx context.Context, conn *servicequotas.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchResourceException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

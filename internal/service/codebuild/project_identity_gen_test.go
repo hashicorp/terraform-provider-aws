@@ -126,7 +126,6 @@ func TestAccCodeBuildProject_Identity_RegionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-
 			testAccPreCheckSourceCredentialsForServerTypeGithub(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),

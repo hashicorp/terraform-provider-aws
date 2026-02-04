@@ -43,13 +43,17 @@ Once the names data is ready, create a new service directory with the appropriat
 mkdir internal/service/<service>
 ```
 
-Add a new file `internal/service/<service>/generate.go` with the following content. This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider).
+Add a new file `internal/service/<service>/generate.go` with the following content.
+This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider)
+and enable [acceptance test generation](./acc-test-generation.md).
 
 ```go
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/tagstests/main.go
+//go:generate go run ../../generate/identitytests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package <service>

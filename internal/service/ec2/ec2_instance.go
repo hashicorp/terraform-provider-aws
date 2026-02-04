@@ -67,8 +67,7 @@ func resourceInstance() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				identitySpec := importer.IdentitySpec(ctx)
-				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+				if err := importer.Import(ctx, rd, meta); err != nil {
 					return nil, err
 				}
 
@@ -1211,7 +1210,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
 		if err := createTags(ctx, conn, vol, svcTags(tftags.New(ctx, blockDeviceTags))); err != nil {
-			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Failed to create tags for EBS volume %s", vol),
+				Detail:   err.Error(),
+			})
 		}
 	}
 

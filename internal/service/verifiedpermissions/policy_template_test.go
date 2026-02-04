@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
@@ -29,19 +28,19 @@ func TestAccVerifiedPermissionsPolicyTemplate_basic(t *testing.T) {
 	var policytemplate verifiedpermissions.GetPolicyTemplateOutput
 	resourceName := "aws_verifiedpermissions_policy_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyTemplateConfig_basic("permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
+					testAccCheckPolicyTemplateExists(ctx, t, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
@@ -64,19 +63,19 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 	var policytemplate verifiedpermissions.GetPolicyTemplateOutput
 	resourceName := "aws_verifiedpermissions_policy_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyTemplateConfig_basic("permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
+					testAccCheckPolicyTemplateExists(ctx, t, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
@@ -84,7 +83,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 			{
 				Config: testAccPolicyTemplateConfig_basic("permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
+					testAccCheckPolicyTemplateExists(ctx, t, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
@@ -102,19 +101,19 @@ func TestAccVerifiedPermissionsPolicyTemplate_disappears(t *testing.T) {
 	var policytemplate verifiedpermissions.GetPolicyTemplateOutput
 	resourceName := "aws_verifiedpermissions_policy_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyTemplateConfig_basic(`permit (principal in ?principal, action in PhotoFlash::Action::"FullPhotoAccess", resource == ?resource) unless { resource.IsPrivate };`, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
+					testAccCheckPolicyTemplateExists(ctx, t, resourceName, &policytemplate),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicyTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -123,9 +122,9 @@ func TestAccVerifiedPermissionsPolicyTemplate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedpermissions_policy_template" {
@@ -153,7 +152,7 @@ func testAccCheckPolicyTemplateDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckPolicyTemplateExists(ctx context.Context, name string, policytemplate *verifiedpermissions.GetPolicyTemplateOutput) resource.TestCheckFunc {
+func testAccCheckPolicyTemplateExists(ctx context.Context, t *testing.T, name string, policytemplate *verifiedpermissions.GetPolicyTemplateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -169,7 +168,7 @@ func testAccCheckPolicyTemplateExists(ctx context.Context, name string, policyte
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNamePolicyTemplate, rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VerifiedPermissionsClient(ctx)
 		resp, err := tfverifiedpermissions.FindPolicyTemplateByID(ctx, conn, policyStoreID, policyTemplateID)
 
 		if err != nil {

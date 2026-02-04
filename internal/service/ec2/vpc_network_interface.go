@@ -1090,8 +1090,22 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]any)
 
-		if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+		// Check that attachment still exists and is not already detached.
+		output, err := findNetworkInterfaceByID(ctx, conn, d.Id())
+		if retry.NotFound(err) {
+			return diags
+		}
+
+		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if output != nil && output.Attachment != nil {
+			if output.Attachment.Status != awstypes.AttachmentStatusDetached {
+				if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), networkInterfaceDetachedTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
 		}
 	}
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -253,9 +252,8 @@ func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -277,8 +275,8 @@ const (
 	customDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
 )
 
-func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCustomDomain(conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
 
 		if retry.NotFound(err) {
@@ -297,10 +295,10 @@ func waitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Cli
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusCreating},
 		Target:  []string{customDomainAssociationStatusPendingCertificateDNSValidation, customDomainAssociationStatusBindingCertificate},
-		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
+		Refresh: statusCustomDomain(conn, domainName, serviceARN),
 		Timeout: timeout,
 	}
 
@@ -317,10 +315,10 @@ func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Cli
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{customDomainAssociationStatusActive, customDomainAssociationStatusDeleting},
 		Target:  []string{},
-		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
+		Refresh: statusCustomDomain(conn, domainName, serviceARN),
 		Timeout: timeout,
 	}
 

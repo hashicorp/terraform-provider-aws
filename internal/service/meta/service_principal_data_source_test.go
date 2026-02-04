@@ -18,7 +18,7 @@ func TestAccMetaServicePrincipalDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service_principal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,7 +40,7 @@ func TestAccMetaServicePrincipalDataSource_basic(t *testing.T) {
 func TestAccMetaServicePrincipalDataSource_MissingService(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,7 +62,7 @@ func TestAccMetaServicePrincipalDataSource_ByRegion(t *testing.T) {
 	for _, region := range regions {
 		t.Run(region, func(t *testing.T) {
 			t.Parallel()
-			resource.Test(t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -134,7 +134,7 @@ func TestAccMetaServicePrincipalDataSource_UniqueForServiceInRegion(t *testing.T
 	for _, testCase := range testCases {
 		t.Run(fmt.Sprintf("%s/%s", testCase.Region, testCase.Service), func(t *testing.T) {
 			t.Parallel()
-			resource.Test(t, resource.TestCase{
+			acctest.Test(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

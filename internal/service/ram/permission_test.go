@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,10 +27,10 @@ import (
 func TestAccRAMPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission awstypes.ResourceSharePermissionDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RAM)
@@ -40,12 +38,12 @@ func TestAccRAMPermission_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -76,10 +74,10 @@ func TestAccRAMPermission_basic(t *testing.T) {
 func TestAccRAMPermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission awstypes.ResourceSharePermissionDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RAM)
@@ -87,12 +85,12 @@ func TestAccRAMPermission_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfram.ResourcePermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,7 +110,7 @@ func TestAccRAMPermission_disappears(t *testing.T) {
 func TestAccRAMPermission_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission awstypes.ResourceSharePermissionDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
 	policyTemplateActions := []string{
 		"backup:ListProtectedResourcesByBackupVault",
@@ -121,7 +119,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 		"backup:DescribeBackupVault",
 		"backup:StartRestoreJob",
 	}
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RAM)
@@ -129,12 +127,12 @@ func TestAccRAMPermission_version(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[:3], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -153,7 +151,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[1:2], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -164,7 +162,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[3:4], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -175,7 +173,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[:4], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -186,7 +184,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[2:4], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -197,7 +195,7 @@ func TestAccRAMPermission_version(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions, `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -212,10 +210,10 @@ func TestAccRAMPermission_version(t *testing.T) {
 func TestAccRAMPermission_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var permission awstypes.ResourceSharePermissionDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RAM)
@@ -223,12 +221,12 @@ func TestAccRAMPermission_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -252,7 +250,7 @@ func TestAccRAMPermission_tags(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -269,7 +267,7 @@ func TestAccRAMPermission_tags(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -286,9 +284,9 @@ func TestAccRAMPermission_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPermissionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_permission" {
@@ -312,14 +310,14 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPermissionExists(ctx context.Context, n string, v *awstypes.ResourceSharePermissionDetail) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, t *testing.T, n string, v *awstypes.ResourceSharePermissionDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 		output, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -334,7 +332,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *awstypes.Res
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).RAMClient(ctx)
 
 	input := &ram.ListPermissionsInput{}
 

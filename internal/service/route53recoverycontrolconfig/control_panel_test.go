@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,22 +18,22 @@ import (
 
 func testAccControlPanel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckControlPanelDestroy(ctx),
+		CheckDestroy:             testAccCheckControlPanelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlPanelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlPanelExists(ctx, resourceName),
+					testAccCheckControlPanelExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
@@ -55,22 +53,22 @@ func testAccControlPanel_basic(t *testing.T) {
 
 func testAccControlPanel_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckControlPanelDestroy(ctx),
+		CheckDestroy:             testAccCheckControlPanelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlPanelConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlPanelExists(ctx, resourceName),
+					testAccCheckControlPanelExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
@@ -87,7 +85,7 @@ func testAccControlPanel_tags(t *testing.T) {
 			{
 				Config: testAccControlPanelConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlPanelExists(ctx, resourceName),
+					testAccCheckControlPanelExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
@@ -100,7 +98,7 @@ func testAccControlPanel_tags(t *testing.T) {
 			{
 				Config: testAccControlPanelConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlPanelExists(ctx, resourceName),
+					testAccCheckControlPanelExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "default_control_panel", acctest.CtFalse),
@@ -114,22 +112,22 @@ func testAccControlPanel_tags(t *testing.T) {
 }
 func testAccControlPanel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53recoverycontrolconfig_control_panel.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Route53RecoveryControlConfigEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckControlPanelDestroy(ctx),
+		CheckDestroy:             testAccCheckControlPanelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlPanelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlPanelExists(ctx, resourceName),
+					testAccCheckControlPanelExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoverycontrolconfig.ResourceControlPanel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -138,9 +136,9 @@ func testAccControlPanel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckControlPanelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckControlPanelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53RecoveryControlConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoverycontrolconfig_control_panel" {
@@ -164,14 +162,14 @@ func testAccCheckControlPanelDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckControlPanelExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckControlPanelExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53RecoveryControlConfigClient(ctx)
 
 		_, err := tfroute53recoverycontrolconfig.FindControlPanelByARN(ctx, conn, rs.Primary.ID)
 

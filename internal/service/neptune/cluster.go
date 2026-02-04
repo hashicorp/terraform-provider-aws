@@ -331,7 +331,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 
 	// Check if any of the parameters that require a cluster modification after creation are set.
 	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.

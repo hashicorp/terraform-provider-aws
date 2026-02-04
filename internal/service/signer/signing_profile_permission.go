@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -110,7 +109,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading Signer Signing Profile (%s) Permissions: %s", profileName, err)
 	}
 
-	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
+	statementID := create.Name(ctx, d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 	input := &signer.AddProfilePermissionInput{
 		Action:      aws.String(d.Get(names.AttrAction).(string)),
 		Principal:   aws.String(d.Get(names.AttrPrincipal).(string)),
@@ -274,9 +273,8 @@ func findPermissions(ctx context.Context, conn *signer.Client, input *signer.Lis
 		output, err := conn.ListProfilePermissions(ctx, input)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

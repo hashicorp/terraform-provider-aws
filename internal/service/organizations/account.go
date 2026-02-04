@@ -360,9 +360,7 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 			d.SetId(d.Id())
 		}
 	} else {
-		identitySpec := importer.IdentitySpec(ctx)
-
-		if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+		if err := importer.Import(ctx, d, meta); err != nil {
 			return nil, err
 		}
 	}

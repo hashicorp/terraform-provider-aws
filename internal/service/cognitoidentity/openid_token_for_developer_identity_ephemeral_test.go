@@ -20,7 +20,7 @@ import (
 
 func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	uuid, err := uuid.GenerateUUID()
 	developerProviderName := sdkacctest.RandString(10)
 	echoResourceName := "echo.test"
@@ -30,7 +30,7 @@ func TestAccCognitoIdentityOpenIDTokenForDeveloperIdentityEphemeral_basic(t *tes
 		t.Fail()
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)

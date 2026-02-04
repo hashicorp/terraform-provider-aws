@@ -34,7 +34,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
 // @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
 // @Testing(idAttrDuplicates="name")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,

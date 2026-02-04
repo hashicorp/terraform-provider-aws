@@ -27,7 +27,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1088,7 +1087,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	startTime := time.Now()
 
-	asgName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	asgName := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputCASG := autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
@@ -2141,9 +2140,7 @@ func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.AutoScalingGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -2167,9 +2164,8 @@ func findInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2194,9 +2190,8 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name 
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2221,9 +2216,8 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Cl
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2245,9 +2239,8 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2281,9 +2274,8 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2316,9 +2308,8 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2348,8 +2339,8 @@ func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name stri
 	return findWarmPool(ctx, conn, &input)
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		if !ignoreFailedScalingActivities {
 			// Check for fatal error in activity logs.
 			scalingActivities, err := findScalingActivitiesByName(ctx, conn, name, startTime)
@@ -2453,8 +2444,8 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn 
 	}
 }
 
-func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGroupInstanceCount(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGroupByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -2469,8 +2460,8 @@ func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.Client, nam
 	}
 }
 
-func statusInstanceRefresh(ctx context.Context, conn *autoscaling.Client, name, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstanceRefresh(conn *autoscaling.Client, name, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceRefreshIds:   []string{id},
@@ -2490,8 +2481,8 @@ func statusInstanceRefresh(ctx context.Context, conn *autoscaling.Client, name, 
 	}
 }
 
-func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.Client, name string, states ...string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLoadBalancerInStateCount(conn *autoscaling.Client, name string, states ...string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLoadBalancerStates(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -2514,8 +2505,8 @@ func statusLoadBalancerInStateCount(ctx context.Context, conn *autoscaling.Clien
 	}
 }
 
-func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autoscaling.Client, name string, states ...string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLoadBalancerTargetGroupInStateCount(conn *autoscaling.Client, name string, states ...string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLoadBalancerTargetGroupStates(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -2538,8 +2529,8 @@ func statusLoadBalancerTargetGroupInStateCount(ctx context.Context, conn *autosc
 	}
 }
 
-func statusTrafficSourcesInStateCount(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, states ...string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrafficSourcesInStateCount(conn *autoscaling.Client, asgName, trafficSourceType string, states ...string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTrafficSourceStatesByTwoPartKey(ctx, conn, asgName, trafficSourceType)
 
 		if retry.NotFound(err) {
@@ -2562,8 +2553,8 @@ func statusTrafficSourcesInStateCount(ctx context.Context, conn *autoscaling.Cli
 	}
 }
 
-func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWarmPool(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWarmPoolByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -2578,8 +2569,8 @@ func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) 
 	}
 }
 
-func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWarmPoolInstanceCount(conn *autoscaling.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWarmPoolByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -2595,9 +2586,9 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, 
 }
 
 func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
-		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),
+		Refresh: statusGroupCapacity(conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),
 		Timeout: timeout,
 	}
 
@@ -2611,9 +2602,9 @@ func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, e
 }
 
 func waitGroupDrained(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*awstypes.AutoScalingGroup, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusGroupInstanceCount(ctx, conn, name),
+		Refresh: statusGroupInstanceCount(conn, name),
 		Timeout: timeout,
 	}
 
@@ -2627,9 +2618,9 @@ func waitGroupDrained(ctx context.Context, conn *autoscaling.Client, name string
 }
 
 func waitLoadBalancersAdded(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusLoadBalancerInStateCount(ctx, conn, name, LoadBalancerStateAdding),
+		Refresh: statusLoadBalancerInStateCount(conn, name, LoadBalancerStateAdding),
 		Timeout: timeout,
 	}
 
@@ -2643,9 +2634,9 @@ func waitLoadBalancersAdded(ctx context.Context, conn *autoscaling.Client, name 
 }
 
 func waitLoadBalancersRemoved(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusLoadBalancerInStateCount(ctx, conn, name, LoadBalancerStateRemoving),
+		Refresh: statusLoadBalancerInStateCount(conn, name, LoadBalancerStateRemoving),
 		Timeout: timeout,
 	}
 
@@ -2659,9 +2650,9 @@ func waitLoadBalancersRemoved(ctx context.Context, conn *autoscaling.Client, nam
 }
 
 func waitLoadBalancerTargetGroupsAdded(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerTargetGroupState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusLoadBalancerTargetGroupInStateCount(ctx, conn, name, LoadBalancerTargetGroupStateAdding),
+		Refresh: statusLoadBalancerTargetGroupInStateCount(conn, name, LoadBalancerTargetGroupStateAdding),
 		Timeout: timeout,
 	}
 
@@ -2675,9 +2666,9 @@ func waitLoadBalancerTargetGroupsAdded(ctx context.Context, conn *autoscaling.Cl
 }
 
 func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) ([]*awstypes.LoadBalancerTargetGroupState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusLoadBalancerTargetGroupInStateCount(ctx, conn, name, LoadBalancerTargetGroupStateRemoving),
+		Refresh: statusLoadBalancerTargetGroupInStateCount(conn, name, LoadBalancerTargetGroupStateRemoving),
 		Timeout: timeout,
 	}
 
@@ -2691,9 +2682,9 @@ func waitLoadBalancerTargetGroupsRemoved(ctx context.Context, conn *autoscaling.
 }
 
 func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, timeout time.Duration) ([]*awstypes.TrafficSourceState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesInStateCount(ctx, conn, asgName, trafficSourceType, TrafficSourceStateAdding),
+		Refresh: statusTrafficSourcesInStateCount(conn, asgName, trafficSourceType, TrafficSourceStateAdding),
 		Timeout: timeout,
 	}
 
@@ -2707,9 +2698,9 @@ func waitTrafficSourcesCreated(ctx context.Context, conn *autoscaling.Client, as
 }
 
 func waitTrafficSourcesDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType string, timeout time.Duration) ([]*awstypes.TrafficSourceState, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusTrafficSourcesInStateCount(ctx, conn, asgName, trafficSourceType, TrafficSourceStateRemoving),
+		Refresh: statusTrafficSourcesInStateCount(conn, asgName, trafficSourceType, TrafficSourceStateRemoving),
 		Timeout: timeout,
 	}
 
@@ -2733,7 +2724,7 @@ const (
 )
 
 func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.Client, name, id string, timeout time.Duration) (*awstypes.InstanceRefresh, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.InstanceRefreshStatusCancelling,
 			awstypes.InstanceRefreshStatusInProgress,
@@ -2744,7 +2735,7 @@ func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.Client,
 			awstypes.InstanceRefreshStatusFailed,
 			awstypes.InstanceRefreshStatusSuccessful,
 		),
-		Refresh: statusInstanceRefresh(ctx, conn, name, id),
+		Refresh: statusInstanceRefresh(conn, name, id),
 		Timeout: timeout,
 	}
 
@@ -2760,10 +2751,10 @@ func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.Client,
 }
 
 func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*awstypes.WarmPoolConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WarmPoolStatusPendingDelete),
 		Target:  []string{},
-		Refresh: statusWarmPool(ctx, conn, name),
+		Refresh: statusWarmPool(conn, name),
 		Timeout: timeout,
 	}
 
@@ -2777,9 +2768,9 @@ func waitWarmPoolDeleted(ctx context.Context, conn *autoscaling.Client, name str
 }
 
 func waitWarmPoolDrained(ctx context.Context, conn *autoscaling.Client, name string, timeout time.Duration) (*autoscaling.DescribeWarmPoolOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{"0"},
-		Refresh: statusWarmPoolInstanceCount(ctx, conn, name),
+		Refresh: statusWarmPoolInstanceCount(conn, name),
 		Timeout: timeout,
 	}
 
