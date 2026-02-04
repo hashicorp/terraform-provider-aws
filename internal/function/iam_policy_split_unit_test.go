@@ -806,6 +806,7 @@ func TestIAMPolicySplit_Comprehensive_BoundaryConditions(t *testing.T) {
 }
 
 func TestIAMPolicySplit_Comprehensive_AllServiceTypeLimits(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -870,6 +871,7 @@ func TestIAMPolicySplit_Comprehensive_AllServiceTypeLimits(t *testing.T) {
 }
 
 func TestIAMPolicySplit_Comprehensive_StatementTypes(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
@@ -939,6 +941,7 @@ func TestIAMPolicySplit_Comprehensive_StatementTypes(t *testing.T) {
 }
 
 func TestIAMPolicySplit_Comprehensive_ErrorScenarios(t *testing.T) {
+	t.Parallel()
 	f := &iamPolicySplitFunction{}
 
 	testCases := []struct {
