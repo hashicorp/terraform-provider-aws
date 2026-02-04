@@ -427,6 +427,42 @@ func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
 	})
 }
 
+func testAccPermissions_lfTagPolicyExpressionName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_lfTagPolicyExpressionName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionAlter)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionCreateTable)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDrop)),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissions_tableBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2039,6 +2075,77 @@ resource "aws_lakeformation_permissions" "test" {
   depends_on = [
     aws_lakeformation_data_lake_settings.test,
     aws_lakeformation_lf_tag.test,
+  ]
+}
+`, rName)
+}
+
+func testAccPermissionsConfig_lfTagPolicyExpressionName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_lakeformation_lf_tag" "test" {
+  key    = %[1]q
+  values = ["value1", "value2"]
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_lf_tag_expression" "test" {
+  name = %[1]q
+
+  expression {
+    tag_key    = aws_lakeformation_lf_tag.test.key
+    tag_values = aws_lakeformation_lf_tag.test.values
+  }
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
+  permissions_with_grant_option = ["CREATE_TABLE"]
+  principal                     = aws_iam_role.test.arn
+
+  lf_tag_policy {
+    resource_type   = "DATABASE"
+    expression_name = aws_lakeformation_lf_tag_expression.test.name
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [
+    aws_lakeformation_data_lake_settings.test,
+    aws_lakeformation_lf_tag_expression.test,
   ]
 }
 `, rName)
