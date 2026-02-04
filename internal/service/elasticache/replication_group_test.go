@@ -4572,7 +4572,7 @@ resource "aws_elasticache_replication_group" "test" {
   automatic_failover_enabled = false
   multi_az_enabled           = false
 
-  num_cache_clusters        = %[4]d
+  num_cache_clusters         = %[4]d
 
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
@@ -4595,9 +4595,9 @@ resource "aws_elasticache_replication_group" "test" {
   automatic_failover_enabled = false
   multi_az_enabled           = false
 
-  num_cache_clusters        = %[4]d
-  snapshot_retention_limit     = 10 
-  snapshot_window    = "01:00-02:00"
+  num_cache_clusters         = %[4]d
+  snapshot_retention_limit   = 10 
+  snapshot_window    		 = "01:00-02:00"
 
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
@@ -4620,9 +4620,9 @@ resource "aws_elasticache_replication_group" "test" {
   automatic_failover_enabled = true
   multi_az_enabled           = false
 
-  cluster_mode            = "enabled"
-  replicas_per_node_group = 2
-  num_node_groups         = 2
+  cluster_mode            	 = "enabled"
+  replicas_per_node_group 	 = 2
+  num_node_groups         	 = 2
 
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
@@ -4645,15 +4645,15 @@ resource "aws_elasticache_replication_group" "test" {
   automatic_failover_enabled = true
   multi_az_enabled           = false
 
-  cluster_mode            = "enabled"
-  replicas_per_node_group = 2
-  num_node_groups         = 2
+  cluster_mode               = "enabled"
+  replicas_per_node_group    = 2
+  num_node_groups            = 2
   
   snapshot_retention_limit     = 10 
-  snapshot_window    = "01:00-02:00"
+  snapshot_window    		   = "01:00-02:00"
 
-  at_rest_encryption_enabled = false
-  transit_encryption_enabled = false
+  at_rest_encryption_enabled   = false
+  transit_encryption_enabled   = false
 
 }
 `, rName, engine, engineVersion)
