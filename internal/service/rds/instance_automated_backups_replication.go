@@ -270,6 +270,22 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.Client, arn 
 	}
 }
 
+func statusDBInstanceForAutomatedBackup(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.DBInstanceStatus), nil
+	}
+}
+
 func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*types.DBInstanceAutomatedBackup, error) {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{instanceAutomatedBackupStatusPending},
@@ -312,5 +328,21 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 		return nil, err
 	}
 
-	return output, nil
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{
+			instanceStatusModifying,
+			instanceStatusBackingUp,
+		},
+		Target:  []string{instanceStatusAvailable},
+		Refresh: statusDBInstanceForAutomatedBackup(ctx, conn, dbInstanceID, optFns...),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBInstance); ok {
+		return output, err
+	}
+
+	return output, err
 }
