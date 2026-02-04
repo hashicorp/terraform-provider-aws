@@ -380,16 +380,16 @@ Use different service types to understand how a policy would need to be split fo
 locals {
   policy_json = jsonencode(local.my_policy)
   
-  inline_split    = provider::aws::iam_policy_split(local.policy_json, "inline")
-  managed_split   = provider::aws::iam_policy_split(local.policy_json, "managed")
-  resource_split  = provider::aws::iam_policy_split(local.policy_json, "resource-based")
+  inline_split   = provider::aws::iam_policy_split(local.policy_json, "inline")
+  managed_split  = provider::aws::iam_policy_split(local.policy_json, "managed")
+  resource_split = provider::aws::iam_policy_split(local.policy_json, "resource-based")
 }
 
 output "policy_analysis" {
   value = {
-    needs_splitting_for_inline    = local.inline_split.count > 1
-    needs_splitting_for_managed   = local.managed_split.count > 1
-    needs_splitting_for_resource  = local.resource_split.count > 1
+    needs_splitting_for_inline   = local.inline_split.count > 1
+    needs_splitting_for_managed  = local.managed_split.count > 1
+    needs_splitting_for_resource = local.resource_split.count > 1
   }
 }
 ```
