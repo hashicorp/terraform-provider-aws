@@ -4561,18 +4561,17 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_snapshotDisabledClusterModeDisabled(rName string, engine string, engineVersion string, numCacheCluster int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id    = %[1]q
-  description             = "test description"
-  node_type               = "cache.t3.small"
-  port                    = 6379
-  apply_immediately       = true
-  engine                  = %[2]q
-  engine_version          = %[3]q
-  
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  port                 = 6379
+  apply_immediately    = true
+  engine               = %[2]q
+  engine_version       = %[3]q
+  num_cache_clusters   = %[4]d
+
   automatic_failover_enabled = false
   multi_az_enabled           = false
-
-  num_cache_clusters         = %[4]d
 
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
@@ -4584,21 +4583,20 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_snapshotEnabledClusterModeDisabled(rName string, engine string, engineVersion string, numCacheCluster int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id    = %[1]q
-  description             = "test description"
-  node_type               = "cache.t3.small"
-  port                    = 6379
-  apply_immediately       = true
-  engine                  = %[2]q
-  engine_version          = %[3]q
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  port                 = 6379
+  apply_immediately    = true
+  engine               = %[2]q
+  engine_version       = %[3]q
+
+  num_cache_clusters       = %[4]d
+  snapshot_retention_limit = 10
+  snapshot_window          = "01:00-02:00"
 
   automatic_failover_enabled = false
   multi_az_enabled           = false
-
-  num_cache_clusters         = %[4]d
-  snapshot_retention_limit   = 10 
-  snapshot_window    		 = "01:00-02:00"
-
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
 
@@ -4609,21 +4607,20 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_snapshotDisabledClusterModeEnabled(rName string, engine string, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id    = %[1]q
-  description             = "test description"
-  node_type               = "cache.t3.small"
-  port                    = 6379
-  apply_immediately       = true
-  engine                  = %[2]q
-  engine_version          = %[3]q
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  port                 = 6379
+  apply_immediately    = true
+  engine               = %[2]q
+  engine_version       = %[3]q
+
+  cluster_mode            = "enabled"
+  replicas_per_node_group = 2
+  num_node_groups         = 2
 
   automatic_failover_enabled = true
   multi_az_enabled           = false
-
-  cluster_mode            	 = "enabled"
-  replicas_per_node_group 	 = 2
-  num_node_groups         	 = 2
-
   at_rest_encryption_enabled = false
   transit_encryption_enabled = false
 
@@ -4641,19 +4638,17 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately       = true
   engine                  = %[2]q
   engine_version          = %[3]q
-  
+  cluster_mode            = "enabled"
+  replicas_per_node_group = 2
+  num_node_groups         = 2
+
+  snapshot_retention_limit = 10
+  snapshot_window          = "01:00-02:00"
+
+  at_rest_encryption_enabled = false
+  transit_encryption_enabled = false
   automatic_failover_enabled = true
   multi_az_enabled           = false
-
-  cluster_mode               = "enabled"
-  replicas_per_node_group    = 2
-  num_node_groups            = 2
-  
-  snapshot_retention_limit     = 10 
-  snapshot_window    		   = "01:00-02:00"
-
-  at_rest_encryption_enabled   = false
-  transit_encryption_enabled   = false
 
 }
 `, rName, engine, engineVersion)
