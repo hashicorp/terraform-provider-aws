@@ -121,7 +121,7 @@ func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequ
 						"related_vulnerabilities":            stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						names.AttrResourceTags:               mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
-						names.AttrResourceType:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						names.AttrResourceType:               resourceTypeFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"severity":                           stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"title":                              stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"updated_at":                         dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -232,6 +232,27 @@ func stringFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNes
 				},
 				names.AttrValue: schema.StringAttribute{
 					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func resourceTypeFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
+	return schema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[stringFilterModel](ctx),
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(maxSize),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"comparison": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ResourceStringComparison](),
+					Required:   true,
+				},
+				names.AttrValue: schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ResourceType](),
+					Required:   true,
 				},
 			},
 		},

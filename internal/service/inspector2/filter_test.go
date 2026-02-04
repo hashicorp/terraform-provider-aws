@@ -243,6 +243,82 @@ func TestAccInspector2Filter_stringFilters(t *testing.T) {
 	})
 }
 
+func TestAccInspector2Filter_resourceTypeFilters(t *testing.T) {
+	ctx := acctest.Context(t)
+	action_1 := string(awstypes.FilterActionNone)
+	description_1 := "TestDescription_1"
+	comparison_1 := string(awstypes.ResourceStringComparisonEquals)
+	value_1 := "AWS_ECR_CONTAINER_IMAGE"
+	reason_1 := "TestReason_1"
+	action_2 := string(awstypes.FilterActionSuppress)
+	description_2 := "TestDescription_2"
+	comparison_2 := string(awstypes.ResourceStringComparisonNotEquals)
+	value_2 := "AWS_EC2_INSTANCE"
+	reason_2 := "TestReason_2"
+	var filter awstypes.Filter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_inspector2_filter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFilterConfig_resourceTypeFilters(rName, action_1, description_1, reason_1, comparison_1, value_1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFilterExists(ctx, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_1),
+					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.resource_type.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.resource_type.*", map[string]string{
+						"comparison":    comparison_1,
+						names.AttrValue: value_1,
+					}),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccFilterImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccFilterConfig_resourceTypeFilters(rName, action_2, description_2, reason_2, comparison_2, value_2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFilterExists(ctx, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description_2),
+					resource.TestCheckResourceAttr(resourceName, "reason", reason_2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.resource_type.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.resource_type.*", map[string]string{
+						"comparison":    comparison_2,
+						names.AttrValue: value_2,
+					}),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "inspector2", regexache.MustCompile(`owner/\d{12}/filter/.+$`)),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccFilterImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func TestAccInspector2Filter_numberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
 	action_1 := string(awstypes.FilterActionNone)
@@ -868,6 +944,23 @@ resource "aws_inspector2_filter" "test" {
       value      = %[6]q
     }
     code_vulnerability_detector_name {
+      comparison = %[5]q
+      value      = %[6]q
+    }
+  }
+}
+`, rName, action, description, reason, comparison, value)
+}
+
+func testAccFilterConfig_resourceTypeFilters(rName, action, description, reason, comparison, value string) string {
+	return fmt.Sprintf(`
+resource "aws_inspector2_filter" "test" {
+  name        = %[1]q
+  action      = %[2]q
+  description = %[3]q
+  reason      = %[4]q
+  filter_criteria {
+    resource_type {
       comparison = %[5]q
       value      = %[6]q
     }
