@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/batch v1.58.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/batch v1.59.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.53.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.3 // indirect
@@ -116,7 +116,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.54.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.285.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9 // indirect
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.43.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.4 // indirect
@@ -209,7 +209,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/odb v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.57.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.27.1 // indirect
@@ -274,7 +274,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.36.14 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6 // indirect
