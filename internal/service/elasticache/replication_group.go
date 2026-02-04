@@ -1049,7 +1049,20 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			// This is a real hack to set the Snapshotting Cluster ID to be the first Cluster in the RG.
 			o, _ := d.GetChange("snapshot_retention_limit")
 			if o.(int) == 0 {
-				input.SnapshottingClusterId = aws.String(fmt.Sprintf("%s-001", d.Id()))
+				rg, _ := findReplicationGroupByID(ctx, conn, d.Id())
+				primaryCacheClusterId := ""
+
+				for _, currentNodeGroupMember := range rg.NodeGroups[0].NodeGroupMembers {
+					if aws.ToString(currentNodeGroupMember.CurrentRole) == "primary" {
+						primaryCacheClusterId = aws.ToString(currentNodeGroupMember.CacheClusterId)
+						break
+					}
+				}
+
+				if primaryCacheClusterId != "" {
+					input.SnapshottingClusterId = aws.String(primaryCacheClusterId)
+				}
+
 			}
 
 			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
