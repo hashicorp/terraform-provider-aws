@@ -4,6 +4,10 @@ FEATURES:
 
 * **New List Resource:** `aws_secretsmanager_secret` ([#46318](https://github.com/hashicorp/terraform-provider-aws/issues/46318))
 
+BUG FIXES:
+
+* resource/aws_cloudfront_multitenant_distribution: Allows disabling the enforcement of a `response_completion_timeout` for Origins, by removing its default value. ([#46306](https://github.com/hashicorp/terraform-provider-aws/issues/46306))
+
 ## 6.31.0 (February 4, 2026)
 
 NOTES:
