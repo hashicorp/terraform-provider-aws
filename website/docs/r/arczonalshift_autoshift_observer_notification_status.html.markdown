@@ -10,6 +10,8 @@ description: |-
 
 Manages the autoshift observer notification status for AWS Application Recovery Controller Zonal Shift. This is an account-level singleton setting that controls whether autoshift observer notifications are enabled or disabled.
 
+~> NOTE: Removing this Terraform resource disables zonal autoshift observer notifications.
+
 ## Example Usage
 
 ```terraform
