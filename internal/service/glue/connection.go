@@ -703,7 +703,7 @@ func flattenOAuth2Properties(apiObject *awstypes.OAuth2Properties) []any {
 		tfMap["token_url"] = aws.ToString(v)
 	}
 
-	if v := apiObject.TokenUrlParametersMap; v != nil && len(v) > 0 {
+	if v := apiObject.TokenUrlParametersMap; len(v) > 0 {
 		tfMap["token_url_parameters_map"] = v
 	}
 
