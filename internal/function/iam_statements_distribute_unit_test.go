@@ -99,9 +99,6 @@ func TestIAMStatementsDistribute_ValidatePolicyType_Valid(t *testing.T) {
 	t.Parallel()
 	validTypes := []string{
 		"customer-managed",
-		"inline-user",
-		"inline-role",
-		"inline-group",
 		"service-control-policy",
 	}
 
@@ -132,11 +129,8 @@ func TestIAMStatementsDistribute_GetSizeLimitForPolicyType(t *testing.T) {
 		expected   int
 	}{
 		{"customer-managed", 6144},
-		{"inline-user", 2048},
-		{"inline-role", 10240},
-		{"inline-group", 5120},
 		{"service-control-policy", 5120},
-		{"unknown", 2048}, // Should default to inline-user
+		{"unknown", 6144}, // Should default to customer-managed
 	}
 
 	for _, test := range tests {
@@ -162,19 +156,19 @@ func TestIAMStatementsDistribute_ValidatePolicySize(t *testing.T) {
 	t.Parallel()
 	smallPolicy := `{"Version":"2012-10-17","Statement":[]}`
 
-	// Should pass for inline-user (small policy)
-	err := ValidatePolicySize(smallPolicy, "inline-user")
+	// Should pass for customer-managed (small policy)
+	err := ValidatePolicySize(smallPolicy, "customer-managed")
 	if err != nil {
-		t.Errorf("Expected no error for small policy with inline-user policy type, got: %v", err)
+		t.Errorf("Expected no error for small policy with customer-managed policy type, got: %v", err)
 	}
 
-	// Create a large policy that exceeds inline-user limit
+	// Create a large policy that exceeds customer-managed limit
 	largePolicy := `{"Version":"2012-10-17","Statement":[` +
-		generateLargeStatement(3000) + `]}`
+		generateLargeStatement(7000) + `]}`
 
-	err = ValidatePolicySize(largePolicy, "inline-user")
+	err = ValidatePolicySize(largePolicy, "customer-managed")
 	if err == nil {
-		t.Error("Expected error for large policy with inline-user policy type, got nil")
+		t.Error("Expected error for large policy with customer-managed policy type, got nil")
 	}
 }
 
@@ -219,7 +213,7 @@ func TestIAMStatementsDistribute_DistributeStatements_SmallPolicy(t *testing.T) 
 		]
 	}`
 
-	result, err := f.distributeStatements(smallPolicy, "inline-user")
+	result, err := f.distributeStatements(smallPolicy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for small policy, got: %v", err)
 	}
@@ -241,13 +235,13 @@ func TestIAMStatementsDistribute_DistributeStatements_LargePolicy(t *testing.T) 
 	t.Parallel()
 	f := &iamStatementsDistributeFunction{}
 
-	// Create a policy with many statements that will exceed inline-user limit
+	// Create a policy with many statements that will exceed customer-managed limit
 	largePolicy := `{
 		"Version": "2012-10-17",
 		"Id": "test-policy",
 		"Statement": [`
 
-	// Add many statements to exceed the 2048 byte limit for inline-user policies
+	// Add many statements to exceed the 6144 byte limit for customer-managed policies
 	for i := range 50 { // Increased from 20 to 50
 		if i > 0 {
 			largePolicy += ","
@@ -263,13 +257,13 @@ func TestIAMStatementsDistribute_DistributeStatements_LargePolicy(t *testing.T) 
 
 	// Check the actual size first
 	policySize := CalculatePolicySize(largePolicy)
-	t.Logf("Policy size: %d bytes (inline-user limit: 2048)", policySize)
+	t.Logf("Policy size: %d bytes (customer-managed limit: 6144)", policySize)
 
-	if policySize <= 2048 {
-		t.Skipf("Test policy (%d bytes) doesn't exceed inline-user limit (2048 bytes), skipping distribution test", policySize)
+	if policySize <= 6144 {
+		t.Skipf("Test policy (%d bytes) doesn't exceed customer-managed limit (6144 bytes), skipping distribution test", policySize)
 	}
 
-	result, err := f.distributeStatements(largePolicy, "inline-user")
+	result, err := f.distributeStatements(largePolicy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for large policy distribution, got: %v", err)
 	}
@@ -314,13 +308,13 @@ func TestIAMStatementsDistribute_DistributeStatements_OversizedSingleStatement(t
 	t.Parallel()
 	f := &iamStatementsDistributeFunction{}
 
-	// Create a policy with a single statement that's too large for inline-user limit
+	// Create a policy with a single statement that's too large for customer-managed limit
 	oversizedPolicy := `{
 		"Version": "2012-10-17",
 		"Statement": [
 			{
 				"Effect": "Allow",
-				"Action": [` + strings.Repeat(`"s3:GetObject",`, 200) + `"s3:PutObject"],
+				"Action": [` + strings.Repeat(`"s3:GetObject",`, 500) + `"s3:PutObject"],
 				"Resource": "arn:aws:s3:::bucket/*"
 			}
 		]
@@ -328,14 +322,14 @@ func TestIAMStatementsDistribute_DistributeStatements_OversizedSingleStatement(t
 
 	// Verify the policy is actually oversized
 	policySize := CalculatePolicySize(oversizedPolicy)
-	t.Logf("Oversized policy size: %d bytes (inline-user limit: 2048)", policySize)
+	t.Logf("Oversized policy size: %d bytes (customer-managed limit: 6144)", policySize)
 
-	if policySize <= 2048 {
-		t.Skipf("Test policy (%d bytes) doesn't exceed inline-user limit, skipping", policySize)
+	if policySize <= 6144 {
+		t.Skipf("Test policy (%d bytes) doesn't exceed customer-managed limit, skipping", policySize)
 	}
 
 	// Should return an error, not attempt to distribute the statement
-	_, err := f.distributeStatements(oversizedPolicy, "inline-user")
+	_, err := f.distributeStatements(oversizedPolicy, "customer-managed")
 	if err == nil {
 		t.Fatal("Expected error for oversized single statement, got nil")
 	}
@@ -346,17 +340,17 @@ func TestIAMStatementsDistribute_DistributeStatements_OversizedSingleStatement(t
 	}
 
 	// Error should suggest using a different policy type
-	if !contains(err.Error(), "policy type with higher limits") {
+	if !contains(err.Error(), "customer-managed") {
 		t.Errorf("Expected policy type suggestions in error message, got: %s", err.Error())
 	}
 }
 
 func TestIAMStatementsDistribute_GeneratePolicyOfSize(t *testing.T) {
 	t.Parallel()
-	// Test generating a policy that should exceed inline-user limit
-	policy := generatePolicyOfSize(2500, "inline-user")
+	// Test generating a policy that should exceed customer-managed limit
+	policy := generatePolicyOfSize(7000, "customer-managed")
 	actualSize := CalculatePolicySize(policy)
-	t.Logf("Generated policy size: %d bytes (target: 2500)", actualSize)
+	t.Logf("Generated policy size: %d bytes (target: 7000)", actualSize)
 
 	// Parse and reformat to see if size changes
 	parsed, err := ParsePolicyDocument(policy)
@@ -380,10 +374,10 @@ func TestIAMStatementsDistribute_GeneratePolicyOfSize(t *testing.T) {
 
 	t.Logf("Size difference: %d bytes", sizeDiff)
 
-	// Check if reformatted size exceeds inline-user limit
-	inlineUserLimit := GetSizeLimitForPolicyType("inline-user")
-	t.Logf("Inline-user limit: %d bytes", inlineUserLimit)
-	t.Logf("Reformatted size exceeds limit: %v", reformattedSize > inlineUserLimit)
+	// Check if reformatted size exceeds customer-managed limit
+	customerManagedLimit := GetSizeLimitForPolicyType("customer-managed")
+	t.Logf("Customer-managed limit: %d bytes", customerManagedLimit)
+	t.Logf("Reformatted size exceeds limit: %v", reformattedSize > customerManagedLimit)
 }
 func TestIAMStatementsDistribute_DistributeStatements_OutputPolicyCompleteness(t *testing.T) {
 	t.Parallel()
@@ -411,7 +405,7 @@ func TestIAMStatementsDistribute_DistributeStatements_OutputPolicyCompleteness(t
 	builder.WriteString(`]}`)
 	largePolicy := builder.String()
 
-	result, err := f.distributeStatements(largePolicy, "inline-user")
+	result, err := f.distributeStatements(largePolicy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for policy distribution, got: %v", err)
 	}
@@ -474,7 +468,7 @@ func TestIAMStatementsDistribute_DistributeStatements_OutputPolicyCompleteness(t
 		}
 
 		// Verify the policy is within size limits
-		if err := ValidatePolicySize(policyJSON, "inline-user"); err != nil {
+		if err := ValidatePolicySize(policyJSON, "customer-managed"); err != nil {
 			t.Errorf("Output policy %d exceeds size limit: %v", i, err)
 		}
 
@@ -517,7 +511,7 @@ func TestIAMStatementsDistribute_DistributeStatements_MetadataGeneration(t *test
 	builder.WriteString(`]}`)
 	largePolicy := builder.String()
 
-	result, err := f.distributeStatements(largePolicy, "inline-user")
+	result, err := f.distributeStatements(largePolicy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for policy distribution, got: %v", err)
 	}
@@ -673,8 +667,8 @@ func TestIAMStatementsDistribute_EnhancedErrorHandling_InvalidActionArray(t *tes
 
 func TestIAMStatementsDistribute_DetectImpossibleConstraints_BasePolicyTooLarge(t *testing.T) {
 	t.Parallel()
-	// Create a policy with a very long ID that makes the base policy too large
-	longId := strings.Repeat("very-long-policy-id-", 200) // This will make base policy > 2048 bytes
+	// Create a policy with a very long ID that makes the base policy too large for customer-managed limit
+	longId := strings.Repeat("very-long-policy-id-", 500) // Increased to make base policy > 6144 bytes
 	policy := &PolicyDocument{
 		Version: "2012-10-17",
 		Id:      longId,
@@ -687,7 +681,7 @@ func TestIAMStatementsDistribute_DetectImpossibleConstraints_BasePolicyTooLarge(
 		},
 	}
 
-	err := detectImpossibleConstraints(policy, "inline-user")
+	err := detectImpossibleConstraints(policy, "customer-managed")
 	if err == nil {
 		t.Fatal("Expected error for base policy too large, got nil")
 	}
@@ -696,19 +690,19 @@ func TestIAMStatementsDistribute_DetectImpossibleConstraints_BasePolicyTooLarge(
 		t.Errorf("Expected impossible constraint error, got: %s", err.Error())
 	}
 
-	if !contains(err.Error(), "Consider using a policy type with higher limits") {
+	if !contains(err.Error(), "Consider simplifying the policy structure") {
 		t.Errorf("Expected helpful suggestion in error, got: %s", err.Error())
 	}
 }
 
 func TestIAMStatementsDistribute_GenerateHelpfulErrorMessage_SizeLimit(t *testing.T) {
 	t.Parallel()
-	originalErr := fmt.Errorf("policy size (3000 bytes) exceeds inline-user policy limit (2048 bytes)")
+	originalErr := fmt.Errorf("policy size (7000 bytes) exceeds customer-managed policy limit (6144 bytes)")
 
-	helpfulMsg := generateHelpfulErrorMessage(originalErr, "inline-user")
+	helpfulMsg := generateHelpfulErrorMessage(originalErr, "customer-managed")
 
-	if !contains(helpfulMsg, "Try using 'inline-group' (5120 bytes), 'customer-managed' (6144 bytes), or 'inline-role' (10240 bytes)") {
-		t.Errorf("Expected helpful suggestion for inline-user policy type, got: %s", helpfulMsg)
+	if !contains(helpfulMsg, "Consider simplifying your policy statements") {
+		t.Errorf("Expected helpful suggestion for customer-managed policy type, got: %s", helpfulMsg)
 	}
 }
 
@@ -716,7 +710,7 @@ func TestIAMStatementsDistribute_GenerateHelpfulErrorMessage_JSONSyntax(t *testi
 	t.Parallel()
 	originalErr := fmt.Errorf("JSON syntax error at position 10")
 
-	helpfulMsg := generateHelpfulErrorMessage(originalErr, "inline-user")
+	helpfulMsg := generateHelpfulErrorMessage(originalErr, "customer-managed")
 
 	if !contains(helpfulMsg, "Validate your JSON using a JSON validator tool") {
 		t.Errorf("Expected JSON validation suggestion, got: %s", helpfulMsg)
@@ -727,7 +721,7 @@ func TestIAMStatementsDistribute_GenerateHelpfulErrorMessage_MissingField(t *tes
 	t.Parallel()
 	originalErr := fmt.Errorf("policy document missing required field: Version")
 
-	helpfulMsg := generateHelpfulErrorMessage(originalErr, "inline-user")
+	helpfulMsg := generateHelpfulErrorMessage(originalErr, "customer-managed")
 
 	if !contains(helpfulMsg, "Ensure your policy includes all required fields") {
 		t.Errorf("Expected required fields suggestion, got: %s", helpfulMsg)
@@ -739,7 +733,7 @@ func TestIAMStatementsDistribute_DistributeStatements_EnhancedErrorHandling(t *t
 	f := &iamStatementsDistributeFunction{}
 
 	// Test with malformed JSON
-	_, err := f.distributeStatements(`{"Version": "2012-10-17", "Statement": [`, "inline-user")
+	_, err := f.distributeStatements(`{"Version": "2012-10-17", "Statement": [`, "customer-managed")
 	if err == nil {
 		t.Fatal("Expected error for malformed JSON, got nil")
 	}
@@ -752,7 +746,7 @@ func TestIAMStatementsDistribute_DistributeStatements_EnhancedErrorHandling(t *t
 	_, err = f.distributeStatements(`{
 		"Version": "2020-01-01",
 		"Statement": [{"Effect": "Allow", "Action": "s3:GetObject", "Resource": "*"}]
-	}`, "inline-user")
+	}`, "customer-managed")
 	if err == nil {
 		t.Fatal("Expected error for unsupported version, got nil")
 	}
@@ -769,11 +763,11 @@ func TestIAMStatementsDistribute_Comprehensive_BoundaryConditions(t *testing.T) 
 	f := &iamStatementsDistributeFunction{}
 
 	// Test policy that should not be distributed (under limit after reformatting)
-	policy := generatePolicyOfSize(1800, "inline-user")
+	policy := generatePolicyOfSize(5000, "customer-managed")
 	actualSize := CalculatePolicySize(policy)
-	t.Logf("Generated policy for size 1800: actual size %d bytes", actualSize)
+	t.Logf("Generated policy for size 5000: actual size %d bytes", actualSize)
 
-	result, err := f.distributeStatements(policy, "inline-user")
+	result, err := f.distributeStatements(policy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for policy under limit, got: %v", err)
 	}
@@ -783,9 +777,9 @@ func TestIAMStatementsDistribute_Comprehensive_BoundaryConditions(t *testing.T) 
 	}
 
 	// Test policy that should be distributed (over limit after reformatting)
-	policy = generatePolicyOfSize(2500, "inline-user")
+	policy = generatePolicyOfSize(8000, "customer-managed")
 	actualSize = CalculatePolicySize(policy)
-	t.Logf("Generated policy for size 2500: actual size %d bytes", actualSize)
+	t.Logf("Generated policy for size 8000: actual size %d bytes", actualSize)
 
 	// Check if reformatted size exceeds limit
 	parsed, err := ParsePolicyDocument(policy)
@@ -799,7 +793,7 @@ func TestIAMStatementsDistribute_Comprehensive_BoundaryConditions(t *testing.T) 
 	reformattedSize := CalculatePolicySize(reformatted)
 	t.Logf("Reformatted size: %d bytes", reformattedSize)
 
-	result, err = f.distributeStatements(policy, "inline-user")
+	result, err = f.distributeStatements(policy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for policy over limit, got: %v", err)
 	}
@@ -822,9 +816,6 @@ func TestIAMStatementsDistribute_Comprehensive_AllPolicyTypeLimits(t *testing.T)
 		sizeLimit  int
 	}{
 		{"customer-managed", 6144},
-		{"inline-user", 2048},
-		{"inline-role", 10240},
-		{"inline-group", 5120},
 		{"service-control-policy", 5120},
 	}
 
@@ -938,7 +929,7 @@ func TestIAMStatementsDistribute_Comprehensive_StatementTypes(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			result, err := f.distributeStatements(tc.policy, "inline-user")
+			result, err := f.distributeStatements(tc.policy, "customer-managed")
 			if err != nil {
 				t.Fatalf("Expected no error for %s, got: %v", tc.name, err)
 			}
@@ -963,13 +954,13 @@ func TestIAMStatementsDistribute_Comprehensive_ErrorScenarios(t *testing.T) {
 		{
 			name:          "EmptyJSON",
 			policy:        "",
-			policyType:    "inline-user",
+			policyType:    "customer-managed",
 			expectedError: "policy JSON cannot be empty",
 		},
 		{
 			name:          "InvalidJSON",
 			policy:        `{"Version": "2012-10-17", "Statement": [`,
-			policyType:    "inline-user",
+			policyType:    "customer-managed",
 			expectedError: "JSON syntax error",
 		},
 		{
@@ -983,7 +974,7 @@ func TestIAMStatementsDistribute_Comprehensive_ErrorScenarios(t *testing.T) {
 					"Resource": "*"
 				}]
 			}`,
-			policyType:    "inline-user",
+			policyType:    "customer-managed",
 			expectedError: "cannot have both 'Action' and 'NotAction'",
 		},
 		{
@@ -996,7 +987,7 @@ func TestIAMStatementsDistribute_Comprehensive_ErrorScenarios(t *testing.T) {
 					"Resource": "*"
 				}]
 			}`,
-			policyType:    "inline-user",
+			policyType:    "customer-managed",
 			expectedError: "Effect must be 'Allow' or 'Deny'",
 		},
 		{
@@ -1009,7 +1000,7 @@ func TestIAMStatementsDistribute_Comprehensive_ErrorScenarios(t *testing.T) {
 					"Resource": "*"
 				}]
 			}`,
-			policyType:    "inline-user",
+			policyType:    "customer-managed",
 			expectedError: "Action field cannot be empty string",
 		},
 	}
@@ -1034,9 +1025,9 @@ func TestIAMStatementsDistribute_Comprehensive_MetadataAccuracy(t *testing.T) {
 	f := &iamStatementsDistributeFunction{}
 
 	// Create a policy that will definitely be distributed
-	largePolicy := generatePolicyOfSize(5000, "inline-user")
+	largePolicy := generatePolicyOfSize(8000, "customer-managed")
 
-	result, err := f.distributeStatements(largePolicy, "inline-user")
+	result, err := f.distributeStatements(largePolicy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for large policy, got: %v", err)
 	}
@@ -1062,8 +1053,8 @@ func TestIAMStatementsDistribute_Comprehensive_MetadataAccuracy(t *testing.T) {
 		t.Errorf("Largest policy (%d) should be >= smallest policy (%d)", largestPolicy, smallestPolicy)
 	}
 
-	if largestPolicy > 2048 {
-		t.Errorf("Largest policy (%d) should not exceed inline-user limit (2048)", largestPolicy)
+	if largestPolicy > 6144 {
+		t.Errorf("Largest policy (%d) should not exceed customer-managed limit (6144)", largestPolicy)
 	}
 
 	if smallestPolicy <= 0 {
@@ -1100,7 +1091,7 @@ func TestIAMStatementsDistribute_Comprehensive_PolicyIntegrity(t *testing.T) {
 	originalSize := CalculatePolicySize(originalPolicy)
 	t.Logf("Original policy size: %d bytes", originalSize)
 
-	result, err := f.distributeStatements(originalPolicy, "inline-user")
+	result, err := f.distributeStatements(originalPolicy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Expected no error for policy distribution, got: %v", err)
 	}
@@ -1239,7 +1230,7 @@ func TestIAMStatementsDistribute_ActualDistribution(t *testing.T) {
 	f := &iamStatementsDistributeFunction{}
 
 	// Generate a policy that should definitely be distributed after reformatting
-	policy := generatePolicyOfSize(2500, "inline")
+	policy := generatePolicyOfSize(8000, "customer-managed")
 	actualSize := CalculatePolicySize(policy)
 	t.Logf("Generated policy size: %d bytes", actualSize)
 
@@ -1255,19 +1246,19 @@ func TestIAMStatementsDistribute_ActualDistribution(t *testing.T) {
 	}
 
 	reformattedSize := CalculatePolicySize(reformatted)
-	inlineLimit := GetSizeLimitForPolicyType("inline-user")
-	t.Logf("Reformatted size: %d bytes, limit: %d bytes", reformattedSize, inlineLimit)
+	customerManagedLimit := GetSizeLimitForPolicyType("customer-managed")
+	t.Logf("Reformatted size: %d bytes, limit: %d bytes", reformattedSize, customerManagedLimit)
 
 	// Try to distribute
-	result, err := f.distributeStatements(policy, "inline-user")
+	result, err := f.distributeStatements(policy, "customer-managed")
 	if err != nil {
 		t.Fatalf("Distribution failed: %v", err)
 	}
 
 	t.Logf("Distribution result: %d policies", len(result.Policies.Elements()))
 
-	if reformattedSize > inlineLimit && len(result.Policies.Elements()) <= 1 {
+	if reformattedSize > customerManagedLimit && len(result.Policies.Elements()) <= 1 {
 		t.Errorf("Expected multiple policies when reformatted size (%d) > limit (%d), got %d policies",
-			reformattedSize, inlineLimit, len(result.Policies.Elements()))
+			reformattedSize, customerManagedLimit, len(result.Policies.Elements()))
 	}
 }

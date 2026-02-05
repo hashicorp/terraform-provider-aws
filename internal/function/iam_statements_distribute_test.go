@@ -34,7 +34,7 @@ func TestIAMStatementsDistributeFunction_basic(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-user", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// TODO: Add specific output checks once implementation is complete
 				),
@@ -55,7 +55,7 @@ func TestIAMStatementsDistributeFunction_invalidJSON(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMStatementsDistributeFunctionConfig(invalidJSON, "inline-user", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(invalidJSON, "customer-managed", ""),
 				ExpectError: regexache.MustCompile("JSON syntax error|unexpected end of JSON input"),
 			},
 		},
@@ -105,7 +105,7 @@ func TestIAMStatementsDistributeFunction_missingVersion(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingVersion, "inline-user", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingVersion, "customer-managed", ""),
 				ExpectError: regexache.MustCompile("policy document missing required field: Version"),
 			},
 		},
@@ -127,7 +127,7 @@ func TestIAMStatementsDistributeFunction_missingStatement(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingStatement, "inline-user", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingStatement, "customer-managed", ""),
 				ExpectError: regexache.MustCompile("policy document missing required field: Statement"),
 			},
 		},
@@ -210,12 +210,6 @@ func TestIAMStatementsDistributeFunction_policyLimits(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-user", ""),
-				Check:  resource.ComposeAggregateTestCheckFunc(
-				// TODO: Add specific output checks once implementation is complete
-				),
-			},
-			{
 				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// TODO: Add specific output checks once implementation is complete
@@ -262,24 +256,6 @@ func TestIAMStatementsDistributeFunction_allPolicyTypes(t *testing.T) {
 				),
 			},
 			{
-				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-user", ""),
-				Check:  resource.ComposeAggregateTestCheckFunc(
-				// Function should execute without error
-				),
-			},
-			{
-				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-role", ""),
-				Check:  resource.ComposeAggregateTestCheckFunc(
-				// Function should execute without error
-				),
-			},
-			{
-				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-group", ""),
-				Check:  resource.ComposeAggregateTestCheckFunc(
-				// Function should execute without error
-				),
-			},
-			{
 				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "service-control-policy", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
@@ -312,7 +288,7 @@ func TestIAMStatementsDistributeFunction_policyWithId(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMStatementsDistributeFunctionConfig(policyWithId, "inline-user", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(policyWithId, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
@@ -393,7 +369,7 @@ func TestIAMStatementsDistributeFunction_edgeCases(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMStatementsDistributeFunctionConfig(minimalPolicy, "inline-user", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(minimalPolicy, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
@@ -423,7 +399,7 @@ func TestIAMStatementsDistributeFunction_malformedStatements(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingEffect, "inline-user", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingEffect, "customer-managed", ""),
 				ExpectError: regexache.MustCompile("statement missing required field: Effect"),
 			},
 		},
@@ -451,7 +427,7 @@ func TestIAMStatementsDistributeFunction_unsupportedVersion(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMStatementsDistributeFunctionConfig(policyUnsupportedVersion, "inline-user", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyUnsupportedVersion, "customer-managed", ""),
 				ExpectError: regexache.MustCompile("unsupported policy version"),
 			},
 		},

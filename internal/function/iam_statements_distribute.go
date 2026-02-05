@@ -59,7 +59,7 @@ func (f iamStatementsDistributeFunction) Definition(ctx context.Context, req fun
 			},
 			function.StringParameter{
 				Name:                "policy_type",
-				MarkdownDescription: "AWS policy type for size limits. Valid values: 'customer-managed' (6144 bytes), 'inline-user' (2048 bytes), 'inline-role' (10240 bytes), 'inline-group' (5120 bytes) and 'service-control-policy' (5120 bytes).",
+				MarkdownDescription: "AWS policy type for size limits. Valid values: 'customer-managed' (6144 bytes) and 'service-control-policy' (5120 bytes).",
 			},
 		},
 		Return: function.ObjectReturn{
@@ -228,9 +228,6 @@ func ParsePolicyDocument(jsonStr string) (*PolicyDocument, error) {
 func ValidatePolicyType(policyType string) error {
 	validTypes := []string{
 		"customer-managed",
-		"inline-user",
-		"inline-role",
-		"inline-group",
 		"service-control-policy",
 	}
 
@@ -246,17 +243,11 @@ func GetSizeLimitForPolicyType(policyType string) int {
 	switch policyType {
 	case "customer-managed":
 		return 6144
-	case "inline-user":
-		return 2048
-	case "inline-role":
-		return 10240
-	case "inline-group":
-		return 5120
 	case "service-control-policy":
 		return 5120
 	default:
-		// Default to inline-user policy limit for safety (most restrictive)
-		return 2048
+		// Default to customer-managed policy limit for safety
+		return 6144
 	}
 }
 
@@ -645,7 +636,7 @@ func detectImpossibleConstraints(policy *PolicyDocument, policyType string) erro
 	// Check if base policy structure is too large
 	if basePolicySize >= sizeLimit {
 		return fmt.Errorf("impossible to distribute: base policy structure (%d bytes) exceeds %s policy limit (%d bytes). "+
-			"Consider using a policy type with higher limits: 'inline-group' (5120 bytes), 'customer-managed' (6144 bytes), or 'inline-role' (10240 bytes)",
+			"Consider simplifying the policy structure or using 'customer-managed' policy type if not already selected",
 			basePolicySize, policyType, sizeLimit)
 	}
 
@@ -661,7 +652,7 @@ func detectImpossibleConstraints(policy *PolicyDocument, policyType string) erro
 		if stmtSize > availableSpace {
 			return fmt.Errorf("impossible to distribute: statement %d (%d bytes) is too large for %s policy limit. "+
 				"Statement size exceeds available space (%d bytes). "+
-				"Consider simplifying the statement or using a policy type with higher limits",
+				"Consider simplifying the statement or using 'customer-managed' policy type if not already selected",
 				i, stmtSize, policyType, availableSpace)
 		}
 	}
@@ -676,14 +667,8 @@ func generateHelpfulErrorMessage(err error, policyType string) string {
 	// Add helpful suggestions based on error type
 	if strings.Contains(errMsg, "exceeds") && strings.Contains(errMsg, "policy limit") {
 		switch policyType {
-		case "inline-user":
-			return errMsg + ". Suggestion: Try using 'inline-group' (5120 bytes), 'customer-managed' (6144 bytes), or 'inline-role' (10240 bytes) policy type for larger limits."
-		case "inline-group":
-			return errMsg + ". Suggestion: Try using 'customer-managed' (6144 bytes) or 'inline-role' (10240 bytes) policy type for larger limits."
 		case "service-control-policy":
-			return errMsg + ". Suggestion: Try using 'customer-managed' (6144 bytes) or 'inline-role' (10240 bytes) policy type for larger limits."
-		case "customer-managed":
-			return errMsg + ". Suggestion: Try using 'inline-role' (10240 bytes) policy type for larger limits."
+			return errMsg + ". Suggestion: Try using 'customer-managed' (6144 bytes) policy type for larger limits."
 		default:
 			return errMsg + ". Suggestion: Consider simplifying your policy statements or breaking them into smaller, more focused statements."
 		}

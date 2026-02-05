@@ -19,7 +19,7 @@ See the [AWS IAM documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide
 ### Basic Statement Distribution
 
 ```terraform
-# Distribute statements from a large policy for inline user policy usage (2048 byte limit)
+# Distribute statements from a large policy for customer-managed policy usage (6144 byte limit)
 locals {
   large_policy = jsonencode({
     Version = "2012-10-17"
@@ -43,13 +43,13 @@ locals {
         ]
         Resource = "arn:aws:dynamodb:us-east-1:123456789012:table/MyTable"
       }
-      # ... many more statements that exceed 2048 bytes
+      # ... many more statements that exceed 6144 bytes
     ]
   })
 }
 
 output "distributed_policies" {
-  value = provider::aws::iam_statements_distribute(local.large_policy, "inline-user")
+  value = provider::aws::iam_statements_distribute(local.large_policy, "customer-managed")
 }
 
 # Result:
@@ -59,21 +59,21 @@ output "distributed_policies" {
 #     "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"dynamodb:GetItem\",\"dynamodb:PutItem\",\"dynamodb:UpdateItem\",\"dynamodb:DeleteItem\"],\"Resource\":\"arn:aws:dynamodb:us-east-1:123456789012:table/MyTable\"}]}"
 #   ],
 #   "metadata": {
-#     "original_size": 2150,
-#     "average_size": 1052,
-#     "largest_policy": 1100,
-#     "smallest_policy": 1005,
+#     "original_size": 6200,
+#     "average_size": 3052,
+#     "largest_policy": 3100,
+#     "smallest_policy": 3005,
 #     "total_size_reduction": 45
 #   }
 # }
 ```
 
-### Complete Example: Automatic Statement Distribution for IAM Role
+### Complete Example: Automatic Statement Distribution for Customer-Managed Policies
 
-This example shows a large policy and automatically distribute its statements across multiple policies attached to an IAM role, without worrying about manual policy management:
+This example shows a large policy and automatically distributes its statements across multiple customer-managed policies:
 
 ```terraform
-# Define a comprehensive policy that exceeds inline policy size limits
+# Define a comprehensive policy that exceeds customer-managed policy size limits
 locals {
   comprehensive_policy = {
     Version = "2012-10-17"
@@ -163,7 +163,7 @@ locals {
         ]
         Resource = "arn:aws:logs:us-east-1:123456789012:*"
       },
-      # Additional permissions that would make this policy exceed 2048 bytes
+      # Additional permissions that would make this policy exceed 6144 bytes
       {
         Effect = "Allow"
         Action = [
@@ -178,12 +178,27 @@ locals {
     ]
   }
 
-  # Convert to JSON and automatically distribute statements for inline user policies
+  # Convert to JSON and automatically distribute statements for customer-managed policies
   policy_json         = jsonencode(local.comprehensive_policy)
-  distribution_result = provider::aws::iam_statements_distribute(local.policy_json, "inline-user")
+  distribution_result = provider::aws::iam_statements_distribute(local.policy_json, "customer-managed")
 }
 
-# Create the IAM role
+# Create multiple customer-managed policies from the distribution result
+resource "aws_iam_policy" "distributed_policies" {
+  count = length(local.distribution_result.policies)
+
+  name        = "my-application-policy-${count.index + 1}"
+  description = "Distributed policy ${count.index + 1} for my application"
+  policy      = local.distribution_result.policies[count.index]
+
+  tags = {
+    Environment = "production"
+    Application = "my-app"
+    PolicySet   = "distributed-permissions"
+  }
+}
+
+# Create the IAM role and attach all distributed policies
 resource "aws_iam_role" "example" {
   name = "my-application-role"
 
@@ -206,13 +221,12 @@ resource "aws_iam_role" "example" {
   }
 }
 
-# Automatically create multiple inline policies from the distribution result
-resource "aws_iam_role_policy" "example" {
-  count = length(local.distribution_result.policies)
+# Attach all distributed policies to the role
+resource "aws_iam_role_policy_attachment" "example" {
+  count = length(aws_iam_policy.distributed_policies)
 
-  name   = "app-policy-${count.index + 1}"
-  role   = aws_iam_role.example.id
-  policy = local.distribution_result.policies[count.index]
+  role       = aws_iam_role.example.name
+  policy_arn = aws_iam_policy.distributed_policies[count.index].arn
 }
 
 # Optional: Create an instance profile if needed for EC2
@@ -222,7 +236,7 @@ resource "aws_iam_instance_profile" "example" {
 }
 ```
 
-This example demonstrates the key benefit: **the a comprehensive policy can be written and the function automatically handles the statement distribution and attachment process**.
+This example demonstrates the key benefit: **a comprehensive policy can be written and the function automatically handles the statement distribution and policy creation process**.
 
 ### Different Policy Types
 
@@ -232,29 +246,9 @@ output "customer_managed_distribution" {
   value = provider::aws::iam_statements_distribute(local.large_policy, "customer-managed")
 }
 
-# For inline policies attached to roles (10240 byte limit)
-output "inline_role_distribution" {
-  value = provider::aws::iam_statements_distribute(local.large_policy, "inline-role")
-}
-
-# For inline policies attached to groups (5120 byte limit)
-output "inline_group_distribution" {
-  value = provider::aws::iam_statements_distribute(local.large_policy, "inline-group")
-}
-
 # For Service Control Policies (5120 byte limit)
 output "scp_distribution" {
   value = provider::aws::iam_statements_distribute(local.large_policy, "service-control-policy")
-}
-
-# For permissions boundary policies (6144 byte limit)
-output "permissions_boundary_distribution" {
-  value = provider::aws::iam_statements_distribute(local.large_policy, "permissions-boundary")
-}
-
-# Legacy aliases still work
-output "legacy_managed_distribution" {
-  value = provider::aws::iam_statements_distribute(local.large_policy, "managed")
 }
 ```
 
@@ -291,7 +285,7 @@ locals {
       # ... statements that exceed size limit
     ]
   })
-  distribution_result = provider::aws::iam_statements_distribute(local.large_policy, "inline-user")
+  distribution_result = provider::aws::iam_statements_distribute(local.large_policy, "customer-managed")
 }
 
 output "size_analysis" {
@@ -314,12 +308,9 @@ iam_statements_distribute(policy_json string, policy_type string) object
 1. `policy_json` (String) IAM policy JSON document to distribute statements from. Must be a valid IAM policy with required fields: `Version` and `Statement`.
 2. `policy_type` (String)  AWS policy type for size limits. Valid values:
    - `"customer-managed"` - 6144 bytes (for customer-managed policies)
-   - `"inline-user"` - 2048 bytes (for inline policies attached to users)
-   - `"inline-role"` - 10240 bytes (for inline policies attached to roles)
-   - `"inline-group"` - 5120 bytes (for inline policies attached to groups)
    - `"service-control-policy"` - 5120 bytes (for AWS Organizations SCPs)
 
-## Attributes
+## Attribute Reference
 
 The function returns an object with the following attributes:
 
@@ -338,12 +329,19 @@ The function returns an object with the following attributes:
 The function enforces AWS policy-specific size limits:
 
 - **Customer-managed policies**: 6144 bytes maximum
-- **Inline policies (User)**: 2048 bytes maximum
-- **Inline policies (Role)**: 10240 bytes maximum  
-- **Inline policies (Group)**: 5120 bytes maximum
 - **Service Control Policies (SCP)**: 5120 bytes maximum
 
 If the original policy is already within the specified size limit, it is returned as-is (but reformatted for consistency).
+
+### Inline Policy Considerations
+
+**Note**: This function does not support inline policy types (`inline-user`, `inline-role`, `inline-group`) because AWS enforces aggregate size limits for inline policies per entity:
+
+- User inline policies: 2,048 characters total across all inline policies
+- Role inline policies: 10,240 characters total across all inline policies  
+- Group inline policies: 5,120 characters total across all inline policies
+
+Since these are aggregate limits, distributing statements across multiple inline policies attached to the same entity does not solve size constraint issues. For large policies, use customer-managed policies instead, which have individual policy limits and no aggregate restrictions.
 
 ### Statement Integrity
 
