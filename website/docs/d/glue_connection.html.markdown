@@ -33,6 +33,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Glue Connection.
 * `catalog_id` - Catalog ID of the Glue Connection.
 * `athena_properties` - A map of connection properties specific to the Athena compute environment.
+* `authentication_configuration` - Configuration block for authentication options.
 * `connection_properties` - A map of connection properties.
 * `connection_type` - Type of Glue Connection.
 * `description` - Description of the connection.
