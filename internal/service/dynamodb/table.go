@@ -3183,11 +3183,18 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 			for v := range tfcty.ValueElementValues(planGSI) {
 				hashKey := v.GetAttr("hash_key")
 				if hashKey.IsKnown() && !hashKey.IsNull() {
-					indexedAttributes[hashKey.AsString()] = true
+					hashKeyStr := hashKey.AsString()
+					if hashKeyStr != "" {
+						indexedAttributes[hashKeyStr] = true
+					}
 				}
+
 				rangeKey := v.GetAttr("range_key")
 				if rangeKey.IsKnown() && !rangeKey.IsNull() {
-					indexedAttributes[rangeKey.AsString()] = true
+					rangeKeyStr := rangeKey.AsString()
+					if rangeKeyStr != "" {
+						indexedAttributes[rangeKeyStr] = true
+					}
 				}
 				keySchema := v.GetAttr("key_schema")
 				if keySchema.IsKnown() && !keySchema.IsNull() {
