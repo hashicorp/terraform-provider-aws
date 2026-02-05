@@ -309,27 +309,27 @@ output "size_analysis" {
 iam_statements_distribute(policy_json string, policy_type string) object
 ```
 
-## Argument Reference
+## Arguments
 
-1. `policy_json` (Required) IAM policy JSON document to distribute statements from. Must be a valid IAM policy with required fields: `Version` and `Statement`.
-2. `policy_type` (Required)  AWS policy type for size limits. Valid values:
+1. `policy_json` (String) IAM policy JSON document to distribute statements from. Must be a valid IAM policy with required fields: `Version` and `Statement`.
+2. `policy_type` (String)  AWS policy type for size limits. Valid values:
    - `"customer-managed"` - 6144 bytes (for customer-managed policies)
    - `"inline-user"` - 2048 bytes (for inline policies attached to users)
    - `"inline-role"` - 10240 bytes (for inline policies attached to roles)
    - `"inline-group"` - 5120 bytes (for inline policies attached to groups)
    - `"service-control-policy"` - 5120 bytes (for AWS Organizations SCPs)
 
-## Attribute Reference
+## Attributes
 
 The function returns an object with the following attributes:
 
-- `policies` - List of complete IAM policy JSON documents. Each policy is standalone and can be used independently.
-- `metadata` - Additional information about the distribution operation:
-    - `original_size` - Size of the original policy in bytes
-    - `average_size` - Average size of distributed policies in bytes
-    - `largest_policy` - Size of the largest distributed policy in bytes
-    - `smallest_policy` - Size of the smallest distributed policy in bytes
-    - `total_size_reduction` - Total size difference in bytes between the original policy and all distributed policies combined. May be negative if distribution adds overhead.
+- `policies` (List of Strings) List of complete IAM policy JSON documents. Each policy is standalone and can be used independently.
+- `metadata` (Object) Additional information about the distribution operation:
+    - `original_size` (Number) Size of the original policy in bytes
+    - `average_size` (Number) Average size of distributed policies in bytes
+    - `largest_policy` (Number) Size of the largest distributed policy in bytes
+    - `smallest_policy` (Number) Size of the smallest distributed policy in bytes
+    - `total_size_reduction` (Number) Total size difference in bytes between the original policy and all distributed policies combined. May be negative if distribution adds overhead.
 
 ## Behavior
 
