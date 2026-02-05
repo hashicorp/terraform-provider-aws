@@ -55,6 +55,140 @@ func resourceConnection() *schema.Resource {
 				Sensitive: true,
 				Elem:      &schema.Schema{Type: schema.TypeString},
 			},
+			"authentication_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"basic_authentication_credentials": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"password": {
+										Type:      schema.TypeString,
+										Required:  true,
+										Sensitive: true,
+									},
+									"username": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"custom_authentication_credentials": {
+							Type:      schema.TypeMap,
+							Optional:  true,
+							Sensitive: true,
+							Elem:      &schema.Schema{Type: schema.TypeString},
+						},
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"oauth2_properties": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorization_code_properties": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"authorization_code": {
+													Type:      schema.TypeString,
+													Required:  true,
+													Sensitive: true,
+												},
+												"redirect_uri": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"oauth2_client_application": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"aws_managed_client_application_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"user_managed_client_application_client_id": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"oauth2_credentials": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"access_token": {
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
+												},
+												"jwt_token": {
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
+												},
+												"refresh_token": {
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
+												},
+												"user_managed_client_application_client_secret": {
+													Type:      schema.TypeString,
+													Optional:  true,
+													Sensitive: true,
+												},
+											},
+										},
+									},
+									"oauth2_grant_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"token_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"token_url_parameters_map": {
+										Type:      schema.TypeMap,
+										Optional:  true,
+										Sensitive: true,
+										Elem:      &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"secret_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -176,6 +310,9 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.Set(names.AttrARN, connectionARN(ctx, c, connectionName))
 	d.Set("athena_properties", connection.AthenaProperties)
+	if err := d.Set("authentication_configuration", flattenAuthenticationConfiguration(connection.AuthenticationConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
+	}
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set("connection_properties", connection.ConnectionProperties)
 	d.Set("connection_type", connection.ConnectionType)
@@ -305,6 +442,10 @@ func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {
 		apiObject.AthenaProperties = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
+	if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]any)) > 0 {
+		apiObject.AuthenticationConfiguration = expandAuthenticationConfiguration(v.([]any))
+	}
+
 	if v, ok := d.GetOk("connection_properties"); ok && len(v.(map[string]any)) > 0 {
 		apiObject.ConnectionProperties = flex.ExpandStringValueMap(v.(map[string]any))
 	} else {
@@ -353,6 +494,235 @@ func flattenPhysicalConnectionRequirements(apiObject *awstypes.PhysicalConnectio
 		names.AttrAvailabilityZone: aws.ToString(apiObject.AvailabilityZone),
 		"security_group_id_list":   apiObject.SecurityGroupIdList,
 		names.AttrSubnetID:         aws.ToString(apiObject.SubnetId),
+	}
+
+	return []any{tfMap}
+}
+
+func expandAuthenticationConfiguration(tfList []any) *awstypes.AuthenticationConfigurationInput {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.AuthenticationConfigurationInput{}
+
+	if v, ok := tfMap["authentication_type"].(string); ok && v != "" {
+		apiObject.AuthenticationType = awstypes.AuthenticationType(v)
+	}
+
+	if v, ok := tfMap["basic_authentication_credentials"].([]any); ok && len(v) > 0 {
+		apiObject.BasicAuthenticationCredentials = expandBasicAuthenticationCredentials(v)
+	}
+
+	if v, ok := tfMap["custom_authentication_credentials"].(map[string]any); ok && len(v) > 0 {
+		apiObject.CustomAuthenticationCredentials = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+		apiObject.KmsKeyArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["oauth2_properties"].([]any); ok && len(v) > 0 {
+		apiObject.OAuth2Properties = expandOAuth2PropertiesInput(v)
+	}
+
+	if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
+		apiObject.SecretArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandBasicAuthenticationCredentials(tfList []any) *awstypes.BasicAuthenticationCredentials {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.BasicAuthenticationCredentials{}
+
+	if v, ok := tfMap["password"].(string); ok && v != "" {
+		apiObject.Password = aws.String(v)
+	}
+
+	if v, ok := tfMap["username"].(string); ok && v != "" {
+		apiObject.Username = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandOAuth2PropertiesInput(tfList []any) *awstypes.OAuth2PropertiesInput {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.OAuth2PropertiesInput{}
+
+	if v, ok := tfMap["authorization_code_properties"].([]any); ok && len(v) > 0 {
+		apiObject.AuthorizationCodeProperties = expandAuthorizationCodeProperties(v)
+	}
+
+	if v, ok := tfMap["oauth2_client_application"].([]any); ok && len(v) > 0 {
+		apiObject.OAuth2ClientApplication = expandOAuth2ClientApplication(v)
+	}
+
+	if v, ok := tfMap["oauth2_credentials"].([]any); ok && len(v) > 0 {
+		apiObject.OAuth2Credentials = expandOAuth2Credentials(v)
+	}
+
+	if v, ok := tfMap["oauth2_grant_type"].(string); ok && v != "" {
+		apiObject.OAuth2GrantType = awstypes.OAuth2GrantType(v)
+	}
+
+	if v, ok := tfMap["token_url"].(string); ok && v != "" {
+		apiObject.TokenUrl = aws.String(v)
+	}
+
+	if v, ok := tfMap["token_url_parameters_map"].(map[string]any); ok && len(v) > 0 {
+		apiObject.TokenUrlParametersMap = flex.ExpandStringValueMap(v)
+	}
+
+	return apiObject
+}
+
+func expandAuthorizationCodeProperties(tfList []any) *awstypes.AuthorizationCodeProperties {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.AuthorizationCodeProperties{}
+
+	if v, ok := tfMap["authorization_code"].(string); ok && v != "" {
+		apiObject.AuthorizationCode = aws.String(v)
+	}
+
+	if v, ok := tfMap["redirect_uri"].(string); ok && v != "" {
+		apiObject.RedirectUri = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandOAuth2ClientApplication(tfList []any) *awstypes.OAuth2ClientApplication {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.OAuth2ClientApplication{}
+
+	if v, ok := tfMap["aws_managed_client_application_reference"].(string); ok && v != "" {
+		apiObject.AWSManagedClientApplicationReference = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_managed_client_application_client_id"].(string); ok && v != "" {
+		apiObject.UserManagedClientApplicationClientId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandOAuth2Credentials(tfList []any) *awstypes.OAuth2Credentials {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.OAuth2Credentials{}
+
+	if v, ok := tfMap["access_token"].(string); ok && v != "" {
+		apiObject.AccessToken = aws.String(v)
+	}
+
+	if v, ok := tfMap["jwt_token"].(string); ok && v != "" {
+		apiObject.JwtToken = aws.String(v)
+	}
+
+	if v, ok := tfMap["refresh_token"].(string); ok && v != "" {
+		apiObject.RefreshToken = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_managed_client_application_client_secret"].(string); ok && v != "" {
+		apiObject.UserManagedClientApplicationClientSecret = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenAuthenticationConfiguration(apiObject *awstypes.AuthenticationConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	authType := apiObject.AuthenticationType
+	if authType == "IAM" {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if authType != "" {
+		tfMap["authentication_type"] = string(authType)
+	}
+
+	if v := apiObject.KmsKeyArn; v != nil {
+		tfMap["kms_key_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.OAuth2Properties; v != nil {
+		tfMap["oauth2_properties"] = flattenOAuth2Properties(v)
+	}
+
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenOAuth2Properties(apiObject *awstypes.OAuth2Properties) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.OAuth2ClientApplication; v != nil {
+		tfMap["oauth2_client_application"] = flattenOAuth2ClientApplication(v)
+	}
+
+	if v := apiObject.OAuth2GrantType; v != "" {
+		tfMap["oauth2_grant_type"] = string(v)
+	}
+
+	if v := apiObject.TokenUrl; v != nil {
+		tfMap["token_url"] = aws.ToString(v)
+	}
+
+	if v := apiObject.TokenUrlParametersMap; v != nil && len(v) > 0 {
+		tfMap["token_url_parameters_map"] = v
+	}
+
+	return []any{tfMap}
+}
+
+func flattenOAuth2ClientApplication(apiObject *awstypes.OAuth2ClientApplication) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AWSManagedClientApplicationReference; v != nil {
+		tfMap["aws_managed_client_application_reference"] = aws.ToString(v)
+	}
+
+	if v := apiObject.UserManagedClientApplicationClientId; v != nil {
+		tfMap["user_managed_client_application_client_id"] = aws.ToString(v)
 	}
 
 	return []any{tfMap}

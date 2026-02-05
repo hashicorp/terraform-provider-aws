@@ -498,6 +498,47 @@ func TestAccGlueConnection_dynamoDB(t *testing.T) {
 	})
 }
 
+func TestAccGlueConnection_mySQL(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection awstypes.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_mySQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "MYSQL"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.HOST", "testhost"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.PORT", "3306"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.DATABASE", "gluedatabase"),
+					resource.TestCheckResourceAttrPair(resourceName, "athena_properties.spill_bucket", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.authentication_type", "BASIC"),
+					resource.TestCheckResourceAttrPair(resourceName, "authentication_configuration.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "physical_connection_requirements.0.availability_zone", "aws_subnet.test", names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "physical_connection_requirements.0.security_group_id_list.0", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "physical_connection_requirements.0.subnet_id", "aws_subnet.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueConnection_openSearch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection awstypes.Connection
@@ -997,6 +1038,97 @@ resource "aws_glue_connection" "test" {
     SparkProperties = jsonencode({
       secretId = aws_secretsmanager_secret.test.name
     })
+  }
+}
+`, rName)
+}
+
+func testAccConnectionConfig_mySQL(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-glue-connection-mysql"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = "%[1]s"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    protocol  = "tcp"
+    self      = true
+    from_port = 1
+    to_port   = 65535
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-glue-connection-mysql"
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%[1]s"
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    username = "glueusername"
+    password = "gluepassword"
+  })
+}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_glue_connection" "test" {
+  name = "%[1]s"
+
+  connection_type = "MYSQL"
+
+  connection_properties = {
+    HOST     = "testhost"
+    PORT     = "3306"
+    DATABASE = "gluedatabase"
+  }
+
+  athena_properties = {
+    lambda_function_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:123456789012:function:athenafederatedcatalog_mysql_abcdefgh"
+    spill_bucket        = aws_s3_bucket.test.bucket
+  }
+
+  authentication_configuration {
+    authentication_type = "BASIC"
+    secret_arn          = aws_secretsmanager_secret.test.arn
+  }
+
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.test.availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test.id
   }
 }
 `, rName)
