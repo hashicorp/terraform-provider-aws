@@ -71,12 +71,12 @@ func resourceConnection() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"password": {
+									names.AttrPassword: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -89,7 +89,7 @@ func resourceConnection() *schema.Resource {
 							Sensitive: true,
 							Elem:      &schema.Schema{Type: schema.TypeString},
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -519,7 +519,7 @@ func expandAuthenticationConfiguration(tfList []any) *awstypes.AuthenticationCon
 		apiObject.CustomAuthenticationCredentials = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 		apiObject.KmsKeyArn = aws.String(v)
 	}
 
@@ -542,11 +542,11 @@ func expandBasicAuthenticationCredentials(tfList []any) *awstypes.BasicAuthentic
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.BasicAuthenticationCredentials{}
 
-	if v, ok := tfMap["password"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
 	}
 
-	if v, ok := tfMap["username"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 		apiObject.Username = aws.String(v)
 	}
 
@@ -670,7 +670,7 @@ func flattenAuthenticationConfiguration(apiObject *awstypes.AuthenticationConfig
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
-		tfMap["kms_key_arn"] = aws.ToString(v)
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.OAuth2Properties; v != nil {

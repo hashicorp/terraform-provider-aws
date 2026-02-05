@@ -54,12 +54,12 @@ func dataSourceConnection() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"password": {
+									names.AttrPassword: {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -72,7 +72,7 @@ func dataSourceConnection() *schema.Resource {
 							Sensitive: true,
 							Elem:      &schema.Schema{Type: schema.TypeString},
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
