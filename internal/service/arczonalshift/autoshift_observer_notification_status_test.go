@@ -99,15 +99,16 @@ func testAccCheckAutoshiftObserverNotificationStatusDestroy(ctx context.Context,
 				continue
 			}
 
-			_, err := findAutoshiftObserverNotificationStatus(ctx, conn, rs.Primary.ID)
-			if retry.NotFound(err) {
-				return nil
-			}
+			// This is a singleton resource, so it can't be truly destroyed.
+			// When deleted, it should be set to DISABLED.
+			out, err := findAutoshiftObserverNotificationStatus(ctx, conn, rs.Primary.ID)
 			if err != nil {
 				return create.Error(names.ARCZonalShift, create.ErrActionCheckingDestroyed, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.ARCZonalShift, create.ErrActionCheckingDestroyed, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, errors.New("not destroyed"))
+			if out.Status != "DISABLED" {
+				return create.Error(names.ARCZonalShift, create.ErrActionCheckingDestroyed, tfarczonalshift.ResNameAutoshiftObserverNotificationStatus, rs.Primary.ID, errors.New("not disabled"))
+			}
 		}
 
 		return nil
