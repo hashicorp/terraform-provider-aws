@@ -179,7 +179,7 @@ locals {
   }
 
   # Convert to JSON and automatically distribute statements for inline user policies
-  policy_json        = jsonencode(local.comprehensive_policy)
+  policy_json         = jsonencode(local.comprehensive_policy)
   distribution_result = provider::aws::iam_statements_distribute(local.policy_json, "inline-user")
 }
 
@@ -290,7 +290,7 @@ locals {
     Statement = [
       # ... statements that exceed size limit
     ]
-  })    
+  })
   distribution_result = provider::aws::iam_statements_distribute(local.large_policy, "inline-user")
 }
 
@@ -378,5 +378,3 @@ The function will return an error in the following cases:
 - **Missing policy type**: The `policy_type` parameter is required and cannot be empty
 - **Statement too large**: Any individual statement exceeds the size limit for the specified policy type
 - **Base policy too large**: The base policy structure (without statements) exceeds the size limit
-
-
