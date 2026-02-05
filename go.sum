@@ -173,8 +173,8 @@ github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0 h1:n4XSHVt0MI30M6QO/W
 github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0/go.mod h1:NBQSTR2wDKdpLcDuX9ksjWgQfUtGeEhlPwa6CCmVOlY=
 github.com/aws/aws-sdk-go-v2/service/connect v1.160.0 h1:lc8Pa5dCCM4YEcFjeTKo1XO40loVMwwOLcQ0meXpVP0=
 github.com/aws/aws-sdk-go-v2/service/connect v1.160.0/go.mod h1:S6hWyUp+Fr+gC6VXtGHO8m1hvi6Obr+3y2F0wodhW+I=
-github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0 h1:CU5j4d2Q4SF7sA2V7UnoBc35osq4WpToEQfgw415ZKw=
-github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0/go.mod h1:jcFVRdIFKNMC3WR5TF31O5LQV6o2QkTHayjpGq1GgPs=
+github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0 h1:FgMOsJ8DTR9q5YOsn91iNHD0PkM/lttNoAWalj1bSTY=
+github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0/go.mod h1:jcFVRdIFKNMC3WR5TF31O5LQV6o2QkTHayjpGq1GgPs=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 h1:nyWkyh61ytkcmG/yy6KEBaylR21Zf+PQRir1zFSokkc=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5/go.mod h1:zYa8/fF7tRFDsdG0k9aQBAhcDZA/BF4lcJIMhqyg+EA=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9 h1:1TWeYJAQdddfirxT9fKqUz0FJPwr7jx5PNeAHTrjiuc=
@@ -231,8 +231,8 @@ github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0 h1:MzP/ElwTpINq+hS80ZQz4epKVnUT
 github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0/go.mod h1:pMlGFDpHoLTJOIZHGdJOAWmi+xeIlQXuFTuQxs1epYE=
 github.com/aws/aws-sdk-go-v2/service/efs v1.41.10 h1:7ixaaFyZ8xXJWPcK3qQKFf1k1HgME9rtCY7S6Unih8I=
 github.com/aws/aws-sdk-go-v2/service/efs v1.41.10/go.mod h1:QwCUd/L5/HX4s/uWt3LPEOwQb/AYE4OyMGB8SL9/W4Y=
-github.com/aws/aws-sdk-go-v2/service/eks v1.77.0 h1:Z5mTpmbJKU7jEM7xoXI5tO4Nm0JUZSgVSFkpYuu6Ic0=
-github.com/aws/aws-sdk-go-v2/service/eks v1.77.0/go.mod h1:Qg678m+87sCuJhcsZojenz8mblYG+Tq86V4m3hjVz0s=
+github.com/aws/aws-sdk-go-v2/service/eks v1.77.1 h1:pMXNbXUX4Xd9fRmRdEe/vQ/5EFRy2M4jvW6geO5lhd8=
+github.com/aws/aws-sdk-go-v2/service/eks v1.77.1/go.mod h1:Qg678m+87sCuJhcsZojenz8mblYG+Tq86V4m3hjVz0s=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9 h1:hTgZLyNoDWphZUtTtcvQh0LP6TZO0mtdSfZK/GObDLk=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9/go.mod h1:91RkIYy9ubykxB50XGYDsbljLZnrZ6rp/Urt4rZrbwQ=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.19 h1:R9l0AfHc/RnJkyXXlBB0YHcb/7s7GjekHoZz4hV9URg=
@@ -357,8 +357,8 @@ github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.0 h1:E2KBOxbHmnA2/1aEUny
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.0/go.mod h1:UtjF30Xaq+QEF2vyCYzPhcF8XUqDq/9GAyxz+so2uts=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.0 h1:uzUt2ntI4y1qhTMV5k+HSbg/C1+9AiHH9QXqrq7IX2Q=
 github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.0/go.mod h1:2VdIvoTkHA7iZeutHky1BSCufmaIVEyidII2lZ8FfWw=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.90.0 h1:R1xj7PCKywa+bToN3yGm027zVUlIDxFIIsB6Ne/jnFM=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.90.0/go.mod h1:gf59d3Bow5l8E64vcgS0B8Ljcl2c9Nx965ZUSGMJH90=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.91.0 h1:JvOb9GLypuxlv6OZWnHN3crn9t9RQxCyEeN5BUTqMCk=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.91.0/go.mod h1:gf59d3Bow5l8E64vcgS0B8Ljcl2c9Nx965ZUSGMJH90=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.17 h1:ZaaW1rgM+f+u8p3jzxP2r5sE2O+PzCol5A/2m0cIfGg=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.17/go.mod h1:FmhF0SelKLjMzn1H0+J3reL+eiBf++MlWYfaYs09ygA=
 github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.2 h1:vEaPqtYwswIg0w8aX/uBX4smaVi65ienb+JeoC7w+LY=
@@ -441,8 +441,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.114.0 h1:p9c6HDzx6sTf7uyc9xsQd693uzA
 github.com/aws/aws-sdk-go-v2/service/rds v1.114.0/go.mod h1:JBRYWpz5oXQtHgQC+X8LX9lh0FBCwRHJlWEIT+TTLaE=
 github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.17 h1:poHYttXFhpCUps5xl5e1GBclCEt4B5dH7RwAjAgp/Yo=
 github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.17/go.mod h1:u5Kzt/39CDtazPRSl5xfkIp/YsLpxJtbxb0AioIUFsw=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.62.0 h1:yvzPNFsXgoMAuu0CMkbnOhbjOA9J4ir8Bt9YgmPcCro=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.62.0/go.mod h1:nawfGxLipdV0PTaLw4iiGGSWu7eykKZTo++EVspXNvg=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.62.1 h1:M1PvxmCK8Fu+Lc46PB+SPYxkgN06XR/TIUXP3uU6HQc=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.62.1/go.mod h1:nawfGxLipdV0PTaLw4iiGGSWu7eykKZTo++EVspXNvg=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.38.4 h1:/pf0N8jnXD1xJk+5hI01HTNmDm5+tquHShxeXiGBpvU=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.38.4/go.mod h1:ldRvw2/cZCR3RXklYX7+sES1vux5NOzC1uhmcauM4u4=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.34.0 h1:hXxycxXrQqbouKo8HdOZhCozwXFbidnss8/hJnB7m7w=
@@ -575,8 +575,8 @@ github.com/aws/aws-sdk-go-v2/service/workmail v1.36.15 h1:tK7i8yFesZYnTWMEwROjH3
 github.com/aws/aws-sdk-go-v2/service/workmail v1.36.15/go.mod h1:+yDuGEkOlHTwYpwgMKR5gRB3d+uIHBDAMnLmgVrAUbI=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.1 h1:c8F1gi+Qk8us9JKaNDWtISthqpxJwvP1F6q9wo8HePA=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.1/go.mod h1:7AFUTHCbWwi/8UK19wBVMElQZzMNS1DKT5rwNxkq5kE=
-github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.1 h1:4/rR7ZuEDveYBzoweEjeQX8hUQjTi0ZTPlK7JfOvwqM=
-github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.1/go.mod h1:b2MU4xTm3AhHGJ+ylssyEOIiyiSaJ0N/sLUYLKcqUdI=
+github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.37.0 h1:WJjiPltOW2rINSgmwBsrCOFBWnzWN9Po5yorhl2jHVU=
+github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.37.0/go.mod h1:b2MU4xTm3AhHGJ+ylssyEOIiyiSaJ0N/sLUYLKcqUdI=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.17 h1:b480fLepDHf9B7FXgcgB7XVDN3pKUACF2MbKu29JYcA=
 github.com/aws/aws-sdk-go-v2/service/xray v1.36.17/go.mod h1:ASKVut5pRPVm4bF9/P01ClCthnIopv1PjxWsLOTjKPU=
 github.com/aws/smithy-go v1.24.0 h1:LpilSUItNPFr1eY85RYgTIg5eIEPtvFbskaFcmmIUnk=

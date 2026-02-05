@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/connect v1.160.0
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.2
@@ -110,7 +110,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10
-	github.com/aws/aws-sdk-go-v2/service/eks v1.77.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.77.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.19
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.19
@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.9
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.90.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.17
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.17
@@ -210,7 +210,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.17
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.0
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.16
@@ -275,7 +275,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.17
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.15
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.65.1
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.36.17
 	github.com/aws/smithy-go v1.24.0
 	github.com/beevik/etree v1.6.0
