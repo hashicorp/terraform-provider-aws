@@ -424,7 +424,7 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 	return []func() function.Function{
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
-		tffunction.NewIAMPolicySplitFunction,
+		tffunction.NewIAMStatementsDistributeFunction,
 		tffunction.NewTrimIAMRolePathFunction,
 		tffunction.NewUserAgentFunction,
 	}

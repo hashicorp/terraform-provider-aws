@@ -16,51 +16,50 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// splitResultAttrTypes defines the return type structure for the IAM policy split function
+// splitResultAttrTypes defines the return type structure for the IAM statements distribute function
 var splitResultAttrTypes = map[string]attr.Type{
-	"policies":             types.ListType{ElemType: types.StringType},
-	"count":                types.Int64Type,
-	"total_size_reduction": types.Int64Type,
-	"metadata":             types.ObjectType{AttrTypes: metadataAttrTypes},
+	"policies": types.ListType{ElemType: types.StringType},
+	"metadata": types.ObjectType{AttrTypes: metadataAttrTypes},
 }
 
 // metadataAttrTypes defines the metadata structure
 var metadataAttrTypes = map[string]attr.Type{
-	"original_size":   types.Int64Type,
-	"average_size":    types.Int64Type,
-	"largest_policy":  types.Int64Type,
-	"smallest_policy": types.Int64Type,
+	"original_size":        types.Int64Type,
+	"average_size":         types.Int64Type,
+	"largest_policy":       types.Int64Type,
+	"smallest_policy":      types.Int64Type,
+	"total_size_reduction": types.Int64Type,
 }
 
-var _ function.Function = iamPolicySplitFunction{}
+var _ function.Function = iamStatementsDistributeFunction{}
 
-// NewIAMPolicySplitFunction creates a new instance of the IAM policy split function
-func NewIAMPolicySplitFunction() function.Function {
-	return &iamPolicySplitFunction{}
+// NewIAMStatementsDistributeFunction creates a new instance of the IAM statements distribute function
+func NewIAMStatementsDistributeFunction() function.Function {
+	return &iamStatementsDistributeFunction{}
 }
 
-type iamPolicySplitFunction struct{}
+type iamStatementsDistributeFunction struct{}
 
 // Metadata sets the function name
-func (f iamPolicySplitFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
-	resp.Name = "iam_policy_split"
+func (f iamStatementsDistributeFunction) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
+	resp.Name = "iam_statements_distribute"
 }
 
 // Definition defines the function parameters and return type
-func (f iamPolicySplitFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
+func (f iamStatementsDistributeFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
-		Summary: "iam_policy_split Function",
-		MarkdownDescription: "Splits large IAM policy documents into multiple smaller policies that comply with AWS size limits. " +
+		Summary: "iam_statements_distribute Function",
+		MarkdownDescription: "Distributes statements from large IAM policy documents across multiple smaller policies that comply with AWS size limits. " +
 			"This function helps manage policies that exceed AWS service-specific size constraints by intelligently " +
 			"distributing statements across multiple valid policy documents.",
 		Parameters: []function.Parameter{
 			function.StringParameter{
 				Name:                "policy_json",
-				MarkdownDescription: "IAM policy JSON document to split",
+				MarkdownDescription: "IAM policy JSON document to distribute statements from",
 			},
 			function.StringParameter{
-				Name:                "service_type",
-				MarkdownDescription: "AWS service type for size limits: 'inline' (2048 bytes), 'managed' (6144 bytes), or 'resource-based' (10240 bytes). Defaults to 'inline'.",
+				Name:                "policy_type",
+				MarkdownDescription: "AWS policy type for size limits. Valid values: 'customer-managed' (6144 bytes), 'inline-user' (2048 bytes), 'inline-role' (10240 bytes), 'inline-group' (5120 bytes) and 'service-control-policy' (5120 bytes).",
 			},
 		},
 		Return: function.ObjectReturn{
@@ -69,25 +68,25 @@ func (f iamPolicySplitFunction) Definition(ctx context.Context, req function.Def
 	}
 }
 
-// Run executes the IAM policy splitting logic
-func (f iamPolicySplitFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
+// Run executes the IAM statements distribution logic
+func (f iamStatementsDistributeFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var policyJSON string
-	var serviceType string
+	var policyType string
 
 	// Get required parameters
-	resp.Error = function.ConcatFuncErrors(req.Arguments.Get(ctx, &policyJSON, &serviceType))
+	resp.Error = function.ConcatFuncErrors(req.Arguments.Get(ctx, &policyJSON, &policyType))
 	if resp.Error != nil {
 		return
 	}
 
-	// Set default service type if empty
-	if serviceType == "" {
-		serviceType = "inline"
+	// Validate that policy_type is provided (no default)
+	if policyType == "" {
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError("policy_type parameter is required"))
+		return
 	}
 
-	// TODO: Implement policy parsing, validation, and splitting logic
 	// For now, return a placeholder result to establish the structure
-	result, err := f.splitPolicy(policyJSON, serviceType)
+	result, err := f.distributeStatements(policyJSON, policyType)
 	if err != nil {
 		resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(err.Error()))
 		return
@@ -95,10 +94,8 @@ func (f iamPolicySplitFunction) Run(ctx context.Context, req function.RunRequest
 
 	// Convert result to Terraform types
 	value := map[string]attr.Value{
-		"policies":             result.Policies,
-		"count":                result.Count,
-		"total_size_reduction": result.TotalSizeReduction,
-		"metadata":             result.Metadata,
+		"policies": result.Policies,
+		"metadata": result.Metadata,
 	}
 
 	resultObj, d := types.ObjectValue(splitResultAttrTypes, value)
@@ -110,20 +107,19 @@ func (f iamPolicySplitFunction) Run(ctx context.Context, req function.RunRequest
 	resp.Error = function.ConcatFuncErrors(resp.Result.Set(ctx, resultObj))
 }
 
-// SplitResult represents the result of the policy splitting operation
-type SplitResult struct {
-	Policies           types.List
-	Count              types.Int64
-	TotalSizeReduction types.Int64
-	Metadata           types.Object
+// DistributeResult represents the result of the statements distribution operation
+type DistributeResult struct {
+	Policies types.List
+	Metadata types.Object
 }
 
-// SplitMetadata contains additional information about the splitting operation
+// SplitMetadata contains additional information about the distribution operation
 type SplitMetadata struct {
-	OriginalSize   int64
-	AverageSize    int64
-	LargestPolicy  int64
-	SmallestPolicy int64
+	OriginalSize       int64
+	AverageSize        int64
+	LargestPolicy      int64
+	SmallestPolicy     int64
+	TotalSizeReduction int64
 }
 
 // PolicyDocument represents an IAM policy document structure
@@ -228,28 +224,38 @@ func ParsePolicyDocument(jsonStr string) (*PolicyDocument, error) {
 	return &policy, nil
 }
 
-// ValidateServiceType checks if the service type is valid
-func ValidateServiceType(serviceType string) error {
-	validTypes := []string{"inline", "managed", "resource-based"}
+// ValidatePolicyType checks if the policy type is valid
+func ValidatePolicyType(policyType string) error {
+	validTypes := []string{
+		"customer-managed",
+		"inline-user",
+		"inline-role",
+		"inline-group",
+		"service-control-policy",
+	}
 
-	if !slices.Contains(validTypes, serviceType) {
-		return fmt.Errorf("invalid service_type '%s': must be one of %s", serviceType, strings.Join(validTypes, ", "))
+	if !slices.Contains(validTypes, policyType) {
+		return fmt.Errorf("invalid policy_type '%s': must be one of %s", policyType, strings.Join(validTypes, ", "))
 	}
 
 	return nil
 }
 
-// GetSizeLimitForServiceType returns the size limit in bytes for the given service type
-func GetSizeLimitForServiceType(serviceType string) int {
-	switch serviceType {
-	case "inline":
-		return 2048
-	case "managed":
+// GetSizeLimitForPolicyType returns the size limit in bytes for the given policy type
+func GetSizeLimitForPolicyType(policyType string) int {
+	switch policyType {
+	case "customer-managed":
 		return 6144
-	case "resource-based":
+	case "inline-user":
+		return 2048
+	case "inline-role":
 		return 10240
+	case "inline-group":
+		return 5120
+	case "service-control-policy":
+		return 5120
 	default:
-		// Default to inline policy limit for safety
+		// Default to inline-user policy limit for safety (most restrictive)
 		return 2048
 	}
 }
@@ -290,33 +296,33 @@ func EstimateStatementSize(stmt Statement) (int, error) {
 	return len(jsonStr), nil
 }
 
-// ValidatePolicySize checks if a policy exceeds the size limit for the service type
-func ValidatePolicySize(policyJSON, serviceType string) error {
+// ValidatePolicySize checks if a policy exceeds the size limit for the policy type
+func ValidatePolicySize(policyJSON, policyType string) error {
 	size := CalculatePolicySize(policyJSON)
-	limit := GetSizeLimitForServiceType(serviceType)
+	limit := GetSizeLimitForPolicyType(policyType)
 
 	if size > limit {
-		return fmt.Errorf("policy size (%d bytes) exceeds %s service limit (%d bytes)", size, serviceType, limit)
+		return fmt.Errorf("policy size (%d bytes) exceeds %s policy limit (%d bytes)", size, policyType, limit)
 	}
 
 	return nil
 }
 
-// splitPolicy is the main splitting logic (placeholder implementation)
-func (f iamPolicySplitFunction) splitPolicy(policyJSON, serviceType string) (*SplitResult, error) {
-	// Validate service type
-	if err := ValidateServiceType(serviceType); err != nil {
+// distributeStatements is the main distribution logic (renamed from splitPolicy)
+func (f iamStatementsDistributeFunction) distributeStatements(policyJSON, policyType string) (*DistributeResult, error) {
+	// Validate policy type
+	if err := ValidatePolicyType(policyType); err != nil {
 		return nil, err
 	}
 
 	// Parse and validate the input policy
 	policy, err := ParsePolicyDocument(policyJSON)
 	if err != nil {
-		return nil, fmt.Errorf("%s", generateHelpfulErrorMessage(err, serviceType))
+		return nil, fmt.Errorf("%s", generateHelpfulErrorMessage(err, policyType))
 	}
 
-	// Check for impossible constraints before attempting to split
-	if err := detectImpossibleConstraints(policy, serviceType); err != nil {
+	// Check for impossible constraints before attempting to distribute
+	if err := detectImpossibleConstraints(policy, policyType); err != nil {
 		return nil, err
 	}
 
@@ -328,7 +334,7 @@ func (f iamPolicySplitFunction) splitPolicy(policyJSON, serviceType string) (*Sp
 
 	// Check if the original policy already fits within the size limit
 	originalSize := CalculatePolicySize(policyJSON)
-	sizeLimit := GetSizeLimitForServiceType(serviceType)
+	sizeLimit := GetSizeLimitForPolicyType(policyType)
 
 	if originalSize <= sizeLimit {
 		// Policy is already within limits, return as-is (but use reformatted JSON for consistency)
@@ -337,69 +343,65 @@ func (f iamPolicySplitFunction) splitPolicy(policyJSON, serviceType string) (*Sp
 		})
 
 		// Generate metadata for single policy
-		metadata := f.calculateMetadata(originalSize, []int{})
+		metadata := f.calculateMetadata(originalSize, []int{}, 0)
 
-		return &SplitResult{
-			Policies:           policies,
-			Count:              types.Int64Value(1),
-			TotalSizeReduction: types.Int64Value(0),
-			Metadata:           metadata,
+		return &DistributeResult{
+			Policies: policies,
+			Metadata: metadata,
 		}, nil
 	}
 
-	// Policy exceeds size limit, need to split
-	splitPolicies, err := f.distributePolicyStatements(policy, serviceType)
+	// Policy exceeds size limit, need to distribute statements
+	distributedPolicies, err := f.distributePolicyStatements(policy, policyType)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert split policies to JSON strings and collect metadata
+	// Convert distributed policies to JSON strings and collect metadata
 	var policyJSONs []attr.Value
-	totalSplitSize := 0
+	totalDistributedSize := 0
 	var policySizes []int
 
-	for _, splitPolicy := range splitPolicies {
-		splitJSON, err := splitPolicy.ToJSON()
+	for _, distributedPolicy := range distributedPolicies {
+		distributedJSON, err := distributedPolicy.ToJSON()
 		if err != nil {
-			return nil, fmt.Errorf("failed to format split policy: %w", err)
+			return nil, fmt.Errorf("failed to format distributed policy: %w", err)
 		}
 
-		// Validate that each split policy is within limits
-		if err := ValidatePolicySize(splitJSON, serviceType); err != nil {
-			return nil, fmt.Errorf("split policy still exceeds size limit: %w", err)
+		// Validate that each distributed policy is within limits
+		if err := ValidatePolicySize(distributedJSON, policyType); err != nil {
+			return nil, fmt.Errorf("distributed policy still exceeds size limit: %w", err)
 		}
 
-		policySize := CalculatePolicySize(splitJSON)
-		policyJSONs = append(policyJSONs, types.StringValue(splitJSON))
-		totalSplitSize += policySize
+		policySize := CalculatePolicySize(distributedJSON)
+		policyJSONs = append(policyJSONs, types.StringValue(distributedJSON))
+		totalDistributedSize += policySize
 		policySizes = append(policySizes, policySize)
 	}
 
-	// Calculate metadata
-	metadata := f.calculateMetadata(originalSize, policySizes)
+	// Calculate size reduction and metadata
+	sizeReduction := originalSize - totalDistributedSize
+	metadata := f.calculateMetadata(originalSize, policySizes, sizeReduction)
 
 	policies, _ := types.ListValue(types.StringType, policyJSONs)
-	sizeReduction := originalSize - totalSplitSize
 
-	return &SplitResult{
-		Policies:           policies,
-		Count:              types.Int64Value(int64(len(splitPolicies))),
-		TotalSizeReduction: types.Int64Value(int64(sizeReduction)),
-		Metadata:           metadata,
+	return &DistributeResult{
+		Policies: policies,
+		Metadata: metadata,
 	}, nil
 }
 
 // distributePolicyStatements implements an accurate size-based bin-packing algorithm
-func (f iamPolicySplitFunction) distributePolicyStatements(policy *PolicyDocument, serviceType string) ([]*PolicyDocument, error) {
-	sizeLimit := GetSizeLimitForServiceType(serviceType)
+func (f iamStatementsDistributeFunction) distributePolicyStatements(policy *PolicyDocument, policyType string) ([]*PolicyDocument, error) {
+	sizeLimit := GetSizeLimitForPolicyType(policyType)
 
 	// Calculate base policy size (Version + empty Statement array + optional Id)
 	basePolicySize := CalculateBasePolicySize(policy.Version, policy.Id)
 
 	// Check if base policy structure exceeds limit
 	if basePolicySize >= sizeLimit {
-		return nil, fmt.Errorf("base policy structure (%d bytes) exceeds %s service limit (%d bytes)",
-			basePolicySize, serviceType, sizeLimit)
+		return nil, fmt.Errorf("base policy structure (%d bytes) exceeds %s policy limit (%d bytes)",
+			basePolicySize, policyType, sizeLimit)
 	}
 
 	// Check if any individual statement is too large
@@ -416,13 +418,13 @@ func (f iamPolicySplitFunction) distributePolicyStatements(policy *PolicyDocumen
 		}
 
 		if CalculatePolicySize(tempJSON) > sizeLimit {
-			return nil, fmt.Errorf("statement %d (%d bytes) is too large for %s service limit (%d bytes)",
-				i, CalculatePolicySize(tempJSON), serviceType, sizeLimit)
+			return nil, fmt.Errorf("statement %d (%d bytes) is too large for %s policy limit (%d bytes)",
+				i, CalculatePolicySize(tempJSON), policyType, sizeLimit)
 		}
 	}
 
 	// Use greedy bin-packing algorithm with actual size validation
-	var splitPolicies []*PolicyDocument
+	var distributedPolicies []*PolicyDocument
 	remainingStatements := make([]Statement, len(policy.Statement))
 	copy(remainingStatements, policy.Statement)
 
@@ -430,7 +432,7 @@ func (f iamPolicySplitFunction) distributePolicyStatements(policy *PolicyDocumen
 		// Create new policy
 		currentPolicy := &PolicyDocument{
 			Version:   policy.Version,
-			Id:        f.generateUniqueId(policy.Id, len(splitPolicies)+1),
+			Id:        f.generateUniqueId(policy.Id, len(distributedPolicies)+1),
 			Statement: []Statement{},
 		}
 
@@ -468,19 +470,19 @@ func (f iamPolicySplitFunction) distributePolicyStatements(policy *PolicyDocumen
 			return nil, fmt.Errorf("unable to fit remaining statements - algorithm error")
 		}
 
-		splitPolicies = append(splitPolicies, currentPolicy)
+		distributedPolicies = append(distributedPolicies, currentPolicy)
 	}
 
 	// Ensure we have at least one policy
-	if len(splitPolicies) == 0 {
+	if len(distributedPolicies) == 0 {
 		return nil, fmt.Errorf("no statements could be distributed - all statements may be too large")
 	}
 
-	return splitPolicies, nil
+	return distributedPolicies, nil
 }
 
-// generateUniqueId generates a unique ID for split policies
-func (f iamPolicySplitFunction) generateUniqueId(originalId string, index int) string {
+// generateUniqueId generates a unique ID for distributed policies
+func (f iamStatementsDistributeFunction) generateUniqueId(originalId string, index int) string {
 	if originalId == "" {
 		return ""
 	}
@@ -488,15 +490,16 @@ func (f iamPolicySplitFunction) generateUniqueId(originalId string, index int) s
 	return fmt.Sprintf("%s-split-%d", originalId, index)
 }
 
-// calculateMetadata generates metadata about the splitting operation
-func (f iamPolicySplitFunction) calculateMetadata(originalSize int, policySizes []int) types.Object {
+// calculateMetadata generates metadata about the distribution operation
+func (f iamStatementsDistributeFunction) calculateMetadata(originalSize int, policySizes []int, sizeReduction int) types.Object {
 	if len(policySizes) == 0 {
 		// Return empty metadata for single policy case
 		metadataValue := map[string]attr.Value{
-			"original_size":   types.Int64Value(int64(originalSize)),
-			"average_size":    types.Int64Value(int64(originalSize)),
-			"largest_policy":  types.Int64Value(int64(originalSize)),
-			"smallest_policy": types.Int64Value(int64(originalSize)),
+			"original_size":        types.Int64Value(int64(originalSize)),
+			"average_size":         types.Int64Value(int64(originalSize)),
+			"largest_policy":       types.Int64Value(int64(originalSize)),
+			"smallest_policy":      types.Int64Value(int64(originalSize)),
+			"total_size_reduction": types.Int64Value(int64(sizeReduction)),
 		}
 
 		result, _ := types.ObjectValue(metadataAttrTypes, metadataValue)
@@ -521,10 +524,11 @@ func (f iamPolicySplitFunction) calculateMetadata(originalSize int, policySizes 
 	averageSize := totalSize / len(policySizes)
 
 	metadataValue := map[string]attr.Value{
-		"original_size":   types.Int64Value(int64(originalSize)),
-		"average_size":    types.Int64Value(int64(averageSize)),
-		"largest_policy":  types.Int64Value(int64(largest)),
-		"smallest_policy": types.Int64Value(int64(smallest)),
+		"original_size":        types.Int64Value(int64(originalSize)),
+		"average_size":         types.Int64Value(int64(averageSize)),
+		"largest_policy":       types.Int64Value(int64(largest)),
+		"smallest_policy":      types.Int64Value(int64(smallest)),
+		"total_size_reduction": types.Int64Value(int64(sizeReduction)),
 	}
 
 	result, _ := types.ObjectValue(metadataAttrTypes, metadataValue)
@@ -633,16 +637,16 @@ func validateActionField(action any, fieldName string) error {
 	return nil
 }
 
-// detectImpossibleConstraints checks for scenarios where splitting cannot succeed
-func detectImpossibleConstraints(policy *PolicyDocument, serviceType string) error {
-	sizeLimit := GetSizeLimitForServiceType(serviceType)
+// detectImpossibleConstraints checks for scenarios where distribution cannot succeed
+func detectImpossibleConstraints(policy *PolicyDocument, policyType string) error {
+	sizeLimit := GetSizeLimitForPolicyType(policyType)
 	basePolicySize := CalculateBasePolicySize(policy.Version, policy.Id)
 
 	// Check if base policy structure is too large
 	if basePolicySize >= sizeLimit {
-		return fmt.Errorf("impossible to split: base policy structure (%d bytes) exceeds %s service limit (%d bytes). "+
-			"Consider using a service type with higher limits: 'managed' (6144 bytes) or 'resource-based' (10240 bytes)",
-			basePolicySize, serviceType, sizeLimit)
+		return fmt.Errorf("impossible to distribute: base policy structure (%d bytes) exceeds %s policy limit (%d bytes). "+
+			"Consider using a policy type with higher limits: 'inline-group' (5120 bytes), 'customer-managed' (6144 bytes), or 'inline-role' (10240 bytes)",
+			basePolicySize, policyType, sizeLimit)
 	}
 
 	// Check if any individual statement is too large
@@ -655,10 +659,10 @@ func detectImpossibleConstraints(policy *PolicyDocument, serviceType string) err
 		}
 
 		if stmtSize > availableSpace {
-			return fmt.Errorf("impossible to split: statement %d (%d bytes) is too large for %s service limit. "+
+			return fmt.Errorf("impossible to distribute: statement %d (%d bytes) is too large for %s policy limit. "+
 				"Statement size exceeds available space (%d bytes). "+
-				"Consider simplifying the statement or using a service type with higher limits",
-				i, stmtSize, serviceType, availableSpace)
+				"Consider simplifying the statement or using a policy type with higher limits",
+				i, stmtSize, policyType, availableSpace)
 		}
 	}
 
@@ -666,16 +670,20 @@ func detectImpossibleConstraints(policy *PolicyDocument, serviceType string) err
 }
 
 // generateHelpfulErrorMessage creates user-friendly error messages with suggestions
-func generateHelpfulErrorMessage(err error, serviceType string) string {
+func generateHelpfulErrorMessage(err error, policyType string) string {
 	errMsg := err.Error()
 
 	// Add helpful suggestions based on error type
-	if strings.Contains(errMsg, "exceeds") && strings.Contains(errMsg, "service limit") {
-		switch serviceType {
-		case "inline":
-			return errMsg + ". Suggestion: Try using 'managed' (6144 bytes) or 'resource-based' (10240 bytes) service type for larger limits."
-		case "managed":
-			return errMsg + ". Suggestion: Try using 'resource-based' (10240 bytes) service type for larger limits."
+	if strings.Contains(errMsg, "exceeds") && strings.Contains(errMsg, "policy limit") {
+		switch policyType {
+		case "inline-user":
+			return errMsg + ". Suggestion: Try using 'inline-group' (5120 bytes), 'customer-managed' (6144 bytes), or 'inline-role' (10240 bytes) policy type for larger limits."
+		case "inline-group":
+			return errMsg + ". Suggestion: Try using 'customer-managed' (6144 bytes) or 'inline-role' (10240 bytes) policy type for larger limits."
+		case "service-control-policy":
+			return errMsg + ". Suggestion: Try using 'customer-managed' (6144 bytes) or 'inline-role' (10240 bytes) policy type for larger limits."
+		case "customer-managed":
+			return errMsg + ". Suggestion: Try using 'inline-role' (10240 bytes) policy type for larger limits."
 		default:
 			return errMsg + ". Suggestion: Consider simplifying your policy statements or breaking them into smaller, more focused statements."
 		}

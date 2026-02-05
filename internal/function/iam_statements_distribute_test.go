@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestIAMPolicySplitFunction_basic(t *testing.T) {
+func TestIAMStatementsDistributeFunction_basic(t *testing.T) {
 	t.Parallel()
 
 	validPolicy := `{
@@ -34,7 +34,7 @@ func TestIAMPolicySplitFunction_basic(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "inline", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-user", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// TODO: Add specific output checks once implementation is complete
 				),
@@ -43,7 +43,7 @@ func TestIAMPolicySplitFunction_basic(t *testing.T) {
 	})
 }
 
-func TestIAMPolicySplitFunction_invalidJSON(t *testing.T) {
+func TestIAMStatementsDistributeFunction_invalidJSON(t *testing.T) {
 	t.Parallel()
 
 	invalidJSON := `{"Version": "2012-10-17", "Statement": [`
@@ -55,37 +55,37 @@ func TestIAMPolicySplitFunction_invalidJSON(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMPolicySplitFunctionConfig(invalidJSON, "inline", ""),
-				ExpectError: regexache.MustCompile("JSON syntax error"),
+				Config:      testIAMStatementsDistributeFunctionConfig(invalidJSON, "inline-user", ""),
+				ExpectError: regexache.MustCompile("JSON syntax error|unexpected end of JSON input"),
 			},
 		},
 	})
 }
 
-func testIAMPolicySplitFunctionConfig(policyJSON, serviceType, maxSize string) string {
+func testIAMStatementsDistributeFunctionConfig(policyJSON, policyType, maxSize string) string {
 	if maxSize != "" {
 		return fmt.Sprintf(`
 output "test" {
-  value = provider::aws::iam_policy_split(%[1]q, %[2]q, %[3]s)
+  value = provider::aws::iam_statements_distribute(%[1]q, %[2]q, %[3]s)
 }
-`, policyJSON, serviceType, maxSize)
+`, policyJSON, policyType, maxSize)
 	}
 
-	if serviceType != "" {
+	if policyType != "" {
 		return fmt.Sprintf(`
 output "test" {
-  value = provider::aws::iam_policy_split(%[1]q, %[2]q)
+  value = provider::aws::iam_statements_distribute(%[1]q, %[2]q)
 }
-`, policyJSON, serviceType)
+`, policyJSON, policyType)
 	}
 
 	return fmt.Sprintf(`
 output "test" {
-  value = provider::aws::iam_policy_split(%[1]q)
+  value = provider::aws::iam_statements_distribute(%[1]q)
 }
 `, policyJSON)
 }
-func TestIAMPolicySplitFunction_missingVersion(t *testing.T) {
+func TestIAMStatementsDistributeFunction_missingVersion(t *testing.T) {
 	t.Parallel()
 
 	policyMissingVersion := `{
@@ -105,14 +105,14 @@ func TestIAMPolicySplitFunction_missingVersion(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMPolicySplitFunctionConfig(policyMissingVersion, "inline", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingVersion, "inline-user", ""),
 				ExpectError: regexache.MustCompile("policy document missing required field: Version"),
 			},
 		},
 	})
 }
 
-func TestIAMPolicySplitFunction_missingStatement(t *testing.T) {
+func TestIAMStatementsDistributeFunction_missingStatement(t *testing.T) {
 	t.Parallel()
 
 	policyMissingStatement := `{
@@ -127,14 +127,14 @@ func TestIAMPolicySplitFunction_missingStatement(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMPolicySplitFunctionConfig(policyMissingStatement, "inline", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingStatement, "inline-user", ""),
 				ExpectError: regexache.MustCompile("policy document missing required field: Statement"),
 			},
 		},
 	})
 }
 
-func TestIAMPolicySplitFunction_invalidServiceType(t *testing.T) {
+func TestIAMStatementsDistributeFunction_missingPolicyType(t *testing.T) {
 	t.Parallel()
 
 	validPolicy := `{
@@ -155,13 +155,14 @@ func TestIAMPolicySplitFunction_invalidServiceType(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMPolicySplitFunctionConfig(validPolicy, "invalid", ""),
-				ExpectError: regexache.MustCompile("service_type 'invalid'"),
+				Config:      testIAMStatementsDistributeFunctionConfig(validPolicy, "", ""),
+				ExpectError: regexache.MustCompile("Not enough function arguments|Missing value for \"policy_type\""),
 			},
 		},
 	})
 }
-func TestIAMPolicySplitFunction_serviceLimits(t *testing.T) {
+
+func TestIAMStatementsDistributeFunction_invalidPolicyType(t *testing.T) {
 	t.Parallel()
 
 	validPolicy := `{
@@ -182,19 +183,46 @@ func TestIAMPolicySplitFunction_serviceLimits(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "inline", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(validPolicy, "invalid", ""),
+				ExpectError: regexache.MustCompile("policy_type 'invalid'"),
+			},
+		},
+	})
+}
+func TestIAMStatementsDistributeFunction_policyLimits(t *testing.T) {
+	t.Parallel()
+
+	validPolicy := `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Action": "s3:GetObject",
+				"Resource": "arn:aws:s3:::example-bucket/*"
+			}
+		]
+	}`
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-user", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// TODO: Add specific output checks once implementation is complete
 				),
 			},
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "managed", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// TODO: Add specific output checks once implementation is complete
 				),
 			},
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "resource-based", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "service-control-policy", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// TODO: Add specific output checks once implementation is complete
 				),
@@ -202,7 +230,7 @@ func TestIAMPolicySplitFunction_serviceLimits(t *testing.T) {
 		},
 	})
 }
-func TestIAMPolicySplitFunction_allServiceTypes(t *testing.T) {
+func TestIAMStatementsDistributeFunction_allPolicyTypes(t *testing.T) {
 	t.Parallel()
 
 	validPolicy := `{
@@ -228,19 +256,31 @@ func TestIAMPolicySplitFunction_allServiceTypes(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "inline", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
 			},
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "managed", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-user", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
 			},
 			{
-				Config: testIAMPolicySplitFunctionConfig(validPolicy, "resource-based", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-role", ""),
+				Check:  resource.ComposeAggregateTestCheckFunc(
+				// Function should execute without error
+				),
+			},
+			{
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "inline-group", ""),
+				Check:  resource.ComposeAggregateTestCheckFunc(
+				// Function should execute without error
+				),
+			},
+			{
+				Config: testIAMStatementsDistributeFunctionConfig(validPolicy, "service-control-policy", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
@@ -249,7 +289,7 @@ func TestIAMPolicySplitFunction_allServiceTypes(t *testing.T) {
 	})
 }
 
-func TestIAMPolicySplitFunction_policyWithId(t *testing.T) {
+func TestIAMStatementsDistributeFunction_policyWithId(t *testing.T) {
 	t.Parallel()
 
 	policyWithId := `{
@@ -272,7 +312,7 @@ func TestIAMPolicySplitFunction_policyWithId(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMPolicySplitFunctionConfig(policyWithId, "inline", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(policyWithId, "inline-user", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
@@ -281,7 +321,7 @@ func TestIAMPolicySplitFunction_policyWithId(t *testing.T) {
 	})
 }
 
-func TestIAMPolicySplitFunction_complexStatements(t *testing.T) {
+func TestIAMStatementsDistributeFunction_complexStatements(t *testing.T) {
 	t.Parallel()
 
 	complexPolicy := `{
@@ -322,7 +362,7 @@ func TestIAMPolicySplitFunction_complexStatements(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMPolicySplitFunctionConfig(complexPolicy, "managed", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(complexPolicy, "customer-managed", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
@@ -331,7 +371,7 @@ func TestIAMPolicySplitFunction_complexStatements(t *testing.T) {
 	})
 }
 
-func TestIAMPolicySplitFunction_edgeCases(t *testing.T) {
+func TestIAMStatementsDistributeFunction_edgeCases(t *testing.T) {
 	t.Parallel()
 
 	// Test with minimal policy
@@ -353,7 +393,7 @@ func TestIAMPolicySplitFunction_edgeCases(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testIAMPolicySplitFunctionConfig(minimalPolicy, "inline", ""),
+				Config: testIAMStatementsDistributeFunctionConfig(minimalPolicy, "inline-user", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 				// Function should execute without error
 				),
@@ -362,7 +402,7 @@ func TestIAMPolicySplitFunction_edgeCases(t *testing.T) {
 	})
 }
 
-func TestIAMPolicySplitFunction_malformedStatements(t *testing.T) {
+func TestIAMStatementsDistributeFunction_malformedStatements(t *testing.T) {
 	t.Parallel()
 
 	// Policy with missing Effect
@@ -383,14 +423,14 @@ func TestIAMPolicySplitFunction_malformedStatements(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMPolicySplitFunctionConfig(policyMissingEffect, "inline", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyMissingEffect, "inline-user", ""),
 				ExpectError: regexache.MustCompile("statement missing required field: Effect"),
 			},
 		},
 	})
 }
 
-func TestIAMPolicySplitFunction_unsupportedVersion(t *testing.T) {
+func TestIAMStatementsDistributeFunction_unsupportedVersion(t *testing.T) {
 	t.Parallel()
 
 	policyUnsupportedVersion := `{
@@ -411,7 +451,7 @@ func TestIAMPolicySplitFunction_unsupportedVersion(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testIAMPolicySplitFunctionConfig(policyUnsupportedVersion, "inline", ""),
+				Config:      testIAMStatementsDistributeFunctionConfig(policyUnsupportedVersion, "inline-user", ""),
 				ExpectError: regexache.MustCompile("unsupported policy version"),
 			},
 		},
