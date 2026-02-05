@@ -1,0 +1,1 @@
+```fixes/dynamodb```: Prevent validation error when ```range_key``` is set to empty string in ```global_secondary_index```
