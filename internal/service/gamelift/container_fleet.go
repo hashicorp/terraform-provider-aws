@@ -8,8 +8,11 @@ package gamelift
 import (
 	"context"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/gamelift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/gamelift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -65,8 +68,12 @@ func resourceContainerFleet() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"game_server_container_group_definition_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				StateFunc: func(v any) string { return normalizeContainerGroupDefinitionName(v.(string)) },
+				DiffSuppressFunc: func(_ string, old, new string, _ *schema.ResourceData) bool {
+					return normalizeContainerGroupDefinitionName(old) == normalizeContainerGroupDefinitionName(new)
+				},
 			},
 			"game_server_container_groups_per_instance": {
 				Type:         schema.TypeInt,
@@ -195,8 +202,12 @@ func resourceContainerFleet() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[awstypes.ProtectionPolicy](),
 			},
 			"per_instance_container_group_definition_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				StateFunc: func(v any) string { return normalizeContainerGroupDefinitionName(v.(string)) },
+				DiffSuppressFunc: func(_ string, old, new string, _ *schema.ResourceData) bool {
+					return normalizeContainerGroupDefinitionName(old) == normalizeContainerGroupDefinitionName(new)
+				},
 			},
 			"remove_per_instance_container_group_definition": {
 				Type:     schema.TypeBool,
@@ -291,7 +302,7 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("game_server_container_group_definition_name"); ok {
-		input.GameServerContainerGroupDefinitionName = aws.String(v.(string))
+		input.GameServerContainerGroupDefinitionName = aws.String(normalizeContainerGroupDefinitionName(v.(string)))
 	}
 	if v, ok := d.GetOk("game_server_container_groups_per_instance"); ok {
 		input.GameServerContainerGroupsPerInstance = aws.Int32(int32(v.(int)))
@@ -321,7 +332,7 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 		input.NewGameSessionProtectionPolicy = awstypes.ProtectionPolicy(v.(string))
 	}
 	if v, ok := d.GetOk("per_instance_container_group_definition_name"); ok {
-		input.PerInstanceContainerGroupDefinitionName = aws.String(v.(string))
+		input.PerInstanceContainerGroupDefinitionName = aws.String(normalizeContainerGroupDefinitionName(v.(string)))
 	}
 
 	output, err := conn.CreateContainerFleet(ctx, input)
@@ -374,8 +385,11 @@ func resourceContainerFleetRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("instance_inbound_permission", flattenIPPermissions(fleet.InstanceInboundPermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_inbound_permission: %s", err)
 	}
-	if err := d.Set("log_configuration", flattenLogConfiguration(fleet.LogConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
+	// Keep API defaults out of state unless user configured this argument.
+	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]any)) > 0 {
+		if err := d.Set("log_configuration", flattenLogConfiguration(fleet.LogConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
+		}
 	}
 	if err := d.Set("game_session_creation_limit_policy", flattenGameSessionCreationLimitPolicy(fleet.GameSessionCreationLimitPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting game_session_creation_limit_policy: %s", err)
@@ -383,8 +397,11 @@ func resourceContainerFleetRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("location_attributes", flattenContainerFleetLocationAttributes(fleet.LocationAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting location_attributes: %s", err)
 	}
-	if err := d.Set("locations", flattenLocationAttributesToLocations(fleet.LocationAttributes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting locations: %s", err)
+	// Keep API defaults out of state unless user configured this argument.
+	if v, ok := d.GetOk("locations"); ok && len(v.([]any)) > 0 {
+		if err := d.Set("locations", flattenLocationAttributesToLocations(fleet.LocationAttributes)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting locations: %s", err)
+		}
 	}
 	if err := d.Set("deployment_details", flattenDeploymentDetails(fleet.DeploymentDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_details: %s", err)
@@ -410,7 +427,7 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.Description = aws.String(v.(string))
 		}
 		if v, ok := d.GetOk("game_server_container_group_definition_name"); ok {
-			input.GameServerContainerGroupDefinitionName = aws.String(v.(string))
+			input.GameServerContainerGroupDefinitionName = aws.String(normalizeContainerGroupDefinitionName(v.(string)))
 		}
 		if v, ok := d.GetOk("game_server_container_groups_per_instance"); ok {
 			input.GameServerContainerGroupsPerInstance = aws.Int32(int32(v.(int)))
@@ -442,7 +459,7 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.NewGameSessionProtectionPolicy = awstypes.ProtectionPolicy(v.(string))
 		}
 		if v, ok := d.GetOk("per_instance_container_group_definition_name"); ok {
-			input.PerInstanceContainerGroupDefinitionName = aws.String(v.(string))
+			input.PerInstanceContainerGroupDefinitionName = aws.String(normalizeContainerGroupDefinitionName(v.(string)))
 		}
 		if v, ok := d.GetOk("deployment_configuration"); ok {
 			input.DeploymentConfiguration = expandDeploymentConfiguration(v.([]any))
@@ -466,12 +483,25 @@ func resourceContainerFleetDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Container Fleet: %s", d.Id())
-	_, err := conn.DeleteContainerFleet(ctx, &gamelift.DeleteContainerFleetInput{
-		FleetId: aws.String(d.Id()),
-	})
+	const timeout = 60 * time.Minute
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteContainerFleet(ctx, &gamelift.DeleteContainerFleetInput{
+			FleetId: aws.String(d.Id()),
+		})
+	}, "cannot be put to Deleting state from")
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GameLift Container Fleet (%s): %s", d.Id(), err)
+	}
+
+	if _, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+		return findContainerFleetByID(ctx, conn, d.Id())
+	}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -495,6 +525,28 @@ func findContainerFleetByID(ctx context.Context, conn *gamelift.Client, id strin
 	}
 
 	return output.ContainerFleet, nil
+}
+
+func normalizeContainerGroupDefinitionName(v string) string {
+	if v == "" {
+		return v
+	}
+
+	parsed, err := arn.Parse(v)
+	if err != nil {
+		return v
+	}
+
+	resource := strings.TrimPrefix(parsed.Resource, "containergroupdefinition/")
+	if resource == parsed.Resource {
+		return v
+	}
+
+	if i := strings.LastIndex(resource, ":"); i > 0 {
+		return resource[:i]
+	}
+
+	return resource
 }
 
 func expandConnectionPortRange(tfList []any) *awstypes.ConnectionPortRange {
