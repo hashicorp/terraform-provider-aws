@@ -129,7 +129,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes:
+This resource exports the following attributes in addition to the arguments above:
 
 - `id` - Container fleet ID.
 - `arn` - Container fleet ARN.

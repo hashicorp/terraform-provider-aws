@@ -120,7 +120,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes:
+This resource exports the following attributes in addition to the arguments above:
 
 - `id` - Container group definition ID in the format `name,version`.
 - `arn` - Container group definition ARN.
