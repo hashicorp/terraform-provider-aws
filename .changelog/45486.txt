@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add `deletion_settings` configuration block to enable managed deletion of images and associated AWS resources
+```
