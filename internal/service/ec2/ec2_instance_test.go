@@ -10379,3 +10379,73 @@ resource "aws_instance" "test" {
 }
 `, rName))
 }
+
+func TestAccEC2Instance_associatePublicIPAddressUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_associatePublicIPAddress(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_associatePublicIPAddress(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckInstanceNotRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_associatePublicIPAddress(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckInstanceNotRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+				),
+			},
+		},
+	})
+}
+
+func testAccInstanceConfig_associatePublicIPAddress(rName string, associatePublicIP bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.test[0].id
+  associate_public_ip_address = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName, associatePublicIP))
+}
