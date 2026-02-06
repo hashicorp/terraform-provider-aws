@@ -444,7 +444,7 @@ func resourceContainerGroupDefinitionCreate(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "parsing GameLift Container Group Definition ID (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitContainerGroupDefinitionReady(ctx, conn, name, version, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitContainerGroupDefinitionReady(ctx, conn, name, version, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Group Definition (%s) create: %s", d.Id(), err)
 	}
 
@@ -550,7 +550,7 @@ func resourceContainerGroupDefinitionUpdate(ctx context.Context, d *schema.Resou
 			return sdkdiag.AppendErrorf(diags, "parsing GameLift Container Group Definition ID (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitContainerGroupDefinitionReady(ctx, conn, name, version, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitContainerGroupDefinitionReady(ctx, conn, name, version, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Group Definition (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -623,7 +623,7 @@ func statusContainerGroupDefinition(ctx context.Context, conn *gamelift.Client, 
 	}
 }
 
-func waitContainerGroupDefinitionReady(ctx context.Context, conn *gamelift.Client, name string, version *int32, timeout time.Duration) (*awstypes.ContainerGroupDefinition, error) {
+func waitContainerGroupDefinitionReady(ctx context.Context, conn *gamelift.Client, name string, version *int32, timeout time.Duration) error {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ContainerGroupDefinitionStatusCopying,
@@ -641,11 +641,9 @@ func waitContainerGroupDefinitionReady(ctx context.Context, conn *gamelift.Clien
 		if reason := aws.ToString(output.StatusReason); reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}
-
-		return output, err
 	}
 
-	return nil, err
+	return err
 }
 
 func resourceContainerGroupDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
