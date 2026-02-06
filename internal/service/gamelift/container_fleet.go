@@ -62,7 +62,7 @@ func resourceContainerFleet() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.ContainerFleetBillingType](),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -133,7 +133,7 @@ func resourceContainerFleet() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidCIDRNetworkAddress,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.IpProtocol](),
@@ -146,7 +146,7 @@ func resourceContainerFleet() *schema.Resource {
 					},
 				},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -158,7 +158,7 @@ func resourceContainerFleet() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"location": {
+						names.AttrLocation: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
@@ -250,7 +250,7 @@ func resourceContainerFleet() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -271,11 +271,11 @@ func resourceContainerFleet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -298,7 +298,7 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("game_server_container_group_definition_name"); ok {
@@ -316,7 +316,7 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("instance_inbound_permission"); ok {
 		input.InstanceInboundPermissions = expandIPPermissions(v.(*schema.Set))
 	}
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		input.InstanceType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("locations"); ok {
@@ -367,14 +367,14 @@ func resourceContainerFleetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, fleet.FleetArn)
 	d.Set("fleet_role_arn", aws.ToString(fleet.FleetRoleArn))
 	d.Set("billing_type", fleet.BillingType)
-	d.Set("description", aws.ToString(fleet.Description))
+	d.Set(names.AttrDescription, aws.ToString(fleet.Description))
 	d.Set("game_server_container_group_definition_name", aws.ToString(fleet.GameServerContainerGroupDefinitionName))
 	d.Set("game_server_container_groups_per_instance", aws.ToInt32(fleet.GameServerContainerGroupsPerInstance))
-	d.Set("instance_type", aws.ToString(fleet.InstanceType))
+	d.Set(names.AttrInstanceType, aws.ToString(fleet.InstanceType))
 	d.Set("metric_groups", flex.FlattenStringValueList(fleet.MetricGroups))
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("per_instance_container_group_definition_name", aws.ToString(fleet.PerInstanceContainerGroupDefinitionName))
-	d.Set("status", fleet.Status)
+	d.Set(names.AttrStatus, fleet.Status)
 	d.Set("game_server_container_group_definition_arn", aws.ToString(fleet.GameServerContainerGroupDefinitionArn))
 	d.Set("per_instance_container_group_definition_arn", aws.ToString(fleet.PerInstanceContainerGroupDefinitionArn))
 	d.Set("maximum_game_server_container_groups_per_instance", aws.ToInt32(fleet.MaximumGameServerContainerGroupsPerInstance))
@@ -423,7 +423,7 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 			FleetId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 		if v, ok := d.GetOk("game_server_container_group_definition_name"); ok {
@@ -583,7 +583,7 @@ func expandLocationConfigurations(tfList []any) []awstypes.LocationConfiguration
 	for _, tfMapRaw := range tfList {
 		m := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, awstypes.LocationConfiguration{
-			Location: aws.String(m["location"].(string)),
+			Location: aws.String(m[names.AttrLocation].(string)),
 		})
 	}
 
@@ -713,8 +713,8 @@ func flattenContainerFleetLocationAttributes(apiObjects []awstypes.ContainerFlee
 	tfList := make([]any, 0, len(apiObjects))
 	for _, apiObject := range apiObjects {
 		m := map[string]any{
-			"location": aws.ToString(apiObject.Location),
-			"status":   apiObject.Status,
+			names.AttrLocation: aws.ToString(apiObject.Location),
+			names.AttrStatus:   apiObject.Status,
 		}
 		tfList = append(tfList, m)
 	}
@@ -730,7 +730,7 @@ func flattenLocationAttributesToLocations(apiObjects []awstypes.ContainerFleetLo
 	tfList := make([]any, 0, len(apiObjects))
 	for _, apiObject := range apiObjects {
 		if location := aws.ToString(apiObject.Location); location != "" {
-			tfList = append(tfList, map[string]any{"location": location})
+			tfList = append(tfList, map[string]any{names.AttrLocation: location})
 		}
 	}
 

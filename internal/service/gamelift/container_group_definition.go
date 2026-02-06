@@ -126,7 +126,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.IsPortNumber,
 												},
-												"protocol": {
+												names.AttrProtocol: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.IpProtocol](),
@@ -152,7 +152,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"condition": {
+									names.AttrCondition: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.ContainerDependencyCondition](),
@@ -165,12 +165,12 @@ func resourceContainerGroupDefinition() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -244,7 +244,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.IsPortNumber,
 												},
-												"protocol": {
+												names.AttrProtocol: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.IpProtocol](),
@@ -265,7 +265,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"condition": {
+									names.AttrCondition: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.ContainerDependencyCondition](),
@@ -278,12 +278,12 @@ func resourceContainerGroupDefinition() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -294,7 +294,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"health_check": {
+						names.AttrHealthCheck: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -305,7 +305,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"interval": {
+									names.AttrInterval: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -320,7 +320,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"timeout": {
+									names.AttrTimeout: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -379,7 +379,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -387,7 +387,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -482,10 +482,10 @@ func resourceContainerGroupDefinitionRead(ctx context.Context, d *schema.Resourc
 	d.Set("total_vcpu_limit", aws.ToFloat64(containerGroup.TotalVcpuLimit))
 	d.Set("version_description", containerGroup.VersionDescription)
 	d.Set("version_number", aws.ToInt32(containerGroup.VersionNumber))
-	d.Set("status", containerGroup.Status)
+	d.Set(names.AttrStatus, containerGroup.Status)
 	d.Set("status_reason", containerGroup.StatusReason)
 	if containerGroup.CreationTime != nil {
-		d.Set("creation_time", containerGroup.CreationTime.Format(time.RFC3339))
+		d.Set(names.AttrCreationTime, containerGroup.CreationTime.Format(time.RFC3339))
 	}
 
 	if err := d.Set("game_server_container_definition", flattenGameServerContainerDefinition(containerGroup.GameServerContainerDefinition)); err != nil {
@@ -653,9 +653,9 @@ func resourceContainerGroupDefinitionCustomizeDiff(_ context.Context, d *schema.
 		d.SetNewComputed(names.AttrARN)
 		d.SetNewComputed(names.AttrID)
 		d.SetNewComputed("version_number")
-		d.SetNewComputed("status")
+		d.SetNewComputed(names.AttrStatus)
 		d.SetNewComputed("status_reason")
-		d.SetNewComputed("creation_time")
+		d.SetNewComputed(names.AttrCreationTime)
 	}
 
 	return nil
@@ -764,7 +764,7 @@ func expandSupportContainerDefinitionInputs(tfList []any) []awstypes.SupportCont
 		if v, ok := m["essential"]; ok {
 			apiObject.Essential = aws.Bool(v.(bool))
 		}
-		if v, ok := m["health_check"]; ok && len(v.([]any)) > 0 {
+		if v, ok := m[names.AttrHealthCheck]; ok && len(v.([]any)) > 0 {
 			apiObject.HealthCheck = expandContainerHealthCheck(v.([]any))
 		}
 		if v, ok := m["memory_hard_limit_mib"]; ok && v.(int) > 0 {
@@ -796,7 +796,7 @@ func expandContainerDependencies(tfList []any) []awstypes.ContainerDependency {
 		m := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, awstypes.ContainerDependency{
 			ContainerName: aws.String(m["container_name"].(string)),
-			Condition:     awstypes.ContainerDependencyCondition(m["condition"].(string)),
+			Condition:     awstypes.ContainerDependencyCondition(m[names.AttrCondition].(string)),
 		})
 	}
 
@@ -812,8 +812,8 @@ func expandContainerEnvironmentOverrides(tfList []any) []awstypes.ContainerEnvir
 	for _, tfMapRaw := range tfList {
 		m := tfMapRaw.(map[string]any)
 		apiObjects = append(apiObjects, awstypes.ContainerEnvironment{
-			Name:  aws.String(m["name"].(string)),
-			Value: aws.String(m["value"].(string)),
+			Name:  aws.String(m[names.AttrName].(string)),
+			Value: aws.String(m[names.AttrValue].(string)),
 		})
 	}
 
@@ -870,7 +870,7 @@ func expandContainerPortRanges(tfList []any) []awstypes.ContainerPortRange {
 		apiObjects = append(apiObjects, awstypes.ContainerPortRange{
 			FromPort: aws.Int32(int32(m["from_port"].(int))),
 			ToPort:   aws.Int32(int32(m["to_port"].(int))),
-			Protocol: awstypes.IpProtocol(m["protocol"].(string)),
+			Protocol: awstypes.IpProtocol(m[names.AttrProtocol].(string)),
 		})
 	}
 
@@ -887,7 +887,7 @@ func expandContainerHealthCheck(tfList []any) *awstypes.ContainerHealthCheck {
 		Command: flex.ExpandStringValueList(m["command"].([]any)),
 	}
 
-	if v, ok := m["interval"]; ok {
+	if v, ok := m[names.AttrInterval]; ok {
 		apiObject.Interval = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := m["retries"]; ok {
@@ -896,7 +896,7 @@ func expandContainerHealthCheck(tfList []any) *awstypes.ContainerHealthCheck {
 	if v, ok := m["start_period"]; ok {
 		apiObject.StartPeriod = aws.Int32(int32(v.(int)))
 	}
-	if v, ok := m["timeout"]; ok {
+	if v, ok := m[names.AttrTimeout]; ok {
 		apiObject.Timeout = aws.Int32(int32(v.(int)))
 	}
 
@@ -965,7 +965,7 @@ func flattenSupportContainerDefinitions(apiObjects []awstypes.SupportContainerDe
 			m["environment_override"] = flattenContainerEnvironmentOverrides(apiObject.EnvironmentOverride)
 		}
 		if apiObject.HealthCheck != nil {
-			m["health_check"] = flattenContainerHealthCheck(apiObject.HealthCheck)
+			m[names.AttrHealthCheck] = flattenContainerHealthCheck(apiObject.HealthCheck)
 		}
 		if apiObject.PortConfiguration != nil {
 			m["port_configuration"] = flattenContainerPortConfiguration(apiObject.PortConfiguration)
@@ -988,8 +988,8 @@ func flattenContainerDependencies(apiObjects []awstypes.ContainerDependency) []a
 	tfList := make([]any, 0, len(apiObjects))
 	for _, apiObject := range apiObjects {
 		m := map[string]any{
-			"container_name": aws.ToString(apiObject.ContainerName),
-			"condition":      apiObject.Condition,
+			"container_name":    aws.ToString(apiObject.ContainerName),
+			names.AttrCondition: apiObject.Condition,
 		}
 		tfList = append(tfList, m)
 	}
@@ -1005,8 +1005,8 @@ func flattenContainerEnvironmentOverrides(apiObjects []awstypes.ContainerEnviron
 	tfList := make([]any, 0, len(apiObjects))
 	for _, apiObject := range apiObjects {
 		m := map[string]any{
-			"name":  aws.ToString(apiObject.Name),
-			"value": aws.ToString(apiObject.Value),
+			names.AttrName:  aws.ToString(apiObject.Name),
+			names.AttrValue: aws.ToString(apiObject.Value),
 		}
 		tfList = append(tfList, m)
 	}
@@ -1057,9 +1057,9 @@ func flattenContainerPortRanges(apiObjects []awstypes.ContainerPortRange) []any 
 	tfList := make([]any, 0, len(apiObjects))
 	for _, apiObject := range apiObjects {
 		m := map[string]any{
-			"from_port": aws.ToInt32(apiObject.FromPort),
-			"to_port":   aws.ToInt32(apiObject.ToPort),
-			"protocol":  apiObject.Protocol,
+			"from_port":        aws.ToInt32(apiObject.FromPort),
+			"to_port":          aws.ToInt32(apiObject.ToPort),
+			names.AttrProtocol: apiObject.Protocol,
 		}
 		tfList = append(tfList, m)
 	}
@@ -1076,7 +1076,7 @@ func flattenContainerHealthCheck(apiObject *awstypes.ContainerHealthCheck) []any
 		"command": flex.FlattenStringValueList(apiObject.Command),
 	}
 	if apiObject.Interval != nil {
-		m["interval"] = aws.ToInt32(apiObject.Interval)
+		m[names.AttrInterval] = aws.ToInt32(apiObject.Interval)
 	}
 	if apiObject.Retries != nil {
 		m["retries"] = aws.ToInt32(apiObject.Retries)
@@ -1085,7 +1085,7 @@ func flattenContainerHealthCheck(apiObject *awstypes.ContainerHealthCheck) []any
 		m["start_period"] = aws.ToInt32(apiObject.StartPeriod)
 	}
 	if apiObject.Timeout != nil {
-		m["timeout"] = aws.ToInt32(apiObject.Timeout)
+		m[names.AttrTimeout] = aws.ToInt32(apiObject.Timeout)
 	}
 
 	return []any{m}
