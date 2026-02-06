@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,20 +27,20 @@ func TestAccBedrockProvisionedModelThroughput_basic(t *testing.T) {
 	acctest.Skip(t, "Bedrock Provisioned Model Throughput has a minimum 1 month commitment and costs > $10K/month")
 
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_provisioned_model_throughput.test"
 	var v bedrock.GetProvisionedModelThroughputOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedModelThroughputDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedModelThroughputDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedModelThroughputConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedModelThroughputExists(ctx, resourceName, &v),
+					testAccCheckProvisionedModelThroughputExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "commitment_duration", "OneMonth"),
 					resource.TestCheckResourceAttrSet(resourceName, "model_arn"),
 					resource.TestCheckResourceAttr(resourceName, "model_units", "1"),
@@ -78,10 +76,10 @@ func TestAccBedrockProvisionedModelThroughput_Identity_ExistingResource(t *testi
 
 	ctx := acctest.Context(t)
 	var v bedrock.GetProvisionedModelThroughputOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_provisioned_model_throughput.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -90,7 +88,7 @@ func TestAccBedrockProvisionedModelThroughput_Identity_ExistingResource(t *testi
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
-		CheckDestroy: testAccCheckProvisionedModelThroughputDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedModelThroughputDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -101,7 +99,7 @@ func TestAccBedrockProvisionedModelThroughput_Identity_ExistingResource(t *testi
 				},
 				Config: testAccProvisionedModelThroughputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedModelThroughputExists(ctx, resourceName, &v),
+					testAccCheckProvisionedModelThroughputExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -116,7 +114,7 @@ func TestAccBedrockProvisionedModelThroughput_Identity_ExistingResource(t *testi
 				},
 				Config: testAccProvisionedModelThroughputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedModelThroughputExists(ctx, resourceName, &v),
+					testAccCheckProvisionedModelThroughputExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -134,7 +132,7 @@ func TestAccBedrockProvisionedModelThroughput_Identity_ExistingResource(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccProvisionedModelThroughputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedModelThroughputExists(ctx, resourceName, &v),
+					testAccCheckProvisionedModelThroughputExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -152,9 +150,9 @@ func TestAccBedrockProvisionedModelThroughput_Identity_ExistingResource(t *testi
 	})
 }
 
-func testAccCheckProvisionedModelThroughputDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProvisionedModelThroughputDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrock_custom_model" {
@@ -178,14 +176,14 @@ func testAccCheckProvisionedModelThroughputDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckProvisionedModelThroughputExists(ctx context.Context, n string, v *bedrock.GetProvisionedModelThroughputOutput) resource.TestCheckFunc {
+func testAccCheckProvisionedModelThroughputExists(ctx context.Context, t *testing.T, n string, v *bedrock.GetProvisionedModelThroughputOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockClient(ctx)
 
 		output, err := tfbedrock.FindProvisionedModelThroughputByID(ctx, conn, rs.Primary.ID)
 

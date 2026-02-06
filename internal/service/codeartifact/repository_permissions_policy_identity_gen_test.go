@@ -46,7 +46,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_Basic(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
-		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryPermissionsPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -56,7 +56,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_Basic(t *testing.T)
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrResourceARN), compare.ValuesSame()),
@@ -251,7 +251,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeArtifactServiceID),
-		CheckDestroy: testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryPermissionsPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -260,7 +260,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -274,7 +274,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -329,7 +329,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource_No
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeArtifactServiceID),
-		CheckDestroy: testAccCheckRepositoryPermissionsPolicyDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryPermissionsPolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -343,7 +343,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource_No
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -358,7 +358,7 @@ func testAccCodeArtifactRepositoryPermissionsPolicy_Identity_ExistingResource_No
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryPermissionsPolicyExists(ctx, resourceName),
+					testAccCheckRepositoryPermissionsPolicyExists(ctx, t, resourceName),
 				),
 			},
 		},

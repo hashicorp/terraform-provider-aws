@@ -1,0 +1,47 @@
+```release-note:note
+resource/aws_s3_bucket_abac: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_accelerate_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_acl: Removes `expected_bucket_owner` and `acl` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_cors_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_lifecycle_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_logging: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_metadata_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_object_lock_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_request_payment_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_server_side_encryption_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_versioning: Removes `expected_bucket_owner` attribute from Resource Identity.
+```
+
+```release-note:note
+resource/aws_s3_bucket_website_configuration: Removes `expected_bucket_owner` attribute from Resource Identity.
+```

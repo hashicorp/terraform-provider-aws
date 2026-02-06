@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,18 +25,18 @@ func TestAccCECostCategory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`costcategory/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -61,7 +59,7 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	firstDayOfMonth := func(v time.Time) string {
 		return time.Date(v.Year(), v.Month(), 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	}
@@ -69,16 +67,16 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 	firstOfThisMonth := firstDayOfMonth(now)
 	firstOfLastMonth := firstDayOfMonth(now.AddDate(0, -1, 0))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_effectiveStart(rName, firstOfThisMonth),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "effective_start", firstOfThisMonth),
 				),
@@ -91,7 +89,7 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 			{
 				Config: testAccCostCategoryConfig_effectiveStart(rName, firstOfLastMonth),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "effective_start", firstOfLastMonth),
 				),
@@ -104,18 +102,18 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceCostCategory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -128,25 +126,25 @@ func TestAccCECostCategory_complete(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccCostCategoryConfig_operandAnd(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -163,18 +161,18 @@ func TestAccCECostCategory_notWithAnd(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_operandNot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -191,25 +189,25 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_splitCharges(rName, "PROPORTIONAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccCostCategoryConfig_splitCharges(rName, "EVEN"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -226,18 +224,18 @@ func TestAccCECostCategory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -250,7 +248,7 @@ func TestAccCECostCategory_tags(t *testing.T) {
 			{
 				Config: testAccCostCategoryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -259,7 +257,7 @@ func TestAccCECostCategory_tags(t *testing.T) {
 			{
 				Config: testAccCostCategoryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -271,7 +269,7 @@ func TestAccCECostCategory_tags(t *testing.T) {
 func testAccPreCheckPayerAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CEClient(ctx)
 
 	input := costexplorer.ListCostCategoryDefinitionsInput{}
 	_, err := conn.ListCostCategoryDefinitions(ctx, &input)
@@ -286,14 +284,14 @@ func testAccPreCheckPayerAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckCostCategoryExists(ctx context.Context, n string, v *awstypes.CostCategory) resource.TestCheckFunc {
+func testAccCheckCostCategoryExists(ctx context.Context, t *testing.T, n string, v *awstypes.CostCategory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CEClient(ctx)
 
 		output, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)
 
@@ -307,9 +305,9 @@ func testAccCheckCostCategoryExists(ctx context.Context, n string, v *awstypes.C
 	}
 }
 
-func testAccCheckCostCategoryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCostCategoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CEClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_cost_category" {

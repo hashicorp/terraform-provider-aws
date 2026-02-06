@@ -191,10 +191,11 @@ func main() {
 			}
 
 			commonConfig := commonConfig{
-				AdditionalTfVars:     additionalTfVars,
-				RequiredEnvVars:      resource.RequiredEnvVars,
-				RequiredEnvVarValues: resource.RequiredEnvVarValues,
-				WithRName:            (resource.Generator != ""),
+				AdditionalTfVars:      additionalTfVars,
+				RequiredEnvVars:       resource.RequiredEnvVars,
+				RequiredEnvVarValues:  resource.RequiredEnvVarValues,
+				WithRName:             (resource.Generator != ""),
+				AlternateRegionTfVars: resource.AlternateRegionTfVars,
 			}
 
 			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
@@ -429,12 +430,13 @@ func (d ResourceDatum) HasRegionAttribute() bool {
 }
 
 type commonConfig struct {
-	AdditionalTfVars     []string
-	WithRName            bool
-	WithRegion           bool
-	ExternalProviders    map[string]requiredProvider
-	RequiredEnvVars      []string
-	RequiredEnvVarValues []string
+	AdditionalTfVars      []string
+	WithRName             bool
+	WithRegion            bool
+	AlternateRegionTfVars bool
+	ExternalProviders     map[string]requiredProvider
+	RequiredEnvVars       []string
+	RequiredEnvVarValues  []string
 }
 
 type requiredProvider struct {
@@ -747,7 +749,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 			if d.HasInherentRegionIdentity() {
 				if d.Implementation == common.ImplementationFramework {
-					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") && !d.HasImportStateIDAttributes() {
 						d.SetImportStateIDAttribute(d.IdentityAttributeName())
 					}
 				}

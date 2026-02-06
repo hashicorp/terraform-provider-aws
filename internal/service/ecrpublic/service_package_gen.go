@@ -20,6 +20,17 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
+	return []*inttypes.ServicePackageEphemeralResource{
+		{
+			Factory:  newAuthorizationTokenEphemeralResource,
+			TypeName: "aws_ecrpublic_authorization_token",
+			Name:     "AuthorizationToken",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{

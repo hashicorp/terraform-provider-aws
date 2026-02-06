@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,7 +32,7 @@ func testAccAccountRegistration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
@@ -45,7 +44,7 @@ func testAccAccountRegistration_basic(t *testing.T) {
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccoountRegistrationExists(ctx, resourceName),
+					testAccCheckAccoountRegistrationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -62,7 +61,7 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
@@ -76,7 +75,7 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 				// audit manager on destroy and trigger the non-empty plan after state refresh
 				Config: testAccAccountRegistrationConfig_deregisterOnDestroy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccoountRegistrationExists(ctx, resourceName),
+					testAccCheckAccoountRegistrationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfauditmanager.ResourceAccountRegistration, resourceName),
 				),
 			},
@@ -92,7 +91,7 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
@@ -104,21 +103,21 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 			{
 				Config: testAccAccountRegistrationConfig_kmsKey(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccoountRegistrationExists(ctx, resourceName),
+					testAccCheckAccoountRegistrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccoountRegistrationExists(ctx, resourceName),
+					testAccCheckAccoountRegistrationExists(ctx, t, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_kmsKey(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccoountRegistrationExists(ctx, resourceName),
+					testAccCheckAccoountRegistrationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
@@ -126,14 +125,14 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 	})
 }
 
-func testAccCheckAccoountRegistrationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccoountRegistrationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AuditManagerClient(ctx)
 
 		_, err := tfauditmanager.FindAccountRegistration(ctx, conn)
 

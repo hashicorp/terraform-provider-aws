@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,18 +28,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @IdentityAttribute("acl", optional="true")
-// @MutableIdentity
-// @ImportIDHandler("bucketACLImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(identityVersion="0;v6.11.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="access_control_policy.0.grant.0.grantee.0.display_name;access_control_policy.0.owner.0.display_name")
 // @Testing(plannableImportAction="NoOp")
@@ -142,21 +141,39 @@ func resourceBucketACL() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 		},
 
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-			if d.HasChange("acl") {
-				_, n := d.GetChange("acl")
-				if n.(string) != "" {
-					return d.SetNewComputed("access_control_policy")
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.HasChange("acl") {
+					_, n := d.GetChange("acl")
+					if n.(string) != "" {
+						return d.SetNewComputed("access_control_policy")
+					}
 				}
-			}
-
-			return nil
-		},
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+				if d.HasChange(names.AttrExpectedBucketOwner) {
+					o, n := d.GetChange(names.AttrExpectedBucketOwner)
+					os, ns := o.(string), n.(string)
+					if os == ns {
+						return nil
+					}
+					if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+						return nil
+					}
+					return d.ForceNew(names.AttrExpectedBucketOwner)
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -170,7 +187,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	acl := d.Get("acl").(string)
-	input := &s3.PutBucketAclInput{
+	input := s3.PutBucketAclInput{
 		Bucket: aws.String(bucket),
 	}
 	if acl != "" {
@@ -185,7 +202,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketAcl(ctx, input)
+		return conn.PutBucketAcl(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) {
@@ -257,7 +274,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketAclInput{
+	input := s3.PutBucketAclInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
@@ -273,7 +290,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		input.ACL = types.BucketCannedACL(acl)
 	}
 
-	_, err = conn.PutBucketAcl(ctx, input)
+	_, err = conn.PutBucketAcl(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 bucket ACL (%s): %s", d.Id(), err)
@@ -288,14 +305,14 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta a
 }
 
 func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketAclOutput, error) {
-	input := &s3.GetBucketAclInput{
+	input := s3.GetBucketAclInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketAcl(ctx, input)
+	output, err := conn.GetBucketAcl(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return nil, &sdkretry.NotFoundError{
@@ -569,36 +586,6 @@ func parseBucketACLResourceID(id string) (string, string, string, error) {
 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER or BUCKET%[2]sACL "+
 		"or BUCKET%[2]sEXPECTED_BUCKET_OWNER%[2]sACL", id, bucketACLSeparator)
-}
-
-var _ inttypes.SDKv2ImportID = bucketACLImportID{}
-
-type bucketACLImportID struct{}
-
-func (bucketACLImportID) Create(d *schema.ResourceData) string {
-	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	acl := d.Get("acl").(string)
-	return createBucketACLResourceID(bucket, expectedBucketOwner, acl)
-}
-
-func (bucketACLImportID) Parse(id string) (string, map[string]string, error) {
-	bucket, expectedBucketOwner, acl, err := parseBucketACLResourceID(id)
-	if err != nil {
-		return id, nil, err
-	}
-
-	results := map[string]string{
-		names.AttrBucket: bucket,
-	}
-	if expectedBucketOwner != "" {
-		results[names.AttrExpectedBucketOwner] = expectedBucketOwner
-	}
-	if acl != "" {
-		results["acl"] = acl
-	}
-
-	return id, results, nil
 }
 
 // These should be defined in the AWS SDK for Go. There is an issue, https://github.com/aws/aws-sdk-go/issues/2683.

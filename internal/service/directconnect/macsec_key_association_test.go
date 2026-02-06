@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +26,16 @@ func TestAccDirectConnectMacSecKeyAssociation_withCkn(t *testing.T) {
 	ckn := testAccMacSecGenerateHex()
 	cak := testAccMacSecGenerateHex()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMacSecKeyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMacSecKeyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMacSecKeyAssociationConfig_withCkn(ckn, cak, connectionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMacSecKeyAssociationExists(ctx, resourceName),
+					testAccCheckMacSecKeyAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestMatchResourceAttr(resourceName, "ckn", regexache.MustCompile(ckn)),
 				),
@@ -58,16 +57,16 @@ func TestAccDirectConnectMacSecKeyAssociation_withSecret(t *testing.T) {
 	secretARN := acctest.SkipIfEnvVarNotSet(t, "SECRET_ARN")
 	resourceName := "aws_dx_macsec_key_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMacSecKeyAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMacSecKeyAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMacSecKeyAssociationConfig_withSecret(secretARN, connectionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMacSecKeyAssociationExists(ctx, resourceName),
+					testAccCheckMacSecKeyAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn", secretARN),
 				),
@@ -89,9 +88,9 @@ func testAccMacSecGenerateHex() string {
 	return hex.EncodeToString(s)
 }
 
-func testAccCheckMacSecKeyAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMacSecKeyAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_macsec_key_association" {
@@ -115,14 +114,14 @@ func testAccCheckMacSecKeyAssociationDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckMacSecKeyAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckMacSecKeyAssociationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		_, err := tfdirectconnect.FindMacSecKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrConnectionID], rs.Primary.Attributes["secret_arn"])
 

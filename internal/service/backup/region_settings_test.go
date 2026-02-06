@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,7 +31,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 	var settings backup.DescribeRegionSettingsOutput
 	resourceName := "aws_backup_region_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FSxEndpointID)
@@ -45,7 +44,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
@@ -73,7 +72,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
@@ -95,7 +94,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 			{
 				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &settings),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &settings),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "18"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
@@ -118,9 +117,9 @@ func testAccRegionSettings_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckRegionSettingsExists(ctx context.Context, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
+func testAccCheckRegionSettingsExists(ctx context.Context, t *testing.T, n string, v *backup.DescribeRegionSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindRegionSettings(ctx, conn)
 

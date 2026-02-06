@@ -39,7 +39,7 @@ func TestAccDeviceFarmUpload_Identity_Basic(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy:             testAccCheckUploadDestroy(ctx),
+		CheckDestroy:             testAccCheckUploadDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccDeviceFarmUpload_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &v),
+					testAccCheckUploadExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -131,7 +131,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckUploadDestroy(ctx),
+		CheckDestroy: testAccCheckUploadDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -140,7 +140,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &v),
+					testAccCheckUploadExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -154,7 +154,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &v),
+					testAccCheckUploadExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -213,7 +213,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DeviceFarmServiceID),
-		CheckDestroy: testAccCheckUploadDestroy(ctx),
+		CheckDestroy: testAccCheckUploadDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -227,7 +227,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &v),
+					testAccCheckUploadExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -242,7 +242,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUploadExists(ctx, resourceName, &v),
+					testAccCheckUploadExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

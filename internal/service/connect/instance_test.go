@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 func testAccInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", acctest.CtTrue), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", acctest.CtFalse),       //verified default result from ListInstanceAttributes()
@@ -60,7 +58,7 @@ func testAccInstance_basic(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_basicFlipped(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", acctest.CtTrue),
@@ -81,21 +79,21 @@ func testAccInstance_basic(t *testing.T) {
 func testAccInstance_directory(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
 	domainName := acctest.RandomDomainName()
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_directory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", string(awstypes.DirectoryTypeExistingDirectory)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.InstanceStatusActive)),
 				),
@@ -113,20 +111,20 @@ func testAccInstance_directory(t *testing.T) {
 func testAccInstance_saml(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_saml(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", string(awstypes.DirectoryTypeSaml)),
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 				),
 			},
 			{
@@ -141,19 +139,19 @@ func testAccInstance_saml(t *testing.T) {
 func testAccInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -166,7 +164,7 @@ func testAccInstance_tags(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -175,7 +173,7 @@ func testAccInstance_tags(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -184,14 +182,14 @@ func testAccInstance_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceExists(ctx context.Context, t *testing.T, n string, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 		output, err := tfconnect.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -205,14 +203,14 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Insta
 	}
 }
 
-func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_instance" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 			_, err := tfconnect.FindInstanceByID(ctx, conn, rs.Primary.ID)
 

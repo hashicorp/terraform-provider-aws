@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -618,9 +617,8 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta any, stackSetName,
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
-			return output, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return output, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -674,9 +672,8 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta any, stackSetName,
 	// set based on the first account and region which means they may not be accurate for all stack instances
 	stackInstance, err := findStackInstanceByFourPartKey(ctx, conn, stackSetName, output.Accounts[0], output.Regions[0], callAs)
 	if none || retry.NotFound(err) {
-		return output, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return output, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

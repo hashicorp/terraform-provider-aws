@@ -400,11 +400,12 @@ func TestAccLogsLogGroup_logGroupClassDELIVERY2(t *testing.T) {
 
 func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 	ctx := acctest.Context(t)
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
-	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
-	nonRequiredTagKey := "NotARequiredKey"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -490,11 +491,12 @@ func TestAccLogsLogGroup_requiredTags(t *testing.T) {
 
 func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 	ctx := acctest.Context(t)
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
-	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
-	nonRequiredTagKey := "NotARequiredKey"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -572,11 +574,12 @@ func TestAccLogsLogGroup_requiredTags_defaultTags(t *testing.T) {
 
 func TestAccLogsLogGroup_requiredTags_warning(t *testing.T) {
 	ctx := acctest.Context(t)
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
-	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
-	nonRequiredTagKey := "NotARequiredKey"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -669,11 +672,12 @@ func TestAccLogsLogGroup_requiredTags_warning(t *testing.T) {
 
 func TestAccLogsLogGroup_requiredTags_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
+	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
+	nonRequiredTagKey := "NotARequiredKey"
+
 	var v types.LogGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
-	tagKey := acctest.SkipIfEnvVarNotSet(t, "TF_ACC_REQUIRED_TAG_KEY")
-	nonRequiredTagKey := "NotARequiredKey"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {

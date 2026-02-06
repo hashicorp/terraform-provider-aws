@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var Region = sync.OnceValue(func() schema.Attribute {
+var Region = sync.OnceValue(func() schema.StringAttribute {
 	return schema.StringAttribute{
 		Optional:    true,
 		Description: names.ListResourceTopLevelRegionAttributeDescription,

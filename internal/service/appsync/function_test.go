@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,22 +21,22 @@ import (
 
 func testAccFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	rName3 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/functions/.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -51,7 +50,7 @@ func testAccFunction_basic(t *testing.T) {
 			{
 				Config: testAccFunctionConfig_basic(rName1, rName3, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 				),
 			},
@@ -66,21 +65,21 @@ func testAccFunction_basic(t *testing.T) {
 
 func testAccFunction_code(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_code(rName1, rName2, "test-fixtures/test-code.js"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
@@ -96,7 +95,7 @@ func testAccFunction_code(t *testing.T) {
 			{
 				Config: testAccFunctionConfig_code(rName1, rName2, "test-fixtures/test-code-updated.js"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
@@ -110,20 +109,20 @@ func testAccFunction_code(t *testing.T) {
 
 func testAccFunction_syncConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_sync(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_detection", "VERSION"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_handler", "OPTIMISTIC_CONCURRENCY"),
@@ -140,28 +139,28 @@ func testAccFunction_syncConfig(t *testing.T) {
 
 func testAccFunction_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_description(rName1, rName2, acctest.Region(), "test description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description 1"),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_description(rName1, rName2, acctest.Region(), "test description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description 2"),
 				),
 			},
@@ -176,21 +175,21 @@ func testAccFunction_description(t *testing.T) {
 
 func testAccFunction_responseMappingTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_responseMappingTemplate(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 				),
 			},
 			{
@@ -204,21 +203,21 @@ func testAccFunction_responseMappingTemplate(t *testing.T) {
 
 func testAccFunction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	rName1 := fmt.Sprintf("tfacctest%d", acctest.RandInt(t))
 	rName2 := fmt.Sprintf("tfexample%s", sdkacctest.RandString(8))
 	resourceName := "aws_appsync_function.test"
 	var config awstypes.FunctionConfiguration
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &config),
+					testAccCheckFunctionExists(ctx, t, resourceName, &config),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -227,9 +226,9 @@ func testAccFunction_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFunctionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_function" {
@@ -253,14 +252,14 @@ func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFunctionExists(ctx context.Context, n string, v *awstypes.FunctionConfiguration) resource.TestCheckFunc {
+func testAccCheckFunctionExists(ctx context.Context, t *testing.T, n string, v *awstypes.FunctionConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppSyncClient(ctx)
 
 		output, err := tfappsync.FindFunctionByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes["function_id"])
 

@@ -284,7 +284,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
-	).Generate()
+	).Generate(ctx)
 	input := &elasticloadbalancing.CreateLoadBalancerInput{
 		Listeners:        listeners,
 		LoadBalancerName: aws.String(lbName),

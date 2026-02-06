@@ -37,7 +37,6 @@ import (
 // @SDKResource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
 // @Testing(importIgnore="password")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,

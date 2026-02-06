@@ -39,7 +39,7 @@ func TestAccCodeBuildProject_Identity_Basic(t *testing.T) {
 			testAccPreCheckSourceCredentialsForServerTypeGithub(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccCodeBuildProject_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v),
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "codebuild", "project/{name}"),
@@ -126,7 +126,6 @@ func TestAccCodeBuildProject_Identity_RegionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-
 			testAccPreCheckSourceCredentialsForServerTypeGithub(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -256,7 +255,7 @@ func TestAccCodeBuildProject_Identity_ExistingResource(t *testing.T) {
 			testAccPreCheckSourceCredentialsForServerTypeGithub(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckProjectDestroy(ctx),
+		CheckDestroy: testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -265,7 +264,7 @@ func TestAccCodeBuildProject_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v),
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -279,7 +278,7 @@ func TestAccCodeBuildProject_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v),
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -339,7 +338,7 @@ func TestAccCodeBuildProject_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 			testAccPreCheckSourceCredentialsForServerTypeGithub(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckProjectDestroy(ctx),
+		CheckDestroy: testAccCheckProjectDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -353,7 +352,7 @@ func TestAccCodeBuildProject_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v),
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -368,7 +367,7 @@ func TestAccCodeBuildProject_Identity_ExistingResource_NoRefresh_NoChange(t *tes
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v),
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

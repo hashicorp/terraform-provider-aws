@@ -22,7 +22,6 @@ import (
 
 // @SDKDataSource("aws_dms_endpoint", name="Endpoint")
 // @Tags(identifierAttribute="endpoint_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEndpointRead,

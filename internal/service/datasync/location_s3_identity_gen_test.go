@@ -38,7 +38,7 @@ func TestAccDataSyncLocationS3_Identity_Basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy:             testAccCheckLocationS3Destroy(ctx),
+		CheckDestroy:             testAccCheckLocationS3Destroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccDataSyncLocationS3_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					testAccCheckLocationS3Exists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -250,7 +250,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckLocationS3Destroy(ctx),
+		CheckDestroy: testAccCheckLocationS3Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -259,7 +259,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					testAccCheckLocationS3Exists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -273,7 +273,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					testAccCheckLocationS3Exists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -332,7 +332,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource_NoRefresh_NoChange(t *t
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DataSyncServiceID),
-		CheckDestroy: testAccCheckLocationS3Destroy(ctx),
+		CheckDestroy: testAccCheckLocationS3Destroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -346,7 +346,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					testAccCheckLocationS3Exists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -361,7 +361,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					testAccCheckLocationS3Exists(ctx, t, resourceName, &v),
 				),
 			},
 		},

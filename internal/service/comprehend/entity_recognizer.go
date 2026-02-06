@@ -49,7 +49,6 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.EntityRecognizerProperties")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
@@ -315,7 +314,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
 	if raw.IsNull() {
-		versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+		versionName = aws.String(create.Name(ctx, "", d.Get("version_name_prefix").(string)))
 	} else if v := raw.AsString(); v != "" {
 		versionName = aws.String(v)
 	}
@@ -382,7 +381,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		if d.HasChange("version_name") {
 			versionName = aws.String(d.Get("version_name").(string))
 		} else if v := d.Get("version_name_prefix").(string); v != "" {
-			versionName = aws.String(create.Name("", d.Get("version_name_prefix").(string)))
+			versionName = aws.String(create.Name(ctx, "", d.Get("version_name_prefix").(string)))
 		}
 
 		diags := entityRecognizerPublishVersion(ctx, conn, d, versionName, create.ErrActionUpdating, d.Timeout(schema.TimeoutUpdate), awsClient)

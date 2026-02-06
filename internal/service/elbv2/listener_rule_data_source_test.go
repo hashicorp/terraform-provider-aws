@@ -9,7 +9,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -25,20 +24,20 @@ func TestAccELBV2ListenerRuleDataSource_byARN(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_byARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -117,20 +116,20 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndPriority(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_byListenerAndPriority(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -209,22 +208,22 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateCognito(t *testing.T) 
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_actionAuthenticateCognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -274,22 +273,22 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateOIDC(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_actionAuthenticateOIDC(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -384,22 +383,22 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateJWTValidation(t *testi
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_actionAuthenticateJWTValidation(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -476,20 +475,20 @@ func TestAccELBV2ListenerRuleDataSource_actionFixedResponse(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_actionFixedResponse(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -538,21 +537,21 @@ func TestAccELBV2ListenerRuleDataSource_actionForwardWeightedStickiness(t *testi
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName = rName[:min(len(rName), 30)]
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_actionForwardWeightedStickiness(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -609,20 +608,20 @@ func TestAccELBV2ListenerRuleDataSource_actionRedirect(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	resourceName := "aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_actionRedirect(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
@@ -671,19 +670,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionHostHeader(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionHostHeader(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -710,19 +709,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionHostHeaderRegex(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionHostHeaderRegex(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -749,19 +748,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeader(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionHTTPHeader(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -789,19 +788,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeaderRegex(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionHTTPHeaderRegex(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -829,19 +828,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionHTTPRequestMethod(t *testing.T)
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionHTTPRequestMethod(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -867,19 +866,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionPathPattern(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionPathPattern(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -906,19 +905,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionPathPatternRegex(t *testing.T) 
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionPathPatternRegex(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -945,19 +944,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionQueryString(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionQueryString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -989,19 +988,19 @@ func TestAccELBV2ListenerRuleDataSource_conditionSourceIP(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_conditionSourceIP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
@@ -1027,19 +1026,19 @@ func TestAccELBV2ListenerRuleDataSource_transform(t *testing.T) {
 	}
 
 	var listenerRule awstypes.Rule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb_listener_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerRuleDataSourceConfig_transform(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					testAccCheckListenerRuleExists(ctx, t, dataSourceName, &listenerRule),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("transform"), knownvalue.SetExact([]knownvalue.Check{

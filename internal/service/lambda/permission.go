@@ -131,7 +131,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	functionName := d.Get("function_name").(string)
-	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
+	statementID := create.Name(ctx, d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 
 	// There is a bug in the API (reported and acknowledged by AWS)
 	// which causes some permissions to be ignored when API calls are sent in parallel

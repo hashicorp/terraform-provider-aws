@@ -91,7 +91,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), "tf")
+	name := create.Name(ctx, d.Get(names.AttrName).(string), "tf")
 	input := &qldb.CreateLedgerInput{
 		DeletionProtection: aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		Name:               aws.String(name),

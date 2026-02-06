@@ -12,8 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -37,6 +43,7 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket}"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
@@ -360,38 +367,6 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_logging.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketLoggingConfig_withExpectedBucketOwner(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccS3BucketLogging_withTargetObjectKeyFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -443,6 +418,227 @@ func TestAccS3BucketLogging_withTargetObjectKeyFormat(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.simple_prefix.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLogging_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLogging_Identity_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				Config: testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+				},
+			},
+
+			// Step 2: Import command
+			{
+				Config:            testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+
+			// Step 3: Import block with Import ID
+			{
+				Config:          testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithID,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+			},
+
+			// Step 4: Import block with Resource Identity
+			{
+				Config:          testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// Resource Identity was added after v6.9.0
+func TestAccS3BucketLogging_Identity_ExistingResource_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.9.0",
+					},
+				},
+				Config: testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+				},
+			},
+		},
+	})
+}
+
+// Resource Identity version 1 was added in version 6.31.0
+func TestAccS3BucketLogging_Identity_Upgrade_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create pre-Identity
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.30.0",
+					},
+				},
+				Config: testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectHasIdentity(resourceName),
+				},
+			},
+
+			// Step 2: Current version
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBucketLoggingConfig_expectedBucketOwner(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, "{bucket},{expected_bucket_owner}"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrBucket:    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrBucket)),
+				},
 			},
 		},
 	})
@@ -656,21 +852,6 @@ resource "aws_s3_bucket_logging" "test" {
 `, targetPrefix))
 }
 
-func testAccBucketLoggingConfig_withExpectedBucketOwner(rName string) string {
-	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), `
-data "aws_caller_identity" "current" {}
-
-resource "aws_s3_bucket_logging" "test" {
-  bucket = aws_s3_bucket.test.id
-
-  expected_bucket_owner = data.aws_caller_identity.current.account_id
-
-  target_bucket = aws_s3_bucket.log_bucket.id
-  target_prefix = "log/"
-}
-`)
-}
-
 func testAccBucketLoggingConfig_withTargetObjectKeyFormatPartitionedPrefix(rName, partitionDateSource string) string {
 	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -704,6 +885,21 @@ resource "aws_s3_bucket_logging" "test" {
     simple_prefix {}
   }
 }
+`)
+}
+
+func testAccBucketLoggingConfig_expectedBucketOwner(rName string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), `
+resource "aws_s3_bucket_logging" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+
+data "aws_caller_identity" "current" {}
 `)
 }
 

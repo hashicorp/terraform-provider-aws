@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -49,22 +47,22 @@ func testAccDataZoneEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "blueprint_identifier", "aws_datazone_environment_blueprint_configuration.test", "environment_blueprint_id"),
@@ -98,22 +96,22 @@ func testAccDataZoneEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -126,23 +124,23 @@ func testAccDataZoneEnvironment_updateNameAndDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rNameUpdate := fmt.Sprintf("%s-update", rName)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_updateNameAndDescription(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-description"),
 				),
@@ -150,7 +148,7 @@ func testAccDataZoneEnvironment_updateNameAndDescription(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_updateNameAndDescription(rName, rNameUpdate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdate+"-description"),
 				),
@@ -169,22 +167,22 @@ func testAccDataZoneEnvironment_accountIDAndRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_accountIDAndRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "account_region", acctest.Region()),
 				),
@@ -203,24 +201,24 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parameterPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parameterPrefixUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parameterPrefix := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	parameterPrefixUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_userParameters(rName, parameterPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
@@ -248,7 +246,7 @@ func testAccDataZoneEnvironment_userParameters_Environment(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_userParameters(rName, parameterPrefixUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
@@ -286,22 +284,22 @@ func testAccDataZoneEnvironment_userParameters_Inherited(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_userParameters_Inherited(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
@@ -338,22 +336,22 @@ func testAccDataZoneEnvironment_userParameters_Override(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_userParameters_Override(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_parameters"), knownvalue.ListExact([]knownvalue.Check{
@@ -386,22 +384,22 @@ func testAccDataZoneEnvironment_glossaryTerms(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environment datazone.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_environment.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_glossaryTerms(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.ListSizeExact(3)),
@@ -419,7 +417,7 @@ func testAccDataZoneEnvironment_glossaryTerms(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_glossaryTerms(rName, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("glossary_terms"), knownvalue.ListSizeExact(4)),
@@ -449,7 +447,7 @@ func testAccEnvironmentImportStateFunc(resourceName string) resource.ImportState
 	}
 }
 
-func testAccCheckEnvironmentExists(ctx context.Context, name string, environment *datazone.GetEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(ctx context.Context, t *testing.T, name string, environment *datazone.GetEnvironmentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -460,7 +458,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, name string, environment
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameEnvironment, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		resp, err := tfdatazone.FindEnvironmentByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.ID)
 
 		if err != nil {
@@ -473,9 +471,9 @@ func testAccCheckEnvironmentExists(ctx context.Context, name string, environment
 	}
 }
 
-func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEnvironmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_environment" {

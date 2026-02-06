@@ -48,7 +48,7 @@ func testAccCloudTrailTrail_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
-		CheckDestroy:             testAccCheckTrailDestroy(ctx),
+		CheckDestroy:             testAccCheckTrailDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -58,7 +58,7 @@ func testAccCloudTrailTrail_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrailExists(ctx, resourceName, &v),
+					testAccCheckTrailExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -254,7 +254,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudTrailServiceID),
-		CheckDestroy: testAccCheckTrailDestroy(ctx),
+		CheckDestroy: testAccCheckTrailDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -263,7 +263,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrailExists(ctx, resourceName, &v),
+					testAccCheckTrailExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -277,7 +277,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrailExists(ctx, resourceName, &v),
+					testAccCheckTrailExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -333,7 +333,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource_NoRefresh_NoChange(t *test
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudTrailServiceID),
-		CheckDestroy: testAccCheckTrailDestroy(ctx),
+		CheckDestroy: testAccCheckTrailDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -347,7 +347,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource_NoRefresh_NoChange(t *test
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrailExists(ctx, resourceName, &v),
+					testAccCheckTrailExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -362,7 +362,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource_NoRefresh_NoChange(t *test
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrailExists(ctx, resourceName, &v),
+					testAccCheckTrailExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

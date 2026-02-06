@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	customerManagedName1 := "aws_iam_role_policy_attachment.customer_managed[0]"

@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -314,9 +313,8 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	output, err := conn.GetAgentAlias(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -331,8 +329,8 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	return output.AgentAlias, nil
 }
 
-func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgentAlias(conn *bedrockagent.Client, agentAliasID, agentID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAgentAliasByTwoPartKey(ctx, conn, agentAliasID, agentID)
 
 		if retry.NotFound(err) {
@@ -348,10 +346,10 @@ func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAlias
 }
 
 func waitAgentAliasCreated(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string, timeout time.Duration) (*awstypes.AgentAlias, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
-		Refresh: statusAgentAlias(ctx, conn, agentAliasID, agentID),
+		Refresh: statusAgentAlias(conn, agentAliasID, agentID),
 		Timeout: timeout,
 	}
 
@@ -365,10 +363,10 @@ func waitAgentAliasCreated(ctx context.Context, conn *bedrockagent.Client, agent
 }
 
 func waitAgentAliasUpdated(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string, timeout time.Duration) (*awstypes.AgentAlias, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
-		Refresh: statusAgentAlias(ctx, conn, agentAliasID, agentID),
+		Refresh: statusAgentAlias(conn, agentAliasID, agentID),
 		Timeout: timeout,
 	}
 
