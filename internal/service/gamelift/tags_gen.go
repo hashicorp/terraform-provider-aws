@@ -6,6 +6,7 @@ package gamelift
 
 import (
 	"context"
+	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +29,12 @@ func listTags(ctx context.Context, conn *gamelift.Client, identifier string, opt
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*gamelift.ListTagsForResourceOutput, *awstypes.InvalidRequestException](ctx, 10*time.Minute,
+		func(ctx context.Context) (*gamelift.ListTagsForResourceOutput, error) {
+			return conn.ListTagsForResource(ctx, &input, optFns...)
+		},
+		"not in a taggable state",
+	)
 
 	if err != nil {
 		return tftags.New(ctx, nil), smarterr.NewError(err)
