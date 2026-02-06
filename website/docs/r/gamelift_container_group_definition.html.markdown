@@ -14,11 +14,11 @@ Provides a GameLift Container Group Definition resource for managed containers.
 
 ```terraform
 resource "aws_gamelift_container_group_definition" "game_server" {
-  name                  = "example-game-server"
-  container_group_type  = "GAME_SERVER"
-  operating_system      = "AMAZON_LINUX_2023"
+  name                   = "example-game-server"
+  container_group_type   = "GAME_SERVER"
+  operating_system       = "AMAZON_LINUX_2023"
   total_memory_limit_mib = 4096
-  total_vcpu_limit      = 2
+  total_vcpu_limit       = 2
 
   game_server_container_definition {
     container_name     = "game-server"
