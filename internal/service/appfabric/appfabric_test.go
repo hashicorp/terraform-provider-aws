@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const serializeDelay = 10 * time.Second
@@ -63,7 +62,7 @@ func TestAccAppFabric_serial(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 	input := &appfabric.ListAppBundlesInput{}
 	_, err := conn.ListAppBundles(ctx, input)

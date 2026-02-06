@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,10 +26,10 @@ import (
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -39,12 +37,12 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -78,10 +76,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_basic(t *testing.T) {
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -89,12 +87,12 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOAuth2CredentialProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceOAuth2CredentialProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,10 +112,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -125,12 +123,12 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "auth0-client-id", "auth0-client-secret", 1, "https://dev-example.auth0.com/.well-known/openid-configuration"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -151,7 +149,7 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 			{
 				Config: testAccOAuth2CredentialProviderConfig_customWithDiscoveryURL(rName, "updated-client-id", "updated-client-secret", 2, "https://company.okta.com/.well-known/openid-configuration"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -166,10 +164,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_customDiscoveryURL(t *testi
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -177,12 +175,12 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOAuth2CredentialProviderConfig_customWithAuthServerMetadata(rName, "keycloak-client-id", "keycloak-client-secret", 1, "https://auth.company.com/realms/production", "https://auth.company.com/realms/production/protocol/openid-connect/auth", "https://auth.company.com/realms/production/protocol/openid-connect/token", "code", "id_token"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -207,10 +205,10 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_authorizationServerMetadata
 func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var oauth2credentialprovider bedrockagentcorecontrol.GetOauth2CredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_oauth2_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -218,12 +216,12 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOAuth2CredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOAuth2CredentialProviderConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOAuth2CredentialProviderExists(ctx, resourceName, &oauth2credentialprovider),
+					testAccCheckOAuth2CredentialProviderExists(ctx, t, resourceName, &oauth2credentialprovider),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -245,9 +243,9 @@ func TestAccBedrockAgentCoreOAuth2CredentialProvider_full(t *testing.T) {
 	})
 }
 
-func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_oauth2_credential_provider" {
@@ -270,14 +268,14 @@ func testAccCheckOAuth2CredentialProviderDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckOAuth2CredentialProviderExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetOauth2CredentialProviderOutput) resource.TestCheckFunc {
+func testAccCheckOAuth2CredentialProviderExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetOauth2CredentialProviderOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindOAuth2CredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
@@ -291,7 +289,7 @@ func testAccCheckOAuth2CredentialProviderExists(ctx context.Context, n string, v
 }
 
 func testAccPreCheckOAuth2CredentialProviders(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListOauth2CredentialProvidersInput{}
 

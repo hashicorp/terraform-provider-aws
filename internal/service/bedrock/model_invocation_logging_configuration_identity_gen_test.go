@@ -47,7 +47,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic(t *testing
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -57,7 +57,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic(t *testing
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -247,7 +247,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
-		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -256,7 +256,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -270,7 +270,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -326,7 +326,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
-		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -340,7 +340,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
+					testAccCheckModelInvocationLoggingConfigurationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -46,6 +46,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -83,7 +84,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}Client(ctx)
+	conn := l.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
@@ -118,11 +119,13 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
 			tflog.Info(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
-			diags := resource{{ .ListResource }}Read(ctx, rd, awsClient)
+			diags := resource{{ .ListResource }}Read(ctx, rd, l.Meta())
 			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
+				tflog.Error(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}", map[string]any{
+					names.AttrID: arn,
+					"diags":      sdkdiag.DiagnosticsString(diags),
+				})
+				continue
 			}
 			if rd.Id() == "" {
 				// Resource is logically deleted
@@ -131,7 +134,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 
 			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

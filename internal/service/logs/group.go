@@ -31,8 +31,6 @@ import (
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
-// @Testing(destroyTakesT=true)
-// @Testing(existsTakesT=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogGroup")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.7.0")

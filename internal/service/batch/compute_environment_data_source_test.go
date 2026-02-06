@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -18,11 +17,11 @@ import (
 
 func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	rName := acctest.RandomWithPrefix(t, "tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
 	dataSourceName := "data.aws_batch_compute_environment.by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,11 +47,11 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 
 func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	rName := acctest.RandomWithPrefix(t, "tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
 	dataSourceName := "data.aws_batch_compute_environment.by_name"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -75,6 +74,10 @@ func testAccComputeEnvironmentDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_%[1]s"
 
@@ -86,7 +89,7 @@ resource "aws_iam_role" "ecs_instance_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       }
     }
   ]

@@ -32,9 +32,10 @@ import (
 
 // @SDKResource("aws_s3_bucket_versioning", name="Bucket Versioning")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
@@ -53,7 +54,6 @@ func resourceBucketVersioning() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
@@ -83,7 +83,7 @@ func resourceBucketVersioning() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
+		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// This CustomizeDiff acts as a plan-time validation to prevent MalformedXML errors
 				// when updating bucket versioning to "Disabled" on existing resources
@@ -99,6 +99,23 @@ func resourceBucketVersioning() *schema.Resource {
 					return fmt.Errorf("versioning_configuration.status cannot be updated from '%s' to '%s'", oldStatus, newStatus)
 				}
 
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+				if d.HasChange(names.AttrExpectedBucketOwner) {
+					o, n := d.GetChange(names.AttrExpectedBucketOwner)
+					os, ns := o.(string), n.(string)
+					if os == ns {
+						return nil
+					}
+					if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+						return nil
+					}
+					return d.ForceNew(names.AttrExpectedBucketOwner)
+				}
 				return nil
 			},
 		),

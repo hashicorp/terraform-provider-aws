@@ -7,6 +7,8 @@ package events
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -145,6 +147,32 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newRuleResourceAsListResource,
+			TypeName: "aws_cloudwatch_event_rule",
+			Name:     "Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
+			Factory:  newTargetResourceAsListResource,
+			TypeName: "aws_cloudwatch_event_target",
+			Name:     "Target",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("event_bus_name", true),
+				inttypes.StringIdentityAttribute(names.AttrRule, true),
+				inttypes.StringIdentityAttribute("target_id", true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

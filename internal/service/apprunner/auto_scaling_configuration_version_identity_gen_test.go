@@ -33,7 +33,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_Basic(t *testing.T
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
+		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_Basic(t *testing.T
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -238,7 +238,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -247,7 +247,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource(t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -261,7 +261,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource(t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -316,7 +316,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource_N
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppRunnerServiceID),
-		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
+		CheckDestroy: testAccCheckAutoScalingConfigurationVersionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -330,7 +330,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource_N
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -345,7 +345,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource_N
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
+					testAccCheckAutoScalingConfigurationVersionExists(ctx, t, resourceName),
 				),
 			},
 		},

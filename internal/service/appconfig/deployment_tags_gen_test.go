@@ -43,7 +43,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -90,7 +90,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -141,7 +141,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -185,7 +185,7 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -240,7 +240,7 @@ func TestAccAppConfigDeployment_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -311,7 +311,7 @@ func TestAccAppConfigDeployment_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -380,7 +380,7 @@ func TestAccAppConfigDeployment_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -404,7 +404,7 @@ func TestAccAppConfigDeployment_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -469,7 +469,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -512,7 +512,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -567,7 +567,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -599,7 +599,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -648,7 +648,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -713,7 +713,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -744,7 +744,7 @@ func TestAccAppConfigDeployment_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -809,7 +809,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -856,7 +856,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -905,7 +905,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -948,7 +948,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1007,7 +1007,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1064,7 +1064,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1120,7 +1120,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1179,7 +1179,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1235,7 +1235,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1295,7 +1295,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1364,7 +1364,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_updateToProviderOnly(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1397,7 +1397,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_updateToProviderOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1461,7 +1461,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_updateToResourceOnly(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1489,7 +1489,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_updateToResourceOnly(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1558,7 +1558,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1627,7 +1627,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_emptyProviderOnlyTag(t *testing
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1692,7 +1692,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_nullOverlappingResourceTag(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1760,7 +1760,7 @@ func TestAccAppConfigDeployment_tags_DefaultTags_nullNonOverlappingResourceTag(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1823,7 +1823,7 @@ func TestAccAppConfigDeployment_tags_ComputedTag_OnCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1886,7 +1886,7 @@ func TestAccAppConfigDeployment_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1918,7 +1918,7 @@ func TestAccAppConfigDeployment_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1989,7 +1989,7 @@ func TestAccAppConfigDeployment_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2019,7 +2019,7 @@ func TestAccAppConfigDeployment_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2089,7 +2089,7 @@ func TestAccAppConfigDeployment_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2138,7 +2138,7 @@ func TestAccAppConfigDeployment_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2187,7 +2187,7 @@ func TestAccAppConfigDeployment_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2252,7 +2252,7 @@ func TestAccAppConfigDeployment_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2315,7 +2315,7 @@ func TestAccAppConfigDeployment_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2378,7 +2378,7 @@ func TestAccAppConfigDeployment_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName),
+					testAccCheckDeploymentExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

@@ -31,7 +31,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -87,7 +87,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -135,7 +135,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -176,7 +176,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -216,7 +216,7 @@ func TestAccAppConfigConfigurationProfile_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -228,7 +228,7 @@ func TestAccAppConfigConfigurationProfile_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -286,7 +286,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -296,7 +296,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -352,7 +352,7 @@ func TestAccAppConfigConfigurationProfile_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -362,7 +362,7 @@ func TestAccAppConfigConfigurationProfile_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -386,7 +386,7 @@ func TestAccAppConfigConfigurationProfile_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -436,7 +436,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -448,7 +448,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -488,7 +488,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -528,7 +528,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Add(t *testing.
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -540,7 +540,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -572,7 +572,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -618,7 +618,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -668,7 +668,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Replace(t *test
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -680,7 +680,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -711,7 +711,7 @@ func TestAccAppConfigConfigurationProfile_tags_EmptyTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -760,7 +760,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_providerOnly(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -773,7 +773,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -817,7 +817,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -863,7 +863,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -903,7 +903,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -944,7 +944,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nonOverlapping(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -959,7 +959,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nonOverlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1013,7 +1013,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nonOverlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1066,7 +1066,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nonOverlapping(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1107,7 +1107,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_overlapping(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1122,7 +1122,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1175,7 +1175,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1232,7 +1232,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1286,7 +1286,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_updateToProviderOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1298,7 +1298,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_updateToProviderOnly(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1331,7 +1331,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_updateToProviderOnly(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1379,7 +1379,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_updateToResourceOnly(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1392,7 +1392,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_updateToResourceOnly(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1420,7 +1420,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_updateToResourceOnly(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1471,7 +1471,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_emptyResourceTag(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1486,7 +1486,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_emptyResourceTag(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1539,7 +1539,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_emptyProviderOnlyTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1552,7 +1552,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_emptyProviderOnlyTag(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1599,7 +1599,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nullOverlappingResour
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1614,7 +1614,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nullOverlappingResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1664,7 +1664,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nullNonOverlappingRes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1679,7 +1679,7 @@ func TestAccAppConfigConfigurationProfile_tags_DefaultTags_nullNonOverlappingRes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1729,7 +1729,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnCreate(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1739,7 +1739,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnCreate(t *testing.T
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1787,7 +1787,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnUpdate_Add(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1799,7 +1799,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnUpdate_Add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1831,7 +1831,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnUpdate_Add(t *testi
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1887,7 +1887,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnUpdate_Replace(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1899,7 +1899,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnUpdate_Replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1929,7 +1929,7 @@ func TestAccAppConfigConfigurationProfile_tags_ComputedTag_OnUpdate_Replace(t *t
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1977,7 +1977,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_DefaultTag(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1996,7 +1996,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2045,7 +2045,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2094,7 +2094,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2142,7 +2142,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_ResourceTag(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AppConfigServiceID),
-		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationProfileDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2159,7 +2159,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2222,7 +2222,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2285,7 +2285,7 @@ func TestAccAppConfigConfigurationProfile_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

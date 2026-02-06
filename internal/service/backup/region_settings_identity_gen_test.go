@@ -59,7 +59,7 @@ func testAccBackupRegionSettings_Identity_Basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/RegionSettings/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &v),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -249,7 +249,7 @@ func testAccBackupRegionSettings_Identity_ExistingResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/RegionSettings/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &v),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -261,7 +261,7 @@ func testAccBackupRegionSettings_Identity_ExistingResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/RegionSettings/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &v),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -330,7 +330,7 @@ func testAccBackupRegionSettings_Identity_ExistingResource_NoRefresh_NoChange(t 
 				ConfigDirectory: config.StaticDirectory("testdata/RegionSettings/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &v),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -343,7 +343,7 @@ func testAccBackupRegionSettings_Identity_ExistingResource_NoRefresh_NoChange(t 
 				ConfigDirectory:          config.StaticDirectory("testdata/RegionSettings/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRegionSettingsExists(ctx, resourceName, &v),
+					testAccCheckRegionSettingsExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

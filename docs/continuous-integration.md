@@ -76,7 +76,7 @@ make clean-make-tests
 
 Before running CI tests, you can automatically fix many common issues that would cause CI failures.
 
-Use the `quick-fix` target to run multiple fix targets in sequence (copyright headers, formatting, acceptance test linting, import ordering, modern Go patterns, Semgrep auto-fixes, and website Terraform formatting):
+Use the `quick-fix` target to run multiple fix targets in sequence (copyright headers, formatting, acceptance test linting, import ordering, modern Go patterns, Semgrep auto-fixes, Terraform formatting, and website Terraform formatting):
 
 ```console
 make quick-fix
@@ -89,6 +89,12 @@ PKG=rds make quick-fix
 ```
 
 This is particularly useful before committing changes or submitting a pull request to catch and fix issues early.
+
+Use the `quick-fix-core` target to run fixes only on core directories (non-service packages):
+
+```console
+make quick-fix-core
+```
 
 ### Acceptance Test Linting
 
@@ -622,4 +628,20 @@ Use the `yamllint` target to perform the check:
 
 ```console
 make yamllint
+```
+
+### Terraform Formatting / terraform fmt
+
+This check ensures that all `.tf`, `.tfvars`, `.tftest.hcl`, and `.tfquery.hcl` files in the repository are properly formatted using `terraform fmt`.
+
+Use the `terraform-fmt` target to format all Terraform files:
+
+```console
+make terraform-fmt
+```
+
+**NOTE:** Install [Terraform](https://developer.hashicorp.com/terraform/install) to run this check. On macOS, you can use Homebrew:
+
+```console
+brew install terraform
 ```

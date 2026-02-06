@@ -191,8 +191,6 @@ resource "aws_s3_bucket_acl" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `acl` (String) Canned ACL to apply to the bucket.
-* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:

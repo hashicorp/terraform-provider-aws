@@ -140,7 +140,6 @@ resource "aws_s3_bucket_versioning" "example" {
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
-* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
 * `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket versioning using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:

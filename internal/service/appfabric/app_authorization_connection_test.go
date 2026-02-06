@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,12 +21,12 @@ func testAccAppAuthorizationConnection_basic(t *testing.T) {
 	resourceName := "aws_appfabric_app_authorization_connection.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
 	appAuthorization := "aws_appfabric_app_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
 	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
 	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -41,7 +39,7 @@ func testAccAppAuthorizationConnection_basic(t *testing.T) {
 			{
 				Config: testAccAppAuthorizationConnectionConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppAuthorizationConnectionExists(ctx, resourceName),
+					testAccCheckAppAuthorizationConnectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "app"),
 					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", appBudleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "app_authorization_arn", appAuthorization, names.AttrARN),
@@ -61,9 +59,9 @@ func testAccAppAuthorizationConnection_OAuth2(t *testing.T) {
 	resourceName := "aws_appfabric_app_authorization_connection.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
 	appAuthorization := "aws_appfabric_app_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -76,7 +74,7 @@ func testAccAppAuthorizationConnection_OAuth2(t *testing.T) {
 			{
 				Config: testAccAppAuthorizationConnectionConfig_OAuth2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationConnectionExists(ctx, resourceName),
+					testAccCheckAppAuthorizationConnectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", appBudleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "app_authorization_arn", appAuthorization, names.AttrARN),
 				),
@@ -85,14 +83,14 @@ func testAccAppAuthorizationConnection_OAuth2(t *testing.T) {
 	})
 }
 
-func testAccCheckAppAuthorizationConnectionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAppAuthorizationConnectionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		_, err := tfappfabric.FindAppAuthorizationConnectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_authorization_arn"], rs.Primary.Attributes["app_bundle_arn"])
 

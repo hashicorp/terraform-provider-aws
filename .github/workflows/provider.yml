@@ -24,6 +24,10 @@ on:
       - main.go
       - names/**
       - website/**
+      - '**/*.tf'
+      - '**/*.tfvars'
+      - '**/*.tftest.hcl'
+      - '**/*.tfquery.hcl'
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -166,6 +170,21 @@ jobs:
         run: |
           git diff --compact-summary --exit-code || \
             (echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
+
+  terraform_fmt:
+    name: terraform fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+      - run: make terraform-fmt
+      - name: Check for Git Differences
+        run: |
+          git diff --compact-summary --exit-code || \
+            (echo; echo "Unexpected difference in directories after terraform formatting. Run 'make terraform-fmt' command and commit."; exit 1)
 
   go_test:
     name: go test (shard ${{ matrix.shard }})

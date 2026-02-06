@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,10 +26,10 @@ import (
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -39,12 +37,12 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -71,7 +69,7 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -86,10 +84,10 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_basic(t *testing.T) {
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -97,12 +95,12 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "write-only-api-key-123", 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -129,7 +127,7 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_writeOnly(rName, "updated-write-only-api-key-456", 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -144,10 +142,10 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_writeOnly(t *testing.T) {
 func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var p bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_api_key_credential_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -155,12 +153,12 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyCredentialProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
+					testAccCheckAPIKeyCredentialProviderExists(ctx, t, resourceName, &p),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAPIKeyCredentialProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -177,9 +175,9 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIKeyCredentialProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPIKeyCredentialProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_api_key_credential_provider" {
@@ -202,14 +200,14 @@ func testAccCheckAPIKeyCredentialProviderDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckAPIKeyCredentialProviderExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput) resource.TestCheckFunc {
+func testAccCheckAPIKeyCredentialProviderExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetApiKeyCredentialProviderOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindAPIKeyCredentialProviderByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
@@ -223,7 +221,7 @@ func testAccCheckAPIKeyCredentialProviderExists(ctx context.Context, n string, v
 }
 
 func testAccPreCheckAPIKeyCredentialProviders(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListApiKeyCredentialProvidersInput{}
 

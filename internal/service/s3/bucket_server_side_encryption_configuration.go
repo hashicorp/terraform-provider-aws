@@ -28,9 +28,10 @@ import (
 
 // @SDKResource("aws_s3_bucket_server_side_encryption_configuration", name="Bucket Server Side Encryption Configuration")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="rule.0.bucket_key_enabled")
 // @Testing(plannableImportAction="NoOp")
@@ -52,7 +53,6 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
@@ -94,6 +94,24 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 					},
 				},
 			},
+		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.Id() == "" {
+				return nil
+			}
+			if d.HasChange(names.AttrExpectedBucketOwner) {
+				o, n := d.GetChange(names.AttrExpectedBucketOwner)
+				os, ns := o.(string), n.(string)
+				if os == ns {
+					return nil
+				}
+				if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+					return nil
+				}
+				return d.ForceNew(names.AttrExpectedBucketOwner)
+			}
+			return nil
 		},
 	}
 }
