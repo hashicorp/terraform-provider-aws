@@ -383,7 +383,7 @@ func resourceContainerGroupDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -478,12 +478,12 @@ func resourceContainerGroupDefinitionRead(ctx context.Context, d *schema.Resourc
 	d.Set(names.AttrName, containerGroup.Name)
 	d.Set("container_group_type", containerGroup.ContainerGroupType)
 	d.Set("operating_system", containerGroup.OperatingSystem)
-	d.Set("total_memory_limit_mib", aws.ToInt32(containerGroup.TotalMemoryLimitMebibytes))
-	d.Set("total_vcpu_limit", aws.ToFloat64(containerGroup.TotalVcpuLimit))
+	d.Set("total_memory_limit_mib", containerGroup.TotalMemoryLimitMebibytes)
+	d.Set("total_vcpu_limit", containerGroup.TotalVcpuLimit)
 	d.Set("version_description", containerGroup.VersionDescription)
-	d.Set("version_number", aws.ToInt32(containerGroup.VersionNumber))
+	d.Set("version_number", containerGroup.VersionNumber)
 	d.Set(names.AttrStatus, containerGroup.Status)
-	d.Set("status_reason", containerGroup.StatusReason)
+	d.Set(names.AttrStatusReason, containerGroup.StatusReason)
 	if containerGroup.CreationTime != nil {
 		d.Set(names.AttrCreationTime, containerGroup.CreationTime.Format(time.RFC3339))
 	}
@@ -652,7 +652,7 @@ func resourceContainerGroupDefinitionCustomizeDiff(_ context.Context, d *schema.
 		d.SetNewComputed(names.AttrID)
 		d.SetNewComputed("version_number")
 		d.SetNewComputed(names.AttrStatus)
-		d.SetNewComputed("status_reason")
+		d.SetNewComputed(names.AttrStatusReason)
 		d.SetNewComputed(names.AttrCreationTime)
 	}
 
@@ -685,7 +685,7 @@ func setContainerGroupDefinitionID(d *schema.ResourceData, definition *awstypes.
 }
 
 func parseContainerGroupDefinitionID(id string) (string, *int32, error) {
-	if strings.HasPrefix(id, "arn:") {
+	if arn.IsARN(id) {
 		parsed, err := arn.Parse(id)
 		if err != nil {
 			return "", nil, err

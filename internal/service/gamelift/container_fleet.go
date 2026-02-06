@@ -182,7 +182,7 @@ func resourceContainerFleet() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -365,19 +365,19 @@ func resourceContainerFleetRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrARN, fleet.FleetArn)
-	d.Set("fleet_role_arn", aws.ToString(fleet.FleetRoleArn))
+	d.Set("fleet_role_arn", fleet.FleetRoleArn)
 	d.Set("billing_type", fleet.BillingType)
-	d.Set(names.AttrDescription, aws.ToString(fleet.Description))
-	d.Set("game_server_container_group_definition_name", aws.ToString(fleet.GameServerContainerGroupDefinitionName))
-	d.Set("game_server_container_groups_per_instance", aws.ToInt32(fleet.GameServerContainerGroupsPerInstance))
-	d.Set(names.AttrInstanceType, aws.ToString(fleet.InstanceType))
+	d.Set(names.AttrDescription, fleet.Description)
+	d.Set("game_server_container_group_definition_name", fleet.GameServerContainerGroupDefinitionName)
+	d.Set("game_server_container_groups_per_instance", fleet.GameServerContainerGroupsPerInstance)
+	d.Set(names.AttrInstanceType, fleet.InstanceType)
 	d.Set("metric_groups", flex.FlattenStringValueList(fleet.MetricGroups))
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
-	d.Set("per_instance_container_group_definition_name", aws.ToString(fleet.PerInstanceContainerGroupDefinitionName))
+	d.Set("per_instance_container_group_definition_name", fleet.PerInstanceContainerGroupDefinitionName)
 	d.Set(names.AttrStatus, fleet.Status)
-	d.Set("game_server_container_group_definition_arn", aws.ToString(fleet.GameServerContainerGroupDefinitionArn))
-	d.Set("per_instance_container_group_definition_arn", aws.ToString(fleet.PerInstanceContainerGroupDefinitionArn))
-	d.Set("maximum_game_server_container_groups_per_instance", aws.ToInt32(fleet.MaximumGameServerContainerGroupsPerInstance))
+	d.Set("game_server_container_group_definition_arn", fleet.GameServerContainerGroupDefinitionArn)
+	d.Set("per_instance_container_group_definition_arn", fleet.PerInstanceContainerGroupDefinitionArn)
+	d.Set("maximum_game_server_container_groups_per_instance", fleet.MaximumGameServerContainerGroupsPerInstance)
 
 	if err := d.Set("instance_connection_port_range", flattenConnectionPortRange(fleet.InstanceConnectionPortRange)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_connection_port_range: %s", err)
@@ -604,7 +604,7 @@ func expandLogConfiguration(tfList []any) *awstypes.LogConfiguration {
 	if v, ok := m["log_group_arn"]; ok && v.(string) != "" {
 		apiObject.LogGroupArn = aws.String(v.(string))
 	}
-	if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrS3BucketName]; ok && v.(string) != "" {
 		apiObject.S3BucketName = aws.String(v.(string))
 	}
 
@@ -624,7 +624,7 @@ func flattenLogConfiguration(apiObject *awstypes.LogConfiguration) []any {
 		m["log_group_arn"] = aws.ToString(apiObject.LogGroupArn)
 	}
 	if apiObject.S3BucketName != nil {
-		m["s3_bucket_name"] = aws.ToString(apiObject.S3BucketName)
+		m[names.AttrS3BucketName] = aws.ToString(apiObject.S3BucketName)
 	}
 
 	if len(m) == 0 {
