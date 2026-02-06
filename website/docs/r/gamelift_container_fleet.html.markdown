@@ -75,6 +75,7 @@ resource "aws_gamelift_container_fleet" "example" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `fleet_role_arn` - (Required) IAM role ARN with the `GameLiftContainerFleetPolicy` managed policy attached.
 - `billing_type` - (Optional) Billing type for fleet instances. Valid values: `ON_DEMAND`, `SPOT`. Defaults to `ON_DEMAND`.
 - `description` - (Optional) Fleet description.

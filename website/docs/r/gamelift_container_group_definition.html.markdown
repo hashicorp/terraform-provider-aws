@@ -50,6 +50,7 @@ resource "aws_gamelift_container_group_definition" "game_server" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `name` - (Required) Name of the container group definition. Must be unique per Region.
 - `container_group_type` - (Optional) Container group type. Valid values: `GAME_SERVER`, `PER_INSTANCE`. Defaults to `GAME_SERVER`.
 - `operating_system` - (Optional) Container operating system. Valid values: `AMAZON_LINUX_2023`. Defaults to `AMAZON_LINUX_2023`.
