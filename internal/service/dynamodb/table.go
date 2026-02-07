@@ -191,6 +191,7 @@ func resourceTable() *schema.Resource {
 								Optional:   true,
 								Computed:   true,
 								Deprecated: "hash_key is deprecated. Use key_schema instead.",
+								ValidateDiagFunc:      validation.ToDiagFunc(validation.StringIsNotEmpty),
 							},
 							"key_schema": {
 								Type:     schema.TypeList,
@@ -229,6 +230,7 @@ func resourceTable() *schema.Resource {
 								Type:       schema.TypeString,
 								Optional:   true,
 								Deprecated: "range_key is deprecated. Use key_schema instead.",
+								ValidateDiagFunc:      validation.ToDiagFunc(validation.StringIsNotEmpty),
 							},
 							"read_capacity": {
 								Type:     schema.TypeInt,
@@ -3183,19 +3185,14 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 			for v := range tfcty.ValueElementValues(planGSI) {
 				hashKey := v.GetAttr("hash_key")
 				if hashKey.IsKnown() && !hashKey.IsNull() {
-					hashKeyStr := hashKey.AsString()
-					if hashKeyStr != "" {
-						indexedAttributes[hashKeyStr] = true
-					}
+					indexedAttributes[hashKey.AsString()] = true
 				}
 
 				rangeKey := v.GetAttr("range_key")
 				if rangeKey.IsKnown() && !rangeKey.IsNull() {
-					rangeKeyStr := rangeKey.AsString()
-					if rangeKeyStr != "" {
-						indexedAttributes[rangeKeyStr] = true
-					}
+					indexedAttributes[rangeKey.AsString()] = true
 				}
+				
 				keySchema := v.GetAttr("key_schema")
 				if keySchema.IsKnown() && !keySchema.IsNull() {
 					for v := range tfcty.ValueElementValues(keySchema) {
