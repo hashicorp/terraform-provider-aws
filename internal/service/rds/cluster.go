@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2091,14 +2090,10 @@ func findDBClusterByID(ctx context.Context, conn *rds.Client, id string, optFns 
 	// Eventual consistency check.
 	if arn.IsARN(id) {
 		if aws.ToString(output.DBClusterArn) != id {
-			return nil, &sdkretry.NotFoundError{
-				LastRequest: input,
-			}
+			return nil, &retry.NotFoundError{}
 		}
 	} else if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -2122,9 +2117,8 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -2142,8 +2136,8 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBCluster(conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id, optFns...)
 
 		if retry.NotFound(err) {
@@ -2181,10 +2175,10 @@ func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, wa
 		clusterStatusUpgrading,
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
+		Refresh:    statusDBCluster(conn, id, waitNoPendingModifiedValues),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -2200,7 +2194,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, wa
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
 			clusterStatusCreating,
@@ -2211,7 +2205,7 @@ func waitDBClusterCreated(ctx context.Context, conn *rds.Client, id string, time
 			clusterStatusResettingMasterCredentials,
 		},
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id, false),
+		Refresh:    statusDBCluster(conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -2242,10 +2236,10 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
+		Refresh:    statusDBCluster(conn, id, waitNoPendingModifiedValues),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -2261,7 +2255,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusBackingUp,
@@ -2271,7 +2265,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *rds.Client, id string, time
 			clusterStatusScalingCompute,
 		},
 		Target:     []string{},
-		Refresh:    statusDBCluster(ctx, conn, id, false),
+		Refresh:    statusDBCluster(conn, id, false),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
