@@ -40,6 +40,11 @@ func resourceContainerFleet() *schema.Resource {
 		UpdateWithoutTimeout: resourceContainerFleetUpdate,
 		DeleteWithoutTimeout: resourceContainerFleetDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+		},
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -377,7 +382,7 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(fleet.FleetId))
 
 	if tfMap := expandContainerFleetAutoScalingPolicy(d.Get("auto_scaling_policy")); tfMap != nil {
-		if err := waitContainerFleetActive(ctx, conn, d.Id(), 60*time.Minute); err != nil {
+		if err := waitContainerFleetActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) to become ACTIVE before creating auto_scaling_policy: %s", d.Id(), err)
 		}
 
@@ -477,7 +482,7 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 	fleetHasChanges := d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "auto_scaling_policy")
 
 	if fleetHasChanges {
-		if err := waitContainerFleetActive(ctx, conn, d.Id(), 60*time.Minute); err != nil {
+		if err := waitContainerFleetActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) to become ACTIVE before update: %s", d.Id(), err)
 		}
 
@@ -542,7 +547,7 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChange("auto_scaling_policy") {
-		if err := waitContainerFleetActive(ctx, conn, d.Id(), 60*time.Minute); err != nil {
+		if err := waitContainerFleetActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) to become ACTIVE before updating auto_scaling_policy: %s", d.Id(), err)
 		}
 
