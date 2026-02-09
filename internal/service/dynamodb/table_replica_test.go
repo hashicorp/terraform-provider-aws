@@ -675,3 +675,76 @@ resource "aws_dynamodb_table_replica" "test" {
 }
 `, rName, deletionProtection))
 }
+
+func TestAccDynamoDBTableReplica_crossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	// This test requires a second account configuration
+	// We'll skip if the environment variables aren't present
+	// expected: AWS_ALTERNATE_ACCESS_KEY_ID, AWS_ALTERNATE_SECRET_ACCESS_KEY, AWS_ALTERNATE_REGION
+	if !acctest.HasAlternateAccount() {
+		t.Skip("skipping cross-account test: missing alternate account credentials")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	tableResourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 includes the alternate account provider if configured correctly
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_crossAccount(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTableReplicaConfig_crossAccount(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleAccountProvider(2),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  provider         = "aws"
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  provider         = "awsalternate"
+  global_table_arn = aws_dynamodb_table.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
