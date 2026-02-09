@@ -39,6 +39,12 @@ resource "aws_gamelift_container_fleet" "example" {
   fleet_role_arn = aws_iam_role.gamelift.arn
   billing_type   = "ON_DEMAND"
 
+  auto_scaling_policy {
+    target_tracking_configuration {
+      target_value = 10
+    }
+  }
+
   game_server_container_group_definition_name = aws_gamelift_container_group_definition.game_server.arn
   game_server_container_groups_per_instance   = 1
 
@@ -79,6 +85,7 @@ This resource supports the following arguments:
 - `fleet_role_arn` - (Required) IAM role ARN with the `GameLiftContainerFleetPolicy` managed policy attached.
 - `billing_type` - (Optional) Billing type for fleet instances. Valid values: `ON_DEMAND`, `SPOT`. Defaults to `ON_DEMAND`.
 - `description` - (Optional) Fleet description.
+- `auto_scaling_policy` - (Optional) Target-based auto scaling policy for the fleet.
 - `game_server_container_group_definition_name` - (Required) Name or ARN of the game server container group definition to deploy.
 - `game_server_container_groups_per_instance` - (Optional) Number of game server container groups per instance.
 - `game_session_creation_limit_policy` - (Optional) Game session creation limit policy.
@@ -93,6 +100,15 @@ This resource supports the following arguments:
 - `remove_per_instance_container_group_definition` - (Optional) When `true`, removes the per-instance container group definition.
 - `deployment_configuration` - (Optional) Deployment configuration settings.
 - `tags` - (Optional) Key-value tags to assign.
+
+### auto_scaling_policy
+
+- `name` - (Optional) Name for the scaling policy. Defaults to `<fleet-id>-target-based`.
+- `target_tracking_configuration` - (Required) Target tracking settings for the target-based scaling policy.
+
+### target_tracking_configuration
+
+- `target_value` - (Required) Target value for `PercentAvailableGameSessions`.
 
 ### game_session_creation_limit_policy
 

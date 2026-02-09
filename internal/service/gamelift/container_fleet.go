@@ -80,6 +80,35 @@ func resourceContainerFleet() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
+			"auto_scaling_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(1, 256),
+						},
+						"target_tracking_configuration": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target_value": {
+										Type:         schema.TypeFloat,
+										Required:     true,
+										ValidateFunc: validation.FloatAtLeast(0),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"game_session_creation_limit_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -347,6 +376,16 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(fleet.FleetId))
 
+	if tfMap := expandContainerFleetAutoScalingPolicy(d.Get("auto_scaling_policy")); tfMap != nil {
+		if err := waitContainerFleetActive(ctx, conn, d.Id(), 60*time.Minute); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) to become ACTIVE before creating auto_scaling_policy: %s", d.Id(), err)
+		}
+
+		if err := putContainerFleetScalingPolicy(ctx, conn, d.Id(), tfMap); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating GameLift Container Fleet (%s) auto_scaling_policy: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceContainerFleetRead(ctx, d, meta)...)
 }
 
@@ -407,6 +446,27 @@ func resourceContainerFleetRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting deployment_details: %s", err)
 	}
 
+	// Keep API defaults out of state unless user configured this argument.
+	if tfMap := expandContainerFleetAutoScalingPolicy(d.Get("auto_scaling_policy")); tfMap != nil {
+		name := containerFleetScalingPolicyName(tfMap, d.Id())
+		policy, err := findContainerFleetScalingPolicyByName(ctx, conn, d.Id(), name)
+
+		switch {
+		case retry.NotFound(err):
+			d.Set("auto_scaling_policy", nil)
+		case err != nil:
+			return sdkdiag.AppendErrorf(diags, "reading GameLift Container Fleet (%s) auto_scaling_policy (%s): %s", d.Id(), name, err)
+		default:
+			if policy.PolicyType != awstypes.PolicyTypeTargetBased || policy.TargetConfiguration == nil || policy.TargetConfiguration.TargetValue == nil {
+				return sdkdiag.AppendErrorf(diags, "reading GameLift Container Fleet (%s) auto_scaling_policy (%s): expected target-based policy with target configuration", d.Id(), name)
+			}
+
+			if err := d.Set("auto_scaling_policy", []any{flattenContainerFleetAutoScalingPolicy(policy)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting auto_scaling_policy: %s", err)
+			}
+		}
+	}
+
 	return diags
 }
 
@@ -414,7 +474,13 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	fleetHasChanges := d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "auto_scaling_policy")
+
+	if fleetHasChanges {
+		if err := waitContainerFleetActive(ctx, conn, d.Id(), 60*time.Minute); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) to become ACTIVE before update: %s", d.Id(), err)
+		}
+
 		if d.Get("remove_per_instance_container_group_definition").(bool) && d.Get("per_instance_container_group_definition_name").(string) != "" {
 			return sdkdiag.AppendErrorf(diags, "remove_per_instance_container_group_definition cannot be set with per_instance_container_group_definition_name")
 		}
@@ -475,12 +541,43 @@ func resourceContainerFleetUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
+	if d.HasChange("auto_scaling_policy") {
+		if err := waitContainerFleetActive(ctx, conn, d.Id(), 60*time.Minute); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for GameLift Container Fleet (%s) to become ACTIVE before updating auto_scaling_policy: %s", d.Id(), err)
+		}
+
+		oldRaw, newRaw := d.GetChange("auto_scaling_policy")
+		oldPolicy := expandContainerFleetAutoScalingPolicy(oldRaw)
+		newPolicy := expandContainerFleetAutoScalingPolicy(newRaw)
+
+		oldName := containerFleetScalingPolicyName(oldPolicy, d.Id())
+		newName := containerFleetScalingPolicyName(newPolicy, d.Id())
+
+		if newPolicy != nil {
+			if err := putContainerFleetScalingPolicy(ctx, conn, d.Id(), newPolicy); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating GameLift Container Fleet (%s) auto_scaling_policy (%s): %s", d.Id(), newName, err)
+			}
+		}
+
+		if oldPolicy != nil && (newPolicy == nil || oldName != newName) {
+			if err := deleteContainerFleetScalingPolicy(ctx, conn, d.Id(), oldName); err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting previous GameLift Container Fleet (%s) auto_scaling_policy (%s): %s", d.Id(), oldName, err)
+			}
+		}
+	}
+
 	return append(diags, resourceContainerFleetRead(ctx, d, meta)...)
 }
 
 func resourceContainerFleetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
+
+	if tfMap := expandContainerFleetAutoScalingPolicy(d.Get("auto_scaling_policy")); tfMap != nil {
+		if err := deleteContainerFleetScalingPolicy(ctx, conn, d.Id(), containerFleetScalingPolicyName(tfMap, d.Id())); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting GameLift Container Fleet (%s) auto_scaling_policy: %s", d.Id(), err)
+		}
+	}
 
 	log.Printf("[INFO] Deleting GameLift Container Fleet: %s", d.Id())
 	const timeout = 60 * time.Minute
@@ -525,6 +622,160 @@ func findContainerFleetByID(ctx context.Context, conn *gamelift.Client, id strin
 	}
 
 	return output.ContainerFleet, nil
+}
+
+func statusContainerFleet(ctx context.Context, conn *gamelift.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		fleet, err := findContainerFleetByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return fleet, string(fleet.Status), nil
+	}
+}
+
+func waitContainerFleetActive(ctx context.Context, conn *gamelift.Client, id string, timeout time.Duration) error {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ContainerFleetStatusPending,
+			awstypes.ContainerFleetStatusCreating,
+			awstypes.ContainerFleetStatusCreated,
+			awstypes.ContainerFleetStatusActivating,
+			awstypes.ContainerFleetStatusUpdating,
+		),
+		Target: enum.Slice(
+			awstypes.ContainerFleetStatusActive,
+		),
+		Refresh: statusContainerFleet(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func findContainerFleetScalingPolicyByName(ctx context.Context, conn *gamelift.Client, fleetID, name string) (*awstypes.ScalingPolicy, error) {
+	input := &gamelift.DescribeScalingPoliciesInput{
+		FleetId: aws.String(fleetID),
+	}
+
+	pages := gamelift.NewDescribeScalingPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, policy := range page.ScalingPolicies {
+			if aws.ToString(policy.Name) == name {
+				return &policy, nil
+			}
+		}
+	}
+
+	return nil, &sdkretry.NotFoundError{
+		LastRequest: input,
+	}
+}
+
+func putContainerFleetScalingPolicy(ctx context.Context, conn *gamelift.Client, fleetID string, tfMap map[string]any) error {
+	input := &gamelift.PutScalingPolicyInput{
+		FleetId:             aws.String(fleetID),
+		Name:                aws.String(containerFleetScalingPolicyName(tfMap, fleetID)),
+		PolicyType:          awstypes.PolicyTypeTargetBased,
+		MetricName:          awstypes.MetricNamePercentAvailableGameSessions,
+		TargetConfiguration: expandContainerFleetTargetTrackingConfiguration(tfMap["target_tracking_configuration"].([]any)),
+	}
+
+	_, err := conn.PutScalingPolicy(ctx, input)
+
+	return err
+}
+
+func deleteContainerFleetScalingPolicy(ctx context.Context, conn *gamelift.Client, fleetID, name string) error {
+	_, err := conn.DeleteScalingPolicy(ctx, &gamelift.DeleteScalingPolicyInput{
+		FleetId: aws.String(fleetID),
+		Name:    aws.String(name),
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil
+	}
+
+	return err
+}
+
+func expandContainerFleetAutoScalingPolicy(v any) map[string]any {
+	tfList, ok := v.([]any)
+	if !ok || len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	return tfMap
+}
+
+func expandContainerFleetTargetTrackingConfiguration(tfList []any) *awstypes.TargetConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	return &awstypes.TargetConfiguration{
+		TargetValue: aws.Float64(tfMap["target_value"].(float64)),
+	}
+}
+
+func flattenContainerFleetAutoScalingPolicy(apiObject *awstypes.ScalingPolicy) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrName:                  aws.ToString(apiObject.Name),
+		"target_tracking_configuration": flattenContainerFleetTargetTrackingConfiguration(apiObject.TargetConfiguration),
+	}
+
+	return tfMap
+}
+
+func flattenContainerFleetTargetTrackingConfiguration(apiObject *awstypes.TargetConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []any{
+		map[string]any{
+			"target_value": aws.ToFloat64(apiObject.TargetValue),
+		},
+	}
+}
+
+func containerFleetScalingPolicyName(tfMap map[string]any, fleetID string) string {
+	if tfMap == nil {
+		return ""
+	}
+
+	if name, ok := tfMap[names.AttrName].(string); ok && name != "" {
+		return name
+	}
+
+	return fleetID + "-target-based"
 }
 
 func normalizeContainerGroupDefinitionName(v string) string {
