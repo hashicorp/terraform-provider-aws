@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
@@ -24,21 +22,21 @@ import (
 func TestAccCognitoIDPLogDeliveryConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_log_delivery_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttrPair("aws_cognito_user_pool.test", names.AttrID, resourceName, names.AttrUserPoolID),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
@@ -59,21 +57,21 @@ func TestAccCognitoIDPLogDeliveryConfiguration_basic(t *testing.T) {
 func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_log_delivery_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
@@ -82,7 +80,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 			{
 				Config: testAccLogDeliveryConfigurationConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
@@ -104,28 +102,28 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 func TestAccCognitoIDPLogDeliveryConfiguration_logLevelUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_log_delivery_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryConfigurationConfig_logLevel(rName, "ERROR"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
 				),
 			},
 			{
 				Config: testAccLogDeliveryConfigurationConfig_logLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
 				),
 			},
@@ -136,21 +134,21 @@ func TestAccCognitoIDPLogDeliveryConfiguration_logLevelUpdate(t *testing.T) {
 func TestAccCognitoIDPLogDeliveryConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_log_delivery_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcognitoidp.ResourceLogDeliveryConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -162,21 +160,21 @@ func TestAccCognitoIDPLogDeliveryConfiguration_disappears(t *testing.T) {
 func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cognito_log_delivery_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLogDeliveryConfigurationConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					testAccCheckLogDeliveryConfigurationExists(ctx, t, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
@@ -196,9 +194,9 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 	})
 }
 
-func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_log_delivery_configuration" {
@@ -222,7 +220,7 @@ func testAccCheckLogDeliveryConfigurationDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, name string, logDeliveryConfiguration *awstypes.LogDeliveryConfigurationType) resource.TestCheckFunc {
+func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, t *testing.T, name string, logDeliveryConfiguration *awstypes.LogDeliveryConfigurationType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -233,7 +231,7 @@ func testAccCheckLogDeliveryConfigurationExists(ctx context.Context, name string
 			return create.Error(names.CognitoIDP, create.ErrActionCheckingExistence, "Log Delivery Configuration", name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CognitoIDPClient(ctx)
 
 		resp, err := tfcognitoidp.FindLogDeliveryConfigurationByUserPoolID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID])
 

@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,19 +19,19 @@ import (
 
 func TestAccELBListenerPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_load_balancer_listener_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerPolicyExists(ctx, resourceName),
+					testAccCheckListenerPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
@@ -45,21 +43,21 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 
 func TestAccELBListenerPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	resourceName := "aws_load_balancer_listener_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerPolicyConfig_update(rName, key, certificate, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerPolicyExists(ctx, resourceName),
+					testAccCheckListenerPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
@@ -73,7 +71,7 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 			{
 				Config: testAccListenerPolicyConfig_update(rName, key, certificate, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerPolicyExists(ctx, resourceName),
+					testAccCheckListenerPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
@@ -101,19 +99,19 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 
 func TestAccELBListenerPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_load_balancer_listener_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerPolicyExists(ctx, resourceName),
+					testAccCheckListenerPolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceListenerPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -122,9 +120,9 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckListenerPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_listener_policy" {
@@ -154,7 +152,7 @@ func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckListenerPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckListenerPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -171,7 +169,7 @@ func testAccCheckListenerPolicyExists(ctx context.Context, n string) resource.Te
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 

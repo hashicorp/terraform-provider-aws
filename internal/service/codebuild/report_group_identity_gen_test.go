@@ -35,7 +35,7 @@ func TestAccCodeBuildReportGroup_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy:             testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckReportGroupDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccCodeBuildReportGroup_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &v),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "codebuild", "report-group/{name}"),
@@ -252,7 +252,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy: testAccCheckReportGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -261,7 +261,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &v),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -275,7 +275,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &v),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -331,7 +331,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource_NoRefresh_NoChange(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckReportGroupDestroy(ctx),
+		CheckDestroy: testAccCheckReportGroupDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -345,7 +345,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource_NoRefresh_NoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &v),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -360,7 +360,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource_NoRefresh_NoChange(t 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReportGroupExists(ctx, resourceName, &v),
+					testAccCheckReportGroupExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

@@ -46,7 +46,7 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -56,7 +56,7 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "codeartifact", "domain/{domain}"),
@@ -253,7 +253,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeArtifactServiceID),
-		CheckDestroy: testAccCheckDomainDestroy(ctx),
+		CheckDestroy: testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -262,7 +262,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -276,7 +276,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -331,7 +331,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeArtifactServiceID),
-		CheckDestroy: testAccCheckDomainDestroy(ctx),
+		CheckDestroy: testAccCheckDomainDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -345,7 +345,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -360,7 +360,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 				),
 			},
 		},

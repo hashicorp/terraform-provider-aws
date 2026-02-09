@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCleanRoomsCollaboration_List_Basic(t *testing.T) {
+func TestAccCleanRoomsCollaboration_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_cleanrooms_collaboration.test[0]"

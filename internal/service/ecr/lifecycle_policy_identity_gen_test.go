@@ -34,7 +34,7 @@ func TestAccECRLifecyclePolicy_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -44,7 +44,7 @@ func TestAccECRLifecyclePolicy_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("repository"), compare.ValuesSame()),
@@ -210,7 +210,7 @@ func TestAccECRLifecyclePolicy_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -219,7 +219,7 @@ func TestAccECRLifecyclePolicy_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -267,7 +267,7 @@ func TestAccECRLifecyclePolicy_Identity_ExistingResource_NoRefresh_NoChange(t *t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx),
+		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -281,7 +281,7 @@ func TestAccECRLifecyclePolicy_Identity_ExistingResource_NoRefresh_NoChange(t *t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					testAccCheckLifecyclePolicyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

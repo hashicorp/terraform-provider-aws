@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -751,9 +750,8 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
-		return nil, nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -788,9 +786,8 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	}
 
 	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
-		return nil, nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 

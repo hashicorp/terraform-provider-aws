@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 // @ArnFormat("report-group/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.ReportGroup")
 // @Testing(importIgnore="delete_reports", plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,
@@ -251,8 +249,8 @@ func findReportGroups(ctx context.Context, conn *codebuild.Client, input *codebu
 	return output.ReportGroups, nil
 }
 
-func statusReportGroup(ctx context.Context, conn *codebuild.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReportGroup(conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReportGroupByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -271,10 +269,10 @@ func waitReportGroupDeleted(ctx context.Context, conn *codebuild.Client, arn str
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ReportGroupStatusTypeDeleting),
 		Target:  []string{},
-		Refresh: statusReportGroup(ctx, conn, arn),
+		Refresh: statusReportGroup(conn, arn),
 		Timeout: timeout,
 	}
 

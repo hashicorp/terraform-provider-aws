@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBatchJobQueue_List_Basic(t *testing.T) {
+func TestAccBatchJobQueue_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_batch_job_queue.test[0]"
@@ -72,7 +72,7 @@ func TestAccBatchJobQueue_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_List_RegionOverride(t *testing.T) {
+func TestAccBatchJobQueue_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_batch_job_queue.test[0]"

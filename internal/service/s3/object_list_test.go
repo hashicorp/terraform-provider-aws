@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3Object_List_Basic(t *testing.T) {
+func TestAccS3Object_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_object.test[0]"
@@ -79,7 +79,7 @@ func TestAccS3Object_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_List_DirectoryBucket(t *testing.T) {
+func TestAccS3Object_List_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_object.test[0]"
@@ -137,7 +137,7 @@ func TestAccS3Object_List_DirectoryBucket(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_List_Prefix(t *testing.T) {
+func TestAccS3Object_List_prefix(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_object.test[0]"

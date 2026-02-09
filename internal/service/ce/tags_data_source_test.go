@@ -9,7 +9,6 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +19,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_tags.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
 	formatDate := "2006-01-02"
 	currentTime := time.Now()
@@ -28,7 +27,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	startDate := monthsAgo.Format(formatDate)
 	endDate := currentTime.Format(formatDate)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -36,7 +35,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTagsDataSourceConfig_basic(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},
@@ -49,7 +48,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_tags.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
 	formatDate := "2006-01-02"
 	currentTime := time.Now()
@@ -57,7 +56,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	startDate := monthsAgo.Format(formatDate)
 	endDate := currentTime.Format(formatDate)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -65,7 +64,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccTagsDataSourceConfig_filter(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, t, resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},

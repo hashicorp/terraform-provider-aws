@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDevOpsGuru_serial(t *testing.T) {
@@ -52,7 +51,7 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 	input := devopsguru.DescribeAccountHealthInput{}
 	_, err := conn.DescribeAccountHealth(ctx, &input)

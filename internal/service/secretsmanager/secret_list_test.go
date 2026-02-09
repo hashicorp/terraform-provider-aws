@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecretsManagerSecret_List_Basic(t *testing.T) {
+func TestAccSecretsManagerSecret_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_secretsmanager_secret.test[0]"

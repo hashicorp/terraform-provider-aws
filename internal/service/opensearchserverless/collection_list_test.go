@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOpenSearchServerlessCollection_List_Basic(t *testing.T) {
+func TestAccOpenSearchServerlessCollection_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_opensearchserverless_collection.test[0]"

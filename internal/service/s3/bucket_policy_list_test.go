@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketPolicy_List_Basic(t *testing.T) {
+func TestAccS3BucketPolicy_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"
@@ -92,7 +92,7 @@ func TestAccS3BucketPolicy_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketPolicy_List_RegionOverride(t *testing.T) {
+func TestAccS3BucketPolicy_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_policy.test[0]"

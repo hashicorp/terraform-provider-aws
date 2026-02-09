@@ -19,7 +19,6 @@ import (
 
 // @SDKDataSource("aws_dms_replication_task", name="Replication Task")
 // @Tags(identifierAttribute="replication_task_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationTaskRead,

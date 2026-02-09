@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketPublicAccessBlock_List_Basic(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_public_access_block.test[0]"
@@ -88,7 +88,7 @@ func TestAccS3BucketPublicAccessBlock_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketPublicAccessBlock_List_RegionOverride(t *testing.T) {
+func TestAccS3BucketPublicAccessBlock_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_public_access_block.test[0]"

@@ -27,7 +27,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
 	resourceName := "aws_dx_hosted_connection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -36,7 +36,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 			{
 				Config: testAccHostedConnectionConfig_basic(connectionName, connectionID, ownerAccountID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedConnectionExists(ctx, resourceName),
+					testAccCheckHostedConnectionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Mbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, connectionID),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_region"),
@@ -79,9 +79,9 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 	}
 }
 
-func testAccCheckHostedConnectionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckHostedConnectionExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

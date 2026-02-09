@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -24,7 +23,7 @@ func TestAccCodeBuildProject_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_codebuild_project.test[0]"
 	resourceName2 := "aws_codebuild_project.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -32,7 +31,7 @@ func TestAccCodeBuildProject_List_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CodeBuildServiceID),
-		CheckDestroy: testAccCheckProjectDestroy(ctx),
+		CheckDestroy: testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

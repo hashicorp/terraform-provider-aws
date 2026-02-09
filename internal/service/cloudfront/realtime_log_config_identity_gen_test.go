@@ -35,7 +35,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckRealtimeLogConfigDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectGlobalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "cloudfront", "realtime-log-config/{name}"),
@@ -119,7 +119,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy: testAccCheckRealtimeLogConfigDestroy(ctx),
+		CheckDestroy: testAccCheckRealtimeLogConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -128,7 +128,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -142,7 +142,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource(t *testing.T) 
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -198,7 +198,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource_NoRefresh_NoCh
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
-		CheckDestroy: testAccCheckRealtimeLogConfigDestroy(ctx),
+		CheckDestroy: testAccCheckRealtimeLogConfigDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -212,7 +212,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource_NoRefresh_NoCh
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -227,7 +227,7 @@ func TestAccCloudFrontRealtimeLogConfig_Identity_ExistingResource_NoRefresh_NoCh
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
+					testAccCheckRealtimeLogConfigExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

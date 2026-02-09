@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsLogGroup_List_Basic(t *testing.T) {
+func TestAccLogsLogGroup_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_cloudwatch_log_group.test[0]"
@@ -81,7 +81,7 @@ func TestAccLogsLogGroup_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogGroup_List_RegionOverride(t *testing.T) {
+func TestAccLogsLogGroup_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_cloudwatch_log_group.test[0]"

@@ -11,17 +11,15 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,10 +48,10 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -62,12 +60,12 @@ func TestAccDataExchangeEventAction_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
@@ -100,13 +98,13 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
 	createdAtNoChange := statecheck.CompareValue(compare.ValuesSame())
 	updatedAtChange := statecheck.CompareValue(compare.ValuesDiffer())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -115,12 +113,12 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
@@ -134,7 +132,7 @@ func TestAccDataExchangeEventAction_update(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "1"),
@@ -163,10 +161,10 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -175,12 +173,12 @@ func TestAccDataExchangeEventAction_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdataexchange.ResourceEventAction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -197,10 +195,10 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -209,12 +207,12 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_keyPattern(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.#", "1"),
@@ -229,7 +227,7 @@ func TestAccDataExchangeEventAction_keyPattern(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.revision_destination.#", "1"),
@@ -253,10 +251,10 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -265,12 +263,12 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_encryption_AES256(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "1"),
@@ -286,7 +284,7 @@ func TestAccDataExchangeEventAction_encryption_AES256(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
@@ -309,10 +307,10 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 
 	var eventaction dataexchange.GetEventActionOutput
 	resourceName := "aws_dataexchange_event_action.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSetId := os.Getenv(testAccDataSetIDEnvVar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDataSetID(t)
@@ -321,12 +319,12 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventActionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventActionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventActionConfig_encryption_kmsKey(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "1"),
@@ -342,7 +340,7 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 			{
 				Config: testAccEventActionConfig_basic(bucketName, dataSetId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventActionExists(ctx, resourceName, &eventaction),
+					testAccCheckEventActionExists(ctx, t, resourceName, &eventaction),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.export_revision_to_s3.0.encryption.#", "0"),
@@ -358,7 +356,7 @@ func TestAccDataExchangeEventAction_encryption_kmsKey(t *testing.T) {
 }
 
 func testAccEventActionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 
 	input := dataexchange.ListEventActionsInput{}
 	_, err := conn.ListEventActions(ctx, &input)
@@ -371,9 +369,9 @@ func testAccEventActionPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckEventActionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEventActionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dataexchange_event_action" {
@@ -382,7 +380,7 @@ func testAccCheckEventActionDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfdataexchange.FindEventActionByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*sdkretry.NotFoundError](err) {
+			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
 			}
 
@@ -397,7 +395,7 @@ func testAccCheckEventActionDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchange.GetEventActionOutput) resource.TestCheckFunc {
+func testAccCheckEventActionExists(ctx context.Context, t *testing.T, n string, v *dataexchange.GetEventActionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -408,7 +406,7 @@ func testAccCheckEventActionExists(ctx context.Context, n string, v *dataexchang
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 		output, err := tfdataexchange.FindEventActionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

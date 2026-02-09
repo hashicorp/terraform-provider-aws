@@ -61,7 +61,7 @@ func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -72,7 +72,7 @@ func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -114,7 +114,7 @@ func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -160,7 +160,7 @@ func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -199,7 +199,7 @@ func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -238,7 +238,7 @@ func testAccConfigServiceAggregateAuthorization_tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -249,7 +249,7 @@ func testAccConfigServiceAggregateAuthorization_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -305,7 +305,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -314,7 +314,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -368,7 +368,7 @@ func testAccConfigServiceAggregateAuthorization_tags_AddOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -377,7 +377,7 @@ func testAccConfigServiceAggregateAuthorization_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -400,7 +400,7 @@ func testAccConfigServiceAggregateAuthorization_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -449,7 +449,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnCreate(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -460,7 +460,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnCreate(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -498,7 +498,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnCreate(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -537,7 +537,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add(t *te
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -548,7 +548,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -579,7 +579,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -623,7 +623,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -672,7 +672,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Replace(t
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -683,7 +683,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Replace(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -713,7 +713,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Replace(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -761,7 +761,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -773,7 +773,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -815,7 +815,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -859,7 +859,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -897,7 +897,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -937,7 +937,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -951,7 +951,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1003,7 +1003,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1054,7 +1054,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1094,7 +1094,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1108,7 +1108,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1159,7 +1159,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1214,7 +1214,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1267,7 +1267,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToProvide
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1278,7 +1278,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToProvide
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1310,7 +1310,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToProvide
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1357,7 +1357,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToResourc
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1369,7 +1369,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToResourc
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1396,7 +1396,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToResourc
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1446,7 +1446,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyResourceTa
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1460,7 +1460,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyResourceTa
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1512,7 +1512,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyProviderOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1524,7 +1524,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyProviderOn
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1570,7 +1570,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullOverlapping
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1584,7 +1584,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullOverlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1633,7 +1633,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullNonOverlapp
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1647,7 +1647,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullNonOverlapp
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1696,7 +1696,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnCreate(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1705,7 +1705,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnCreate(t *tes
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1752,7 +1752,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Add(t 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1763,7 +1763,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Add(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1794,7 +1794,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Add(t 
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1849,7 +1849,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Replac
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1860,7 +1860,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Replac
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1889,7 +1889,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Replac
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1936,7 +1936,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1954,7 +1954,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultT
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2002,7 +2002,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultT
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2050,7 +2050,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultT
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2098,7 +2098,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_Resource
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx),
+		CheckDestroy: testAccCheckAggregateAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2114,7 +2114,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_Resource
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2176,7 +2176,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_Resource
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2238,7 +2238,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_Resource
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &v),
+					testAccCheckAggregateAuthorizationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
