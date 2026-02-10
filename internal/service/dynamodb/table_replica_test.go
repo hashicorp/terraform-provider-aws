@@ -685,9 +685,7 @@ func TestAccDynamoDBTableReplica_crossAccount(t *testing.T) {
 	// This test requires a second account configuration
 	// We'll skip if the environment variables aren't present
 	// expected: AWS_ALTERNATE_ACCESS_KEY_ID, AWS_ALTERNATE_SECRET_ACCESS_KEY, AWS_ALTERNATE_REGION
-	if !acctest.HasAlternateAccount() {
-		t.Skip("skipping cross-account test: missing alternate account credentials")
-	}
+	acctest.PreCheckAlternateAccount(t)
 
 	resourceName := "aws_dynamodb_table_replica.test"
 	tableResourceName := "aws_dynamodb_table.test"
@@ -700,7 +698,7 @@ func TestAccDynamoDBTableReplica_crossAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableReplicaConfig_crossAccount(rName),
+				Config: testAccTableReplicaConfig_crossAccount(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, names.AttrARN),
@@ -716,9 +714,9 @@ func TestAccDynamoDBTableReplica_crossAccount(t *testing.T) {
 	})
 }
 
-func testAccTableReplicaConfig_crossAccount(rName string) string {
+func testAccTableReplicaConfig_crossAccount(t *testing.T, rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigMultipleAccountProvider(2),
+		acctest.ConfigMultipleAccountProvider(t, 2),
 		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   provider         = "aws"
