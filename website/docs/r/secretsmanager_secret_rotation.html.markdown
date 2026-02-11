@@ -30,44 +30,41 @@ resource "aws_secretsmanager_secret_rotation" "example" {
 For managed external secrets that are rotated by AWS partner integrations:
 
 ```terraform
-resource "aws_iam_role" "example" {
-  name = "secretsmanager-external-rotation-role"
+# AWS Secrets Manager Secret with MES support
+resource "aws_secretsmanager_secret" "salesforce_client_secret" {
+  name        = "${var.prefix}-salesforce-client-secret"
+  description = "Demo of Managed External Secrets for Salesforce integration"
+  type = "SalesforceClientSecret"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "secretsmanager.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
+  tags = {
+    Name        = "${var.prefix}-salesforce-secret"
+    Environment = "demo"
+    Partner     = "Salesforce"
+    MESEnabled  = "true"
+  }
 }
 
-resource "aws_secretsmanager_secret" "bigid" {
-  name = "bigid-client-secret"
-  type = "BigIDClientSecret"
-}
+# Secret rotation configuration with external metadata
+resource "aws_secretsmanager_secret_rotation" "salesforce_rotation" {
+  secret_id = aws_secretsmanager_secret.salesforce_client_secret.id
 
-resource "aws_secretsmanager_secret_rotation" "bigid" {
-  secret_id                         = aws_secretsmanager_secret.bigid.id
-  external_secret_rotation_role_arn = aws_iam_role.example.arn
+  external_secret_rotation_role_arn = aws_iam_role.external_rotation_role.arn
 
   external_secret_rotation_metadata {
-    key   = "base_url"
-    value = "https://bigid.example.com"
+    key   = "adminSecretArn"
+    value = aws_secretsmanager_secret.salesforce_client_secret.arn
+  }
+  external_secret_rotation_metadata {
+    key   = "apiVersion"
+    value = "v65.0"
   }
 
-  external_secret_rotation_metadata {
-    key   = "client_id"
-    value = "my-client-id"
-  }
 
   rotation_rules {
-    automatically_after_days = 30
+    automatically_after_days = var.rotation_days
   }
 }
+
 ```
 
 For more information about managed external secrets and partner-specific metadata requirements, see the [AWS documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html) and [partner-specific guides](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html).
