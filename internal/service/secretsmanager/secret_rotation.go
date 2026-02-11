@@ -91,6 +91,27 @@ func resourceSecretRotation() *schema.Resource {
 					},
 				},
 			},
+			"external_secret_rotation_metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKey: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrValue: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"external_secret_rotation_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"secret_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -116,10 +137,19 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.RotationLambdaARN = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("external_secret_rotation_metadata"); ok && len(v.([]any)) > 0 {
+		input.ExternalSecretRotationMetadata = expandExternalSecretRotationMetadata(v.([]any))
+	}
+
+	if v, ok := d.GetOk("external_secret_rotation_role_arn"); ok {
+		input.ExternalSecretRotationRoleArn = aws.String(v.(string))
+	}
+
 	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
+	// InvalidRequestException: Secrets Manager is unable to assume role (IAM propagation delay).
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.RotateSecret(ctx, input)
-	}, "AccessDeniedException")
+	}, "AccessDeniedException", "InvalidRequestException")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret Rotation (%s): %s", secretID, err)
@@ -153,9 +183,15 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
 		}
+		if err := d.Set("external_secret_rotation_metadata", flattenExternalSecretRotationMetadata(output.ExternalSecretRotationMetadata)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting external_secret_rotation_metadata: %s", err)
+		}
+		d.Set("external_secret_rotation_role_arn", output.ExternalSecretRotationRoleArn)
 	} else {
 		d.Set("rotation_lambda_arn", "")
 		d.Set("rotation_rules", []any{})
+		d.Set("external_secret_rotation_metadata", []any{})
+		d.Set("external_secret_rotation_role_arn", "")
 	}
 	d.Set("secret_id", d.Id())
 
@@ -166,7 +202,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
+	if d.HasChanges("rotation_lambda_arn", "rotation_rules", "external_secret_rotation_metadata", "external_secret_rotation_role_arn") {
 		secretID := d.Get("secret_id").(string)
 		input := &secretsmanager.RotateSecretInput{
 			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
@@ -177,6 +213,14 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok {
 			input.RotationLambdaARN = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("external_secret_rotation_metadata"); ok && len(v.([]any)) > 0 {
+			input.ExternalSecretRotationMetadata = expandExternalSecretRotationMetadata(v.([]any))
+		}
+
+		if v, ok := d.GetOk("external_secret_rotation_role_arn"); ok {
+			input.ExternalSecretRotationRoleArn = aws.String(v.(string))
 		}
 
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
@@ -249,4 +293,57 @@ func flattenRotationRules(rules *types.RotationRulesType) []any {
 	}
 
 	return []any{m}
+}
+
+func expandExternalSecretRotationMetadata(tfList []any) []types.ExternalSecretRotationMetadataItem {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]types.ExternalSecretRotationMetadataItem, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := types.ExternalSecretRotationMetadataItem{}
+
+		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenExternalSecretRotationMetadata(apiObjects []types.ExternalSecretRotationMetadataItem) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.Key; v != nil {
+			tfMap[names.AttrKey] = aws.ToString(v)
+		}
+
+		if v := apiObject.Value; v != nil {
+			tfMap[names.AttrValue] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
