@@ -105,6 +105,13 @@ func resourceSecret() *schema.Resource {
 					validation.IntInSlice([]int{0}),
 				),
 			},
+			names.AttrType: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				ForceNew:     true, // Type cannot be changed after secret creation
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"replica": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -177,6 +184,10 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.AddReplicaRegions = expandReplicaRegionTypes(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) != "" {
+		input.Type = aws.String(v.(string))
+	}
+
 	// Retry for secret recreation after deletion.
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func(ctx context.Context) (any, error) {
@@ -247,6 +258,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrType, output.Type)
 	if err := d.Set("replica", flattenReplicationStatusTypes(output.ReplicationStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
 	}

@@ -610,3 +610,104 @@ resource "aws_secretsmanager_secret_rotation" "test" {
 }
 `, rName, automaticallyAfterDays, duration))
 }
+
+func TestAccSecretsManagerSecretRotation_externalRotation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const (
+		resourceName = "aws_secretsmanager_secret_rotation.test"
+		days         = 30
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_externalRotation(rName, days),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.0.key", "adminSecretArn"),
+					resource.TestCheckResourceAttrPair(resourceName, "external_secret_rotation_metadata.0.value", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.1.key", "apiVersion"),
+					resource.TestCheckResourceAttr(resourceName, "external_secret_rotation_metadata.1.value", "v65.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "external_secret_rotation_role_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
+			},
+		},
+	})
+}
+
+func testAccSecretRotationConfig_externalRotation(rName string, automaticallyAfterDays int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "secretsmanager.${data.aws_partition.current.dns_suffix}"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "secretsmanager:*"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+  type = "SalesforceClientSecret"
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id                        = aws_secretsmanager_secret.test.id
+  external_secret_rotation_role_arn = aws_iam_role.test.arn
+
+  external_secret_rotation_metadata {
+    key   = "adminSecretArn"
+    value = aws_secretsmanager_secret.test.arn
+  }
+
+  external_secret_rotation_metadata {
+    key   = "apiVersion"
+    value = "v65.0"
+  }
+
+  rotation_rules {
+    automatically_after_days = %[2]d
+  }
+
+  depends_on = [aws_secretsmanager_secret.test]
+}
+`, rName, automaticallyAfterDays)
+}

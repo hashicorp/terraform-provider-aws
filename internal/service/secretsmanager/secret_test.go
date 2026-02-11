@@ -601,3 +601,41 @@ resource "aws_secretsmanager_secret" "test" {
 }
 `, rName)
 }
+
+func TestAccSecretsManagerSecret_type(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretConfig_type(rName, "SalesforceClientSecret"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SalesforceClientSecret"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+			},
+		},
+	})
+}
+
+func testAccSecretConfig_type(rName, secretType string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+  type = %[2]q
+}
+`, rName, secretType)
+}

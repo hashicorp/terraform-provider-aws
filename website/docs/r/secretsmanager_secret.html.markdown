@@ -20,6 +20,17 @@ resource "aws_secretsmanager_secret" "example" {
 }
 ```
 
+### Managed External Secret
+
+```terraform
+resource "aws_secretsmanager_secret" "bigid" {
+  name = "bigid-client-secret"
+  type = "BigIDClientSecret"
+}
+```
+
+For more information about managed external secrets and supported partners, see the [AWS documentation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/managed-external-secrets.html).
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -33,6 +44,7 @@ This resource supports the following arguments:
 * `recovery_window_in_days` - (Optional) Number of days that AWS Secrets Manager waits before it can delete the secret. This value can be `0` to force deletion without recovery or range from `7` to `30` days. The default value is `30`.
 * `replica` - (Optional) Configuration block to support secret replication. See details below.
 * `force_overwrite_replica_secret` - (Optional) Accepts boolean value to specify whether to overwrite a secret with the same name in the destination Region.
+* `type` - (Optional) The type of secret for managed external secrets. Valid values are `SalesforceClientSecret`, `BigIDClientSecret`, and `SnowflakeKeyPairAuthentication`. For more information about supported partners and their specific requirements, see [Managed external secret partners](https://docs.aws.amazon.com/secretsmanager/latest/userguide/mes-partners.html). This attribute cannot be changed after creation.
 * `tags` - (Optional) Key-value map of user-defined tags that are attached to the secret. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### replica
