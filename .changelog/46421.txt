@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add `origin_mtls_config` argument to `custom_origin_config` for mutual TLS authentication with origins
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_multitenant_distribution: Add `origin_mtls_config` argument to `custom_origin_config` for mutual TLS authentication with origins
+```
