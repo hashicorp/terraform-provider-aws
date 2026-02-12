@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
+func TestAccCognitoIDPLogDeliveryConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.LogDeliveryConfigurationType
@@ -109,7 +109,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPLogDeliveryConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccCognitoIDPLogDeliveryConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cognito_log_delivery_configuration.test"

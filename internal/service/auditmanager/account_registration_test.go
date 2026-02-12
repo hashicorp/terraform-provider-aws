@@ -22,7 +22,7 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 		acctest.CtBasic:      testAccAccountRegistration_basic,
 		acctest.CtDisappears: testAccAccountRegistration_disappears,
 		"kms key":            testAccAccountRegistration_optionalKMSKey,
-		"Identity":           testAccAuditManagerAccountRegistration_IdentitySerial,
+		"Identity":           testAccAuditManagerAccountRegistration_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

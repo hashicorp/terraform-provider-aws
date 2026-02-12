@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccXRayEncryptionConfig_IdentitySerial(t *testing.T) {
+func testAccXRayEncryptionConfig_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccXRayEncryptionConfig_Identity_Basic,
-		"ExistingResource":          testAccXRayEncryptionConfig_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccXRayEncryptionConfig_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccXRayEncryptionConfig_Identity_RegionOverride,
+		acctest.CtBasic:             testAccXRayEncryptionConfig_Identity_basic,
+		"ExistingResource":          testAccXRayEncryptionConfig_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccXRayEncryptionConfig_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccXRayEncryptionConfig_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccXRayEncryptionConfig_Identity_Basic(t *testing.T) {
+func testAccXRayEncryptionConfig_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EncryptionConfig
@@ -111,7 +111,7 @@ func testAccXRayEncryptionConfig_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccXRayEncryptionConfig_Identity_RegionOverride(t *testing.T) {
+func testAccXRayEncryptionConfig_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_xray_encryption_config.test"
@@ -221,7 +221,7 @@ func testAccXRayEncryptionConfig_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccXRayEncryptionConfig_Identity_ExistingResource(t *testing.T) {
+func testAccXRayEncryptionConfig_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EncryptionConfig
@@ -294,7 +294,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccXRayEncryptionConfig_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccXRayEncryptionConfig_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.EncryptionConfig

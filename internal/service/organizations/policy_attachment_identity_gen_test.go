@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsPolicyAttachment_IdentitySerial(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsPolicyAttachment_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsPolicyAttachment_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsPolicyAttachment_Identity_basic,
+		"ExistingResource":          testAccOrganizationsPolicyAttachment_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsPolicyAttachment_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
@@ -121,7 +121,7 @@ func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"
@@ -182,7 +182,7 @@ func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsPolicyAttachment_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_organizations_policy_attachment.test"

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccELBV2TargetGroup_Identity_Basic(t *testing.T) {
+func TestAccELBV2TargetGroup_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -111,7 +111,7 @@ func TestAccELBV2TargetGroup_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_Identity_RegionOverride(t *testing.T) {
+func TestAccELBV2TargetGroup_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lb_target_group.test"
@@ -238,7 +238,7 @@ func TestAccELBV2TargetGroup_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccELBV2TargetGroup_Identity_ExistingResource(t *testing.T) {
+func TestAccELBV2TargetGroup_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -294,7 +294,7 @@ func TestAccELBV2TargetGroup_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.3.0
-func TestAccELBV2TargetGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccELBV2TargetGroup_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup

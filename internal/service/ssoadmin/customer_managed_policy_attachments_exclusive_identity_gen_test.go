@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"
@@ -115,7 +115,7 @@ func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_Basic(t *
 	})
 }
 
-func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t *testing.T) {
+func TestAccSSOAdminCustomerManagedPolicyAttachmentsExclusive_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_customer_managed_policy_attachments_exclusive.test"

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccACMCertificate_Identity_Basic(t *testing.T) {
+func TestAccACMCertificate_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CertificateDetail
@@ -120,7 +120,7 @@ func TestAccACMCertificate_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
+func TestAccACMCertificate_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_acm_certificate.test"
@@ -259,7 +259,7 @@ func TestAccACMCertificate_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_Identity_ExistingResource(t *testing.T) {
+func TestAccACMCertificate_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CertificateDetail
@@ -342,7 +342,7 @@ func TestAccACMCertificate_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccACMCertificate_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccACMCertificate_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CertificateDetail

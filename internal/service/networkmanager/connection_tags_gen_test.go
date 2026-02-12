@@ -24,25 +24,25 @@ func testAccNetworkManagerConnection_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccNetworkManagerConnection_tags,
-		"null":                                      testAccNetworkManagerConnection_tags_null,
-		"EmptyMap":                                  testAccNetworkManagerConnection_tags_EmptyMap,
-		"AddOnUpdate":                               testAccNetworkManagerConnection_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccNetworkManagerConnection_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccNetworkManagerConnection_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccNetworkManagerConnection_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccNetworkManagerConnection_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccNetworkManagerConnection_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccNetworkManagerConnection_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccNetworkManagerConnection_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccNetworkManagerConnection_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccNetworkManagerConnection_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccNetworkManagerConnection_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccNetworkManagerConnection_Tags_null,
+		"EmptyMap":                                  testAccNetworkManagerConnection_Tags_emptyMap,
+		"AddOnUpdate":                               testAccNetworkManagerConnection_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccNetworkManagerConnection_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccNetworkManagerConnection_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccNetworkManagerConnection_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccNetworkManagerConnection_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccNetworkManagerConnection_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccNetworkManagerConnection_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccNetworkManagerConnection_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccNetworkManagerConnection_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccNetworkManagerConnection_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccNetworkManagerConnection_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccNetworkManagerConnection_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccNetworkManagerConnection_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccNetworkManagerConnection_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccNetworkManagerConnection_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccNetworkManagerConnection_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccNetworkManagerConnection_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -232,7 +232,7 @@ func testAccNetworkManagerConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_null(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -300,7 +300,7 @@ func testAccNetworkManagerConnection_tags_null(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_EmptyMap(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -364,7 +364,7 @@ func testAccNetworkManagerConnection_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_AddOnUpdate(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -446,7 +446,7 @@ func testAccNetworkManagerConnection_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -539,7 +539,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -679,7 +679,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -771,7 +771,7 @@ func testAccNetworkManagerConnection_tags_EmptyTag_OnUpdate_Replace(t *testing.T
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -954,7 +954,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_providerOnly(t *testing.T)
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1116,7 +1116,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_nonOverlapping(t *testing.
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1294,7 +1294,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_overlapping(t *testing.T) 
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1385,7 +1385,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_updateToProviderOnly(t *te
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1475,7 +1475,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_updateToResourceOnly(t *te
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1544,7 +1544,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_emptyResourceTag(t *testin
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource Connection does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1605,7 +1605,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_emptyProviderOnlyTag(t *te
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1669,7 +1669,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_nullOverlappingResourceTag
 	})
 }
 
-func testAccNetworkManagerConnection_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1733,7 +1733,7 @@ func testAccNetworkManagerConnection_tags_DefaultTags_nullNonOverlappingResource
 	})
 }
 
-func testAccNetworkManagerConnection_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1790,7 +1790,7 @@ func testAccNetworkManagerConnection_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1888,7 +1888,7 @@ func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Add(t *testing.T)
 	})
 }
 
-func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -1976,7 +1976,7 @@ func testAccNetworkManagerConnection_tags_ComputedTag_OnUpdate_Replace(t *testin
 	})
 }
 
-func testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"
@@ -2137,7 +2137,7 @@ func testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_DefaultTag(t *testi
 	})
 }
 
-func testAccNetworkManagerConnection_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccNetworkManagerConnection_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkmanager_connection.test"

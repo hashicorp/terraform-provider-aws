@@ -806,6 +806,80 @@ func resourceInstance() *schema.Resource {
 					ValidateFunc: validation.IsIPv4Address,
 				},
 			},
+			"secondary_network_interface": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+							ForceNew: true,
+						},
+						"device_index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+							ForceNew: true,
+						},
+						"interface_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "secondary",
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"secondary",
+							}, false),
+						},
+						"mac_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+						"private_ip_address_count": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  1,
+							ForceNew: true,
+						},
+						"private_ip_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv4Address,
+							},
+						},
+						"secondary_interface_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secondary_network_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secondary_subnet_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"source_dest_check": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1113,6 +1187,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Placement:                         instanceOpts.Placement,
 		PrivateDnsNameOptions:             instanceOpts.PrivateDNSNameOptions,
 		PrivateIpAddress:                  instanceOpts.PrivateIPAddress,
+		SecondaryInterfaces:               instanceOpts.SecondaryInterfaces,
 		SecurityGroupIds:                  instanceOpts.SecurityGroupIDs,
 		SecurityGroups:                    instanceOpts.SecurityGroups,
 		SubnetId:                          instanceOpts.SubnetID,
@@ -2673,6 +2748,7 @@ type instanceOpts struct {
 	Placement                         *awstypes.Placement
 	PrivateDNSNameOptions             *awstypes.PrivateDnsNameOptionsRequest
 	PrivateIPAddress                  *string
+	SecondaryInterfaces               []awstypes.InstanceSecondaryInterfaceSpecificationRequest
 	SecurityGroupIDs                  []string
 	SecurityGroups                    []string
 	SpotPlacement                     *awstypes.SpotPlacement
@@ -2886,6 +2962,10 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta any) (*
 				opts.SecurityGroupIDs = append(opts.SecurityGroupIDs, v.(string))
 			}
 		}
+	}
+
+	if v, ok := d.GetOk("secondary_network_interface"); ok {
+		opts.SecondaryInterfaces = expandSecondaryNetworkInterfaces(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {
@@ -3267,6 +3347,12 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 
 	if err := rd.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", rd.Id(), err)
+	}
+
+	if len(instance.SecondaryInterfaces) > 0 {
+		if err := rd.Set("secondary_network_interface", flattenSecondaryNetworkInterfaces(instance.SecondaryInterfaces)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting secondary_network_interface for AWS Instance (%s): %s", rd.Id(), err)
+		}
 	}
 
 	if err := rd.Set("ipv6_addresses", ipv6Addresses); err != nil {
@@ -4017,4 +4103,132 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 
 func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
 	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
+}
+
+func expandSecondaryNetworkInterfaces(tfList []any) []awstypes.InstanceSecondaryInterfaceSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.InstanceSecondaryInterfaceSpecificationRequest
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.InstanceSecondaryInterfaceSpecificationRequest{}
+
+		if v, ok := tfMap["secondary_subnet_id"].(string); ok && v != "" {
+			apiObject.SecondarySubnetId = aws.String(v)
+		}
+
+		if v, ok := tfMap["network_card_index"].(int); ok {
+			apiObject.NetworkCardIndex = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap["device_index"].(int); ok {
+			apiObject.DeviceIndex = aws.Int32(int32(v))
+		}
+
+		if v, ok := tfMap["interface_type"].(string); ok && v != "" {
+			apiObject.InterfaceType = awstypes.SecondaryInterfaceType(v)
+		}
+
+		if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
+			apiObject.DeleteOnTermination = aws.Bool(v)
+		}
+
+		if v, ok := tfMap["private_ip_address_count"].(int); ok && v > 0 {
+			apiObject.PrivateIpAddressCount = aws.Int32(int32(v))
+		}
+
+		// Handle private IP addresses if specified
+		if v, ok := tfMap["private_ip_addresses"].([]any); ok && len(v) > 0 {
+			var privateIPs []awstypes.InstanceSecondaryInterfacePrivateIpAddressRequest
+			for _, ipRaw := range v {
+				if ipAddr, ok := ipRaw.(string); ok && ipAddr != "" {
+					privateIP := awstypes.InstanceSecondaryInterfacePrivateIpAddressRequest{
+						PrivateIpAddress: aws.String(ipAddr),
+					}
+					privateIPs = append(privateIPs, privateIP)
+				}
+			}
+			apiObject.PrivateIpAddresses = privateIPs
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenSecondaryNetworkInterfaces(apiObjects []awstypes.InstanceSecondaryInterface) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		// Fields from the request that are preserved
+		if v := apiObject.SecondarySubnetId; v != nil {
+			tfMap["secondary_subnet_id"] = aws.ToString(v)
+		}
+
+		if apiObject.Attachment != nil {
+			if v := apiObject.Attachment.NetworkCardIndex; v != nil {
+				tfMap["network_card_index"] = aws.ToInt32(v)
+			}
+
+			if v := apiObject.Attachment.DeviceIndex; v != nil {
+				tfMap["device_index"] = aws.ToInt32(v)
+			}
+
+			if v := apiObject.Attachment.DeleteOnTermination; v != nil {
+				tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
+			}
+		}
+
+		if v := apiObject.InterfaceType; v != "" {
+			tfMap["interface_type"] = string(v)
+		}
+
+		// Handle private IP addresses from response
+		if len(apiObject.PrivateIpAddresses) > 0 {
+			var privateIPs []string
+			for _, ip := range apiObject.PrivateIpAddresses {
+				if ip.PrivateIpAddress != nil {
+					privateIPs = append(privateIPs, aws.ToString(ip.PrivateIpAddress))
+				}
+			}
+			tfMap["private_ip_addresses"] = privateIPs
+			tfMap["private_ip_address_count"] = len(privateIPs)
+		}
+
+		// Computed fields from the response
+		if v := apiObject.SecondaryInterfaceId; v != nil {
+			tfMap["secondary_interface_id"] = aws.ToString(v)
+		}
+
+		if v := apiObject.SecondaryNetworkId; v != nil {
+			tfMap["secondary_network_id"] = aws.ToString(v)
+		}
+
+		if v := apiObject.MacAddress; v != nil {
+			tfMap["mac_address"] = aws.ToString(v)
+		}
+
+		if v := apiObject.Status; v != "" {
+			tfMap[names.AttrStatus] = string(v)
+		}
+
+		if v := apiObject.SourceDestCheck; v != nil {
+			tfMap["source_dest_check"] = aws.ToBool(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
 }

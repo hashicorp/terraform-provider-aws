@@ -122,7 +122,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 			"studioWebPortalSettings_hiddenAppTypes":   testAccUserProfile_studioWebPortalSettings_hiddenAppTypes,
 			"studioWebPortalSettings_hiddenMlTools":    testAccUserProfile_studioWebPortalSettings_hiddenMlTools,
-			"Identity":                                 testAccSageMakerUserProfile_IdentitySerial,
+			"Identity":                                 testAccSageMakerUserProfile_identitySerial,
 		},
 		"Workforce": {
 			acctest.CtDisappears: testAccWorkforce_disappears,
@@ -143,7 +143,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Servicecatalog": {
 			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
-			"Identity":      testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial,
+			"Identity":      testAccSageMakerServicecatalogPortfolioStatus_identitySerial,
 		},
 		"LabelingJob": {
 			acctest.CtBasic:      testAccLabelingJob_basic,

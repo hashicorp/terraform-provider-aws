@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDeviceFarmUpload_Identity_Basic(t *testing.T) {
+func TestAccDeviceFarmUpload_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Upload
@@ -115,7 +115,7 @@ func TestAccDeviceFarmUpload_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmUpload_Identity_ExistingResource(t *testing.T) {
+func TestAccDeviceFarmUpload_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Upload
@@ -197,7 +197,7 @@ func TestAccDeviceFarmUpload_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDeviceFarmUpload_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDeviceFarmUpload_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Upload

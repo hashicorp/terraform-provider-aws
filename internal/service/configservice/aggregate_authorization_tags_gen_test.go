@@ -25,25 +25,25 @@ func testAccConfigServiceAggregateAuthorization_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccConfigServiceAggregateAuthorization_tags,
-		"null":                                      testAccConfigServiceAggregateAuthorization_tags_null,
-		"EmptyMap":                                  testAccConfigServiceAggregateAuthorization_tags_EmptyMap,
-		"AddOnUpdate":                               testAccConfigServiceAggregateAuthorization_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccConfigServiceAggregateAuthorization_Tags_null,
+		"EmptyMap":                                  testAccConfigServiceAggregateAuthorization_Tags_emptyMap,
+		"AddOnUpdate":                               testAccConfigServiceAggregateAuthorization_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccConfigServiceAggregateAuthorization_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccConfigServiceAggregateAuthorization_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccConfigServiceAggregateAuthorization_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccConfigServiceAggregateAuthorization_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccConfigServiceAggregateAuthorization_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccConfigServiceAggregateAuthorization_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccConfigServiceAggregateAuthorization_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccConfigServiceAggregateAuthorization_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -226,7 +226,7 @@ func testAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_null(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -293,7 +293,7 @@ func testAccConfigServiceAggregateAuthorization_tags_null(t *testing.T) {
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_EmptyMap(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -356,7 +356,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_AddOnUpdate(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -437,7 +437,7 @@ func testAccConfigServiceAggregateAuthorization_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -525,7 +525,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnCreate(t *testin
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -660,7 +660,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Add(t *te
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -749,7 +749,7 @@ func testAccConfigServiceAggregateAuthorization_tags_EmptyTag_OnUpdate_Replace(t
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -925,7 +925,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_providerOnly(t 
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1082,7 +1082,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nonOverlapping(
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1255,7 +1255,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_overlapping(t *
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1345,7 +1345,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToProvide
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1434,7 +1434,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_updateToResourc
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1500,7 +1500,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyResourceTa
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1558,7 +1558,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_emptyProviderOn
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1621,7 +1621,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullOverlapping
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1684,7 +1684,7 @@ func testAccConfigServiceAggregateAuthorization_tags_DefaultTags_nullNonOverlapp
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1740,7 +1740,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnCreate(t *tes
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1837,7 +1837,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Add(t 
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -1924,7 +1924,7 @@ func testAccConfigServiceAggregateAuthorization_tags_ComputedTag_OnUpdate_Replac
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization
@@ -2086,7 +2086,7 @@ func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_DefaultT
 	})
 }
 
-func testAccConfigServiceAggregateAuthorization_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AggregationAuthorization

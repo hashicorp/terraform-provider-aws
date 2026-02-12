@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeBuildReportGroup_Identity_Basic(t *testing.T) {
+func TestAccCodeBuildReportGroup_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReportGroup
@@ -112,7 +112,7 @@ func TestAccCodeBuildReportGroup_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildReportGroup_Identity_RegionOverride(t *testing.T) {
+func TestAccCodeBuildReportGroup_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codebuild_report_group.test"
@@ -239,7 +239,7 @@ func TestAccCodeBuildReportGroup_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildReportGroup_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeBuildReportGroup_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReportGroup
@@ -318,7 +318,7 @@ func TestAccCodeBuildReportGroup_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildReportGroup_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCodeBuildReportGroup_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ReportGroup

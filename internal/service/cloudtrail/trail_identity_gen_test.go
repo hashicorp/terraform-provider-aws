@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCloudTrailTrail_IdentitySerial(t *testing.T) {
+func testAccCloudTrailTrail_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccCloudTrailTrail_Identity_Basic,
-		"ExistingResource":          testAccCloudTrailTrail_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccCloudTrailTrail_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccCloudTrailTrail_Identity_RegionOverride,
+		acctest.CtBasic:             testAccCloudTrailTrail_Identity_basic,
+		"ExistingResource":          testAccCloudTrailTrail_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccCloudTrailTrail_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccCloudTrailTrail_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccCloudTrailTrail_Identity_Basic(t *testing.T) {
+func testAccCloudTrailTrail_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Trail
@@ -121,7 +121,7 @@ func testAccCloudTrailTrail_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccCloudTrailTrail_Identity_RegionOverride(t *testing.T) {
+func testAccCloudTrailTrail_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudtrail.test"
@@ -241,7 +241,7 @@ func testAccCloudTrailTrail_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
+func testAccCloudTrailTrail_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Trail
@@ -320,7 +320,7 @@ func testAccCloudTrailTrail_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccCloudTrailTrail_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccCloudTrailTrail_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Trail

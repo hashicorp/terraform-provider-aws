@@ -260,18 +260,18 @@ func testAccAccount_govCloud(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsAccount_IdentitySerial(t *testing.T) {
+func testAccOrganizationsAccount_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccOrganizationsAccount_Identity_Basic,
-		"ExistingResource": testAccOrganizationsAccount_Identity_ExistingResource,
+		acctest.CtBasic:    testAccOrganizationsAccount_Identity_basic,
+		"ExistingResource": testAccOrganizationsAccount_Identity_ExistingResource_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsAccount_Identity_Basic(t *testing.T) {
+func testAccOrganizationsAccount_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Account
@@ -355,7 +355,7 @@ func testAccOrganizationsAccount_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsAccount_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsAccount_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Account

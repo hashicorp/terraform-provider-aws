@@ -238,7 +238,7 @@ func TestAccVPC_List_filtered(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_defaultVPC_exclude(t *testing.T) {
+func TestAccVPC_List_DefaultVPC_exclude(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	id := tfstatecheck.StateValue()
@@ -439,7 +439,7 @@ func TestAccVPC_List_filteredVPCIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_filtered_isDefault(t *testing.T) {
+func TestAccVPC_List_Filtered_isDefault(t *testing.T) {
 	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
 
 	ctx := acctest.Context(t)

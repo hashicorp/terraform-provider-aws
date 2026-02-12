@@ -195,7 +195,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -257,7 +257,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -307,7 +307,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -386,7 +386,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -474,7 +474,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -610,7 +610,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -699,7 +699,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -874,7 +874,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1030,7 +1030,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1202,7 +1202,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1291,7 +1291,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1379,7 +1379,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1445,7 +1445,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *t
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1503,7 +1503,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1572,7 +1572,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResour
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1643,7 +1643,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingRes
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1698,7 +1698,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1794,7 +1794,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -1880,7 +1880,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
@@ -2041,7 +2041,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_block_public_access_exclusion.test"

@@ -28,7 +28,7 @@ func TestAccSSOAdminTrustedTokenIssuer_serial(t *testing.T) {
 		acctest.CtDisappears: testAccSSOAdminTrustedTokenIssuer_disappears,
 		"update":             testAccSSOAdminTrustedTokenIssuer_update,
 		"tags":               testAccSSOAdminTrustedTokenIssuer_tags,
-		"Identity":           testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
+		"Identity":           testAccSSOAdminTrustedTokenIssuer_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

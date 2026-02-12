@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCSecurityGroupEgressRule_Identity_Basic(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SecurityGroupRule
@@ -111,7 +111,7 @@ func TestAccVPCSecurityGroupEgressRule_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroupEgressRule_Identity_RegionOverride(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_security_group_egress_rule.test"
@@ -200,7 +200,7 @@ func TestAccVPCSecurityGroupEgressRule_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.12.0
-func TestAccVPCSecurityGroupEgressRule_Identity_ExistingResource(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SecurityGroupRule
@@ -258,7 +258,7 @@ func TestAccVPCSecurityGroupEgressRule_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.12.0
-func TestAccVPCSecurityGroupEgressRule_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccVPCSecurityGroupEgressRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SecurityGroupRule

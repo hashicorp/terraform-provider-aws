@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,19 +30,19 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 	threatintelsetName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
 	resourceName := "aws_guardduty_threatintelset.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
+		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					testAccCheckThreatIntelSetExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtTrue),
@@ -59,7 +58,7 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 			{
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName2, threatintelsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThreatIntelSetExists(ctx, resourceName),
+					testAccCheckThreatIntelSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
@@ -69,9 +68,9 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckThreatIntelSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckThreatIntelSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_threatintelset" {
@@ -106,7 +105,7 @@ func testAccCheckThreatIntelSetDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckThreatIntelSetExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckThreatIntelSetExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -123,7 +122,7 @@ func testAccCheckThreatIntelSetExists(ctx context.Context, name string) resource
 			ThreatIntelSetId: aws.String(threatIntelSetId),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 		_, err = conn.GetThreatIntelSet(ctx, input)
 		return err
 	}

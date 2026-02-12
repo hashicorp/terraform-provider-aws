@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKMSKey_Identity_Basic(t *testing.T) {
+func TestAccKMSKey_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -114,7 +114,7 @@ func TestAccKMSKey_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccKMSKey_Identity_RegionOverride(t *testing.T) {
+func TestAccKMSKey_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_kms_key.test"
@@ -209,7 +209,7 @@ func TestAccKMSKey_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccKMSKey_Identity_ExistingResource(t *testing.T) {
+func TestAccKMSKey_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata
@@ -267,7 +267,7 @@ func TestAccKMSKey_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccKMSKey_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccKMSKey_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.KeyMetadata

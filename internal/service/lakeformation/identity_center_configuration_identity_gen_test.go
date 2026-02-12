@@ -21,18 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccLakeFormationIdentityCenterConfiguration_IdentitySerial(t *testing.T) {
+func testAccLakeFormationIdentityCenterConfiguration_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccLakeFormationIdentityCenterConfiguration_Identity_Basic,
-		"RegionOverride": testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:  testAccLakeFormationIdentityCenterConfiguration_Identity_basic,
+		"RegionOverride": testAccLakeFormationIdentityCenterConfiguration_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T) {
+func testAccLakeFormationIdentityCenterConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v lakeformation.DescribeLakeFormationIdentityCenterConfigurationOutput
@@ -114,7 +114,7 @@ func testAccLakeFormationIdentityCenterConfiguration_Identity_Basic(t *testing.T
 	})
 }
 
-func testAccLakeFormationIdentityCenterConfiguration_Identity_RegionOverride(t *testing.T) {
+func testAccLakeFormationIdentityCenterConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lakeformation_identity_center_configuration.test"

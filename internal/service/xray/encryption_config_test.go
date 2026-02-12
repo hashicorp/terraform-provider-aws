@@ -23,7 +23,7 @@ func TestAccXRayEncryptionConfig_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccXRayEncryptionConfig_basic,
-		"Identity":      testAccXRayEncryptionConfig_IdentitySerial,
+		"Identity":      testAccXRayEncryptionConfig_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

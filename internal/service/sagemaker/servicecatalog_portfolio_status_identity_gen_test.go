@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSageMakerServicecatalogPortfolioStatus_Identity_Basic,
-		"ExistingResource":          testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccSageMakerServicecatalogPortfolioStatus_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSageMakerServicecatalogPortfolioStatus_Identity_basic,
+		"ExistingResource":          testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccSageMakerServicecatalogPortfolioStatus_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSageMakerServicecatalogPortfolioStatus_Identity_Basic(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput
@@ -111,7 +111,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_Basic(t *testing.T) 
 	})
 }
 
-func testAccSageMakerServicecatalogPortfolioStatus_Identity_RegionOverride(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sagemaker_servicecatalog_portfolio_status.test"
@@ -221,7 +221,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_RegionOverride(t *te
 	})
 }
 
-func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput
@@ -294,7 +294,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource(t *
 	})
 }
 
-func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput

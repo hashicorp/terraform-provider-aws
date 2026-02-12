@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncLocationS3_Identity_Basic(t *testing.T) {
+func TestAccDataSyncLocationS3_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationS3Output
@@ -111,7 +111,7 @@ func TestAccDataSyncLocationS3_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationS3_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncLocationS3_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_location_s3.test"
@@ -234,7 +234,7 @@ func TestAccDataSyncLocationS3_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationS3_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncLocationS3_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationS3Output
@@ -316,7 +316,7 @@ func TestAccDataSyncLocationS3_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationS3_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDataSyncLocationS3_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationS3Output

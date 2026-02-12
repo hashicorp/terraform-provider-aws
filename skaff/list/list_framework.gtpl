@@ -119,7 +119,7 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 	        // TIP: -- 4. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
-			r.SetResult(ctx, r.Meta(), &data, &result, func() {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
 				if diags := fwflex.Flatten(ctx, item, &data, flex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)

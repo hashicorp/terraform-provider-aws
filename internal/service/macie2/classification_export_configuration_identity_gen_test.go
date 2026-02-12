@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccMacie2ClassificationExportConfiguration_IdentitySerial(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccMacie2ClassificationExportConfiguration_Identity_Basic,
-		"ExistingResource":          testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccMacie2ClassificationExportConfiguration_Identity_basic,
+		"ExistingResource":          testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccMacie2ClassificationExportConfiguration_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput
@@ -111,7 +111,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_macie2_classification_export_configuration.test"
@@ -221,7 +221,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput
@@ -294,7 +294,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t 
 	})
 }
 
-func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v macie2.GetClassificationExportConfigurationOutput

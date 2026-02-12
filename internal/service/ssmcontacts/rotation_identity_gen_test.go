@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSMContactsRotation_IdentitySerial(t *testing.T) {
+func testAccSSMContactsRotation_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSMContactsRotation_Identity_Basic,
-		"ExistingResource":          testAccSSMContactsRotation_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccSSMContactsRotation_Identity_basic,
+		"ExistingResource":          testAccSSMContactsRotation_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSSMContactsRotation_Identity_Basic(t *testing.T) {
+func testAccSSMContactsRotation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -118,7 +118,7 @@ func testAccSSMContactsRotation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -197,7 +197,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"

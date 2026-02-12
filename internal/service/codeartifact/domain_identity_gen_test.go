@@ -21,20 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCodeArtifactDomain_IdentitySerial(t *testing.T) {
+func testAccCodeArtifactDomain_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccCodeArtifactDomain_Identity_Basic,
-		"ExistingResource":          testAccCodeArtifactDomain_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccCodeArtifactDomain_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccCodeArtifactDomain_Identity_RegionOverride,
+		acctest.CtBasic:             testAccCodeArtifactDomain_Identity_basic,
+		"ExistingResource":          testAccCodeArtifactDomain_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccCodeArtifactDomain_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccCodeArtifactDomain_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
+func testAccCodeArtifactDomain_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain.test"
@@ -120,7 +120,7 @@ func testAccCodeArtifactDomain_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
+func testAccCodeArtifactDomain_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain.test"
@@ -241,7 +241,7 @@ func testAccCodeArtifactDomain_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_Identity_ExistingResource(t *testing.T) {
+func testAccCodeArtifactDomain_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain.test"
@@ -319,7 +319,7 @@ func testAccCodeArtifactDomain_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccCodeArtifactDomain_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccCodeArtifactDomain_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codeartifact_domain.test"

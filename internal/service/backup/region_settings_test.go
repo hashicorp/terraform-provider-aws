@@ -20,7 +20,7 @@ func TestAccBackupRegionSettings_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccRegionSettings_basic,
-		"Identity":      testAccBackupRegionSettings_IdentitySerial,
+		"Identity":      testAccBackupRegionSettings_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

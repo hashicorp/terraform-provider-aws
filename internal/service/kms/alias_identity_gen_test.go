@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKMSAlias_Identity_Basic(t *testing.T) {
+func TestAccKMSAlias_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AliasListEntry
@@ -107,7 +107,7 @@ func TestAccKMSAlias_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccKMSAlias_Identity_RegionOverride(t *testing.T) {
+func TestAccKMSAlias_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_kms_alias.test"
@@ -195,7 +195,7 @@ func TestAccKMSAlias_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccKMSAlias_Identity_ExistingResource(t *testing.T) {
+func TestAccKMSAlias_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AliasListEntry
@@ -253,7 +253,7 @@ func TestAccKMSAlias_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccKMSAlias_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccKMSAlias_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AliasListEntry

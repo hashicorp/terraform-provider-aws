@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
+func TestAccCEAnomalySubscription_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AnomalySubscription
@@ -111,7 +111,7 @@ func TestAccCEAnomalySubscription_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
+func TestAccCEAnomalySubscription_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AnomalySubscription
@@ -195,7 +195,7 @@ func TestAccCEAnomalySubscription_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCEAnomalySubscription_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AnomalySubscription

@@ -25,25 +25,25 @@ func testAccBackupFramework_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccBackupFramework_tags,
-		"null":                                      testAccBackupFramework_tags_null,
-		"EmptyMap":                                  testAccBackupFramework_tags_EmptyMap,
-		"AddOnUpdate":                               testAccBackupFramework_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccBackupFramework_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccBackupFramework_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccBackupFramework_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccBackupFramework_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccBackupFramework_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccBackupFramework_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccBackupFramework_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccBackupFramework_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccBackupFramework_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccBackupFramework_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccBackupFramework_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccBackupFramework_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccBackupFramework_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccBackupFramework_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccBackupFramework_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccBackupFramework_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccBackupFramework_Tags_null,
+		"EmptyMap":                                  testAccBackupFramework_Tags_emptyMap,
+		"AddOnUpdate":                               testAccBackupFramework_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccBackupFramework_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccBackupFramework_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccBackupFramework_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccBackupFramework_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccBackupFramework_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccBackupFramework_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccBackupFramework_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccBackupFramework_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccBackupFramework_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccBackupFramework_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccBackupFramework_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccBackupFramework_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccBackupFramework_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccBackupFramework_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccBackupFramework_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccBackupFramework_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -235,7 +235,7 @@ func testAccBackupFramework_tags(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_null(t *testing.T) {
+func testAccBackupFramework_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -306,7 +306,7 @@ func testAccBackupFramework_tags_null(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_EmptyMap(t *testing.T) {
+func testAccBackupFramework_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -373,7 +373,7 @@ func testAccBackupFramework_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_AddOnUpdate(t *testing.T) {
+func testAccBackupFramework_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -458,7 +458,7 @@ func testAccBackupFramework_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccBackupFramework_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -551,7 +551,7 @@ func testAccBackupFramework_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccBackupFramework_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -692,7 +692,7 @@ func testAccBackupFramework_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccBackupFramework_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -785,7 +785,7 @@ func testAccBackupFramework_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -970,7 +970,7 @@ func testAccBackupFramework_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1134,7 +1134,7 @@ func testAccBackupFramework_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1314,7 +1314,7 @@ func testAccBackupFramework_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1408,7 +1408,7 @@ func testAccBackupFramework_tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1501,7 +1501,7 @@ func testAccBackupFramework_tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1570,7 +1570,7 @@ func testAccBackupFramework_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1631,7 +1631,7 @@ func testAccBackupFramework_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) 
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1697,7 +1697,7 @@ func testAccBackupFramework_tags_DefaultTags_nullOverlappingResourceTag(t *testi
 	})
 }
 
-func testAccBackupFramework_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccBackupFramework_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1763,7 +1763,7 @@ func testAccBackupFramework_tags_DefaultTags_nullNonOverlappingResourceTag(t *te
 	})
 }
 
-func testAccBackupFramework_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccBackupFramework_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1822,7 +1822,7 @@ func testAccBackupFramework_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccBackupFramework_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -1923,7 +1923,7 @@ func testAccBackupFramework_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccBackupFramework_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -2014,7 +2014,7 @@ func testAccBackupFramework_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccBackupFramework_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput
@@ -2180,7 +2180,7 @@ func testAccBackupFramework_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func testAccBackupFramework_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccBackupFramework_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v backup.DescribeFrameworkOutput

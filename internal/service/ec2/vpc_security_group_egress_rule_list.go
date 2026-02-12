@@ -104,7 +104,7 @@ func (l *listResourceSecurityGroupEgressRule) List(ctx context.Context, request 
 
 			result := request.NewListResult(ctx)
 			var data securityGroupRuleResourceModel
-			l.SetResult(ctx, awsClient, &data, &result, func() {
+			l.SetResult(ctx, awsClient, request.IncludeResource, &data, &result, func() {
 				data.ID = fwflex.StringToFramework(ctx, rule.SecurityGroupRuleId)
 				data.ARN = l.securityGroupRuleARN(ctx, ruleID)
 				data.CIDRIPv4 = fwflex.StringToFramework(ctx, rule.CidrIpv4)

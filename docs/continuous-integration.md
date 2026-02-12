@@ -614,6 +614,30 @@ make gh-workflow-lint
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
+## Naming Checks
+
+The Naming Checks workflow validates that test function names follow Go naming conventions.
+
+### Test Naming
+
+Test functions should follow the pattern `TestAccResource_MiddleSegment_finalSegment` where:
+
+- Middle segments use UpperCase (e.g., `List`, `DefaultTags`)
+- The final segment uses lowerCamelCase (e.g., `basic`, `emptyMap`, `regionOverride`)
+
+This check currently validates:
+
+- Generated test files (`*_gen_test.go`)
+- List resource test files (`*_list_test.go`)
+
+Use the `test-naming` target to run the same check CI runs:
+
+```console
+make test-naming
+```
+
+**NOTE:** Requires `ripgrep` to be installed (`brew install ripgrep` on macOS).
+
 ### YAML Linting / yamllint
 
 YAMLlint checks the validity of YAML files.

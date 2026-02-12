@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRole_Identity_Basic(t *testing.T) {
+func TestAccIAMRole_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Role
@@ -107,7 +107,7 @@ func TestAccIAMRole_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_Identity_ExistingResource(t *testing.T) {
+func TestAccIAMRole_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Role
@@ -188,7 +188,7 @@ func TestAccIAMRole_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccIAMRole_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Role

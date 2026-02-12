@@ -197,7 +197,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -264,7 +264,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -327,7 +327,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -408,7 +408,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -498,7 +498,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -635,7 +635,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -726,7 +726,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -902,7 +902,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1059,7 +1059,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1232,7 +1232,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1322,7 +1322,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1411,7 +1411,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourc
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1479,7 +1479,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTa
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1539,7 +1539,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1602,7 +1602,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlapping
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1665,7 +1665,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlapp
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1721,7 +1721,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *tes
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1818,7 +1818,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -1905,7 +1905,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering
@@ -2067,7 +2067,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccNetworkManagerTransitGatewayPeering_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayPeering

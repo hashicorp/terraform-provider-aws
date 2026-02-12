@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -33,10 +33,10 @@ const (
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
 func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
 		Target:  enum.Slice(awstypes.AdminStatusEnabled),
-		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
+		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
 		Timeout: adminAccountEnabledTimeout,
 	}
 
@@ -51,10 +51,10 @@ func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.Client, adminA
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
 func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AdminStatusDisableInProgress),
 		Target:  []string{adminStatusNotFound},
-		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
+		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
 		Timeout: adminAccountNotFoundTimeout,
 	}
 
@@ -69,10 +69,10 @@ func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, admin
 
 // waitPublishingDestinationCreated waits for GuardDuty to return Publishing
 func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PublishingStatusPendingVerification),
 		Target:  enum.Slice(awstypes.PublishingStatusPublishing),
-		Refresh: statusPublishingDestination(ctx, conn, destinationID, detectorID),
+		Refresh: statusPublishingDestination(conn, destinationID, detectorID),
 		Timeout: publishingDestinationCreatedTimeout,
 	}
 

@@ -258,7 +258,7 @@ In order to [generate tests](#acceptance-testing) related to adding Identity dat
 Add the annotation `@Testing(preIdentityVersion="<version>")`, where version is the last version of the provider **before** Resource Identity is added to the resource type.
 For example, Resource Identity was added to `aws_batch_job_definition` in version 6.5.0, so the annotation is `preIdentityVersion="v6.4.0"`.
 
-In some cases, even though a resource type has an ARN Identity or Singleton Identity, it also has an `id` attribute that is set to the same value.
+In some cases, even though a resource type has an ARN Identity, a Single-Attribute Parameterized Identity, or a Singleton Identity, it also has an `id` attribute that is set to the same value.
 Specify this by adding the annotation parameter `identityDuplicateAttributes="id"` to the identity annotation.
 (This will always be the case for resource types implemented with the Plugin SDK, so setting `identityDuplicateAttributes="id"` is not necessary for those resource types.)
 For example, the resource type `aws_rds_integration` has an `id` attribute that duplicates the `arn`.

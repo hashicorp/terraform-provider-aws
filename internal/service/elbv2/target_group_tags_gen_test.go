@@ -218,7 +218,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_null(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -292,7 +292,7 @@ func TestAccELBV2TargetGroup_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_EmptyMap(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -362,7 +362,7 @@ func TestAccELBV2TargetGroup_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_AddOnUpdate(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -450,7 +450,7 @@ func TestAccELBV2TargetGroup_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -549,7 +549,7 @@ func TestAccELBV2TargetGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -696,7 +696,7 @@ func TestAccELBV2TargetGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -792,7 +792,7 @@ func TestAccELBV2TargetGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -989,7 +989,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1162,7 +1162,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1351,7 +1351,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1448,7 +1448,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T)
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1544,7 +1544,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T)
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1616,7 +1616,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1680,7 +1680,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T)
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1749,7 +1749,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_nullOverlappingResourceTag(t *test
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1818,7 +1818,7 @@ func TestAccELBV2TargetGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1880,7 +1880,7 @@ func TestAccELBV2TargetGroup_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -1984,7 +1984,7 @@ func TestAccELBV2TargetGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -2078,7 +2078,7 @@ func TestAccELBV2TargetGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup
@@ -2244,7 +2244,7 @@ func TestAccELBV2TargetGroup_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccELBV2TargetGroup_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.TargetGroup

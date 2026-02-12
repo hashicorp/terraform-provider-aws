@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2Instance_Identity_Basic(t *testing.T) {
+func TestAccEC2Instance_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Instance
@@ -101,7 +101,7 @@ func TestAccEC2Instance_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_Identity_RegionOverride(t *testing.T) {
+func TestAccEC2Instance_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_instance.test"
@@ -187,7 +187,7 @@ func TestAccEC2Instance_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccEC2Instance_Identity_ExistingResource(t *testing.T) {
+func TestAccEC2Instance_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Instance
@@ -240,7 +240,7 @@ func TestAccEC2Instance_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccEC2Instance_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccEC2Instance_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Instance

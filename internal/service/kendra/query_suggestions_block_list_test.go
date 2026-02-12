@@ -61,7 +61,7 @@ func TestAccKendraQuerySuggestionsBlockList_basic(t *testing.T) {
 	})
 }
 
-func TestAccKendraQuerySuggestionsBlockList_Description(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -110,7 +110,7 @@ func TestAccKendraQuerySuggestionsBlockList_Description(t *testing.T) {
 	})
 }
 
-func TestAccKendraQuerySuggestionsBlockList_Name(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -153,7 +153,7 @@ func TestAccKendraQuerySuggestionsBlockList_Name(t *testing.T) {
 	})
 }
 
-func TestAccKendraQuerySuggestionsBlockList_RoleARN(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_roleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -195,7 +195,7 @@ func TestAccKendraQuerySuggestionsBlockList_RoleARN(t *testing.T) {
 	})
 }
 
-func TestAccKendraQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_sourceS3Path(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

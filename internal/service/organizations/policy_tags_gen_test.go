@@ -25,25 +25,25 @@ func testAccOrganizationsPolicy_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccOrganizationsPolicy_tags,
-		"null":                                      testAccOrganizationsPolicy_tags_null,
-		"EmptyMap":                                  testAccOrganizationsPolicy_tags_EmptyMap,
-		"AddOnUpdate":                               testAccOrganizationsPolicy_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccOrganizationsPolicy_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccOrganizationsPolicy_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccOrganizationsPolicy_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccOrganizationsPolicy_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccOrganizationsPolicy_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccOrganizationsPolicy_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccOrganizationsPolicy_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccOrganizationsPolicy_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccOrganizationsPolicy_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccOrganizationsPolicy_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccOrganizationsPolicy_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccOrganizationsPolicy_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccOrganizationsPolicy_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccOrganizationsPolicy_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccOrganizationsPolicy_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccOrganizationsPolicy_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccOrganizationsPolicy_Tags_null,
+		"EmptyMap":                                  testAccOrganizationsPolicy_Tags_emptyMap,
+		"AddOnUpdate":                               testAccOrganizationsPolicy_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccOrganizationsPolicy_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccOrganizationsPolicy_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccOrganizationsPolicy_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccOrganizationsPolicy_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccOrganizationsPolicy_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccOrganizationsPolicy_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccOrganizationsPolicy_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccOrganizationsPolicy_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccOrganizationsPolicy_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccOrganizationsPolicy_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccOrganizationsPolicy_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccOrganizationsPolicy_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccOrganizationsPolicy_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccOrganizationsPolicy_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccOrganizationsPolicy_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccOrganizationsPolicy_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -238,7 +238,7 @@ func testAccOrganizationsPolicy_tags(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_null(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -312,7 +312,7 @@ func testAccOrganizationsPolicy_tags_null(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_EmptyMap(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -382,7 +382,7 @@ func testAccOrganizationsPolicy_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_AddOnUpdate(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -470,7 +470,7 @@ func testAccOrganizationsPolicy_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -566,7 +566,7 @@ func testAccOrganizationsPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -710,7 +710,7 @@ func testAccOrganizationsPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -806,7 +806,7 @@ func testAccOrganizationsPolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -994,7 +994,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1161,7 +1161,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1344,7 +1344,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1441,7 +1441,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_updateToProviderOnly(t *testing
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1537,7 +1537,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_updateToResourceOnly(t *testing
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1609,7 +1609,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1673,7 +1673,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_emptyProviderOnlyTag(t *testing
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1742,7 +1742,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_nullOverlappingResourceTag(t *t
 	})
 }
 
-func testAccOrganizationsPolicy_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1811,7 +1811,7 @@ func testAccOrganizationsPolicy_tags_DefaultTags_nullNonOverlappingResourceTag(t
 	})
 }
 
-func testAccOrganizationsPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1873,7 +1873,7 @@ func testAccOrganizationsPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -1977,7 +1977,7 @@ func testAccOrganizationsPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -2071,7 +2071,7 @@ func testAccOrganizationsPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 	})
 }
 
-func testAccOrganizationsPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -2240,7 +2240,7 @@ func testAccOrganizationsPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 	})
 }
 
-func testAccOrganizationsPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccOrganizationsPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy

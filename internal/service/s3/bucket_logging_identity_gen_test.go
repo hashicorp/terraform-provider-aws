@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketLogging_Identity_Basic(t *testing.T) {
+func TestAccS3BucketLogging_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_logging.test"
@@ -105,7 +105,7 @@ func TestAccS3BucketLogging_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketLogging_Identity_RegionOverride(t *testing.T) {
+func TestAccS3BucketLogging_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_logging.test"
@@ -193,7 +193,7 @@ func TestAccS3BucketLogging_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketLogging_Identity_ExistingResource(t *testing.T) {
+func TestAccS3BucketLogging_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_logging.test"
@@ -250,7 +250,7 @@ func TestAccS3BucketLogging_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketLogging_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3BucketLogging_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_logging.test"
@@ -307,7 +307,7 @@ func TestAccS3BucketLogging_Identity_ExistingResource_NoRefresh_NoChange(t *test
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketLogging_Identity_Upgrade(t *testing.T) {
+func TestAccS3BucketLogging_Identity_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_logging.test"
@@ -364,7 +364,7 @@ func TestAccS3BucketLogging_Identity_Upgrade(t *testing.T) {
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketLogging_Identity_Upgrade_NoRefresh(t *testing.T) {
+func TestAccS3BucketLogging_Identity_Upgrade_noRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_logging.test"

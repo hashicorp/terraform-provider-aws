@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncLocationNFS_Identity_Basic(t *testing.T) {
+func TestAccDataSyncLocationNFS_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationNfsOutput
@@ -111,7 +111,7 @@ func TestAccDataSyncLocationNFS_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationNFS_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncLocationNFS_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_location_nfs.test"
@@ -234,7 +234,7 @@ func TestAccDataSyncLocationNFS_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationNFS_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncLocationNFS_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationNfsOutput
@@ -316,7 +316,7 @@ func TestAccDataSyncLocationNFS_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationNFS_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDataSyncLocationNFS_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeLocationNfsOutput

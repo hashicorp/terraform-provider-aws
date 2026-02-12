@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMDocument_Identity_Basic(t *testing.T) {
+func TestAccSSMDocument_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_document.test"
@@ -105,7 +105,7 @@ func TestAccSSMDocument_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMDocument_Identity_RegionOverride(t *testing.T) {
+func TestAccSSMDocument_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_document.test"
@@ -193,7 +193,7 @@ func TestAccSSMDocument_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMDocument_Identity_ExistingResource(t *testing.T) {
+func TestAccSSMDocument_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_document.test"
@@ -250,7 +250,7 @@ func TestAccSSMDocument_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccSSMDocument_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSSMDocument_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssm_document.test"

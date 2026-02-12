@@ -22,19 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccS3ControlAccountPublicAccessBlock_IdentitySerial(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccS3ControlAccountPublicAccessBlock_Identity_Basic,
-		"ExistingResource":          testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccS3ControlAccountPublicAccessBlock_Identity_basic,
+		"ExistingResource":          testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PublicAccessBlockConfiguration
@@ -105,7 +105,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PublicAccessBlockConfiguration
@@ -176,7 +176,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testi
 	})
 }
 
-func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.PublicAccessBlockConfiguration

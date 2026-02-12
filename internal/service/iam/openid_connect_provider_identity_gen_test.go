@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOpenIDConnectProvider_Identity_Basic(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_openid_connect_provider.test"
@@ -104,7 +104,7 @@ func TestAccIAMOpenIDConnectProvider_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccIAMOpenIDConnectProvider_Identity_ExistingResource(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_openid_connect_provider.test"
@@ -159,7 +159,7 @@ func TestAccIAMOpenIDConnectProvider_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func TestAccIAMOpenIDConnectProvider_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccIAMOpenIDConnectProvider_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_openid_connect_provider.test"

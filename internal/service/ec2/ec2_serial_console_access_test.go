@@ -24,7 +24,7 @@ func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
-			"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+			"Identity":      testAccEC2SerialConsoleAccess_identitySerial,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEC2SerialConsoleAccessDataSource_basic,

@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSOAdminTrustedTokenIssuer_IdentitySerial(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSOAdminTrustedTokenIssuer_Identity_Basic,
-		"ExistingResource":          testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccSSOAdminTrustedTokenIssuer_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSSOAdminTrustedTokenIssuer_Identity_basic,
+		"ExistingResource":          testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccSSOAdminTrustedTokenIssuer_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSSOAdminTrustedTokenIssuer_Identity_Basic(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ssoadmin.DescribeTrustedTokenIssuerOutput
@@ -125,7 +125,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccSSOAdminTrustedTokenIssuer_Identity_RegionOverride(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
@@ -249,7 +249,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ssoadmin.DescribeTrustedTokenIssuerOutput
@@ -334,7 +334,7 @@ func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v ssoadmin.DescribeTrustedTokenIssuerOutput

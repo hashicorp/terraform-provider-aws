@@ -36,6 +36,9 @@ func SingleParameterized(ctx context.Context, client AWSClient, request resource
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
+	for _, attr := range identitySpec.IdentityDuplicateAttrs {
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(attr), parameterVal)...)
+	}
 
 	if identity := response.Identity; identity != nil {
 		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), client.AccountID(ctx))...)

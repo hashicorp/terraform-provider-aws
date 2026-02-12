@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAppFabricAppBundle_IdentitySerial(t *testing.T) {
+func testAccAppFabricAppBundle_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccAppFabricAppBundle_Identity_Basic,
-		"ExistingResource":          testAccAppFabricAppBundle_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccAppFabricAppBundle_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccAppFabricAppBundle_Identity_RegionOverride,
+		acctest.CtBasic:             testAccAppFabricAppBundle_Identity_basic,
+		"ExistingResource":          testAccAppFabricAppBundle_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccAppFabricAppBundle_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccAppFabricAppBundle_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccAppFabricAppBundle_Identity_Basic(t *testing.T) {
+func testAccAppFabricAppBundle_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -116,7 +116,7 @@ func testAccAppFabricAppBundle_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_Identity_RegionOverride(t *testing.T) {
+func testAccAppFabricAppBundle_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_appfabric_app_bundle.test"
@@ -232,7 +232,7 @@ func testAccAppFabricAppBundle_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_Identity_ExistingResource(t *testing.T) {
+func testAccAppFabricAppBundle_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle
@@ -308,7 +308,7 @@ func testAccAppFabricAppBundle_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccAppFabricAppBundle_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccAppFabricAppBundle_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.AppBundle

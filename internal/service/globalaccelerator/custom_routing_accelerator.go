@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +34,6 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingAcceleratorCreate,
@@ -336,9 +334,8 @@ func findCustomRoutingAcceleratorByARN(ctx context.Context, conn *globalaccelera
 	output, err := conn.DescribeCustomRoutingAccelerator(ctx, input)
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -361,9 +358,8 @@ func findCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *glob
 	output, err := conn.DescribeCustomRoutingAcceleratorAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -378,8 +374,8 @@ func findCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *glob
 	return output.AcceleratorAttributes, nil
 }
 
-func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCustomRoutingAccelerator(conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		accelerator, err := findCustomRoutingAcceleratorByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -395,10 +391,10 @@ func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator
 }
 
 func waitCustomRoutingAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.Client, arn string, timeout time.Duration) (*awstypes.CustomRoutingAccelerator, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AcceleratorStatusInProgress),
 		Target:  enum.Slice(awstypes.AcceleratorStatusDeployed),
-		Refresh: statusCustomRoutingAccelerator(ctx, conn, arn),
+		Refresh: statusCustomRoutingAccelerator(conn, arn),
 		Timeout: timeout,
 	}
 

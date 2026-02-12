@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,21 +20,21 @@ import (
 
 func TestAccImageBuilderImage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	imageRecipeResourceName := "aws_imagebuilder_image_recipe.test"
 	infrastructureConfigurationResourceName := "aws_imagebuilder_infrastructure_configuration.test"
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("image/%s/1.0.0/[1-9][0-9]*", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "container_recipe_arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
@@ -66,19 +64,19 @@ func TestAccImageBuilderImage_basic(t *testing.T) {
 
 func TestAccImageBuilderImage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -89,20 +87,20 @@ func TestAccImageBuilderImage_disappears(t *testing.T) {
 
 func TestAccImageBuilderImage_distributionARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	distributionConfigurationResourceName := "aws_imagebuilder_distribution_configuration.test"
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_distributionConfigurationARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution_configuration_arn", distributionConfigurationResourceName, names.AttrARN),
 				),
 			},
@@ -117,19 +115,19 @@ func TestAccImageBuilderImage_distributionARN(t *testing.T) {
 
 func TestAccImageBuilderImage_enhancedImageMetadataEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_enhancedMetadataEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtFalse),
 				),
 			},
@@ -144,19 +142,19 @@ func TestAccImageBuilderImage_enhancedImageMetadataEnabled(t *testing.T) {
 
 func TestAccImageBuilderImage_ImageTests_imageTestsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_testsConfigurationTestsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtFalse),
 				),
@@ -172,19 +170,19 @@ func TestAccImageBuilderImage_ImageTests_imageTestsEnabled(t *testing.T) {
 
 func TestAccImageBuilderImage_ImageTests_timeoutMinutes(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_testsConfigurationTimeoutMinutes(rName, 721),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "721"),
 				),
@@ -200,19 +198,19 @@ func TestAccImageBuilderImage_ImageTests_timeoutMinutes(t *testing.T) {
 
 func TestAccImageBuilderImage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -225,7 +223,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 			{
 				Config: testAccImageConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -234,7 +232,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 			{
 				Config: testAccImageConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -245,20 +243,20 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 
 func TestAccImageBuilderImage_containerRecipeARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 	containerRecipeResourceName := "aws_imagebuilder_container_recipe.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_containerRecipe(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "container_recipe_arn", containerRecipeResourceName, names.AttrARN),
 				),
 			},
@@ -268,10 +266,10 @@ func TestAccImageBuilderImage_containerRecipeARN(t *testing.T) {
 
 func TestAccImageBuilderImage_imageScanningConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -280,12 +278,12 @@ func TestAccImageBuilderImage_imageScanningConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_imageScanningConfigurationEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 				),
 			},
@@ -295,20 +293,20 @@ func TestAccImageBuilderImage_imageScanningConfiguration(t *testing.T) {
 
 func TestAccImageBuilderImage_outputResources_containers(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_containerRecipe(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "output_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_resources.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_resources.0.containers.0.image_uris.#", "2"),
@@ -321,19 +319,19 @@ func TestAccImageBuilderImage_outputResources_containers(t *testing.T) {
 
 func TestAccImageBuilderImage_workflows(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_workflows(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "workflow.0.workflow_arn", "aws_imagebuilder_workflow.test_build", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
@@ -349,19 +347,19 @@ func TestAccImageBuilderImage_workflows(t *testing.T) {
 
 func TestAccImageBuilderImage_loggingConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		CheckDestroy:             testAccCheckImageDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageConfig_loggingConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckImageExists(ctx, resourceName),
+					testAccCheckImageExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image/%s", rName)),
 				),
@@ -375,9 +373,9 @@ func TestAccImageBuilderImage_loggingConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckImageDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_image_pipeline" {
@@ -401,14 +399,14 @@ func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckImageExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckImageExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
 
 		_, err := tfimagebuilder.FindImageByARN(ctx, conn, rs.Primary.ID)
 

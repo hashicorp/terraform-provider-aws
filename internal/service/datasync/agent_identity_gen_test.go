@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
+func TestAccDataSyncAgent_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeAgentOutput
@@ -118,7 +118,7 @@ func TestAccDataSyncAgent_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
+func TestAccDataSyncAgent_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_datasync_agent.test"
@@ -253,7 +253,7 @@ func TestAccDataSyncAgent_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
+func TestAccDataSyncAgent_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeAgentOutput
@@ -335,7 +335,7 @@ func TestAccDataSyncAgent_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncAgent_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDataSyncAgent_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v datasync.DescribeAgentOutput

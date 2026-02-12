@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Basic(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -108,7 +108,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Basic(t *testing.
 	})
 }
 
-func TestAccS3BucketServerSideEncryptionConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -199,7 +199,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_RegionOverride(t 
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -256,7 +256,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource(
 }
 
 // Resource Identity was added after v6.9.0
-func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -313,7 +313,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_ExistingResource_
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Upgrade(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_Identity_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"
@@ -370,7 +370,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Upgrade(t *testin
 }
 
 // Resource Identity version 1 was added in version 6.31.0
-func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Upgrade_NoRefresh(t *testing.T) {
+func TestAccS3BucketServerSideEncryptionConfiguration_Identity_Upgrade_noRefresh(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3_bucket_server_side_encryption_configuration.test"

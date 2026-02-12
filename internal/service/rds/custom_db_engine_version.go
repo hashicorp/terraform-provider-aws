@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -405,9 +404,8 @@ func findDBEngineVersions(ctx context.Context, conn *rds.Client, input *rds.Desc
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.CustomDBEngineVersionNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -434,8 +432,8 @@ const (
 	statusPendingValidation = "pending-validation" // Custom for SQL Server, ready for validation by an instance
 )
 
-func statusDBEngineVersion(ctx context.Context, conn *rds.Client, engine, engineVersion string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBEngineVersion(conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
 		if retry.NotFound(err) {
@@ -451,10 +449,10 @@ func statusDBEngineVersion(ctx context.Context, conn *rds.Client, engine, engine
 }
 
 func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.Client, engine, engineVersion string, timeout time.Duration) (*types.DBEngineVersion, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusCreating},
 		Target:                    []string{statusAvailable, statusPendingValidation},
-		Refresh:                   statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh:                   statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -470,10 +468,10 @@ func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.Client, eng
 }
 
 func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.Client, engine, engineVersion string, timeout time.Duration) (*types.DBEngineVersion, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusAvailable},
 		Target:  []string{statusAvailable, statusPendingValidation},
-		Refresh: statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh: statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout: timeout,
 	}
 
@@ -487,10 +485,10 @@ func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.Client, eng
 }
 
 func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.Client, engine, engineVersion string, timeout time.Duration) (*types.DBEngineVersion, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting},
 		Target:  []string{},
-		Refresh: statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh: statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout: timeout,
 	}
 

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecretsManagerSecretPolicy_Identity_Basic(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v secretsmanager.GetResourcePolicyOutput
@@ -108,7 +108,7 @@ func TestAccSecretsManagerSecretPolicy_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSecretsManagerSecretPolicy_Identity_RegionOverride(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_secretsmanager_secret_policy.test"
@@ -229,7 +229,7 @@ func TestAccSecretsManagerSecretPolicy_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.8.0
-func TestAccSecretsManagerSecretPolicy_Identity_ExistingResource(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v secretsmanager.GetResourcePolicyOutput
@@ -285,7 +285,7 @@ func TestAccSecretsManagerSecretPolicy_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.8.0
-func TestAccSecretsManagerSecretPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSecretsManagerSecretPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v secretsmanager.GetResourcePolicyOutput

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSFNAlias_Identity_Basic(t *testing.T) {
+func TestAccSFNAlias_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sfn.DescribeStateMachineAliasOutput
@@ -108,7 +108,7 @@ func TestAccSFNAlias_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSFNAlias_Identity_RegionOverride(t *testing.T) {
+func TestAccSFNAlias_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sfn_alias.test"
@@ -229,7 +229,7 @@ func TestAccSFNAlias_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func TestAccSFNAlias_Identity_ExistingResource(t *testing.T) {
+func TestAccSFNAlias_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sfn.DescribeStateMachineAliasOutput
@@ -285,7 +285,7 @@ func TestAccSFNAlias_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func TestAccSFNAlias_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSFNAlias_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sfn.DescribeStateMachineAliasOutput

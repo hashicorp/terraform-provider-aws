@@ -3692,6 +3692,52 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_SecondaryNetworkInterface_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_SECONDARY_NETWORK_INTERFACE_ENABLED")
+	instanceType := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EC2_SECONDARY_NETWORK_INTERFACE_INSTANCE_TYPE")
+
+	var instance awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSecondaryNetworkInterface(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_secondaryNetworkInterface_multiple(rName, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "secondary_network_interface.#", "4"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_network_interface.*", map[string]string{
+						"network_card_index":          "1",
+						"device_index":                "0",
+						"interface_type":              "secondary",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
+						"private_ip_address_count":    "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_network_interface.*", map[string]string{
+						"network_card_index":          "2",
+						"device_index":                "0",
+						"interface_type":              "secondary",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
+						"private_ip_address_count":    "2",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "additional_info", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform/issues/3205
 func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -6542,6 +6588,21 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	}
 
 	return len(subnets)
+}
+
+func testAccPreCheckSecondaryNetworkInterface(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+	input := ec2.DescribeSecondaryNetworksInput{}
+	_, err := conn.DescribeSecondaryNetworks(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 // testAccLatestWindowsServer2016CoreAMIConfig returns the configuration for a data source that
@@ -10378,4 +10439,91 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_secondaryNetworkInterface_multiple(rName, instanceType string) string {
+	return acctest.ConfigCompose(
+		testAccLatestAmazonLinux2023AMIConfig(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		fmt.Sprintf(`
+data "aws_subnet" "selected" {
+  id = aws_subnet.test.id
+}
+
+resource "aws_ec2_secondary_network" "test" {
+  ipv4_cidr_block = "10.0.0.0/16"
+  network_type    = "rdma"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_secondary_subnet" "test" {
+  secondary_network_id = aws_ec2_secondary_network.test.id
+  ipv4_cidr_block      = "10.0.1.0/24"
+  availability_zone    = data.aws_subnet.selected.availability_zone
+
+  tags = {
+    Name = "%[1]s-1"
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = %[2]q
+  network_interface {
+    network_interface_id = aws_network_interface.test.id
+    device_index         = 0
+  }
+  availability_zone = data.aws_subnet.selected.availability_zone
+
+  secondary_network_interface {
+    network_card_index       = 1
+    device_index             = 0
+    interface_type           = "secondary"
+    delete_on_termination    = true
+    private_ip_address_count = 1
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+  }
+
+  secondary_network_interface {
+    network_card_index       = 2
+    device_index             = 0
+    interface_type           = "secondary"
+    delete_on_termination    = true
+    private_ip_address_count = 2
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+  }
+
+  secondary_network_interface {
+    network_card_index       = 3
+    device_index             = 0
+    interface_type           = "secondary"
+    delete_on_termination    = true
+    private_ip_address_count = 2
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+  }
+  secondary_network_interface {
+    network_card_index       = 4
+    device_index             = 0
+    interface_type           = "secondary"
+    delete_on_termination    = true
+    private_ip_address_count = 2
+    secondary_subnet_id      = aws_ec2_secondary_subnet.test.id
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, instanceType))
 }

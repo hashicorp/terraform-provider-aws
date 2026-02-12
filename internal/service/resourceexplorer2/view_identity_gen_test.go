@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccResourceExplorer2View_IdentitySerial(t *testing.T) {
+func testAccResourceExplorer2View_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccResourceExplorer2View_Identity_Basic,
-		"ExistingResource":          testAccResourceExplorer2View_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccResourceExplorer2View_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccResourceExplorer2View_Identity_RegionOverride,
+		acctest.CtBasic:             testAccResourceExplorer2View_Identity_basic,
+		"ExistingResource":          testAccResourceExplorer2View_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccResourceExplorer2View_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccResourceExplorer2View_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccResourceExplorer2View_Identity_Basic(t *testing.T) {
+func testAccResourceExplorer2View_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resourceexplorer2.GetViewOutput
@@ -121,7 +121,7 @@ func testAccResourceExplorer2View_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2View_Identity_RegionOverride(t *testing.T) {
+func testAccResourceExplorer2View_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_view.test"
@@ -241,7 +241,7 @@ func testAccResourceExplorer2View_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2View_Identity_ExistingResource(t *testing.T) {
+func testAccResourceExplorer2View_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resourceexplorer2.GetViewOutput
@@ -321,7 +321,7 @@ func testAccResourceExplorer2View_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2View_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccResourceExplorer2View_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v resourceexplorer2.GetViewOutput
