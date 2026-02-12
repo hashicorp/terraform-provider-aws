@@ -525,16 +525,17 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			"origin_group": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[originGroupModel](ctx),
 				NestedObject: schema.NestedBlockObject{
-				Attributes: map[string]schema.Attribute{
-					names.AttrID: schema.StringAttribute{
-						Required: true,
+					Attributes: map[string]schema.Attribute{
+						names.AttrID: schema.StringAttribute{
+							Required: true,
+						},
+						"selection_criteria": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.OriginGroupSelectionCriteria](),
+							Optional:   true,
+						},
 					},
-					"selection_criteria": schema.StringAttribute{
-						Optional: true,
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"failover_criteria": schema.ListNestedBlock{
+					Blocks: map[string]schema.Block{
+						"failover_criteria": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[failoverCriteriaModel](ctx),
 							Validators: []validator.List{
 								listvalidator.IsRequired(),

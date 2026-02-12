@@ -1729,6 +1729,15 @@ func TestAccCloudFrontDistribution_originGroupsSelectionCriteria(t *testing.T) {
 					}),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
 		},
 	})
 }

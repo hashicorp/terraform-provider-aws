@@ -614,6 +614,7 @@ func resourceDistribution() *schema.Resource {
 						"selection_criteria": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OriginGroupSelectionCriteria](),
 						},
 					},
