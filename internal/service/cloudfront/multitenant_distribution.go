@@ -532,6 +532,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						"selection_criteria": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.OriginGroupSelectionCriteria](),
 							Optional:   true,
+							Computed:   true,
 						},
 					},
 					Blocks: map[string]schema.Block{
