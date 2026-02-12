@@ -525,13 +525,16 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 			"origin_group": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[originGroupModel](ctx),
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrID: schema.StringAttribute{
-							Required: true,
-						},
+				Attributes: map[string]schema.Attribute{
+					names.AttrID: schema.StringAttribute{
+						Required: true,
 					},
-					Blocks: map[string]schema.Block{
-						"failover_criteria": schema.ListNestedBlock{
+					"selection_criteria": schema.StringAttribute{
+						Optional: true,
+					},
+				},
+				Blocks: map[string]schema.Block{
+					"failover_criteria": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[failoverCriteriaModel](ctx),
 							Validators: []validator.List{
 								listvalidator.IsRequired(),
@@ -1096,9 +1099,10 @@ type vpcOriginConfigModel struct {
 }
 
 type originGroupModel struct {
-	FailoverCriteria fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
-	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
-	ID               types.String                                           `tfsdk:"id"`
+	FailoverCriteria  fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
+	Member            fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
+	ID                types.String                                           `tfsdk:"id"`
+	SelectionCriteria fwtypes.StringEnum[awstypes.OriginGroupSelectionCriteria] `tfsdk:"selection_criteria"`
 }
 
 type failoverCriteriaModel struct {

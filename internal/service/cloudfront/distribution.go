@@ -611,6 +611,11 @@ func resourceDistribution() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
 						},
+						"selection_criteria": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OriginGroupSelectionCriteria](),
+						},
 					},
 				},
 			},
@@ -2383,6 +2388,10 @@ func expandOriginGroup(tfMap map[string]any) *awstypes.OriginGroup {
 		Members:          expandMembers(tfMap["member"].([]any)),
 	}
 
+	if v, ok := tfMap["selection_criteria"].(string); ok && v != "" {
+		apiObject.SelectionCriteria = awstypes.OriginGroupSelectionCriteria(v)
+	}
+
 	return apiObject
 }
 
@@ -2393,6 +2402,7 @@ func flattenOriginGroup(apiObject *awstypes.OriginGroup) map[string]any {
 
 	tfMap := make(map[string]any)
 	tfMap["origin_id"] = aws.ToString(apiObject.Id)
+	tfMap["selection_criteria"] = string(apiObject.SelectionCriteria)
 
 	if apiObject.FailoverCriteria != nil {
 		tfMap["failover_criteria"] = flattenOriginGroupFailoverCriteria(apiObject.FailoverCriteria)
