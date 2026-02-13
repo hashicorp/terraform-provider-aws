@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix perpetual diff caused by ordering differences in `trusted_key_groups`, `trusted_signers`, and `query_string_cache_keys` attributes
+```
