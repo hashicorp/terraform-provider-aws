@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing.T) {
+func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
@@ -110,7 +110,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing
 	})
 }
 
-func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"

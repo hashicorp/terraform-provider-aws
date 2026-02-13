@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRolePolicyAttachment_Identity_Basic(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_role_policy_attachment.test"
@@ -107,7 +107,7 @@ func TestAccIAMRolePolicyAttachment_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccIAMRolePolicyAttachment_Identity_ExistingResource(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_role_policy_attachment.test"
@@ -165,7 +165,7 @@ func TestAccIAMRolePolicyAttachment_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iam_role_policy_attachment.test"

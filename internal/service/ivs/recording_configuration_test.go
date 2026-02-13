@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfivs "github.com/hashicorp/terraform-provider-aws/internal/service/ivs"
@@ -28,10 +26,10 @@ import (
 func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var recordingConfiguration awstypes.RecordingConfiguration
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
@@ -39,12 +37,12 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -64,16 +62,16 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.RecordingConfiguration
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 	recordingReconnectWindowSeconds := "45"
 	recordingMode := "INTERVAL"
 	targetIntervalSeconds := "30"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
@@ -81,12 +79,12 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordingConfigurationConfig_name(bucketName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &v1),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName1),
 				),
@@ -99,7 +97,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 			{
 				Config: testAccRecordingConfigurationConfig_update(bucketName2, rName2, recordingReconnectWindowSeconds, recordingMode, targetIntervalSeconds),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &v2),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &v2),
 					testAccCheckRecordingConfigurationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName2),
@@ -115,10 +113,10 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var recordingconfiguration awstypes.RecordingConfiguration
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
@@ -126,12 +124,12 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingconfiguration),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingconfiguration),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfivs.ResourceRecordingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -143,11 +141,11 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	var recordingconfiguration awstypes.RecordingConfiguration
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	parentResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_ivs_recording_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
@@ -155,12 +153,12 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingconfiguration),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingconfiguration),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -172,10 +170,10 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var recordingConfiguration awstypes.RecordingConfiguration
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ivs_recording_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IVSEndpointID)
@@ -183,12 +181,12 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -201,7 +199,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccRecordingConfigurationConfig_tags2(bucketName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -210,7 +208,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
+					testAccCheckRecordingConfigurationExists(ctx, t, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -219,9 +217,9 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRecordingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRecordingConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IVSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivs_recording_configuration" {
@@ -246,7 +244,7 @@ func testAccCheckRecordingConfigurationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, recordingconfiguration *awstypes.RecordingConfiguration) resource.TestCheckFunc {
+func testAccCheckRecordingConfigurationExists(ctx context.Context, t *testing.T, name string, recordingconfiguration *awstypes.RecordingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -257,7 +255,7 @@ func testAccCheckRecordingConfigurationExists(ctx context.Context, name string, 
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameRecordingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IVSClient(ctx)
 
 		resp, err := tfivs.FindRecordingConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -282,7 +280,7 @@ func testAccCheckRecordingConfigurationRecreated(before, after *awstypes.Recordi
 }
 
 func testAccRecordingConfigurationPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).IVSClient(ctx)
 
 	input := &ivs.ListRecordingConfigurationsInput{}
 	_, err := conn.ListRecordingConfigurations(ctx, input)

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,19 +30,19 @@ func testAccIPSet_basic(t *testing.T) {
 	ipsetName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
 	resourceName := "aws_guardduty_ipset.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName),
+					testAccCheckIPSetExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/ipset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtTrue),
@@ -59,7 +58,7 @@ func testAccIPSet_basic(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_basic(bucketName, keyName2, ipsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName),
+					testAccCheckIPSetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
@@ -69,9 +68,9 @@ func testAccIPSet_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_ipset" {
@@ -106,7 +105,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIPSetExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckIPSetExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -123,7 +122,7 @@ func testAccCheckIPSetExists(ctx context.Context, name string) resource.TestChec
 			IpSetId:    aws.String(ipSetId),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 		_, err = conn.GetIPSet(ctx, input)
 		return err
 	}

@@ -21,20 +21,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccResourceExplorer2Index_IdentitySerial(t *testing.T) {
+func testAccResourceExplorer2Index_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccResourceExplorer2Index_Identity_Basic,
-		"ExistingResource":          testAccResourceExplorer2Index_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccResourceExplorer2Index_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccResourceExplorer2Index_Identity_RegionOverride,
+		acctest.CtBasic:             testAccResourceExplorer2Index_Identity_basic,
+		"ExistingResource":          testAccResourceExplorer2Index_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccResourceExplorer2Index_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccResourceExplorer2Index_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccResourceExplorer2Index_Identity_Basic(t *testing.T) {
+func testAccResourceExplorer2Index_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_index.test"
@@ -110,7 +110,7 @@ func testAccResourceExplorer2Index_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2Index_Identity_RegionOverride(t *testing.T) {
+func testAccResourceExplorer2Index_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_index.test"
@@ -223,7 +223,7 @@ func testAccResourceExplorer2Index_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2Index_Identity_ExistingResource(t *testing.T) {
+func testAccResourceExplorer2Index_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_index.test"
@@ -295,7 +295,7 @@ func testAccResourceExplorer2Index_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccResourceExplorer2Index_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccResourceExplorer2Index_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_resourceexplorer2_index.test"

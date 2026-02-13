@@ -34,7 +34,7 @@ KEY
 
 The following arguments are required:
 
-* `table_name` - (Required) The name of the table containing the requested item.
+* `table_name` - (Required) The name or ARN of the table containing the requested item.
 * `key` - (Required) A map of attribute names to AttributeValue objects, representing the primary key of the item to retrieve.
   For the primary key, you must provide all of the attributes. For example, with a simple primary key, you only need to provide a value for the partition key. For a composite primary key, you must provide values for both the partition key and the sort key.
 

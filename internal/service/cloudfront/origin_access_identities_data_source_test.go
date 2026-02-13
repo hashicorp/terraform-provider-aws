@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,13 +16,13 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_origin_access_identities.test"
 	resourceName := "aws_cloudfront_origin_access_identity.test1"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceConfig_comments(rName),
@@ -43,13 +42,13 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudfront_origin_access_identities.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceConfig_noComments(rName),

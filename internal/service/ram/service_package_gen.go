@@ -27,6 +27,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newPermissionResource,
+			TypeName: "aws_ram_permission",
+			Name:     "Permission",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "Permission",
+			}),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newResourceShareAssociationsExclusiveResource,
 			TypeName: "aws_ram_resource_share_associations_exclusive",
 			Name:     "Resource Share Associations Exclusive",
@@ -70,7 +84,8 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ram_resource_share",
 			Name:     "Resource Share",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "ResourceShare",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

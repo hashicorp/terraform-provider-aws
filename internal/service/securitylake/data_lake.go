@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package securitylake
 
 import (
@@ -24,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -412,8 +413,8 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	return dataLakes, nil
 }
 
-func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataLakeCreate(conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -428,8 +429,8 @@ func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn st
 	}
 }
 
-func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataLakeUpdate(conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataLakeByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -449,10 +450,10 @@ func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn st
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
-		Refresh: statusDataLakeCreate(ctx, conn, arn),
+		Refresh: statusDataLakeCreate(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -472,10 +473,10 @@ func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusPending, awstypes.DataLakeStatusInitialized),
 		Target:  enum.Slice(awstypes.DataLakeStatusCompleted),
-		Refresh: statusDataLakeUpdate(ctx, conn, arn),
+		Refresh: statusDataLakeUpdate(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -495,10 +496,10 @@ func waitDataLakeUpdated(ctx context.Context, conn *securitylake.Client, arn str
 }
 
 func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataLakeStatusInitialized, awstypes.DataLakeStatusCompleted, awstypes.DataLakeStatusFailed),
 		Target:  []string{},
-		Refresh: statusDataLakeCreate(ctx, conn, arn),
+		Refresh: statusDataLakeCreate(conn, arn),
 		Timeout: timeout,
 	}
 

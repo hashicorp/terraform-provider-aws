@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix panic when `global_secondary_index` or `global_secondary_index.key_schema` are `dynamic`
+```

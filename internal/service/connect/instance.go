@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package connect
 
 import (
@@ -17,7 +19,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -334,9 +335,8 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	output, err := conn.DescribeInstance(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -364,9 +364,8 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	output, err := conn.DescribeInstanceAttribute(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -381,8 +380,8 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	return output.Attribute, nil
 }
 
-func statusInstance(ctx context.Context, conn *connect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstance(conn *connect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -398,10 +397,10 @@ func statusInstance(ctx context.Context, conn *connect.Client, id string) sdkret
 }
 
 func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.InstanceStatusActive),
-		Refresh: statusInstance(ctx, conn, id),
+		Refresh: statusInstance(conn, id),
 		Timeout: timeout,
 	}
 
@@ -419,10 +418,10 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 }
 
 func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusActive),
 		Target:  []string{},
-		Refresh: statusInstance(ctx, conn, id),
+		Refresh: statusInstance(conn, id),
 		Timeout: timeout,
 	}
 

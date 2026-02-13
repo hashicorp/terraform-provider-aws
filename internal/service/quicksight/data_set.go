@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package quicksight
 
 import (
@@ -32,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSet")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
@@ -76,8 +79,14 @@ func resourceDataSet() *schema.Resource {
 				"row_level_permission_data_set":          quicksightschema.DataSetRowLevelPermissionDataSetSchema(),
 				"row_level_permission_tag_configuration": quicksightschema.DataSetRowLevelPermissionTagConfigurationSchema(),
 				"refresh_properties":                     quicksightschema.DataSetRefreshPropertiesSchema(),
-				names.AttrTags:                           tftags.TagsSchema(),
-				names.AttrTagsAll:                        tftags.TagsSchemaComputed(),
+				"use_as": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.DataSetUseAs](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
 
@@ -142,6 +151,10 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	if v, ok := d.GetOk("row_level_permission_tag_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.RowLevelPermissionTagConfiguration = quicksightschema.ExpandRowLevelPermissionTagConfiguration(v.([]any))
+	}
+
+	if v, ok := d.GetOk("use_as"); ok {
+		input.UseAs = awstypes.DataSetUseAs(v.(string))
 	}
 
 	_, err := conn.CreateDataSet(ctx, input)
@@ -210,6 +223,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
 	d.Set(names.AttrName, dataSet.Name)
+	d.Set("use_as", dataSet.UseAs)
 	if err := d.Set("output_columns", quicksightschema.FlattenOutputColumns(dataSet.OutputColumns)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting output_columns: %s", err)
 	}

@@ -130,3 +130,10 @@ variable "alt_region" {
   nullable    = false
 }
 {{ end -}}
+{{- if .AlternateRegionTfVars }}
+variable "secondary_region" {
+  description = "Secondary region"
+  type        = string
+  nullable    = false
+}
+{{ end -}}

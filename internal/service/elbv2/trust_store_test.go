@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccELBV2TrustStore_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("truststore/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -55,18 +53,18 @@ func TestAccELBV2TrustStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceTrustStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,18 +77,18 @@ func TestAccELBV2TrustStore_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_nameGenerated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-"),
 				),
@@ -108,18 +106,18 @@ func TestAccELBV2TrustStore_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TrustStore
 	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
+		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrustStoreConfig_namePrefix(rName, "tf-px-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
+					testAccCheckTrustStoreExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-px-"),
 				),
@@ -133,14 +131,14 @@ func TestAccELBV2TrustStore_namePrefix(t *testing.T) {
 	})
 }
 
-func testAccCheckTrustStoreExists(ctx context.Context, n string, v *awstypes.TrustStore) resource.TestCheckFunc {
+func testAccCheckTrustStoreExists(ctx context.Context, t *testing.T, n string, v *awstypes.TrustStore) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 		output, err := tfelbv2.FindTrustStoreByARN(ctx, conn, rs.Primary.ID)
 
@@ -154,9 +152,9 @@ func testAccCheckTrustStoreExists(ctx context.Context, n string, v *awstypes.Tru
 	}
 }
 
-func testAccCheckTrustStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTrustStoreDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_trust_store" {

@@ -12,11 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,11 +37,11 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 	}
 
 	var userprofile datazone.GetUserProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_user_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -55,7 +53,7 @@ func TestAccDataZoneUserProfile_basic(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -80,11 +78,11 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 	}
 
 	var userprofile datazone.GetUserProfileOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_user_profile.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -96,7 +94,7 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_update(rName, "ACTIVATED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -106,7 +104,7 @@ func TestAccDataZoneUserProfile_update(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_update(rName, "DEACTIVATED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(ctx, resourceName, &userprofile),
+					testAccCheckUserProfileExists(ctx, t, resourceName, &userprofile),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
@@ -127,7 +125,7 @@ func testAccUserProfileImportStateFunc(resourceName string) resource.ImportState
 	}
 }
 
-func testAccCheckUserProfileExists(ctx context.Context, name string, userprofile *datazone.GetUserProfileOutput) resource.TestCheckFunc {
+func testAccCheckUserProfileExists(ctx context.Context, t *testing.T, name string, userprofile *datazone.GetUserProfileOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -142,7 +140,7 @@ func testAccCheckUserProfileExists(ctx context.Context, name string, userprofile
 		ui := rs.Primary.Attributes["user_identifier"]
 		ut := types.UserProfileType(rs.Primary.Attributes[names.AttrType])
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		resp, err := tfdatazone.FindUserProfileByID(ctx, conn, du, ui, ut)
 
 		if err != nil {

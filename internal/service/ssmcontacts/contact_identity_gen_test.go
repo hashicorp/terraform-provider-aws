@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSMContactsContact_IdentitySerial(t *testing.T) {
+func testAccSSMContactsContact_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSMContactsContact_Identity_Basic,
-		"ExistingResource":          testAccSSMContactsContact_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSSMContactsContact_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccSSMContactsContact_Identity_basic,
+		"ExistingResource":          testAccSSMContactsContact_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSSMContactsContact_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSSMContactsContact_Identity_Basic(t *testing.T) {
+func testAccSSMContactsContact_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact.test"
@@ -119,7 +119,7 @@ func testAccSSMContactsContact_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.15.0
-func testAccSSMContactsContact_Identity_ExistingResource(t *testing.T) {
+func testAccSSMContactsContact_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact.test"
@@ -174,7 +174,7 @@ func testAccSSMContactsContact_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.15.0
-func testAccSSMContactsContact_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSSMContactsContact_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact.test"

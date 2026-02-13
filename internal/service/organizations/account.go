@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package organizations
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
@@ -358,9 +360,7 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 			d.SetId(d.Id())
 		}
 	} else {
-		identitySpec := importer.IdentitySpec(ctx)
-
-		if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+		if err := importer.Import(ctx, d, meta); err != nil {
 			return nil, err
 		}
 	}

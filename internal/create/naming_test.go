@@ -4,6 +4,7 @@
 package create
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,8 +17,8 @@ func strPtr(str string) *string {
 	return &str
 }
 
-func nameWithSuffix(name string, namePrefix string, nameSuffix string) string {
-	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix), WithSuffix(nameSuffix)).Generate()
+func nameWithSuffix(ctx context.Context, name string, namePrefix string, nameSuffix string) string {
+	return NewNameGenerator(WithConfiguredName(name), WithConfiguredPrefix(namePrefix), WithSuffix(nameSuffix)).Generate(ctx)
 }
 
 func TestName(t *testing.T) {
@@ -55,7 +56,7 @@ func TestName(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			got := Name(testCase.configuredName, testCase.configuredPrefix)
+			got := Name(context.Background(), testCase.configuredName, testCase.configuredPrefix)
 
 			if !testCase.expectedRegexp.MatchString(got) {
 				t.Errorf("Name(%q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, got, testCase.expectedRegexp)
@@ -123,8 +124,9 @@ func TestNameWithSuffix(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 
-			got := nameWithSuffix(testCase.configuredName, testCase.configuredPrefix, testCase.suffix)
+			got := nameWithSuffix(ctx, testCase.configuredName, testCase.configuredPrefix, testCase.suffix)
 
 			if !testCase.expectedRegexp.MatchString(got) {
 				t.Errorf("NameWithSuffix(%q, %q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, testCase.suffix, got, testCase.expectedRegexp)
@@ -167,8 +169,9 @@ func TestNameWithDefaultPrefix(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
+			ctx := t.Context()
 
-			got := NewNameGenerator(WithConfiguredName(testCase.configuredName), WithConfiguredPrefix(testCase.configuredPrefix), WithDefaultPrefix("def-")).Generate()
+			got := NewNameGenerator(WithConfiguredName(testCase.configuredName), WithConfiguredPrefix(testCase.configuredPrefix), WithDefaultPrefix("def-")).Generate(ctx)
 
 			if !testCase.expectedRegexp.MatchString(got) {
 				t.Errorf("NameWithDefaultPrefix(%q, %q) = %v, does not match %s", testCase.configuredName, testCase.configuredPrefix, got, testCase.expectedRegexp)
@@ -302,7 +305,7 @@ func TestNamePrefixFromName(t *testing.T) {
 
 		for i := range 10 {
 			prefix := "test-"
-			input := Name("", prefix)
+			input := Name(context.Background(), "", prefix)
 			got := NamePrefixFromName(input)
 
 			if got == nil {
@@ -400,10 +403,11 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
 		t.Parallel()
+		ctx := t.Context()
 
 		for i := range 10 {
 			prefix := "test-"
-			input := nameWithSuffix("", prefix, "suffix")
+			input := nameWithSuffix(ctx, "", prefix, "suffix")
 			got := NamePrefixFromNameWithSuffix(input, "suffix")
 
 			if got == nil {

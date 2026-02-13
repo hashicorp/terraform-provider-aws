@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -47,7 +48,7 @@ func TestAccS3BucketABAC_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrStatus: knownvalue.StringExact(string(awstypes.BucketAbacStatusEnabled)),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
 						}),
 					})),
 				},
@@ -56,7 +57,7 @@ func TestAccS3BucketABAC_basic(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrStatus: knownvalue.StringExact(string(awstypes.BucketAbacStatusEnabled)),
+								names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
 							}),
 						})),
 					},
@@ -127,7 +128,7 @@ func TestAccS3BucketABAC_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrStatus: knownvalue.StringExact(string(awstypes.BucketAbacStatusEnabled)),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
 						}),
 					})),
 				},
@@ -136,7 +137,7 @@ func TestAccS3BucketABAC_update(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrStatus: knownvalue.StringExact(string(awstypes.BucketAbacStatusEnabled)),
+								names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
 							}),
 						})),
 					},
@@ -177,7 +178,7 @@ func TestAccS3BucketABAC_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							names.AttrStatus: knownvalue.StringExact(string(awstypes.BucketAbacStatusEnabled)),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
 						}),
 					})),
 				},
@@ -186,10 +187,60 @@ func TestAccS3BucketABAC_update(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrStatus: knownvalue.StringExact(string(awstypes.BucketAbacStatusEnabled)),
+								names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
 							}),
 						})),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3BucketABAC_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_abac.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketABACDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketABACConfig_expectedBucketOwner(rName, string(awstypes.BucketAbacStatusEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketABACExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("abac_status"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrStatus: tfknownvalue.StringExact(awstypes.BucketAbacStatusEnabled),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrBucket),
+				ImportStateVerifyIdentifierAttribute: names.AttrBucket,
+				ImportStateVerifyIgnore: []string{
+					names.AttrExpectedBucketOwner,
 				},
 			},
 		},
@@ -263,5 +314,24 @@ resource "aws_s3_bucket_abac" "test" {
     status = %[2]q
   }
 }
+`, rName, status)
+}
+
+func testAccBucketABACConfig_expectedBucketOwner(rName, status string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_abac" "test" {
+  bucket                = aws_s3_bucket.test.bucket
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  abac_status {
+    status = %[2]q
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+data "aws_caller_identity" "current" {}
 `, rName, status)
 }

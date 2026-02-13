@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
@@ -25,24 +23,24 @@ func TestAccCloudWatchContributorManagedInsightRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var contributormanagedinsightrule types.ManagedRuleDescription
-	rName := sdkacctest.RandomWithPrefix("tfacctest")
+	rName := acctest.RandomWithPrefix(t, "tfacctest")
 	resourceName := "aws_cloudwatch_contributor_managed_insight_rule.test"
 	templateName := "VpcEndpointService-NewConnectionsByEndpointId-v1"
 	vpcEndpointService := "aws_vpc_endpoint_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorManagedInsightRuleConfig_basic(rName, templateName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &contributormanagedinsightrule),
+					testAccCheckContributorManagedInsightRuleExists(ctx, t, resourceName, &contributormanagedinsightrule),
 					resource.TestCheckResourceAttr(resourceName, "template_name", templateName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcEndpointService, names.AttrARN),
 				),
@@ -63,23 +61,23 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.ManagedRuleDescription
-	rName := sdkacctest.RandomWithPrefix("tfacctest")
+	rName := acctest.RandomWithPrefix(t, "tfacctest")
 	resourceName := "aws_cloudwatch_contributor_managed_insight_rule.test"
 	templateName := "VpcEndpointService-NewConnectionsByEndpointId-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorManagedInsightRuleConfig_basic(rName, templateName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorManagedInsightRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
@@ -91,23 +89,23 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 func TestAccCloudWatchContributorManagedInsightRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ManagedRuleDescription
-	rName := sdkacctest.RandomWithPrefix("tfacctest")
+	rName := acctest.RandomWithPrefix(t, "tfacctest")
 	resourceName := "aws_cloudwatch_contributor_managed_insight_rule.test"
 	templateName := "VpcEndpointService-NewConnectionsByEndpointId-v1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorManagedInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorManagedInsightRuleConfig_tags1(rName, templateName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorManagedInsightRuleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -124,9 +122,9 @@ func TestAccCloudWatchContributorManagedInsightRule_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckContributorManagedInsightRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContributorManagedInsightRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_contributor_managed_insight_rule" {
@@ -160,7 +158,7 @@ func testAccCheckContributorManagedInsightRuleDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccCheckContributorManagedInsightRuleExists(ctx context.Context, name string, contributormanagedinsightrule *types.ManagedRuleDescription) resource.TestCheckFunc {
+func testAccCheckContributorManagedInsightRuleExists(ctx context.Context, t *testing.T, name string, contributormanagedinsightrule *types.ManagedRuleDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -171,7 +169,7 @@ func testAccCheckContributorManagedInsightRuleExists(ctx context.Context, name s
 			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameContributorManagedInsightRule, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 		output, err := tfcloudwatch.FindContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["template_name"])
 

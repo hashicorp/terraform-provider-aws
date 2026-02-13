@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCSecurityGroupVPCAssociation_Identity_Basic(t *testing.T) {
+func TestAccVPCSecurityGroupVPCAssociation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SecurityGroupVpcAssociation
@@ -114,7 +114,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroupVPCAssociation_Identity_RegionOverride(t *testing.T) {
+func TestAccVPCSecurityGroupVPCAssociation_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_vpc_security_group_vpc_association.test"
@@ -207,7 +207,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_RegionOverride(t *testing.T)
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource(t *testing.T) {
+func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SecurityGroupVpcAssociation
@@ -267,7 +267,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource(t *testing.
 }
 
 // Resource Identity was added after v6.0.0
-func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.SecurityGroupVpcAssociation

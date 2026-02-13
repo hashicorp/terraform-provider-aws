@@ -661,14 +661,11 @@ service "arcregionswitch" {
 
   names {
     provider_name_upper = "ARCRegionSwitch"
-    human_friendly      = "Application Resilience Controller Region Switch"
+    human_friendly      = "ARC (Application Recovery Controller) Region Switch"
   }
 
   endpoint_info {
     endpoint_api_call = "ListPlans"
-    endpoint_region_overrides = {
-      "aws" = "us-east-1"
-    }
   }
 
   resource_prefix {
@@ -677,7 +674,9 @@ service "arcregionswitch" {
 
   provider_package_correct = "arcregionswitch"
   doc_prefix               = ["arcregionswitch_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
+
+  is_global = true
 }
 
 service "arczonalshift" {
@@ -693,7 +692,7 @@ service "arczonalshift" {
 
   names {
     provider_name_upper = "ARCZonalShift"
-    human_friendly      = "Application Recovery Controller Zonal Shift"
+    human_friendly      = "ARC (Application Recovery Controller) Zonal Shift"
   }
 
   endpoint_info {
@@ -706,7 +705,7 @@ service "arczonalshift" {
 
   provider_package_correct = "arczonalshift"
   doc_prefix               = ["arczonalshift_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "athena" {
@@ -3442,6 +3441,8 @@ service "invoicing" {
   provider_package_correct = "invoicing"
   doc_prefix               = ["invoicing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "mediaconnect" {
@@ -5822,6 +5823,33 @@ service "mobile" {
   not_implemented          = true
 }
 
+service "mpa" {
+  sdk {
+    id            = "MPA"
+    arn_namespace = "mpa"
+  }
+
+  names {
+    provider_name_upper = "MPA"
+    human_friendly      = "Multi-party Approval"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApprovalTeams"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_mpa_"
+  }
+
+  provider_package_correct = "mpa"
+  doc_prefix               = ["mpa_"]
+  brand                    = "AWS"
+}
+
 service "mq" {
   sdk {
     id            = "mq"
@@ -7765,6 +7793,10 @@ service "savingsplans" {
     human_friendly      = "Savings Plans"
   }
 
+  endpoint_info {
+    endpoint_api_call = "DescribeSavingsPlans"
+  }
+
   resource_prefix {
     correct = "aws_savingsplans_"
   }
@@ -7772,7 +7804,8 @@ service "savingsplans" {
   provider_package_correct = "savingsplans"
   doc_prefix               = ["savingsplans_"]
   brand                    = "AWS"
-  not_implemented          = true
+
+  is_global = true
 }
 
 service "simpledb" {
@@ -9334,7 +9367,7 @@ service "ec2" {
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|secondary_network|secondary_subnet|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
@@ -9644,7 +9677,7 @@ service "ec2" {
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_allowed_images_settings", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_secondary_network", "ec2_secondary_subnet", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
 }
 

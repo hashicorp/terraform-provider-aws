@@ -661,6 +661,19 @@ func testAccCheckStateMachineDestroy(ctx context.Context) resource.TestCheckFunc
 
 func testAccStateMachineConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_service_principal" "lambda" {
+  service_name = "lambda"
+}
+
+data "aws_service_principal" "states" {
+  service_name = "states"
+  region       = data.aws_region.current.name
+}
+
 resource "aws_iam_role_policy" "for_lambda" {
   name = "%[1]s-lambda"
   role = aws_iam_role.for_lambda.id
@@ -690,7 +703,7 @@ resource "aws_iam_role" "for_lambda" {
   "Statement": [{
     "Action": "sts:AssumeRole",
     "Principal": {
-      "Service": "lambda.amazonaws.com"
+      "Service": "${data.aws_service_principal.lambda.name}"
     },
     "Effect": "Allow"
   }]
@@ -705,10 +718,6 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs20.x"
 }
-
-data "aws_region" "current" {}
-
-data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "for_sfn" {
   name = "%[1]s-sfn"
@@ -749,7 +758,7 @@ resource "aws_iam_role" "for_sfn" {
   "Statement": [{
     "Effect": "Allow",
     "Principal": {
-      "Service": "states.${data.aws_region.current.region}.amazonaws.com"
+      "Service": "${data.aws_service_principal.states.name}"
     },
     "Action": "sts:AssumeRole"
   }]

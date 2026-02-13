@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,22 +24,22 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 	}
 
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
 	domainName := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
+					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, t, resourceName, &authorizevpcendpointaccess),
 					resource.TestCheckResourceAttrSet(resourceName, "account"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 				),
@@ -60,22 +58,22 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_authorize_vpc_endpoint_access.test"
 	domainName := testAccRandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
+					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, t, resourceName, &authorizevpcendpointaccess),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,9 +82,9 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearch_authorize_vpc_endpoint_access" {
@@ -109,14 +107,14 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, n string, v *awstypes.AuthorizedPrincipal) resource.TestCheckFunc {
+func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, t *testing.T, n string, v *awstypes.AuthorizedPrincipal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchClient(ctx)
 
 		output, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
 

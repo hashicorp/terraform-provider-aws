@@ -19,7 +19,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	dataSource := "data.aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,7 +52,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -72,7 +72,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_mutabilityWithExclusion(t *t
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	dataSource := "data.aws_ecr_repository_creation_template.root"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

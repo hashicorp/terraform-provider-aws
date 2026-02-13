@@ -76,7 +76,7 @@ make clean-make-tests
 
 Before running CI tests, you can automatically fix many common issues that would cause CI failures.
 
-Use the `quick-fix` target to run multiple fix targets in sequence (copyright headers, formatting, acceptance test linting, import ordering, modern Go patterns, Semgrep auto-fixes, and website Terraform formatting):
+Use the `quick-fix` target to run multiple fix targets in sequence (copyright headers, formatting, acceptance test linting, import ordering, modern Go patterns, Semgrep auto-fixes, Terraform formatting, and website Terraform formatting):
 
 ```console
 make quick-fix
@@ -89,6 +89,12 @@ PKG=rds make quick-fix
 ```
 
 This is particularly useful before committing changes or submitting a pull request to catch and fix issues early.
+
+Use the `quick-fix-core` target to run fixes only on core directories (non-service packages):
+
+```console
+make quick-fix-core
+```
 
 ### Acceptance Test Linting
 
@@ -608,6 +614,30 @@ make gh-workflow-lint
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
+## Naming Checks
+
+The Naming Checks workflow validates that test function names follow Go naming conventions.
+
+### Test Naming
+
+Test functions should follow the pattern `TestAccResource_MiddleSegment_finalSegment` where:
+
+- Middle segments use UpperCase (e.g., `List`, `DefaultTags`)
+- The final segment uses lowerCamelCase (e.g., `basic`, `emptyMap`, `regionOverride`)
+
+This check currently validates:
+
+- Generated test files (`*_gen_test.go`)
+- List resource test files (`*_list_test.go`)
+
+Use the `test-naming` target to run the same check CI runs:
+
+```console
+make test-naming
+```
+
+**NOTE:** Requires `ripgrep` to be installed (`brew install ripgrep` on macOS).
+
 ### YAML Linting / yamllint
 
 YAMLlint checks the validity of YAML files.
@@ -622,4 +652,20 @@ Use the `yamllint` target to perform the check:
 
 ```console
 make yamllint
+```
+
+### Terraform Formatting / terraform fmt
+
+This check ensures that all `.tf`, `.tfvars`, `.tftest.hcl`, and `.tfquery.hcl` files in the repository are properly formatted using `terraform fmt`.
+
+Use the `terraform-fmt` target to format all Terraform files:
+
+```console
+make terraform-fmt
+```
+
+**NOTE:** Install [Terraform](https://developer.hashicorp.com/terraform/install) to run this check. On macOS, you can use Homebrew:
+
+```console
+brew install terraform
 ```

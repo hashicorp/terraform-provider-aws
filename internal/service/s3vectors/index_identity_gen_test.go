@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3VectorsIndex_Identity_Basic(t *testing.T) {
+func TestAccS3VectorsIndex_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Index
@@ -106,7 +106,7 @@ func TestAccS3VectorsIndex_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccS3VectorsIndex_Identity_RegionOverride(t *testing.T) {
+func TestAccS3VectorsIndex_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_s3vectors_index.test"

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package appflow
 
 import (
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1507,9 +1508,8 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	output, err := conn.DescribeFlow(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1522,17 +1522,16 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	}
 
 	if status := output.FlowStatus; status == types.FlowStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusFlow(ctx context.Context, conn *appflow.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFlow(conn *appflow.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFlowByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1551,9 +1550,9 @@ func waitFlowDeleted(ctx context.Context, conn *appflow.Client, name string) (*t
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{},
-		Refresh: statusFlow(ctx, conn, name),
+		Refresh: statusFlow(conn, name),
 		Timeout: timeout,
 	}
 

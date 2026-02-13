@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -26,12 +28,14 @@ import (
 
 // @SDKResource("aws_s3_bucket_server_side_encryption_configuration", name="Bucket Server Side Encryption Configuration")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="rule.0.bucket_key_enabled")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
@@ -49,8 +53,8 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			names.AttrRule: {
 				Type:     schema.TypeSet,
@@ -91,6 +95,24 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.Id() == "" {
+				return nil
+			}
+			if d.HasChange(names.AttrExpectedBucketOwner) {
+				o, n := d.GetChange(names.AttrExpectedBucketOwner)
+				os, ns := o.(string), n.(string)
+				if os == ns {
+					return nil
+				}
+				if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+					return nil
+				}
+				return d.ForceNew(names.AttrExpectedBucketOwner)
+			}
+			return nil
+		},
 	}
 }
 
@@ -103,7 +125,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketEncryptionInput{
+	input := s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
 			Rules: expandServerSideEncryptionRules(d.Get(names.AttrRule).(*schema.Set).List()),
@@ -114,7 +136,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketEncryption(ctx, input)
+		return conn.PutBucketEncryption(ctx, &input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
 	if err != nil {
@@ -181,7 +203,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketEncryptionInput{
+	input := s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
 			Rules: expandServerSideEncryptionRules(d.Get(names.AttrRule).(*schema.Set).List()),
@@ -192,7 +214,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketEncryption(ctx, input)
+		return conn.PutBucketEncryption(ctx, &input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
 
 	if err != nil {
@@ -215,14 +237,14 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.DeleteBucketEncryptionInput{
+	input := s3.DeleteBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.DeleteBucketEncryption(ctx, input)
+	_, err = conn.DeleteBucketEncryption(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeServerSideEncryptionConfigurationNotFound) {
 		return diags
@@ -238,14 +260,14 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 }
 
 func findServerSideEncryptionConfiguration(ctx context.Context, conn *s3.Client, bucketName, expectedBucketOwner string) (*types.ServerSideEncryptionConfiguration, error) {
-	input := &s3.GetBucketEncryptionInput{
+	input := s3.GetBucketEncryptionInput{
 		Bucket: aws.String(bucketName),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketEncryption(ctx, input)
+	output, err := conn.GetBucketEncryption(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeServerSideEncryptionConfigurationNotFound) {
 		return nil, &sdkretry.NotFoundError{

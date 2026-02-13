@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSageMakerUserProfile_IdentitySerial(t *testing.T) {
+func testAccSageMakerUserProfile_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSageMakerUserProfile_Identity_Basic,
-		"ExistingResource":          testAccSageMakerUserProfile_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccSageMakerUserProfile_Identity_RegionOverride,
+		acctest.CtBasic:             testAccSageMakerUserProfile_Identity_basic,
+		"ExistingResource":          testAccSageMakerUserProfile_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccSageMakerUserProfile_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSageMakerUserProfile_Identity_Basic(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput
@@ -125,7 +125,7 @@ func testAccSageMakerUserProfile_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccSageMakerUserProfile_Identity_RegionOverride(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -218,7 +218,7 @@ func testAccSageMakerUserProfile_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.2.0
-func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput
@@ -278,7 +278,7 @@ func testAccSageMakerUserProfile_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.2.0
-func testAccSageMakerUserProfile_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSageMakerUserProfile_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v sagemaker.DescribeUserProfileOutput

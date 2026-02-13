@@ -12,12 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
@@ -29,23 +27,23 @@ func testAccOptIn_basic(t *testing.T) {
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	roleName := "aws_iam_role.test"
 	databaseName := "aws_glue_catalog_database.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptInDestroy(ctx),
+		CheckDestroy:             testAccCheckOptInDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptInConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptInExists(ctx, resourceName, &optin),
+					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "resource_data.#", "1"),
@@ -62,24 +60,24 @@ func testAccOptIn_table(t *testing.T) {
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	roleName := "aws_iam_role.test"
 	databaseName := "aws_glue_catalog_database.test"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptInDestroy(ctx),
+		CheckDestroy:             testAccCheckOptInDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptInConfig_Table(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptInExists(ctx, resourceName, &optin),
+					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "resource_data.#", "1"),
@@ -91,7 +89,7 @@ func testAccOptIn_table(t *testing.T) {
 			{
 				Config: testAccOptInConfig_Table_wildcard(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptInExists(ctx, resourceName, &optin),
+					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					resource.TestCheckResourceAttr(resourceName, "principal.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal.0.data_lake_principal_identifier", roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "resource_data.#", "1"),
@@ -114,21 +112,21 @@ func testAccOptIn_disappears(t *testing.T) {
 
 	var optin lakeformation.ListLakeFormationOptInsOutput
 	resourceName := "aws_lakeformation_opt_in.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOptInDestroy(ctx),
+		CheckDestroy:             testAccCheckOptInDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptInConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOptInExists(ctx, resourceName, &optin),
+					testAccCheckOptInExists(ctx, t, resourceName, &optin),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflakeformation.ResourceOptIn, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
@@ -137,9 +135,9 @@ func testAccOptIn_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOptInDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_opt_in" {
@@ -173,7 +171,7 @@ func testAccCheckOptInDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformation.ListLakeFormationOptInsOutput) resource.TestCheckFunc {
+func testAccCheckOptInExists(ctx context.Context, t *testing.T, name string, optin *lakeformation.ListLakeFormationOptInsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -184,7 +182,7 @@ func testAccCheckOptInExists(ctx context.Context, name string, optin *lakeformat
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameOptIn, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		principalID := rs.Primary.ID
 		in := &lakeformation.ListLakeFormationOptInsInput{}

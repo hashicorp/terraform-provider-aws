@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package route53
 
 import (
@@ -47,6 +49,7 @@ import (
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

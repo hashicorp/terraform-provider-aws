@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSNSTopicSubscription_Identity_Basic(t *testing.T) {
+func TestAccSNSTopicSubscription_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[string]string
@@ -114,7 +114,7 @@ func TestAccSNSTopicSubscription_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccSNSTopicSubscription_Identity_RegionOverride(t *testing.T) {
+func TestAccSNSTopicSubscription_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_sns_topic_subscription.test"
@@ -247,7 +247,7 @@ func TestAccSNSTopicSubscription_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.8.0
-func TestAccSNSTopicSubscription_Identity_ExistingResource(t *testing.T) {
+func TestAccSNSTopicSubscription_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[string]string
@@ -303,7 +303,7 @@ func TestAccSNSTopicSubscription_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.8.0
-func TestAccSNSTopicSubscription_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccSNSTopicSubscription_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v map[string]string

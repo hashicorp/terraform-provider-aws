@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPC_List_Basic(t *testing.T) {
+func TestAccVPC_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc.test[0]"
@@ -85,7 +85,7 @@ func TestAccVPC_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_RegionOverride(t *testing.T) {
+func TestAccVPC_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc.test[0]"
@@ -155,7 +155,7 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_Filtered(t *testing.T) {
+func TestAccVPC_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_vpc.expected[0]"
@@ -238,7 +238,7 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
+func TestAccVPC_List_DefaultVPC_exclude(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	id := tfstatecheck.StateValue()
@@ -288,7 +288,7 @@ func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_VPCIDs(t *testing.T) {
+func TestAccVPC_List_vpcIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc.test[0]"
@@ -354,7 +354,7 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
+func TestAccVPC_List_filteredVPCIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_vpc.expected[0]"
@@ -439,7 +439,7 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_Filtered_IsDefault(t *testing.T) {
+func TestAccVPC_List_Filtered_isDefault(t *testing.T) {
 	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
 
 	ctx := acctest.Context(t)

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmonitor
 
 import (
@@ -22,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -316,9 +317,8 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	output, err := conn.GetProbe(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -333,8 +333,8 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	return output, nil
 }
 
-func statusProbe(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProbe(conn *networkmonitor.Client, monitorName, probeID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProbeByTwoPartKey(ctx, conn, monitorName, probeID)
 
 		if retry.NotFound(err) {
@@ -353,10 +353,10 @@ func waitProbeReady(ctx context.Context, conn *networkmonitor.Client, monitorNam
 	const (
 		timeout = time.Minute * 15
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ProbeStatePending),
 		Target:     enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive),
-		Refresh:    statusProbe(ctx, conn, monitorName, probeID),
+		Refresh:    statusProbe(conn, monitorName, probeID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -374,10 +374,10 @@ func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, monitorN
 	const (
 		timeout = time.Minute * 15
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive, awstypes.ProbeStateDeleting),
 		Target:     []string{},
-		Refresh:    statusProbe(ctx, conn, monitorName, probeID),
+		Refresh:    statusProbe(conn, monitorName, probeID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

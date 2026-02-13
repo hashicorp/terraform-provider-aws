@@ -259,7 +259,7 @@ func testAccCheckModelCardDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Model Card (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Model Card (%s) still exists", rs.Primary.Attributes["model_card_name"])
 		}
 		return nil
 	}

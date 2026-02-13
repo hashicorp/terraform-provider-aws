@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 func TestAccElasticBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config awstypes.ConfigurationSettingsDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 				),
 			},
 		},
@@ -45,19 +43,19 @@ func TestAccElasticBeanstalkConfigurationTemplate_basic(t *testing.T) {
 func TestAccElasticBeanstalkConfigurationTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config awstypes.ConfigurationSettingsDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceConfigurationTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -69,19 +67,19 @@ func TestAccElasticBeanstalkConfigurationTemplate_disappears(t *testing.T) {
 func TestAccElasticBeanstalkConfigurationTemplate_Disappears_application(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config awstypes.ConfigurationSettingsDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticbeanstalk.ResourceApplication(), "aws_elastic_beanstalk_application.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,19 +91,19 @@ func TestAccElasticBeanstalkConfigurationTemplate_Disappears_application(t *test
 func TestAccElasticBeanstalkConfigurationTemplate_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config awstypes.ConfigurationSettingsDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 				),
 			},
 		},
@@ -115,19 +113,19 @@ func TestAccElasticBeanstalkConfigurationTemplate_vpc(t *testing.T) {
 func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config awstypes.ConfigurationSettingsDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationTemplateConfig_setting(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						names.AttrValue: "m1.small",
@@ -141,13 +139,13 @@ func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 func TestAccElasticBeanstalkConfigurationTemplate_migrate_settingsResourceDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	var config awstypes.ConfigurationSettingsDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
-		CheckDestroy: testAccCheckConfigurationTemplateDestroy(ctx),
+		CheckDestroy: testAccCheckConfigurationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -158,14 +156,14 @@ func TestAccElasticBeanstalkConfigurationTemplate_migrate_settingsResourceDefaul
 				},
 				Config: testAccConfigurationTemplateConfig_setting(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccConfigurationTemplateConfig_setting(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
+					testAccCheckConfigurationTemplateExists(ctx, t, resourceName, &config),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -183,9 +181,9 @@ func TestAccElasticBeanstalkConfigurationTemplate_migrate_settingsResourceDefaul
 	})
 }
 
-func testAccCheckConfigurationTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConfigurationTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElasticBeanstalkClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastic_beanstalk_configuration_template" {
@@ -209,14 +207,14 @@ func testAccCheckConfigurationTemplateDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *awstypes.ConfigurationSettingsDescription) resource.TestCheckFunc {
+func testAccCheckConfigurationTemplateExists(ctx context.Context, t *testing.T, n string, v *awstypes.ConfigurationSettingsDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElasticBeanstalkClient(ctx)
 
 		output, err := tfelasticbeanstalk.FindConfigurationSettingsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application"], rs.Primary.ID)
 

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -26,11 +28,13 @@ import (
 
 // @SDKResource("aws_s3_bucket_cors_configuration", name="Bucket CORS Configuration")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
 // @Testing(importIgnore="cors_rule.0.max_age_seconds")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
@@ -48,8 +52,8 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"cors_rule": {
 				Type:     schema.TypeSet,
@@ -90,6 +94,24 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.Id() == "" {
+				return nil
+			}
+			if d.HasChange(names.AttrExpectedBucketOwner) {
+				o, n := d.GetChange(names.AttrExpectedBucketOwner)
+				os, ns := o.(string), n.(string)
+				if os == ns {
+					return nil
+				}
+				if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+					return nil
+				}
+				return d.ForceNew(names.AttrExpectedBucketOwner)
+			}
+			return nil
+		},
 	}
 }
 
@@ -102,7 +124,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketCorsInput{
+	input := s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
 		CORSConfiguration: &types.CORSConfiguration{
 			CORSRules: expandCORSRules(d.Get("cors_rule").(*schema.Set).List()),
@@ -113,7 +135,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketCors(ctx, input)
+		return conn.PutBucketCors(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "CORSConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -184,7 +206,7 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketCorsInput{
+	input := s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
 		CORSConfiguration: &types.CORSConfiguration{
 			CORSRules: expandCORSRules(d.Get("cors_rule").(*schema.Set).List()),
@@ -194,7 +216,7 @@ func resourceBucketCorsConfigurationUpdate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketCors(ctx, input)
+	_, err = conn.PutBucketCors(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
@@ -216,14 +238,14 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.DeleteBucketCorsInput{
+	input := s3.DeleteBucketCorsInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.DeleteBucketCors(ctx, input)
+	_, err = conn.DeleteBucketCors(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
 		return diags
@@ -245,14 +267,14 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 }
 
 func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.CORSRule, error) {
-	input := &s3.GetBucketCorsInput{
+	input := s3.GetBucketCorsInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketCors(ctx, input)
+	output, err := conn.GetBucketCors(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
 		return nil, &sdkretry.NotFoundError{

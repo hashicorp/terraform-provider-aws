@@ -15,8 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -177,7 +180,7 @@ func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 
 func TestAccVPCSubnet_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after awstypes.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -188,11 +191,21 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSubnetConfig_ipv6(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &before),
-					testAccCheckSubnetIPv6BeforeUpdate(&before),
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(true),
+					),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -200,18 +213,58 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCSubnetConfig_ipv6UpdateAssignv6OnCreation(rName),
+				// Disable assign_ipv6_address_on_creation
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &after),
-					testAccCheckSubnetIPv6AfterUpdate(&after),
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(false),
+					),
+				},
 			},
 			{
-				Config: testAccVPCSubnetConfig_ipv6UpdateV6CIDR(rName),
+				// Change IPv6 CIDR block
+				// assign_ipv6_address_on_creation was false, so no replacement
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 3, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &after),
-					testAccCheckSubnetNotRecreated(t, &before, &after),
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(true),
+					),
+				},
+			},
+			{
+				// Force new by changing IPv6 CIDR block
+				// since assign_ipv6_address_on_creation was true
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(false),
+					),
+				},
 			},
 		},
 	})
@@ -243,7 +296,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCSubnetConfig_ipv6(rName),
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
@@ -745,35 +798,10 @@ func TestAccVPCSubnet_IPAM_crossRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetIPv6BeforeUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
+func testAccCheckSubnetIPv6CIDRBlockAssociationSet(subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
-		}
-
-		if !aws.ToBool(subnet.AssignIpv6AddressOnCreation) {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.ToBool(subnet.AssignIpv6AddressOnCreation))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSubnetIPv6AfterUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToBool(subnet.AssignIpv6AddressOnCreation) {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.ToBool(subnet.AssignIpv6AddressOnCreation))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSubnetNotRecreated(t *testing.T, before, after *awstypes.Subnet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(before.SubnetId) != aws.ToString(after.SubnetId) {
-			t.Fatalf("Expected SubnetIDs not to change, but both got before: %s and after: %s",
-				aws.ToString(before.SubnetId), aws.ToString(after.SubnetId))
 		}
 		return nil
 	}
@@ -1004,7 +1032,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccVPCSubnetConfig_ipv6(rName string) string {
+func testAccVPCSubnetConfig_ipv6(rName string, ipv6CidrSubnetIndex int, assignIPv6AddressOnCreation bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -1018,62 +1046,14 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block                      = "10.10.1.0/24"
   vpc_id                          = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = true
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, %[2]d)
+  assign_ipv6_address_on_creation = %[3]t
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
-}
-
-func testAccVPCSubnetConfig_ipv6UpdateAssignv6OnCreation(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.10.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block                      = "10.10.1.0/24"
-  vpc_id                          = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCSubnetConfig_ipv6UpdateV6CIDR(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.10.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block                      = "10.10.1.0/24"
-  vpc_id                          = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 3)
-  assign_ipv6_address_on_creation = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
+`, rName, ipv6CidrSubnetIndex, assignIPv6AddressOnCreation)
 }
 
 func testAccVPCSubnetConfig_availabilityZoneID(rName string) string {

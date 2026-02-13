@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package dynamodb
 
 import (
@@ -32,7 +34,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
 // @Testing(importIgnore="policy")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 

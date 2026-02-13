@@ -1095,6 +1095,143 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 	})
 }
 
+// To support ABAC (attribute based access control) when deleting network interfaces, the provider
+// attempts to verify that the interface has an attachment before attempting to detach
+//
+// This test expects the TF_ACC_ASSUME_ROLE_ARN to be set to a role ARN that has a principal "Owner" tag
+// that matches the "Owner" tag set on the resources.
+//
+// Use the following configuration to create the role to assume:
+/*
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = "assume-role-ec2"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = ["sts:AssumeRole", "sts:SetSourceIdentity"],
+      Principal = {
+        AWS = data.aws_caller_identity.current.arn,
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  tags = {
+    Owner = "terraform-provider-aws"
+  }
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "ec2:DetachNetworkInterface",
+      "ec2:DeleteNetworkInterface",
+      "ec2:TerminateInstances",
+      "ec2:DeleteVolume",
+      "ec2:DetachVolume"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      values   = ["$${aws:PrincipalTag/Owner}"]
+      variable = "aws:ResourceTag/Owner"
+    }
+  }
+
+  # 2. Creation Actions (Allow creation freely so we can get to the destroy step)
+  statement {
+    actions = [
+      "ec2:RunInstances",
+      "ec2:CreateNetworkInterface",
+      "ec2:CreateVolume",
+      "ec2:CreateTags",
+      "ec2:CreateSecurityGroup",
+      "ec2:Describe*",
+      # Add network creation permissions for THIS workspace to work
+      "ec2:CreateVpc",
+      "ec2:DeleteVpc",
+      "ec2:CreateSubnet",
+      "ec2:DeleteSubnet"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "test" {
+  name   = "tfc-reproduce-abac-issue"
+  policy = data.aws_iam_policy_document.test.json
+
+  tags = {
+    Owner = "terraform-provider-aws"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "tfc_policy_attachment" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+*/
+//	Once provisioned, use the role_arn output and run this test as follows:
+//
+//	TF_ACC_ASSUME_ROLE_ARN=<output> make t K=ec2 T=TestAccVPCNetworkInterface_deleteWithLimitedAssumeRole
+func TestAccVPCNetworkInterface_deleteWithLimitedAssumeRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAssumeRoleARN(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigAssumeRole(),
+					testAccVPCNetworkInterfaceConfig_deleteWithLimitedAssumeRole_attached(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-interface/.+$`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled", "attachment"},
+			},
+			{
+				// test that deleting the network interface does not produce an error while detaching
+				Config: acctest.ConfigCompose(
+					acctest.ConfigAssumeRole(),
+					testAccVPCNetworkInterfaceConfig_deleteWithLimitedAssumeRole_removed(rName),
+				),
+			},
+		},
+	})
+}
+
 // checkResourceAttrPrivateDNSName ensures the Terraform state exactly matches a private DNS name
 //
 // For example: ip-172-16-10-100.us-west-2.compute.internal
@@ -1756,4 +1893,84 @@ resource "aws_network_interface" "test" {
   private_ip_list         = ["%[1]s"]
 }
 `, strings.Join(privateIPs, `", "`)))
+}
+
+func testAccVPCNetworkInterfaceConfig_deleteWithLimitedAssumeRole_attached(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name  = %[1]q
+    Owner = "terraform-provider-aws"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name  = %[1]q
+    Owner = "terraform-provider-aws"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  primary_network_interface {
+    network_interface_id = aws_network_interface.test.id
+  }
+
+  tags = {
+    Name  = %[1]q
+    Owner = "terraform-provider-aws"
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name  = %[1]q
+    Owner = "terraform-provider-aws"
+  }
+}
+`, rName))
+}
+
+func testAccVPCNetworkInterfaceConfig_deleteWithLimitedAssumeRole_removed(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name  = %[1]q
+    Owner = "terraform-provider-aws"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = false
+
+  tags = {
+    Name  = %[1]q
+    Owner = "terraform-provider-aws"
+  }
+}
+`, rName))
 }

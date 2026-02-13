@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -26,9 +28,11 @@ import (
 
 // @SDKResource("aws_s3_bucket_logging", name="Bucket Logging")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLoggingCreate,
@@ -46,8 +50,8 @@ func resourceBucketLogging() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"target_bucket": {
 				Type:     schema.TypeString,
@@ -136,6 +140,24 @@ func resourceBucketLogging() *schema.Resource {
 				Required: true,
 			},
 		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.Id() == "" {
+				return nil
+			}
+			if d.HasChange(names.AttrExpectedBucketOwner) {
+				o, n := d.GetChange(names.AttrExpectedBucketOwner)
+				os, ns := o.(string), n.(string)
+				if os == ns {
+					return nil
+				}
+				if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+					return nil
+				}
+				return d.ForceNew(names.AttrExpectedBucketOwner)
+			}
+			return nil
+		},
 	}
 }
 
@@ -148,7 +170,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	input := &s3.PutBucketLoggingInput{
+	input := s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
 		BucketLoggingStatus: &types.BucketLoggingStatus{
 			LoggingEnabled: &types.LoggingEnabled{
@@ -170,7 +192,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.PutBucketLogging(ctx, input)
+		return conn.PutBucketLogging(ctx, &input)
 	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "BucketLoggingStatus is not valid, expected CreateBucketConfiguration") {
@@ -250,7 +272,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketLoggingInput{
+	input := s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
 		BucketLoggingStatus: &types.BucketLoggingStatus{
 			LoggingEnabled: &types.LoggingEnabled{
@@ -271,7 +293,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]any)[0].(map[string]any))
 	}
 
-	_, err = conn.PutBucketLogging(ctx, input)
+	_, err = conn.PutBucketLogging(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Logging (%s): %s", d.Id(), err)
@@ -293,7 +315,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketLoggingInput{
+	input := s3.PutBucketLoggingInput{
 		Bucket:              aws.String(bucket),
 		BucketLoggingStatus: &types.BucketLoggingStatus{},
 	}
@@ -301,7 +323,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketLogging(ctx, input)
+	_, err = conn.PutBucketLogging(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return diags
@@ -317,14 +339,14 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expectedBucketOwner string) (*types.LoggingEnabled, error) {
-	input := &s3.GetBucketLoggingInput{
+	input := s3.GetBucketLoggingInput{
 		Bucket: aws.String(bucketName),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketLogging(ctx, input)
+	output, err := conn.GetBucketLogging(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return nil, &sdkretry.NotFoundError{

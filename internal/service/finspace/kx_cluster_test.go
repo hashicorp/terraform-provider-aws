@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,10 +37,10 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -50,12 +48,12 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -76,10 +74,10 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -87,12 +85,12 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,10 +106,10 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -119,12 +117,12 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_description(rName, "cluster description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "cluster description"),
 				),
 			},
@@ -140,10 +138,10 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -151,12 +149,12 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_database(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -171,10 +169,10 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -182,12 +180,12 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_cacheConfigurations(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -202,10 +200,10 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -213,12 +211,12 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_cache250Configurations(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
 						names.AttrSize: "1200",
@@ -240,10 +238,10 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -251,12 +249,12 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_cache12Configurations(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
 						names.AttrSize: "6000",
@@ -278,12 +276,12 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 	codePath := "test-fixtures/code.zip"
 	updatedCodePath := "test-fixtures/updated_code.zip"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -291,12 +289,12 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, codePath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
 						names.AttrS3Bucket: rName,
 						"s3_key":           codePath,
@@ -307,7 +305,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 			{
 				Config: testAccKxClusterConfig_code(rName, codePath, updatedCodePath, updatedCodePath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
 						names.AttrS3Bucket: rName,
 						"s3_key":           updatedCodePath,
@@ -326,10 +324,10 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -337,12 +335,12 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_multiAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -357,10 +355,10 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -368,12 +366,12 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_rdb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -388,10 +386,10 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -399,12 +397,12 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -419,10 +417,10 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -430,12 +428,12 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_autoScaling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -450,13 +448,13 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 	codePath := "test-fixtures/code.zip"
 	initScriptPath := "code/helloworld.q"
 	updatedInitScriptPath := "code/helloworld_updated.q"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -464,19 +462,19 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_initScript(rName, codePath, initScriptPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 			{
 				Config: testAccKxClusterConfig_initScript(rName, codePath, updatedInitScriptPath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
@@ -491,11 +489,11 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	codePath := "test-fixtures/code.zip"
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -503,12 +501,12 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue1, codePath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
@@ -517,7 +515,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 			{
 				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue2, codePath),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
@@ -534,10 +532,10 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -545,12 +543,12 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -558,7 +556,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 			{
 				Config: testAccKxClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -567,7 +565,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 			{
 				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -583,10 +581,10 @@ func TestAccFinSpaceKxCluster_ScalingGroup(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -594,12 +592,12 @@ func TestAccFinSpaceKxCluster_ScalingGroup(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfig_ScalingGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -615,10 +613,10 @@ func TestAccFinSpaceKxCluster_RDBInScalingGroupWithKxVolume(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -626,12 +624,12 @@ func TestAccFinSpaceKxCluster_RDBInScalingGroupWithKxVolume(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxRDBClusterConfigInScalingGroup_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -647,10 +645,10 @@ func TestAccFinSpaceKxCluster_TPInScalingGroupWithKxVolume(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -658,12 +656,12 @@ func TestAccFinSpaceKxCluster_TPInScalingGroupWithKxVolume(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxTPClusterConfigInScalingGroup_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -679,10 +677,10 @@ func TestAccFinSpaceKxCluster_InScalingGroupWithKxDataview(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var kxcluster finspace.GetKxClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -690,12 +688,12 @@ func TestAccFinSpaceKxCluster_InScalingGroupWithKxDataview(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckKxClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKxClusterConfigInScalingGroup_withKxDataview(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
+					testAccCheckKxClusterExists(ctx, t, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -704,9 +702,9 @@ func TestAccFinSpaceKxCluster_InScalingGroupWithKxDataview(t *testing.T) {
 	})
 }
 
-func testAccCheckKxClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKxClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_cluster" {
@@ -733,7 +731,7 @@ func testAccCheckKxClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKxClusterExists(ctx context.Context, name string, kxcluster *finspace.GetKxClusterOutput) resource.TestCheckFunc {
+func testAccCheckKxClusterExists(ctx context.Context, t *testing.T, name string, kxcluster *finspace.GetKxClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -744,7 +742,7 @@ func testAccCheckKxClusterExists(ctx context.Context, name string, kxcluster *fi
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxCluster, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FinSpaceClient(ctx)
 		resp, err := conn.GetKxCluster(ctx, &finspace.GetKxClusterInput{
 			ClusterName:   aws.String(rs.Primary.Attributes[names.AttrName]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),

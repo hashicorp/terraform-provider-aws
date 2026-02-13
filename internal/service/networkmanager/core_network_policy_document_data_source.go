@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmanager
 
 import (
@@ -1033,6 +1035,10 @@ func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesConditions(tfList []any)
 }
 
 func expandCoreNetworkPolicyAttachmentRoutingPolicyRulesAction(tfList []any) *coreNetworkPolicyAttachmentRoutingPolicyRuleAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
 	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &coreNetworkPolicyAttachmentRoutingPolicyRuleAction{}

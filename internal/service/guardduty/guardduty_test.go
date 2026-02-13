@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 )
@@ -122,7 +121,7 @@ func testAccMemberAccountFromEnv(t *testing.T) string {
 
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
@@ -137,7 +136,7 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 // testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 

@@ -24,25 +24,25 @@ func testAccSSMContactsRotation_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccSSMContactsRotation_tags,
-		"null":                                      testAccSSMContactsRotation_tags_null,
-		"EmptyMap":                                  testAccSSMContactsRotation_tags_EmptyMap,
-		"AddOnUpdate":                               testAccSSMContactsRotation_tags_AddOnUpdate,
-		"EmptyTag_OnCreate":                         testAccSSMContactsRotation_tags_EmptyTag_OnCreate,
-		"EmptyTag_OnUpdate_Add":                     testAccSSMContactsRotation_tags_EmptyTag_OnUpdate_Add,
-		"EmptyTag_OnUpdate_Replace":                 testAccSSMContactsRotation_tags_EmptyTag_OnUpdate_Replace,
-		"DefaultTags_providerOnly":                  testAccSSMContactsRotation_tags_DefaultTags_providerOnly,
-		"DefaultTags_nonOverlapping":                testAccSSMContactsRotation_tags_DefaultTags_nonOverlapping,
-		"DefaultTags_overlapping":                   testAccSSMContactsRotation_tags_DefaultTags_overlapping,
-		"DefaultTags_updateToProviderOnly":          testAccSSMContactsRotation_tags_DefaultTags_updateToProviderOnly,
-		"DefaultTags_updateToResourceOnly":          testAccSSMContactsRotation_tags_DefaultTags_updateToResourceOnly,
-		"DefaultTags_emptyResourceTag":              testAccSSMContactsRotation_tags_DefaultTags_emptyResourceTag,
-		"DefaultTags_nullOverlappingResourceTag":    testAccSSMContactsRotation_tags_DefaultTags_nullOverlappingResourceTag,
-		"DefaultTags_nullNonOverlappingResourceTag": testAccSSMContactsRotation_tags_DefaultTags_nullNonOverlappingResourceTag,
-		"ComputedTag_OnCreate":                      testAccSSMContactsRotation_tags_ComputedTag_OnCreate,
-		"ComputedTag_OnUpdate_Add":                  testAccSSMContactsRotation_tags_ComputedTag_OnUpdate_Add,
-		"ComputedTag_OnUpdate_Replace":              testAccSSMContactsRotation_tags_ComputedTag_OnUpdate_Replace,
-		"IgnoreTags_Overlap_DefaultTag":             testAccSSMContactsRotation_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag":            testAccSSMContactsRotation_tags_IgnoreTags_Overlap_ResourceTag,
+		"null":                                      testAccSSMContactsRotation_Tags_null,
+		"EmptyMap":                                  testAccSSMContactsRotation_Tags_emptyMap,
+		"AddOnUpdate":                               testAccSSMContactsRotation_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccSSMContactsRotation_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccSSMContactsRotation_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccSSMContactsRotation_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccSSMContactsRotation_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccSSMContactsRotation_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccSSMContactsRotation_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccSSMContactsRotation_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccSSMContactsRotation_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccSSMContactsRotation_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccSSMContactsRotation_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccSSMContactsRotation_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccSSMContactsRotation_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccSSMContactsRotation_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccSSMContactsRotation_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccSSMContactsRotation_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccSSMContactsRotation_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -233,7 +233,7 @@ func testAccSSMContactsRotation_tags(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_null(t *testing.T) {
+func testAccSSMContactsRotation_Tags_null(t *testing.T) {
 	t.Skip("Resource Rotation does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -300,7 +300,7 @@ func testAccSSMContactsRotation_tags_null(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_EmptyMap(t *testing.T) {
+func testAccSSMContactsRotation_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -353,7 +353,7 @@ func testAccSSMContactsRotation_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_AddOnUpdate(t *testing.T) {
+func testAccSSMContactsRotation_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -436,7 +436,7 @@ func testAccSSMContactsRotation_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_EmptyTag_OnCreate(t *testing.T) {
+func testAccSSMContactsRotation_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource Rotation does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -531,7 +531,7 @@ func testAccSSMContactsRotation_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func testAccSSMContactsRotation_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource Rotation does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -675,7 +675,7 @@ func testAccSSMContactsRotation_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func testAccSSMContactsRotation_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource Rotation does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -770,7 +770,7 @@ func testAccSSMContactsRotation_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -954,7 +954,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -1117,7 +1117,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_overlapping(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -1296,7 +1296,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -1389,7 +1389,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_updateToProviderOnly(t *testing
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -1481,7 +1481,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_updateToResourceOnly(t *testing
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource Rotation does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1552,7 +1552,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource Rotation does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1615,7 +1615,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_emptyProviderOnlyTag(t *testing
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	t.Skip("Resource Rotation does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -1689,7 +1689,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_nullOverlappingResourceTag(t *t
 	})
 }
 
-func testAccSSMContactsRotation_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccSSMContactsRotation_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	t.Skip("Resource Rotation does not support null tags")
 
 	ctx := acctest.Context(t)
@@ -1765,7 +1765,7 @@ func testAccSSMContactsRotation_tags_DefaultTags_nullNonOverlappingResourceTag(t
 	})
 }
 
-func testAccSSMContactsRotation_tags_ComputedTag_OnCreate(t *testing.T) {
+func testAccSSMContactsRotation_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -1823,7 +1823,7 @@ func testAccSSMContactsRotation_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func testAccSSMContactsRotation_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -1923,7 +1923,7 @@ func testAccSSMContactsRotation_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func testAccSSMContactsRotation_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -2013,7 +2013,7 @@ func testAccSSMContactsRotation_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 	})
 }
 
-func testAccSSMContactsRotation_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccSSMContactsRotation_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -2178,7 +2178,7 @@ func testAccSSMContactsRotation_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T)
 	})
 }
 
-func testAccSSMContactsRotation_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccSSMContactsRotation_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"

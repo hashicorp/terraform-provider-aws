@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,19 +30,19 @@ func testAccFilter_basic(t *testing.T) {
 	startDate := "2020-01-01T00:00:00Z"
 	endDate := "2020-02-01T00:00:00Z"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v1),
+					testAccCheckFilterExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
@@ -79,7 +78,7 @@ func testAccFilter_basic(t *testing.T) {
 			{
 				Config: testAccFilterConfig_noopfull(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v2),
+					testAccCheckFilterExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "NOOP"),
@@ -101,19 +100,19 @@ func testAccFilter_update(t *testing.T) {
 	startDate := "2020-01-01T00:00:00Z"
 	endDate := "2020-02-01T00:00:00Z"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v1),
+					testAccCheckFilterExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
@@ -121,7 +120,7 @@ func testAccFilter_update(t *testing.T) {
 			{
 				Config: testAccFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v2),
+					testAccCheckFilterExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -140,7 +139,7 @@ func testAccFilter_update(t *testing.T) {
 			{
 				Config: testAccFilterConfig_matches(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v1),
+					testAccCheckFilterExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
@@ -151,7 +150,7 @@ func testAccFilter_update(t *testing.T) {
 			{
 				Config: testAccFilterConfig_notMatches(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v1),
+					testAccCheckFilterExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
@@ -171,19 +170,19 @@ func testAccFilter_disappears(t *testing.T) {
 	startDate := "2020-01-01T00:00:00Z"
 	endDate := "2020-02-01T00:00:00Z"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckACMPCACertificateAuthorityDestroy(ctx),
+		CheckDestroy:             testAccCheckACMPCACertificateAuthorityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v),
+					testAccCheckFilterExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -192,9 +191,9 @@ func testAccFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFilterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_filter" {
@@ -226,7 +225,7 @@ func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFilterExists(ctx context.Context, name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
+func testAccCheckFilterExists(ctx context.Context, t *testing.T, name string, filter *guardduty.GetFilterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -242,7 +241,7 @@ func testAccCheckFilterExists(ctx context.Context, name string, filter *guarddut
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 		input := guardduty.GetFilterInput{
 			DetectorId: aws.String(detectorID),
 			FilterName: aws.String(name),
@@ -397,9 +396,9 @@ resource "aws_guardduty_detector" "test" {
 `
 }
 
-func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_certificate_authority" {

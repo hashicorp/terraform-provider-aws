@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package lakeformation
 
 import (
@@ -28,9 +30,8 @@ func DataSourcePermissions() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -76,10 +77,9 @@ func DataSourcePermissions() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -92,10 +92,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -141,10 +140,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						names.AttrExpression: {
 							Type:     schema.TypeSet,
@@ -204,10 +202,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -234,10 +231,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,

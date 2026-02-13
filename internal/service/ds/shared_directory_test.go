@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SharedDirectory
 	resourceName := "aws_directory_service_shared_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckSharedDirectoryDestroy(ctx),
+		CheckDestroy:             testAccCheckSharedDirectoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSharedDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSharedDirectoryExists(ctx, resourceName, &v),
+					testAccCheckSharedDirectoryExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "method", "HANDSHAKE"),
 					resource.TestCheckResourceAttr(resourceName, "notes", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
@@ -57,22 +55,22 @@ func TestAccDSSharedDirectory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SharedDirectory
 	resourceName := "aws_directory_service_shared_directory.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckSharedDirectoryDestroy(ctx),
+		CheckDestroy:             testAccCheckSharedDirectoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSharedDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSharedDirectoryExists(ctx, resourceName, &v),
+					testAccCheckSharedDirectoryExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceSharedDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,14 +79,14 @@ func TestAccDSSharedDirectory_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *awstypes.SharedDirectory) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryExists(ctx context.Context, t *testing.T, n string, v *awstypes.SharedDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		output, err := tfds.FindSharedDirectoryByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
@@ -102,9 +100,9 @@ func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *awstype
 	}
 }
 
-func testAccCheckSharedDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_shared_directory" {

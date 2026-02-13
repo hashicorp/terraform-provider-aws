@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,24 +23,24 @@ func testAccVocabulary_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var v awstypes.Vocabulary
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 
 	content := "Phrase\tIPA\tSoundsLike\tDisplayAs\nLos-Angeles\t\t\tLos Angeles\nF.B.I.\tɛ f b i aɪ\t\tFBI\nEtienne\t\teh-tee-en\t"
 	languageCode := "en-US"
 
 	resourceName := "aws_connect_vocabulary.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &v),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/vocabulary/{vocabulary_id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
@@ -70,24 +68,24 @@ func testAccVocabulary_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var v awstypes.Vocabulary
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 
 	content := "Phrase\tIPA\tSoundsLike\tDisplayAs\nLos-Angeles\t\t\tLos Angeles\nF.B.I.\tɛ f b i aɪ\t\tFBI\nEtienne\t\teh-tee-en\t"
 	languageCode := "en-US"
 
 	resourceName := "aws_connect_vocabulary.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &v),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,24 +100,24 @@ func testAccVocabulary_updateTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var v awstypes.Vocabulary
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	rName2 := acctest.RandomWithPrefix(t, "resource-test-terraform")
 
 	content := "Phrase\tIPA\tSoundsLike\tDisplayAs\nLos-Angeles\t\t\tLos Angeles\nF.B.I.\tɛ f b i aɪ\t\tFBI\nEtienne\t\teh-tee-en\t"
 	languageCode := "en-US"
 
 	resourceName := "aws_connect_vocabulary.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyDestroy(ctx),
+		CheckDestroy:             testAccCheckVocabularyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &v),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
@@ -132,7 +130,7 @@ func testAccVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccVocabularyConfig_tags(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &v),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
@@ -141,7 +139,7 @@ func testAccVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccVocabularyConfig_tagsUpdate(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyExists(ctx, resourceName, &v),
+					testAccCheckVocabularyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
@@ -152,14 +150,14 @@ func testAccVocabulary_updateTags(t *testing.T) {
 	})
 }
 
-func testAccCheckVocabularyExists(ctx context.Context, n string, v *awstypes.Vocabulary) resource.TestCheckFunc {
+func testAccCheckVocabularyExists(ctx context.Context, t *testing.T, n string, v *awstypes.Vocabulary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 		output, err := tfconnect.FindVocabularyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["vocabulary_id"])
 
@@ -173,14 +171,14 @@ func testAccCheckVocabularyExists(ctx context.Context, n string, v *awstypes.Voc
 	}
 }
 
-func testAccCheckVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVocabularyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_vocabulary" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 			_, err := tfconnect.FindVocabularyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["vocabulary_id"])
 

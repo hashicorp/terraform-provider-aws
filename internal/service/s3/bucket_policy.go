@@ -1,10 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,6 +29,7 @@ import (
 // @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
@@ -111,8 +115,10 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrPolicy, policy)
+	err = resourceBucketPolicyFlatten(ctx, policy, d)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
 }
@@ -173,4 +179,13 @@ func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (stri
 	}
 
 	return aws.ToString(output.Policy), nil
+}
+
+func resourceBucketPolicyFlatten(_ context.Context, policy string, d *schema.ResourceData) error {
+	policy, err := structure.NormalizeJsonString(policy)
+	if err != nil {
+		return fmt.Errorf("could not normalize policy JSON: %w", err)
+	}
+	d.Set(names.AttrPolicy, policy)
+	return nil
 }

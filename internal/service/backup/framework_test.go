@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,16 +48,16 @@ func testAccFramework_basic(t *testing.T) {
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_framework.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_basic(rName, originalDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -81,7 +80,7 @@ func testAccFramework_basic(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_basic(rName, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -109,16 +108,16 @@ func testAccFramework_updateControlScope(t *testing.T) {
 	updatedControlScopeTagValue := ""
 	resourceName := "aws_backup_framework.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -141,7 +140,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_controlScopeComplianceResourceID(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -167,7 +166,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_controlScopeTag(rName, description, originalControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -191,7 +190,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_controlScopeTag(rName, description, updatedControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -220,16 +219,16 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 	updatedRequiredRetentionDays := "34"
 	resourceName := "aws_backup_framework.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
@@ -263,7 +262,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_controlInputParameter(rName, description, updatedRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
@@ -300,16 +299,16 @@ func testAccFramework_updateControls(t *testing.T) {
 	description := "example description"
 	resourceName := "aws_backup_framework.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
@@ -332,7 +331,7 @@ func testAccFramework_updateControls(t *testing.T) {
 			{
 				Config: testAccFrameworkConfig_controls(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
@@ -376,16 +375,16 @@ func testAccFramework_disappears(t *testing.T) {
 	rName := randomFrameworkName()
 	resourceName := "aws_backup_framework.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkExists(ctx, resourceName, &framework),
+					testAccCheckFrameworkExists(ctx, t, resourceName, &framework),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceFramework(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -395,7 +394,7 @@ func testAccFramework_disappears(t *testing.T) {
 }
 
 func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 	input := backup.ListFrameworksInput{}
 	_, err := conn.ListFrameworks(ctx, &input)
@@ -409,9 +408,9 @@ func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFrameworkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_framework" {
@@ -435,14 +434,14 @@ func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFrameworkExists(ctx context.Context, n string, v *backup.DescribeFrameworkOutput) resource.TestCheckFunc {
+func testAccCheckFrameworkExists(ctx context.Context, t *testing.T, n string, v *backup.DescribeFrameworkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindFrameworkByName(ctx, conn, rs.Primary.ID)
 

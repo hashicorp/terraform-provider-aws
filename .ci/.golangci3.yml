@@ -5,6 +5,7 @@ version: "2"
 linters:
   default: none
   enable:
+    # !! only add f-m linters here
     - goconst
     - gocritic
     - govet

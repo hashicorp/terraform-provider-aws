@@ -227,7 +227,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -301,7 +301,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_EmptyMap(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -371,7 +371,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -459,7 +459,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_onCreate(t *testing.T) {
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -560,7 +560,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -709,7 +709,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -807,7 +807,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1008,7 +1008,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1183,7 +1183,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1372,7 +1372,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1469,7 +1469,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1565,7 +1565,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1639,7 +1639,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	t.Skip("Resource ProvisionedProduct does not support empty tags")
 
 	ctx := acctest.Context(t)
@@ -1705,7 +1705,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyProviderOnlyT
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1774,7 +1774,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1843,7 +1843,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -1905,7 +1905,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testin
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -2009,7 +2009,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -2103,7 +2103,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail
@@ -2269,7 +2269,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_DefaultTag(
 	})
 }
 
-func TestAccServiceCatalogProvisionedProduct_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ProvisionedProductDetail

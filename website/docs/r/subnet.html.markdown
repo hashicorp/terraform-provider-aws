@@ -119,7 +119,7 @@ This resource supports the following arguments:
 * `enable_resource_name_dns_aaaa_record_on_launch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `false`.
 * `enable_resource_name_dns_a_record_on_launch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`.
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
-    in CIDR notation. The subnet size must use a /64 prefix length.
+    in CIDR notation. The subnet size must use a /64 prefix length. If the existing IPv6 subnet was created with `assign_ipv6_address_on_creation = true`, changing this value will force resource recreation.
 * `ipv6_native` - (Optional) Indicates whether to create an IPv6-only subnet. Default: `false`.
 * `ipv4_ipam_pool_id` - (Optional) ID of an IPv4 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet.
 * `ipv4_netmask_length` - (Optional) Netmask. Requires specifying a `ipv4_ipam_pool_id`.

@@ -19,7 +19,7 @@ func TestAccMemoryDBUserDataSource_basic(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 	dataSourceName := "data.aws_memorydb_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +47,7 @@ func TestAccMemoryDBUserDataSource_authenticationModeIAM(t *testing.T) {
 	resourceName := "aws_memorydb_user.test"
 	dataSourceName := "data.aws_memorydb_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

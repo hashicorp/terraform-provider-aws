@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ssm
 
 import (
@@ -29,6 +31,7 @@ import (
 // @Testing(importIgnore="activation_code")
 // @Testing(tagsUpdateForceNew=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Activation")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,

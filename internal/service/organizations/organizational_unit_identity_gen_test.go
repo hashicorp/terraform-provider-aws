@@ -22,19 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsOrganizationalUnit_IdentitySerial(t *testing.T) {
+func testAccOrganizationsOrganizationalUnit_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsOrganizationalUnit_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsOrganizationalUnit_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsOrganizationalUnit_Identity_basic,
+		"ExistingResource":          testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsOrganizationalUnit_Identity_Basic(t *testing.T) {
+func testAccOrganizationsOrganizationalUnit_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.OrganizationalUnit
@@ -119,7 +119,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.OrganizationalUnit
@@ -179,7 +179,7 @@ func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource(t *testing
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsOrganizationalUnit_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.OrganizationalUnit

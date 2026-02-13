@@ -11,11 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ComprehendClient(ctx)
 
 	input := &comprehend.ListEntityRecognizersInput{}
 

@@ -29,6 +29,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +56,7 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, dataSourceInjectRegionAttribute())
+		interceptors = append(interceptors, dataSourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, dataSourceValidateRegion())
 		}
@@ -100,6 +101,9 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
+		if s := c.RandomnessSource(); s != nil {
+			ctx = vcr.NewContext(ctx, s)
+		}
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
@@ -544,7 +548,7 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 	if isRegionOverrideEnabled {
 		v := spec.Region.Value()
 
-		interceptors = append(interceptors, resourceInjectRegionAttribute())
+		interceptors = append(interceptors, resourceInjectRegionAttribute(v.IsOverrideDeprecated))
 		if v.IsValidateOverrideInPartition {
 			interceptors = append(interceptors, resourceValidateRegion())
 		}

@@ -177,6 +177,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                                                         // lintignore:AWSAT005          // CloudWatch Alarm
 		"arn:aws:imagebuilder:eu-central-1:aws-marketplace:component/crowdstrike-falcon-install-linux-prod-nhzsem4gwwfja/1.2.2/1", // lintignore:AWSAT003,AWSAT005 // EC2 image builder marketplace subscription ARN
 		"arn:aws-eusc:acm-pca:eusc-de-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012",             // lintignore:AWSAT003,AWSAT005 // ESC ACMPCA ARN
+		"arn:aws:network-firewall:us-east-1:partner-managed:stateful-rulegroup/Trend-MalwareBlockStrictOrder",                     // lintignore:AWSAT003,AWSAT005 // Network Firewall partner-managed rule group
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package ec2
 
 import (
@@ -115,7 +117,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
+	keyName := create.Name(ctx, d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 	publicKeyWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("public_key_wo"))
 	diags = append(diags, di...)
 	if diags.HasError() {

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,15 +16,15 @@ func testAccReportDefinitionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	dataSourceName := "data.aws_cur_report_definition.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	reportName := acctest.RandomWithPrefix(t, "tf_acc_test")
+	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt(t))
 	s3Prefix := "test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, s3BucketName, s3Prefix),
@@ -50,15 +49,15 @@ func testAccReportDefinitionDataSource_additional(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	dataSourceName := "data.aws_cur_report_definition.test"
-	reportName := sdkacctest.RandomWithPrefix("tf_acc_test")
-	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+	reportName := acctest.RandomWithPrefix(t, "tf_acc_test")
+	s3BucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt(t))
 	s3Prefix := "test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CURServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, s3BucketName, s3Prefix),

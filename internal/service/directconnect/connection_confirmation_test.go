@@ -30,7 +30,7 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 	providerFunc := testAccConnectionConfirmationProvider(&providers, 0)
 	altProviderFunc := testAccConnectionConfirmationProvider(&providers, 1)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -41,13 +41,13 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfirmationConfig_basic(connectionName, connectionID, ownerAccountID),
-				Check:  testAccCheckConnectionConfirmationExists(ctx, resourceName, providerFunc),
+				Check:  testAccCheckConnectionConfirmationExists(ctx, t, resourceName, providerFunc),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionConfirmationExists(ctx context.Context, n string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckConnectionConfirmationExists(ctx context.Context, _ *testing.T, n string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package kms
 
 import (
@@ -75,7 +77,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if namePrefix == "" {
 		namePrefix = aliasNamePrefix
 	}
-	name := create.Name(d.Get(names.AttrName).(string), namePrefix)
+	name := create.Name(ctx, d.Get(names.AttrName).(string), namePrefix)
 	input := &kms.CreateAliasInput{
 		AliasName:   aws.String(name),
 		TargetKeyId: aws.String(d.Get("target_key_id").(string)),

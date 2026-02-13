@@ -22,19 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsOrganization_IdentitySerial(t *testing.T) {
+func testAccOrganizationsOrganization_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsOrganization_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsOrganization_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsOrganization_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsOrganization_Identity_basic,
+		"ExistingResource":          testAccOrganizationsOrganization_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsOrganization_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsOrganization_Identity_Basic(t *testing.T) {
+func testAccOrganizationsOrganization_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Organization
@@ -46,7 +46,7 @@ func testAccOrganizationsOrganization_Identity_Basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
@@ -110,7 +110,7 @@ func testAccOrganizationsOrganization_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsOrganization_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsOrganization_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Organization
@@ -122,7 +122,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		CheckDestroy: testAccCheckOrganizationDestroy(ctx),
@@ -165,7 +165,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsOrganization_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsOrganization_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Organization
@@ -177,7 +177,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource_NoRefresh_NoChan
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		CheckDestroy: testAccCheckOrganizationDestroy(ctx),

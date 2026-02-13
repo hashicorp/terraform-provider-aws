@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,16 +23,16 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`core-network/core-network-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -56,16 +55,16 @@ func TestAccNetworkManagerCoreNetwork_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceCoreNetwork(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,16 +79,16 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 	originalDescription := "description1"
 	updatedDescription := "description2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_description(originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
@@ -102,7 +101,7 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 			{
 				Config: testAccCoreNetworkConfig_description(updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
@@ -114,16 +113,16 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithoutRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "base_policy_regions"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
@@ -153,16 +152,16 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithMultiRegion(t 
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithMultiRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "base_policy_regions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.AlternateRegion()),
@@ -200,16 +199,16 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithPolicyDocument
 	edgeAsn1 := "65500"
 	edgeAsn2 := "65501"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithPolicyDocument(edgeAsn1, edgeAsn2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  edgeAsn1,
@@ -242,16 +241,16 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_core_network.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -263,7 +262,7 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 			{
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithoutRegion(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
@@ -288,16 +287,16 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithAccountV202112
 	resourceName := "aws_networkmanager_core_network.test"
 	edgeAsn := "4200000000"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithAccountV202112(edgeAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -314,16 +313,16 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithAccountV202511
 	resourceName := "aws_networkmanager_core_network.test"
 	edgeAsn := "4200000001"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithAccountV202511(edgeAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -335,9 +334,9 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithAccountV202511
 	})
 }
 
-func testAccCheckCoreNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCoreNetworkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_core_network" {
@@ -361,14 +360,14 @@ func testAccCheckCoreNetworkDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckCoreNetworkExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCoreNetworkExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		_, err := tfnetworkmanager.FindCoreNetworkByID(ctx, conn, rs.Primary.ID)
 

@@ -22,19 +22,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccOrganizationsPolicy_IdentitySerial(t *testing.T) {
+func testAccOrganizationsPolicy_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccOrganizationsPolicy_Identity_Basic,
-		"ExistingResource":          testAccOrganizationsPolicy_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccOrganizationsPolicy_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccOrganizationsPolicy_Identity_basic,
+		"ExistingResource":          testAccOrganizationsPolicy_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccOrganizationsPolicy_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccOrganizationsPolicy_Identity_Basic(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -119,7 +119,7 @@ func testAccOrganizationsPolicy_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicy_Identity_ExistingResource(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy
@@ -179,7 +179,7 @@ func testAccOrganizationsPolicy_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.4.0
-func testAccOrganizationsPolicy_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccOrganizationsPolicy_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Policy

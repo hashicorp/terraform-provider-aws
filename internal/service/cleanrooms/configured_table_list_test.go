@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCleanRoomsConfiguredTable_List_Basic(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_cleanrooms_configured_table.test[0]"

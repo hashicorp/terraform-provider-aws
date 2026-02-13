@@ -34,7 +34,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 			"IgnorePublicAcls":      testAccAccountPublicAccessBlock_IgnorePublicACLs,
 			"RestrictPublicBuckets": testAccAccountPublicAccessBlock_RestrictPublicBuckets,
 			"DataSourceBasic":       testAccAccountPublicAccessBlockDataSource_basic,
-			"Identity":              testAccS3ControlAccountPublicAccessBlock_IdentitySerial,
+			"Identity":              testAccS3ControlAccountPublicAccessBlock_identitySerial,
 		},
 	}
 

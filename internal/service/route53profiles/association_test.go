@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
@@ -28,23 +26,23 @@ func TestAccRoute53ProfilesAssociation_basic(t *testing.T) {
 	}
 
 	var association awstypes.ProfileAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53profiles_association.test"
 	profileName := "aws_route53profiles_profile.test"
 	vpcName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName, &association),
+					testAccCheckAssociationExists(ctx, t, resourceName, &association),
 					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -64,22 +62,22 @@ func TestAccRoute53ProfilesAssociation_basic(t *testing.T) {
 
 func TestAccRoute53ProfilesAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53profiles_association.test"
 	var v awstypes.ProfileAssociation
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName, &v),
+					testAccCheckAssociationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -92,7 +90,7 @@ func TestAccRoute53ProfilesAssociation_tags(t *testing.T) {
 			{
 				Config: testAccAssociationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName, &v),
+					testAccCheckAssociationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -101,7 +99,7 @@ func TestAccRoute53ProfilesAssociation_tags(t *testing.T) {
 			{
 				Config: testAccAssociationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName, &v),
+					testAccCheckAssociationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -117,21 +115,21 @@ func TestAccRoute53ProfilesAssociation_disappears(t *testing.T) {
 	}
 
 	var association awstypes.ProfileAssociation
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_route53profiles_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName, &association),
+					testAccCheckAssociationExists(ctx, t, resourceName, &association),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53profiles.Route53ProfileAssocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -140,9 +138,9 @@ func TestAccRoute53ProfilesAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53ProfilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53profiles_association" {
@@ -164,7 +162,7 @@ func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckAssociationExists(ctx context.Context, name string, association *awstypes.ProfileAssociation) resource.TestCheckFunc {
+func testAccCheckAssociationExists(ctx context.Context, t *testing.T, name string, association *awstypes.ProfileAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -175,7 +173,7 @@ func testAccCheckAssociationExists(ctx context.Context, name string, association
 			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfroute53profiles.ResNameAssociation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53ProfilesClient(ctx)
 		resp, err := tfroute53profiles.FindAssociationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfroute53profiles.ResNameAssociation, rs.Primary.ID, err)

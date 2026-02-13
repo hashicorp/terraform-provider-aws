@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package workspacesweb
 
 import (
@@ -45,6 +47,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.TrustStore")
 // @Testing(importStateIdAttribute="trust_store_arn")
 // @Testing(importIgnore="certificate_list")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustStoreResource{}, nil
 }

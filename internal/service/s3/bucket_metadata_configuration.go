@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package s3
 
 import (
@@ -65,6 +67,7 @@ func (r *bucketMetadataConfigurationResource) Schema(ctx context.Context, reques
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 			},
 		},
 		Blocks: map[string]schema.Block{

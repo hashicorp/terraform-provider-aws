@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/datasourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -34,25 +34,29 @@ func validateInContextRegionInPartition(ctx context.Context, c awsClient) diag.D
 	return diags
 }
 
-type dataSourceInjectRegionAttributeInterceptor struct{}
+type dataSourceInjectRegionAttributeInterceptor struct {
+	isDeprecated bool
+}
 
 func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[datasource.SchemaRequest, datasource.SchemaResponse]) {
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: names.ResourceTopLevelRegionAttributeDescription,
+			if r.isDeprecated {
+				response.Schema.Attributes[names.AttrRegion] = datasourceattribute.RegionDeprecated()
+			} else {
+				response.Schema.Attributes[names.AttrRegion] = datasourceattribute.Region()
 			}
 		}
 	}
 }
 
 // dataSourceInjectRegionAttribute injects a top-level "region" attribute into a data source's schema.
-func dataSourceInjectRegionAttribute() dataSourceSchemaInterceptor {
-	return &dataSourceInjectRegionAttributeInterceptor{}
+func dataSourceInjectRegionAttribute(isDeprecated bool) dataSourceSchemaInterceptor {
+	return &dataSourceInjectRegionAttributeInterceptor{
+		isDeprecated: isDeprecated,
+	}
 }
 
 type dataSourceValidateRegionInterceptor struct{}
@@ -168,21 +172,29 @@ func ephemeralResourceValidateRegion() ephemeralResourceORCInterceptor {
 	return &ephemeralResourceValidateRegionInterceptor{}
 }
 
-type resourceInjectRegionAttributeInterceptor struct{}
+type resourceInjectRegionAttributeInterceptor struct {
+	isDeprecated bool
+}
 
 func (r resourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) {
 	switch response, when := opts.response, opts.when; when {
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			if r.isDeprecated {
+				response.Schema.Attributes[names.AttrRegion] = resourceattribute.RegionDeprecated()
+			} else {
+				response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			}
 		}
 	}
 }
 
 // resourceInjectRegionAttribute injects a top-level "region" attribute into a resource's schema.
-func resourceInjectRegionAttribute() resourceSchemaInterceptor {
-	return &resourceInjectRegionAttributeInterceptor{}
+func resourceInjectRegionAttribute(isDeprecated bool) resourceSchemaInterceptor {
+	return &resourceInjectRegionAttributeInterceptor{
+		isDeprecated: isDeprecated,
+	}
 }
 
 type resourceValidateRegionInterceptor struct{}
