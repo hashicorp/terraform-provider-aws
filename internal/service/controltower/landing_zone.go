@@ -84,6 +84,14 @@ func resourceLandingZone() *schema.Resource {
 					return json
 				},
 			},
+			"remediation_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.RemediationType](),
+				},
+			},
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -107,6 +115,10 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 		Manifest: manifest,
 		Tags:     getTagsIn(ctx),
 		Version:  aws.String(d.Get(names.AttrVersion).(string)),
+	}
+
+	if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
+		input.RemediationTypes = expandRemediationTypes(v.(*schema.Set).List())
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
@@ -165,6 +177,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 	} else {
 		d.Set("manifest_json", nil)
 	}
+	d.Set("remediation_types", flattenRemediationTypes(landingZone.RemediationTypes))
 	d.Set(names.AttrVersion, landingZone.Version)
 
 	return diags
@@ -184,6 +197,10 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 			LandingZoneIdentifier: aws.String(d.Id()),
 			Manifest:              manifest,
 			Version:               aws.String(d.Get(names.AttrVersion).(string)),
+		}
+
+		if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
+			input.RemediationTypes = expandRemediationTypes(v.(*schema.Set).List())
 		}
 
 		output, err := conn.UpdateLandingZone(ctx, input)
@@ -314,6 +331,26 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 	}
 
 	return nil, err
+}
+
+func expandRemediationTypes(tfList []any) []types.RemediationType {
+	apiObjects := make([]types.RemediationType, 0, len(tfList))
+
+	for _, v := range tfList {
+		apiObjects = append(apiObjects, types.RemediationType(v.(string)))
+	}
+
+	return apiObjects
+}
+
+func flattenRemediationTypes(apiObjects []types.RemediationType) []string {
+	tfList := make([]string, 0, len(apiObjects))
+
+	for _, v := range apiObjects {
+		tfList = append(tfList, string(v))
+	}
+
+	return tfList
 }
 
 func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatusSummary) map[string]any {
