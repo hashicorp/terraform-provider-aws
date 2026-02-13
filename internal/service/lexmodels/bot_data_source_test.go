@@ -18,7 +18,7 @@ func TestAccLexModelsBotDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
@@ -61,7 +61,7 @@ func testAccBotDataSource_withVersion(t *testing.T) {
 	resourceName := "aws_lex_bot.test"
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)

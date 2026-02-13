@@ -41,7 +41,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.DirectConnectGatewayAttachment")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(importIgnore="state")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 

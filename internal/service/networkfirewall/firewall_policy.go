@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -364,9 +363,8 @@ func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input
 	output, err := conn.DescribeFirewallPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -389,8 +387,8 @@ func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, 
 	return findFirewallPolicy(ctx, conn, input)
 }
 
-func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewallPolicy(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallPolicyByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -406,10 +404,10 @@ func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn
 }
 
 func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFirewallPolicy(ctx, conn, arn),
+		Refresh: statusFirewallPolicy(conn, arn),
 		Timeout: timeout,
 	}
 

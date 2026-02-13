@@ -40,13 +40,13 @@ import (
 	"fmt"
 	"iter"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 {{ if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
@@ -120,7 +120,7 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
 			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
-				if diags := fwflex.Flatten(ctx, item, &data, flex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
+				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
 					return

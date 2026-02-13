@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
@@ -41,10 +40,10 @@ const (
 
 // waitOperation waits for an Operation to return Succeeded or Completed
 func waitOperation(ctx context.Context, conn *lightsail.Client, oid *string) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.OperationStatusStarted),
 		Target:     enum.Slice(types.OperationStatusCompleted, types.OperationStatusSucceeded),
-		Refresh:    statusOperation(ctx, conn, oid),
+		Refresh:    statusOperation(conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
@@ -61,10 +60,10 @@ func waitOperation(ctx context.Context, conn *lightsail.Client, oid *string) err
 
 // waitDatabaseModified waits for a Modified Database return available
 func waitDatabaseModified(ctx context.Context, conn *lightsail.Client, db *string) (*lightsail.GetRelationalDatabaseOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
-		Refresh:    statusDatabase(ctx, conn, db),
+		Refresh:    statusDatabase(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -82,10 +81,10 @@ func waitDatabaseModified(ctx context.Context, conn *lightsail.Client, db *strin
 // waitDatabaseBackupRetentionModified waits for a Modified  BackupRetention on Database return available
 
 func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Client, db *string, target bool) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!target)},
 		Target:     []string{strconv.FormatBool(target)},
-		Refresh:    statusDatabaseBackupRetention(ctx, conn, db),
+		Refresh:    statusDatabaseBackupRetention(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -101,10 +100,10 @@ func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Cl
 }
 
 func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail.Client, db *string, target bool) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!target)},
 		Target:     []string{strconv.FormatBool(target)},
-		Refresh:    statusDatabasePubliclyAccessible(ctx, conn, db),
+		Refresh:    statusDatabasePubliclyAccessible(conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -120,10 +119,10 @@ func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail
 }
 
 func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ContainerServiceStatePending),
 		Target:     enum.Slice(types.ContainerServiceStateReady),
-		Refresh:    statusContainerService(ctx, conn, serviceName),
+		Refresh:    statusContainerService(conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -143,10 +142,10 @@ func waitContainerServiceCreated(ctx context.Context, conn *lightsail.Client, se
 }
 
 func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ContainerServiceStateUpdating),
 		Target:     enum.Slice(types.ContainerServiceStateDisabled),
-		Refresh:    statusContainerService(ctx, conn, serviceName),
+		Refresh:    statusContainerService(conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -166,10 +165,10 @@ func waitContainerServiceDisabled(ctx context.Context, conn *lightsail.Client, s
 }
 
 func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ContainerServiceStateUpdating),
 		Target:     enum.Slice(types.ContainerServiceStateReady, types.ContainerServiceStateRunning),
-		Refresh:    statusContainerService(ctx, conn, serviceName),
+		Refresh:    statusContainerService(conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -189,10 +188,10 @@ func waitContainerServiceUpdated(ctx context.Context, conn *lightsail.Client, se
 }
 
 func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Client, serviceName string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ContainerServiceStateDeleting),
 		Target:     []string{},
-		Refresh:    statusContainerService(ctx, conn, serviceName),
+		Refresh:    statusContainerService(conn, serviceName),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -212,10 +211,10 @@ func waitContainerServiceDeleted(ctx context.Context, conn *lightsail.Client, se
 }
 
 func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *lightsail.Client, serviceName string, version int, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ContainerServiceDeploymentStateActivating),
 		Target:     enum.Slice(types.ContainerServiceDeploymentStateActive),
-		Refresh:    statusContainerServiceDeploymentVersion(ctx, conn, serviceName, version),
+		Refresh:    statusContainerServiceDeploymentVersion(conn, serviceName, version),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -235,10 +234,10 @@ func waitContainerServiceDeploymentVersionActive(ctx context.Context, conn *ligh
 }
 
 func waitInstanceState(ctx context.Context, conn *lightsail.Client, id *string) (*lightsail.GetInstanceStateOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"pending", "stopping"},
 		Target:     []string{"stopped", "running"},
-		Refresh:    statusInstance(ctx, conn, id),
+		Refresh:    statusInstance(conn, id),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,

@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -634,9 +633,8 @@ func findClusters(ctx context.Context, conn *memorydb.Client, input *memorydb.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -650,8 +648,8 @@ func findClusters(ctx context.Context, conn *memorydb.Client, input *memorydb.De
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -666,8 +664,8 @@ func statusCluster(ctx context.Context, conn *memorydb.Client, name string) sdkr
 	}
 }
 
-func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterParameterGroup(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -682,8 +680,8 @@ func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, nam
 	}
 }
 
-func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusClusterSecurityGroups(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -707,10 +705,10 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, nam
 }
 
 func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:  []string{clusterStatusAvailable},
-		Refresh: statusCluster(ctx, conn, name),
+		Refresh: statusCluster(conn, name),
 		Timeout: timeout,
 	}
 
@@ -724,10 +722,10 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name strin
 }
 
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      []string{clusterStatusDeleting},
 		Target:       []string{},
-		Refresh:      statusCluster(ctx, conn, name),
+		Refresh:      statusCluster(conn, name),
 		Timeout:      timeout,
 		Delay:        5 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -746,10 +744,10 @@ func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client,
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterParameterGroupStatusApplying},
 		Target:  []string{clusterParameterGroupStatusInSync},
-		Refresh: statusClusterParameterGroup(ctx, conn, name),
+		Refresh: statusClusterParameterGroup(conn, name),
 		Timeout: timeout,
 	}
 
@@ -766,10 +764,10 @@ func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client,
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterSecurityGroupStatusModifying},
 		Target:  []string{clusterSecurityGroupStatusActive},
-		Refresh: statusClusterSecurityGroups(ctx, conn, name),
+		Refresh: statusClusterSecurityGroups(conn, name),
 		Timeout: timeout,
 	}
 

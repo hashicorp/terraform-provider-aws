@@ -32,7 +32,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -43,7 +43,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -85,7 +85,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -131,7 +131,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -170,7 +170,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -209,7 +209,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_null(t *testin
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -220,7 +220,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_null(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -276,7 +276,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_emptyMap(t *te
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -285,7 +285,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_emptyMap(t *te
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -339,7 +339,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_addOnUpdate(t 
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -348,7 +348,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_addOnUpdate(t 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -371,7 +371,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_addOnUpdate(t 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -422,7 +422,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_onCre
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -433,7 +433,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_onCre
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -471,7 +471,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_onCre
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -512,7 +512,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -523,7 +523,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -554,7 +554,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -598,7 +598,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -649,7 +649,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -660,7 +660,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -690,7 +690,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_EmptyTag_OnUpd
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -738,7 +738,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_pr
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -750,7 +750,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_pr
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -792,7 +792,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_pr
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -836,7 +836,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_pr
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -874,7 +874,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_pr
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -914,7 +914,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_no
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -928,7 +928,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_no
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -980,7 +980,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_no
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1031,7 +1031,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_no
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1071,7 +1071,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_ov
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1085,7 +1085,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_ov
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1136,7 +1136,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_ov
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1191,7 +1191,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_ov
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1244,7 +1244,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_up
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1255,7 +1255,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_up
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1287,7 +1287,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_up
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1334,7 +1334,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_up
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1346,7 +1346,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_up
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1373,7 +1373,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_up
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1425,7 +1425,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_em
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1439,7 +1439,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_em
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1493,7 +1493,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_em
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1505,7 +1505,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_em
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1551,7 +1551,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_nu
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1565,7 +1565,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_nu
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1614,7 +1614,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_nu
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1628,7 +1628,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_DefaultTags_nu
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1677,7 +1677,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_on
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1686,7 +1686,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_on
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1733,7 +1733,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_On
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1744,7 +1744,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_On
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1775,7 +1775,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_On
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1830,7 +1830,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_On
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1841,7 +1841,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_On
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1870,7 +1870,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_ComputedTag_On
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1917,7 +1917,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -1935,7 +1935,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1983,7 +1983,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2031,7 +2031,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2079,7 +2079,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
+		CheckDestroy: testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2095,7 +2095,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2157,7 +2157,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2219,7 +2219,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_Tags_IgnoreTags_Ove
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

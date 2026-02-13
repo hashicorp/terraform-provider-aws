@@ -2437,10 +2437,10 @@ func statusGroupCapacity(conn *autoscaling.Client, elbconn *elasticloadbalancing
 		err = cb(nASG, nELB)
 
 		if err != nil {
-			return struct{}{}, err.Error(), nil //nolint:nilerr // err is passed via the result State
+			return true, err.Error(), nil //nolint:nilerr // err is passed via the result State
 		}
 
-		return struct{}{}, "ok", nil
+		return true, "ok", nil
 	}
 }
 

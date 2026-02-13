@@ -1622,15 +1622,16 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 
 func authTokenUpdateStrategyValidate(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	strategy, strategyOk := diff.GetOk("auth_token_update_strategy")
-	_, tokenOk := diff.GetOk("auth_token")
+	// Use GetRawConfig to check if auth_token is configured, even if unknown at plan time
+	tokenConfigured := !diff.GetRawConfig().GetAttr("auth_token").IsNull()
 
 	if strategyOk && awstypes.AuthTokenUpdateStrategyType(strategy.(string)) == awstypes.AuthTokenUpdateStrategyTypeDelete {
-		if tokenOk {
+		if tokenConfigured {
 			return errors.New(`"auth_token" must not be specified when "auth_token_update_strategy" is "DELETE"`)
 		}
 		return nil
 	}
-	if strategyOk && !tokenOk {
+	if strategyOk && !tokenConfigured {
 		return errors.New(`"auth_token_update_strategy": "auth_token" must be specified`)
 	}
 
