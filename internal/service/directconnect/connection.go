@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package directconnect
 
@@ -15,13 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -267,7 +269,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	connection, err := findConnectionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -378,8 +380,7 @@ func findConnectionByID(ctx context.Context, conn *directconnect.Client, id stri
 
 	if state := output.ConnectionState; state == awstypes.ConnectionStateDeleted || state == awstypes.ConnectionStateRejected {
 		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+			Message: string(state),
 		}
 	}
 
@@ -401,8 +402,7 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -411,17 +411,17 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
 }
 
-func statusConnection(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnection(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -440,7 +440,7 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusConnection(ctx, conn, id),
+		Refresh: statusConnection(conn, id),
 		Timeout: timeout,
 	}
 

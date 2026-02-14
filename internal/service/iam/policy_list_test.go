@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMPolicy_List_Basic(t *testing.T) {
+func TestAccIAMPolicy_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_iam_policy.test[0]"
@@ -86,7 +86,7 @@ func TestAccIAMPolicy_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicy_List_PathPrefix(t *testing.T) {
+func TestAccIAMPolicy_List_pathPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_iam_policy.expected[0]"

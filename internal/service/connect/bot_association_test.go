@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -12,28 +12,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccBotAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotAssociationExists(ctx, resourceName),
+					testAccCheckBotAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttr(resourceName, "lex_bot.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lex_bot.0.name", "aws_lex_bot.test", names.AttrName),
@@ -52,21 +51,21 @@ func testAccBotAssociation_basic(t *testing.T) {
 func testAccBotAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
 	instanceResourceName := "aws_connect_bot_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckBotAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBotAssociationConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBotAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
+					testAccCheckBotAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceBotAssociation(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,14 +73,14 @@ func testAccBotAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBotAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckBotAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 		_, err := tfconnect.FindBotAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["lex_bot.0.name"], rs.Primary.Attributes["lex_bot.0.lex_region"])
 
@@ -89,18 +88,18 @@ func testAccCheckBotAssociationExists(ctx context.Context, n string) resource.Te
 	}
 }
 
-func testAccCheckBotAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBotAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_bot_association" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).ConnectClient(ctx)
 
 			_, err := tfconnect.FindBotAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["lex_bot.0.name"], rs.Primary.Attributes["lex_bot.0.lex_region"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

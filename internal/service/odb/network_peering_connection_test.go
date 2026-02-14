@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,6 +70,74 @@ func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkPeeringConnection_withARN(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var odbPeeringResource odb.GetOdbPeeringConnectionOutput
+	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+	resourceName := "aws_odb_network_peering_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			oracleDBNwkPeeringTestResource.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: oracleDBNwkPeeringTestResource.basicConfigWithARN(vpcName, odbNetName, odbPeeringDisplayName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBNetworkPeeringConnection_variables(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
+	vpcName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.vpcNamePrefix)
+	odbNetName := sdkacctest.RandomWithPrefix(oracleDBNwkPeeringTestResource.odbNwkDisplayNamePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			vmClusterTestEntity.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             oracleDBNwkPeeringTestResource.testAccCheckNetworkPeeringConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
+			{
+				Config:             oracleDBNwkPeeringTestResource.basicConfig_useVariables(vpcName, odbNetName, odbPeeringDisplayName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -151,7 +219,7 @@ func TestAccODBNetworkPeeringConnection_disappears(t *testing.T) {
 				Config: oracleDBNwkPeeringTestResource.basicConfig(vpcName, odbNetDisplayName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeering),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.OracleDBNetworkPeeringConnection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.OracleDBNetworkPeeringConnection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,7 +235,7 @@ func (oracleDBNwkPeeringResourceTest) testAccCheckNetworkPeeringConnectionDestro
 				continue
 			}
 			_, err := oracleDBNwkPeeringTestResource.findOracleDBNetworkPeering(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 			if err != nil {
@@ -218,7 +286,7 @@ func (oracleDBNwkPeeringResourceTest) findOracleDBNetworkPeering(ctx context.Con
 	out, err := conn.GetOdbPeeringConnection(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -252,6 +320,62 @@ resource "aws_odb_network" "test" {
 resource "aws_odb_network_peering_connection" "test" {
   display_name    = %[3]q
   odb_network_id  = aws_odb_network.test.id
+  peer_network_id = aws_vpc.test.id
+  tags = {
+    "env" = "dev"
+  }
+}
+`, vpcName, odbNetName, odbPeeringName)
+}
+
+func (oracleDBNwkPeeringResourceTest) basicConfig_useVariables(vpcName, odbNetName, odbPeeringName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+variable odb_network_id {
+  default     = "odbnet_3l9st3litg"
+  type        = string
+  description = "ODB Network"
+}
+
+resource "aws_odb_network_peering_connection" "test" {
+  display_name    = %[3]q
+  odb_network_id  = var.odb_network_id
+  peer_network_id = aws_vpc.test.id
+  tags = {
+    "env" = "dev"
+  }
+}
+`, vpcName, odbNetName, odbPeeringName)
+}
+
+func (oracleDBNwkPeeringResourceTest) basicConfigWithARN(vpcName, odbNetName, odbPeeringName string) string {
+	return fmt.Sprintf(`
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_odb_network" "test" {
+  display_name         = %[2]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
+}
+
+resource "aws_odb_network_peering_connection" "test" {
+  display_name    = %[3]q
+  odb_network_id  = aws_odb_network.test.arn
   peer_network_id = aws_vpc.test.id
   tags = {
     "env" = "dev"

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package acm
 
@@ -19,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -129,7 +132,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			case err != nil:
 				return nil, err
 			case len(output) == 0:
-				return nil, tfresource.NewEmptyResultError(input)
+				return nil, tfresource.NewEmptyResultError()
 			default:
 				return output, nil
 			}
@@ -145,7 +148,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		certificateARN := aws.ToString(certificateSummary.CertificateArn)
 		certificate, err := findCertificateByARN(ctx, conn, certificateARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			continue
 		}
 

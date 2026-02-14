@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -29,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -682,7 +683,7 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -700,7 +701,7 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -717,7 +718,7 @@ func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -752,9 +753,8 @@ func findGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	out, err := conn.GetGatewayTarget(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -763,7 +763,7 @@ func findGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

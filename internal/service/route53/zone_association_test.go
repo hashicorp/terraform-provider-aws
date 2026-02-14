@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +62,7 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 				Config: testAccZoneAssociationConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZoneAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,7 +70,7 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
+func TestAccRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	vpcResourceName := "aws_vpc.bar"
@@ -87,7 +87,7 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 				Config: testAccZoneAssociationConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, ec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, ec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +95,7 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
+func TestAccRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	route53ZoneResourceName := "aws_route53_zone.foo"
@@ -112,7 +112,7 @@ func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
 				Config: testAccZoneAssociationConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -223,7 +223,7 @@ func testAccCheckZoneAssociationDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfroute53.FindZoneAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID], rs.Primary.Attributes["vpc_region"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

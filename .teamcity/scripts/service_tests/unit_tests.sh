@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # shellcheck disable=SC2162
 
 set -euo pipefail

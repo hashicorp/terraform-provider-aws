@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexv2models
 
@@ -27,11 +29,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -970,7 +972,7 @@ func (r *intentResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	out, err := findIntentByIDs(ctx, conn, data.IntentID.ValueString(), data.BotID.ValueString(), data.BotVersion.ValueString(), data.LocaleID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -1152,7 +1154,7 @@ func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, intentID, b
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
+		Refresh:                   statusIntent(conn, intentID, botID, botVersion, localeID),
 		Timeout:                   timeout,
 		MinTimeout:                5 * time.Second,
 		NotFoundChecks:            20,
@@ -1171,7 +1173,7 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{statusNormal},
 		Target:     []string{},
-		Refresh:    statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
+		Refresh:    statusIntent(conn, intentID, botID, botVersion, localeID),
 		Timeout:    timeout,
 		MinTimeout: 5 * time.Second,
 	}
@@ -1184,10 +1186,10 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, 
 	return nil, err
 }
 
-func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusIntent(conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findIntentByIDs(ctx, conn, intentID, botID, botVersion, localeID)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1212,8 +1214,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -1221,7 +1222,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -22,7 +22,7 @@ func TestAccEC2EBSSnapshotBlockPublicAccess_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccEC2EBSSnapshotBlockPublicAccess_basic,
-		"Identity":      testAccEC2EBSEBSSnapshotBlockPublicAccess_IdentitySerial,
+		"Identity":      testAccEC2EBSEBSSnapshotBlockPublicAccess_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

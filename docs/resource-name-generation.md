@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Name Generation Support
 
@@ -62,14 +65,14 @@ Implementing name generation requires modifying the following:
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
-    name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+    name := create.Name(ctx, plan.Name.ValueString(), plan.NamePrefix.ValueString())
 
     // ... in AWS Go SDK V2 Input types, etc. use aws.ToString(name)
     ```
 
 === "Terraform Plugin SDK V2"
     ```go
-    name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+    name := create.Name(ctx, d.Get("name").(string), d.Get("name_prefix").(string))
 
     // ... in AWS Go SDK V2 Input types, etc. use aws.ToString(name)
     ```

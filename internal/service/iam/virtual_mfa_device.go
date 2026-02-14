@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,6 +33,7 @@ import (
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
 // @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
@@ -62,6 +66,10 @@ func resourceVirtualMFADevice() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 512),
 			},
 			"qr_code_png": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"serial_number": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +147,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 
 	vMFA, err := findVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Virtual MFA Device (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -150,6 +158,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set(names.AttrARN, vMFA.SerialNumber)
+	d.Set("serial_number", vMFA.SerialNumber)
 
 	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {

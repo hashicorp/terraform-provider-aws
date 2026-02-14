@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,7 +104,7 @@ func TestAccVPCLatticeListenerRule_disappears(t *testing.T) {
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceListenerRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceListenerRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -412,7 +412,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfvpclattice.FindListenerRuleByThreePartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_identifier"], rs.Primary.Attributes["rule_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

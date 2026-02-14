@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray_test
@@ -23,7 +23,7 @@ func TestAccXRayEncryptionConfig_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccXRayEncryptionConfig_basic,
-		"Identity":      testAccXRayEncryptionConfig_IdentitySerial,
+		"Identity":      testAccXRayEncryptionConfig_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

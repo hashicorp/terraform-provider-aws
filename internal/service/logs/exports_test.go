@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -21,6 +21,7 @@ var (
 	ResourceResourcePolicy            = resourceResourcePolicy
 	ResourceStream                    = resourceStream
 	ResourceSubscriptionFilter        = resourceSubscriptionFilter
+	ResourceTransformer               = newTransformerResource
 
 	FindAccountPolicyByTwoPartKey                          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName                 = findDataProtectionPolicyByLogGroupName
@@ -38,6 +39,7 @@ var (
 	FindQueryDefinitionByTwoPartKey                        = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName                               = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey                     = findSubscriptionFilterByTwoPartKey
+	FindTransformerByLogGroupIdentifier                    = findTransformerByLogGroupIdentifier
 
 	TrimLogGroupARNWildcardSuffix          = trimLogGroupARNWildcardSuffix
 	ValidLogGroupName                      = validLogGroupName

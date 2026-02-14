@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -128,7 +130,7 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Reading Glue Partition Index: %s", d.Id())
 	partition, err := findPartitionIndexByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Partition Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -197,8 +199,7 @@ func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -207,7 +208,7 @@ func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, partInd := range output.PartitionIndexDescriptorList {
@@ -219,19 +220,18 @@ func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 
 	if result == nil {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
 	return result, nil
 }
 
-func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPartitionIndex(conn *glue.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPartitionIndexByName(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -247,7 +247,7 @@ func waitPartitionIndexCreated(ctx context.Context, conn *glue.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PartitionIndexStatusCreating),
 		Target:  enum.Slice(awstypes.PartitionIndexStatusActive),
-		Refresh: statusPartitionIndex(ctx, conn, id),
+		Refresh: statusPartitionIndex(conn, id),
 		Timeout: timeout,
 	}
 
@@ -264,7 +264,7 @@ func waitPartitionIndexDeleted(ctx context.Context, conn *glue.Client, id string
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PartitionIndexStatusDeleting),
 		Target:  []string{},
-		Refresh: statusPartitionIndex(ctx, conn, id),
+		Refresh: statusPartitionIndex(conn, id),
 		Timeout: timeout,
 	}
 

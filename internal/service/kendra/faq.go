@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kendra
 
@@ -18,12 +20,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -225,7 +227,7 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	resp, err := FindFaqByID(ctx, conn, id, indexId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra Faq (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -306,7 +308,7 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 		Pending:                   enum.Slice(types.FaqStatusCreating, "PENDING_CREATION"), // API currently returns PENDING_CREATION instead of CREATING
 		Target:                    enum.Slice(types.FaqStatusActive),
 		Timeout:                   timeout,
-		Refresh:                   statusFaq(ctx, conn, id, indexId),
+		Refresh:                   statusFaq(conn, id, indexId),
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
@@ -315,7 +317,7 @@ func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string
 
 	if output, ok := outputRaw.(*kendra.DescribeFaqOutput); ok {
 		if output.Status == types.FaqStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -328,13 +330,13 @@ func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string
 		Pending: enum.Slice(types.FaqStatusDeleting, "PENDING_DELETION"), // API currently returns PENDING_DELETION instead of DELETING
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusFaq(ctx, conn, id, indexId),
+		Refresh: statusFaq(conn, id, indexId),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeFaqOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}
@@ -342,11 +344,11 @@ func waitFaqDeleted(ctx context.Context, conn *kendra.Client, id, indexId string
 	return nil, err
 }
 
-func statusFaq(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFaq(conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := FindFaqByID(ctx, conn, id, indexId)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

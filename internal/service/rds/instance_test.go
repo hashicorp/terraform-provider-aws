@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -44,22 +44,22 @@ func TestAccRDSInstance_basic(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "10"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
@@ -102,6 +102,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestMatchResourceAttr(resourceName, "upgrade_rollout_order", regexache.MustCompile(`^(first|second|last)$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
 				),
 			},
@@ -131,19 +132,19 @@ func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_identifierPrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
@@ -170,19 +171,19 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_identifierGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
@@ -207,23 +208,23 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), resourceName),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -238,22 +239,22 @@ func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_engineLifecycleSupport_disabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
@@ -285,22 +286,22 @@ func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_majorVersionOnly(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
 				),
@@ -328,21 +329,21 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 	var v types.DBInstance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_kmsKeyID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
@@ -373,9 +374,9 @@ func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
@@ -385,12 +386,12 @@ func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_customIAMInstanceProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "custom_iam_instance_profile"),
 				),
 			},
@@ -407,31 +408,31 @@ func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	dbSubnetGroupResourceName2 := "aws_db_subnet_group.test2"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName2, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", fmt.Sprintf("%s-2", rName)),
 				),
@@ -449,29 +450,29 @@ func TestAccRDSInstance_networkType(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_networkType(rName, "IPV4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_networkType(rName, "DUAL"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
 				),
 			},
@@ -486,22 +487,22 @@ func TestAccRDSInstance_optionGroup(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_optionGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "option_group_name", rName),
 				),
@@ -517,22 +518,22 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_iamAuth(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
@@ -549,22 +550,22 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 
 	var dbInstance1 types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Versions_allowMajor(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 				),
 			},
@@ -583,7 +584,7 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Versions_allowMajor(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtFalse),
 				),
 			},
@@ -601,26 +602,26 @@ func TestAccRDSInstance_db2(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	// Requires an IBM Db2 License set as environmental variable.
 	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html.
 	customerID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_CUSTOMER_ID")
 	siteID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_SITE_ID")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_db2engine(rName, customerID, siteID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 		},
@@ -634,11 +635,11 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -649,12 +650,12 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -669,23 +670,23 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -703,22 +704,22 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
@@ -737,7 +738,7 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
@@ -754,11 +755,11 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_basic(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -767,12 +768,12 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_basic(t *testing.T) {
 		},
 		// testAccCheckInstanceDestroyWithFinalSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
-		CheckDestroy: testAccCheckInstanceDestroyWithFinalSnapshot(ctx),
+		CheckDestroy: testAccCheckInstanceDestroyWithFinalSnapshot(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 				),
 			},
 			// Test updating just final_snapshot_identifier.
@@ -780,7 +781,7 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_basic(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
@@ -796,22 +797,22 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) 
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx),
+		CheckDestroy: testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_FinalSnapshotID_skipFinalSnapshot(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 				),
 			},
 		},
@@ -826,28 +827,28 @@ func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mariaDB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -874,43 +875,43 @@ func TestAccRDSInstance_Storage_maxAllocated(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 15),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "15"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
 				),
 			},
@@ -927,17 +928,17 @@ func TestAccRDSInstance_password(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Password should not be shown in error message
 			{
@@ -947,7 +948,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
 				),
 			},
@@ -965,7 +966,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-2"),
 				),
@@ -983,17 +984,17 @@ func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Password should not be shown in error message
 			{
@@ -1003,7 +1004,7 @@ func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_passwordWriteOnly(rName, "valid-password-1", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 				),
 			},
 			{
@@ -1020,7 +1021,7 @@ func TestAccRDSInstance_passwordWriteOnly(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_passwordWriteOnly(rName, "valid-password-2", 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 				),
 			},
@@ -1035,22 +1036,22 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_manageMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
@@ -1082,22 +1083,22 @@ func TestAccRDSInstance_ErrorOnConvertToManageOnStoppedInstance(t *testing.T) {
 	}
 
 	var v1 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_passwordWithStoppedInstance(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
 					resource.TestCheckResourceAttr("aws_rds_instance_state.test", names.AttrState, "stopped"),
 				),
@@ -1129,22 +1130,22 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_manageMasterPasswordKMSKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
@@ -1177,22 +1178,22 @@ func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 	}
 
 	var dbCluster1, dbCluster2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbCluster1),
 					resource.TestCheckNoResourceAttr(resourceName, "manage_master_user_password"),
 				),
 			},
@@ -1210,7 +1211,7 @@ func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_manageMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbCluster2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 				),
@@ -1229,24 +1230,24 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1305,24 +1306,24 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteNull(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1332,8 +1333,8 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteNull(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_promoteNull(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "replicate_source_db", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
@@ -1363,24 +1364,24 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteEmptyString(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1390,8 +1391,8 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteEmptyString(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_promoteEmptyString(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "replicate_source_db", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
@@ -1421,24 +1422,24 @@ func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_sourceARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
@@ -1488,24 +1489,24 @@ func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_upgradeStorageConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", acctest.CtTrue),
 				),
@@ -1524,23 +1525,23 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 
 	var v types.DBInstance
 
-	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	const identifierPrefix = "tf-acc-test-prefix-"
 	const resourceName = "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
@@ -1568,22 +1569,22 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 
 	var v types.DBInstance
 
-	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	const resourceName = "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
@@ -1611,30 +1612,30 @@ func TestAccRDSInstance_ReplicateSourceDB_addLater(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_addLaterSetup(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_addLater(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 				),
 			},
@@ -1652,24 +1653,24 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_allocatedStorage(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "10"),
 				),
@@ -1688,24 +1689,24 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_iops(rName, 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
@@ -1724,24 +1725,24 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_allocatedStorageAndIOPS(rName, 220, 2200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "220"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2200"),
@@ -1761,24 +1762,24 @@ func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T)
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_allowMajorVersionUpgrade(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 				),
@@ -1797,24 +1798,24 @@ func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) 
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 				),
@@ -1833,24 +1834,24 @@ func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_availabilityZone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 				),
 			},
@@ -1867,24 +1868,24 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_backupRetentionPeriod(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 				),
@@ -1903,24 +1904,24 @@ func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_backupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
 				),
@@ -1939,24 +1940,24 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_basic(t *testing.T) 
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
 				),
@@ -1975,24 +1976,24 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(t *test
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
 				),
@@ -2011,25 +2012,25 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameVPC(t *testing.T
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
@@ -2061,12 +2062,12 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testi
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -2076,12 +2077,12 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testi
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_crossRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
@@ -2099,11 +2100,11 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -2115,12 +2116,12 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -2137,11 +2138,11 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs(t
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -2151,12 +2152,12 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs(t
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -2186,24 +2187,24 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
@@ -2212,8 +2213,8 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
@@ -2232,24 +2233,24 @@ func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *te
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
@@ -2268,24 +2269,24 @@ func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_maintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
@@ -2304,24 +2305,24 @@ func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_maxAllocatedStorage(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
 				),
@@ -2340,24 +2341,24 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_monitoring(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
 				),
@@ -2376,30 +2377,30 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring_sourceAlreadyExists(t *test
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_monitoring_sourceOnly(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_monitoring(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
 				),
@@ -2418,24 +2419,24 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_multiAZ(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
@@ -2454,24 +2455,24 @@ func TestAccRDSInstance_ReplicateSourceDB_networkType(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_networkType(rName, "IPV4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 				),
@@ -2490,24 +2491,24 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth(t *tes
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_sameSetOnBoth(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, sourceResourceName, names.AttrParameterGroupName),
@@ -2529,25 +2530,25 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth(t
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_differentSetOnBoth(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
 					resource.TestCheckResourceAttr(sourceResourceName, names.AttrParameterGroupName, fmt.Sprintf("%s-source", rName)),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
@@ -2568,24 +2569,24 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue(t
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_replicaCopiesValue(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, sourceResourceName, names.AttrParameterGroupName),
@@ -2606,24 +2607,24 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica(t *test
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupName_setOnReplica(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
@@ -2643,24 +2644,24 @@ func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_port(rName, 9999),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
 				),
@@ -2679,24 +2680,24 @@ func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
@@ -2715,25 +2716,25 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 	certifiateDataSourceName := "data.aws_rds_certificate.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_caCertificateID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_cert_identifier", certifiateDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", certifiateDataSourceName, names.AttrID),
@@ -2753,25 +2754,25 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_characterSet_Source(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
 					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
 				),
@@ -2803,24 +2804,24 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, string(types.ReplicaModeMounted)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "replica_mode", string(types.ReplicaModeMounted)),
 				),
@@ -2841,8 +2842,8 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName, string(types.ReplicaModeOpenReadOnly)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "replica_mode", string(types.ReplicaModeOpenReadOnly)),
 				),
@@ -2868,24 +2869,24 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 	parameterGroupResourceName := "aws_db_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_ParameterGroupTwoStep_setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
 					resource.TestCheckResourceAttr(sourceResourceName, names.AttrParameterGroupName, "default.oracle-ee-19"),
 					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
 				),
@@ -2893,9 +2894,9 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_parameterGroupTwoStep(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
 					resource.TestCheckResourceAttr(sourceResourceName, names.AttrParameterGroupName, "default.oracle-ee-19"),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "replica_mode", "open-read-only"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupResourceName, names.AttrName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
@@ -2917,18 +2918,18 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 	var dbInstance, sourceDbInstance types.DBInstance
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_equivalent(rName),
@@ -2966,18 +2967,18 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNamePostgres
 	var dbInstance, sourceDbInstance types.DBInstance
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_postgres(rName),
@@ -3016,18 +3017,18 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 	var dbInstance, sourceDbInstance types.DBInstance
 	var providers []*schema.Provider
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName),
@@ -3062,25 +3063,25 @@ func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 	domain := acctest.RandomDomain().String()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_mssqlDomain(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
@@ -3112,22 +3113,22 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_s3Import(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 				),
@@ -3156,26 +3157,26 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_snapshotID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
@@ -3206,26 +3207,26 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_snapshotID_ManageMasterPasswordKMSKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
@@ -3260,23 +3261,23 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 
 	var v types.DBInstance
 
-	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	const identifierPrefix = "tf-acc-test-prefix-"
 	const resourceName = "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
@@ -3305,22 +3306,22 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 
 	var v types.DBInstance
 
-	sourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	const resourceName = "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
@@ -3349,29 +3350,29 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 
 	var dbInstance1, dbInstance2 types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_snapshotID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance1),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_SnapshotID_associationRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance2),
 					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAllocatedStorage, sourceDbResourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, sourceDbResourceName, names.AttrEngine),
@@ -3393,26 +3394,26 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_allocatedStorage(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "10"),
 				),
 			},
@@ -3431,26 +3432,26 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_ioStorage(rName, "io1", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
@@ -3469,26 +3470,26 @@ func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_ioStorage(rName, "io2", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
@@ -3507,26 +3508,26 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 				),
 			},
@@ -3545,26 +3546,26 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 				),
 			},
@@ -3583,26 +3584,26 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_availabilityZone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 		},
@@ -3620,26 +3621,26 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_backupRetentionPeriod(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 				),
 			},
@@ -3658,26 +3659,26 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_BackupRetentionPeriod_unset(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
 				),
 			},
@@ -3696,26 +3697,26 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_backupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
 				),
 			},
@@ -3733,27 +3734,27 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_dbSubnetGroupName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -3771,13 +3772,13 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -3788,14 +3789,14 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -3813,27 +3814,27 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -3852,26 +3853,26 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
@@ -3879,9 +3880,9 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_SnapshotID_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
@@ -3900,26 +3901,26 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_iamDatabaseAuthenticationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
 			},
@@ -3938,26 +3939,26 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_maintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00-sun:23:30"),
 				),
 			},
@@ -3976,26 +3977,26 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_maxAllocatedStorage(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
 				),
 			},
@@ -4014,26 +4015,26 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_monitoring(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
 				),
 			},
@@ -4052,26 +4053,26 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_multiAZ(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
 			},
@@ -4090,26 +4091,26 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_MultiAZ_sqlServer(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
@@ -4129,26 +4130,26 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_parameterGroupName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, rName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
 				),
@@ -4168,26 +4169,26 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_port(rName, 9999),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
 				),
 			},
@@ -4206,26 +4207,26 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -4258,26 +4259,26 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_tagsRemove(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -4305,26 +4306,26 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 		},
@@ -4346,26 +4347,26 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_VPCSecurityGroupIDs_tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -4384,21 +4385,21 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 
 	var dbInstance types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 				),
 			},
@@ -4416,21 +4417,21 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 				),
 			},
@@ -4449,21 +4450,21 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 	var dbInstance types.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -4481,7 +4482,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
@@ -4500,21 +4501,21 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 	var dbInstance types.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -4532,7 +4533,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_monitoringRoleARNRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 		},
@@ -4550,21 +4551,21 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 	var dbInstance types.DBInstance
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringRoleARNRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 			{
@@ -4581,7 +4582,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -4597,22 +4598,22 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 
 	var v types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "3306"),
 				),
 			},
@@ -4620,7 +4621,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_updateMySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "3305"),
 				),
 			},
@@ -4637,22 +4638,22 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MSSQL_timezone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes_MSSQL(&v, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "20"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineSQLServerExpress),
@@ -4662,7 +4663,7 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_MSSQL_timezone_AKST(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes_MSSQL(&v, "Alaskan Standard Time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "20"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineSQLServerExpress),
@@ -4682,25 +4683,25 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 
 	var vBefore, vAfter types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	domain := acctest.RandomDomain()
 	domain1 := domain.RandomSubdomain().String()
 	domain2 := domain.RandomSubdomain().String()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlDomain(rName, domain1, domain2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &vBefore),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &vBefore),
 					testAccCheckInstanceDomainAttributes(domain1, &vBefore),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
@@ -4709,7 +4710,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_mssqlUpdateDomain(rName, domain1, domain2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &vAfter),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &vAfter),
 					testAccCheckInstanceDomainAttributes(domain2, &vAfter),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
@@ -4730,23 +4731,23 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 	var v, vRestoredInstance types.DBInstance
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlDomainSnapshotRestore(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &vRestoredInstance),
-					testAccCheckDBInstanceExists(ctx, originResourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &vRestoredInstance),
+					testAccCheckDBInstanceExists(ctx, t, originResourceName, &v),
 					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
@@ -4766,25 +4767,25 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 
 	var vBefore, vAfter types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomain().String()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 	domain1 := acctest.RandomDomain().String()
 	domain1Ou := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain1, ".")[0], strings.Split(domain1, ".")[1])
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlSelfManagedDomain(rName, domain, domainOu),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &vBefore),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &vBefore),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
@@ -4794,7 +4795,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_mssqlUpdateSelfManagedDomain(rName, domain1, domain1Ou),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &vAfter),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &vAfter),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
@@ -4815,23 +4816,23 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSingleDomainDNSIP(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomain().String()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlSelfManagedDomainSingleDomainDNSIP(rName, domain, domainOu),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
@@ -4855,24 +4856,24 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 	var v, vRestoredInstance types.DBInstance
 	resourceName := "aws_db_instance.test"
 	originResourceName := "aws_db_instance.origin"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlSelfManagedDomainSnapshotRestore(rName, domain, domainOu),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &vRestoredInstance),
-					testAccCheckDBInstanceExists(ctx, originResourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &vRestoredInstance),
+					testAccCheckDBInstanceExists(ctx, t, originResourceName, &v),
 					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
@@ -4891,28 +4892,32 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	// Versions
+	// 8.4.7: latest as of 2026-01-15. End of support is 2026-11-30.
+	// 8.4.5: End of support is 2026-09-30.
+	const sourceVersion = "8.4.5" // Source version must *not* be the current version
 
 	var v, vRestoredInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	restoreResourceName := "aws_db_instance.restore"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName),
+				Config: testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName, sourceVersion),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, restoreResourceName, &vRestoredInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, restoreResourceName, &vRestoredInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					// Hardcoded older version. Will need to update when no longer compatible to upgrade from this to the default version.
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.32"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, sourceVersion),
 					resource.TestCheckResourceAttrPair(restoreResourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
@@ -4927,21 +4932,21 @@ func TestAccRDSInstance_Versions_minor(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_autoMinorVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, "aws_db_instance.bar", &v),
+					testAccCheckDBInstanceExists(ctx, t, "aws_db_instance.bar", &v),
 				),
 			},
 		},
@@ -4956,21 +4961,21 @@ func TestAccRDSInstance_CloudWatchLogsExport_basic(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExport(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
@@ -5001,26 +5006,26 @@ func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	// Requires an IBM Db2 License set as environmental variable.
 	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html.
 	customerID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_CUSTOMER_ID")
 	siteID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_SITE_ID")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExport_db2(rName, customerID, siteID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
 			},
@@ -5049,21 +5054,21 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExport(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
@@ -5072,7 +5077,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportAdd(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
@@ -5082,7 +5087,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportModify(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
@@ -5092,7 +5097,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportDelete(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 				),
 			},
@@ -5109,22 +5114,22 @@ func TestAccRDSInstance_CloudWatchLogsExport_msSQL(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExport_mssql(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
 			},
@@ -5152,22 +5157,22 @@ func TestAccRDSInstance_CloudWatchLogsExport_oracle(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExport_oracle(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
 				),
 			},
@@ -5194,22 +5199,22 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 	// This is one of the 20 fastest-running tests.
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName, "postgresql", "upgrade"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
 			},
@@ -5237,22 +5242,22 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql_iam_db_auth(t *testing.T
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName, "postgresql", "iam-db-auth-error"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "iam-db-auth-error"),
@@ -5271,22 +5276,22 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnCreate(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtTrue),
 				),
 			},
@@ -5312,29 +5317,29 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtTrue),
 				),
 			},
@@ -5350,7 +5355,7 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_dedicatedLogVolumeEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
 				),
 			},
@@ -5377,22 +5382,22 @@ func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckInstanceAutomatedBackupsDelete(ctx),
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsDelete(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_noDeleteAutomatedBackups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 		},
@@ -5409,10 +5414,10 @@ func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5422,12 +5427,12 @@ func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
 				),
 			},
@@ -5445,7 +5450,7 @@ func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_performanceInsightsEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 				),
 			},
@@ -5462,10 +5467,10 @@ func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5475,12 +5480,12 @@ func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 				),
 			},
@@ -5498,7 +5503,7 @@ func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_performanceInsightsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
 				),
 			},
@@ -5515,11 +5520,11 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5529,12 +5534,12 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -5553,7 +5558,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyIdDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -5561,7 +5566,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -5579,11 +5584,11 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID_UpdateMode(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5593,7 +5598,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID_UpdateMode(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyIDUpdateMode(rName, string(types.DatabaseInsightsModeStandard)),
@@ -5603,7 +5608,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID_UpdateMode(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", string(types.DatabaseInsightsModeStandard)),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
@@ -5628,7 +5633,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID_UpdateMode(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", string(types.DatabaseInsightsModeAdvanced)),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
@@ -5642,7 +5647,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID_UpdateMode(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", string(types.DatabaseInsightsModeStandard)),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
@@ -5661,10 +5666,10 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5674,12 +5679,12 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 731),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "731"),
 				),
@@ -5698,7 +5703,7 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 7),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
@@ -5706,7 +5711,7 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 155),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
 				),
@@ -5725,22 +5730,22 @@ func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_databaseInsightsMode(rName, "advanced", true, "465"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -5756,7 +5761,7 @@ func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_databaseInsightsMode(rName, "standard", false, "null"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -5771,7 +5776,7 @@ func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_databaseInsightsMode(rName, "standard", true, "465"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -5787,7 +5792,7 @@ func TestAccRDSInstance_PerformanceInsights_databaseInsightsMode(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_databaseInsightsMode(rName, "advanced", true, "465"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -5814,12 +5819,12 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 
 	var dbInstance, sourceDbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5829,13 +5834,13 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_performanceInsightsEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
@@ -5857,13 +5862,13 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	sourceDbResourceName := "aws_db_instance.source"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, tfrds.InstanceEngineMySQL)
@@ -5873,14 +5878,14 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_performanceInsightsEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
@@ -5899,23 +5904,23 @@ func TestAccRDSInstance_CACertificate_latest(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	dataSourceName := "data.aws_rds_certificate.latest"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CACertificate_latest(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, names.AttrID),
 				),
 			},
@@ -5932,29 +5937,29 @@ func TestAccRDSInstance_CACertificate_update(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CACertificate_update(rName, "rds-ca-ecc384-g1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-ecc384-g1"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_CACertificate_update(rName, "rds-ca-rsa2048-g1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-rsa2048-g1"),
 				),
 			},
@@ -5973,22 +5978,22 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_sourceID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 			{
@@ -6020,22 +6025,22 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_sourceResourceID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 				),
 			},
 			{
@@ -6067,22 +6072,22 @@ func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_monitoring(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
 				),
 			},
@@ -6101,22 +6106,22 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 	var dbInstance, sourceDbInstance types.DBInstance
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_ManageMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
@@ -6153,22 +6158,22 @@ func TestAccRDSInstance_Oracle_nationalCharacterSet(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Oracle_nationalCharacterSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "UTF8"),
 				),
 			},
@@ -6198,22 +6203,22 @@ func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 
 	var dbInstance types.DBInstance
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Oracle_noNationalCharacterSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "AL16UTF16"),
 				),
 			},
@@ -6242,22 +6247,22 @@ func TestAccRDSInstance_Outposts_coIPEnabled(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, true, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
 						resourceName, "customer_owned_ip_enabled", acctest.CtTrue),
@@ -6276,22 +6281,22 @@ func TestAccRDSInstance_Outposts_coIPDisabledToEnabled(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, false, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", acctest.CtFalse),
 				),
 			},
@@ -6309,7 +6314,7 @@ func TestAccRDSInstance_Outposts_coIPDisabledToEnabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, true, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", acctest.CtTrue),
 				),
 			},
@@ -6326,22 +6331,22 @@ func TestAccRDSInstance_Outposts_coIPEnabledToDisabled(t *testing.T) {
 	}
 
 	var dbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, true, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", acctest.CtTrue),
 				),
 			},
@@ -6359,7 +6364,7 @@ func TestAccRDSInstance_Outposts_coIPEnabledToDisabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, false, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", acctest.CtFalse),
 				),
 			},
@@ -6376,24 +6381,24 @@ func TestAccRDSInstance_Outposts_coIPRestoreToPointInTime(t *testing.T) {
 	}
 
 	var dbInstance, sourceDbInstance types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceName := "aws_db_instance.test"
 	resourceName := "aws_db_instance.restore"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outposts_coIPRestorePointInTime(rName, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceName, &sourceDbInstance),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", acctest.CtTrue),
 				),
 			},
@@ -6426,26 +6431,26 @@ func TestAccRDSInstance_Outposts_coIPSnapshotIdentifier(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 	var dbSnapshot types.DBSnapshot
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	sourceDbResourceName := "aws_db_instance.test"
 	snapshotResourceName := "aws_db_snapshot.test"
 	resourceName := "aws_db_instance.restore"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outposts_coIPSnapshotID(rName, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
-					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckDBInstanceExists(ctx, t, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, t, snapshotResourceName, &dbSnapshot),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", acctest.CtTrue),
 				),
 			},
@@ -6462,22 +6467,22 @@ func TestAccRDSInstance_Outposts_backupTarget(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outposts_backupTarget(rName, "outposts", 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "backup_target", "outposts"),
 				),
@@ -6495,22 +6500,22 @@ func TestAccRDSInstance_license(t *testing.T) {
 	}
 
 	var v types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_license(rName, "license-included"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "license-included"),
 				),
 			},
@@ -6529,7 +6534,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_license(rName, "bring-your-own-license"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "bring-your-own-license"),
 				),
 			},
@@ -6546,22 +6551,22 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
 				),
@@ -6569,7 +6574,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.update", names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
@@ -6602,32 +6607,85 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	parameterGroupResourceName := "aws_db_parameter_group.test"
 	parameterGroupDataSource := "data.aws_db_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupDataSource, names.AttrName),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"latest_restorable_time", // This causes intermittent failures when the value increments
+					"blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroupNonTFamilyInstances(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	parameterGroupResourceName := "aws_db_parameter_group.test"
+	parameterGroupDataSource := "data.aws_db_parameter_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupDataSource, names.AttrName),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
@@ -6661,22 +6719,22 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -6684,7 +6742,7 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_tags1(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -6717,22 +6775,22 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_updateableInstanceClass(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 				),
@@ -6740,7 +6798,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_updateableInstanceClass(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
@@ -6773,23 +6831,23 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	sourceResourceName := "aws_db_instance.source"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_prePromote(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -6798,7 +6856,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_promote(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.update", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
@@ -6831,22 +6889,22 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_pre(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
 				),
@@ -6854,7 +6912,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_updateableInstanceClass(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -6888,22 +6946,22 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 				),
@@ -6925,7 +6983,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
@@ -6958,29 +7016,29 @@ func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-2"),
 				),
@@ -6998,22 +7056,22 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 	}
 
 	var v1, v2, v3 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -7036,7 +7094,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
@@ -7060,7 +7118,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 			{
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v3),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v3),
 					testAccCheckDBInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
@@ -7079,23 +7137,23 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 	var updateVersion string
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_engineVersion(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
@@ -7208,7 +7266,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
@@ -7243,21 +7301,21 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7280,7 +7338,7 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7301,21 +7359,21 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7338,7 +7396,7 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7359,21 +7417,21 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassSQLServerExGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7396,7 +7454,7 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassSQLServerExGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7416,21 +7474,21 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7439,7 +7497,7 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7460,21 +7518,21 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7483,7 +7541,7 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 13000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7504,21 +7562,21 @@ func TestAccRDSInstance_Storage_changeIOPSGP3(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7527,7 +7585,7 @@ func TestAccRDSInstance_Storage_changeIOPSGP3(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 14000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "14000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7548,21 +7606,21 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_throughputSSE(rName, 4201, 125),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4201"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7571,7 +7629,7 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_throughputSSE(rName, 4201, 126),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4201"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "126"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -7591,21 +7649,21 @@ func TestAccRDSInstance_Storage_postgres(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Storage_postgres(rName, "gp2", 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
@@ -7628,7 +7686,7 @@ func TestAccRDSInstance_Storage_postgres(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_Storage_postgres(rName, "gp3", 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
@@ -7652,21 +7710,21 @@ func TestAccRDSInstance_Storage_changeIOPSio1(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
@@ -7674,7 +7732,7 @@ func TestAccRDSInstance_Storage_changeIOPSio1(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
@@ -7692,21 +7750,21 @@ func TestAccRDSInstance_Storage_changeIOPSio2(t *testing.T) {
 
 	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
@@ -7714,7 +7772,7 @@ func TestAccRDSInstance_Storage_changeIOPSio2(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 				),
 			},
@@ -7731,23 +7789,23 @@ func TestAccRDSInstance_NewIdentifier_pending(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 				),
 			},
@@ -7764,7 +7822,7 @@ func TestAccRDSInstance_NewIdentifier_pending(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 				),
@@ -7782,23 +7840,23 @@ func TestAccRDSInstance_NewIdentifier_immediately(t *testing.T) {
 	}
 
 	var v1, v2 types.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 				),
 			},
@@ -7813,7 +7871,7 @@ func TestAccRDSInstance_NewIdentifier_immediately(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceExists(ctx, t, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName2),
 				),
@@ -7822,9 +7880,9 @@ func TestAccRDSInstance_NewIdentifier_immediately(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceAutomatedBackupsDelete(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceAutomatedBackupsDelete(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -7852,13 +7910,13 @@ func testAccCheckInstanceAutomatedBackupsDelete(ctx context.Context) resource.Te
 			}
 		}
 
-		return testAccCheckDBInstanceDestroy(ctx)(s)
+		return testAccCheckDBInstanceDestroy(ctx, t)(s)
 	}
 }
 
-func testAccCheckDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDBInstanceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -7867,7 +7925,7 @@ func testAccCheckDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -7976,9 +8034,9 @@ func testAccCheckInstanceReplicaAttributes(source, replica *types.DBInstance) re
 // - A DBSnapshot has been produced
 // - Tags have been copied to the snapshot
 // The snapshot is deleted.
-func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -8010,7 +8068,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 
 			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8028,9 +8086,9 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 // testAccCheckInstanceDestroyWithoutFinalSnapshot verifies that:
 // - The DBInstance has been destroyed
 // - No DBSnapshot has been produced
-func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance" {
@@ -8041,7 +8099,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 			_, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {
-				if !tfresource.NotFound(err) {
+				if !retry.NotFound(err) {
 					return err
 				}
 			} else {
@@ -8050,7 +8108,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 
 			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8091,11 +8149,28 @@ func dbInstanceIdentity(v *types.DBInstance) string {
 	return aws.ToString(v.DbiResourceId)
 }
 
-func testAccCheckDBInstanceExists(ctx context.Context, n string, v *types.DBInstance) resource.TestCheckFunc {
-	return testAccCheckDBInstanceExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+func testAccCheckDBInstanceExists(ctx context.Context, t *testing.T, n string, v *types.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
+
+		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
 }
 
-func testAccCheckDBInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckDBInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -9719,7 +9794,7 @@ resource "aws_db_instance" "test" {
 `, rName, domain, domainOu))
 }
 
-func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) string {
+func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName, sourceVersion string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
 		testAccInstanceConfig_orderableClassMySQL(),
@@ -9728,7 +9803,7 @@ func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) strin
 resource "aws_db_instance" "test" {
   allocated_storage   = 20
   engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = "8.0.32" # test is from older to newer version, update when restore from this to current default version is incompatible
+  engine_version      = %[2]q
   identifier          = %[1]q
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   skip_final_snapshot = true
@@ -9777,7 +9852,7 @@ resource "aws_security_group_rule" "test" {
 
   security_group_id = aws_security_group.test.id
 }
-`, rName))
+`, rName, sourceVersion))
 }
 
 func testAccInstanceConfig_Versions_allowMajor(rName string, allowMajorVersionUpgrade bool) string {
@@ -14166,10 +14241,14 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
@@ -14232,10 +14311,14 @@ resource "aws_db_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_basic(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_basic(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 data "aws_db_parameter_group" "test" {
   name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"

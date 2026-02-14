@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ses
 
@@ -14,10 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -76,7 +79,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err := findIdentityVerificationAttributesByIdentity(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SES Email Identity (%s) verification not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -129,7 +132,7 @@ func findIdentityVerificationAttributesByIdentity(ctx context.Context, conn *ses
 		return &v, nil
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
 func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityVerificationAttributesInput) (map[string]awstypes.IdentityVerificationAttributes, error) {
@@ -140,7 +143,7 @@ func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, i
 	}
 
 	if output == nil || output.VerificationAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VerificationAttributes, nil

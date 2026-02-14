@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,7 +74,7 @@ func TestAccLambdaCodeSigningConfig_disappears(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceCodeSigningConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceCodeSigningConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -244,7 +244,7 @@ func testAccCheckCodeSigningConfigDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tflambda.FindCodeSigningConfigByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -201,7 +201,7 @@ func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 				Config: testAccFirewallRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceFirewallRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceFirewallRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,7 +226,7 @@ func testAccCheckFirewallRuleDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err = tfroute53resolver.FindFirewallRuleByTwoPartKey(ctx, conn, firewallRuleGroupID, firewallDomainListID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -377,4 +377,139 @@ resource "aws_route53_resolver_firewall_rule" "test" {
   q_type                  = %[2]q
 }
 `, rName, qType)
+}
+
+func TestAccRoute53ResolverFirewallRule_dnsThreatProtectionDGA(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.FirewallRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_resolver_firewall_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallRuleConfig_dnsThreatProtection(rName, "DGA", "HIGH"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "dns_threat_protection", "DGA"),
+					resource.TestCheckResourceAttr(resourceName, "confidence_threshold", "HIGH"),
+					resource.TestCheckResourceAttr(resourceName, "block_response", "NODATA"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttrSet(resourceName, "firewall_threat_protection_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverFirewallRule_dnsThreatProtectionDNSTunneling(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.FirewallRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_resolver_firewall_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallRuleConfig_dnsThreatProtection(rName, "DNS_TUNNELING", "MEDIUM"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "dns_threat_protection", "DNS_TUNNELING"),
+					resource.TestCheckResourceAttr(resourceName, "confidence_threshold", "MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "block_response", "NODATA"),
+					resource.TestCheckResourceAttrSet(resourceName, "firewall_threat_protection_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverFirewallRule_dnsThreatProtectionAlert(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.FirewallRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_resolver_firewall_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallRuleConfig_dnsThreatProtectionAlert(rName, "DGA", "LOW"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ALERT"),
+					resource.TestCheckResourceAttr(resourceName, "dns_threat_protection", "DGA"),
+					resource.TestCheckResourceAttr(resourceName, "confidence_threshold", "LOW"),
+					resource.TestCheckResourceAttrSet(resourceName, "firewall_threat_protection_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFirewallRuleConfig_dnsThreatProtection(rName, dnsThreatProtection, confidenceThreshold string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_firewall_rule_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_resolver_firewall_rule" "test" {
+  name                   = %[1]q
+  action                 = "BLOCK"
+  block_response         = "NODATA"
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
+  dns_threat_protection  = %[2]q
+  confidence_threshold   = %[3]q
+  priority               = 100
+}
+`, rName, dnsThreatProtection, confidenceThreshold)
+}
+
+func testAccFirewallRuleConfig_dnsThreatProtectionAlert(rName, dnsThreatProtection, confidenceThreshold string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_firewall_rule_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_resolver_firewall_rule" "test" {
+  name                   = %[1]q
+  action                 = "ALERT"
+  firewall_rule_group_id = aws_route53_resolver_firewall_rule_group.test.id
+  dns_threat_protection  = %[2]q
+  confidence_threshold   = %[3]q
+  priority               = 100
+}
+`, rName, dnsThreatProtection, confidenceThreshold)
 }

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # AWSAT004
 
 The AWSAT004 analyzer reports TestCheckResourceAttr() calls with hardcoded

@@ -1,3 +1,6 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
 package main
 
 import (
@@ -32,6 +35,8 @@ func test1(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					// todoruleid: arn-resourceattrset
 					resource.TestCheckResourceAttrSet(resourceName, "some_other_arn"),
+					// ruleid: arn-matchresourceattr
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, regexache.MustCompile(`^arn:aws:arc-region-switch:.*:.*:plan/.+`)),
 				),
 			},
 		},

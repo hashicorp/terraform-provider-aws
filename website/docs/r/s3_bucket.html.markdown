@@ -14,6 +14,8 @@ Provides a S3 bucket resource.
 
 -> Object Lock can be enabled by using the `object_lock_enable` attribute or by using the [`aws_s3_bucket_object_lock_configuration`](/docs/providers/aws/r/s3_bucket_object_lock_configuration.html) resource. Please note, that by using the resource, Object Lock can be enabled/disabled without destroying and recreating the bucket.
 
+-> To support ABAC (Attribute Based Access Control) in general purpose buckets, this resource will now attempt to send tags in the create request and use the S3 Control tagging APIs [`TagResource`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_TagResource.html), [`UntagResource`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_UntagResource.html), and [`ListTagsForResource`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_control_ListTagsForResource.html) for read and update operations. The calling principal must have the corresponding `s3:TagResource`, `s3:UntagResource`, and `s3:ListTagsForResource` [IAM permissions](https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-actions-as-permissions). If the principal lacks the appropriate permissions, the provider will fall back to tagging after creation and using the S3 tagging APIs [`PutBucketTagging`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketTagging.html), [`DeleteBucketTagging`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteBucketTagging.html), and [`GetBucketTagging`](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html) instead. With ABAC enabled, tag modifications may fail with the fall back behavior. See the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/buckets-tagging-enable-abac.html) for additional details on enabling ABAC in general purpose buckets.
+
 ## Example Usage
 
 ### Private Bucket With Tags
@@ -264,6 +266,8 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 ### Server Side Encryption Configuration
 
 ~> **NOTE:** Currently, changes to the `server_side_encryption_configuration` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes in encryption of an S3 bucket, use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. If you use `server_side_encryption_configuration` on an `aws_s3_bucket`, Terraform will assume management over the encryption configuration for the S3 bucket, treating additional encryption changes as drift. For this reason, `server_side_encryption_configuration` cannot be mixed with the external `aws_s3_bucket_server_side_encryption_configuration` resource for a given S3 bucket.
+
+~> **NOTE:** [Starting in March 2026](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-s3-c-encryption-setting-faq.html), Amazon S3 will automatically block server-side encryption with customer-provided keys (SSE-C) for all new buckets. The `blocked_encryption_types` argument is not available in this deprecated configuration block. Use the [`aws_s3_bucket_server_side_encryption_configuration`](/docs/providers/aws/r/s3_bucket_server_side_encryption_configuration.html) resource to manage this behavior for specific buckets.
 
 The `server_side_encryption_configuration` configuration block supports the following argument:
 

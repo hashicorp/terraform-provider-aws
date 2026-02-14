@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -78,7 +78,7 @@ func TestAccSQSQueuePolicy_disappears(t *testing.T) {
 				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,7 +102,7 @@ func TestAccSQSQueuePolicy_Disappears_queue(t *testing.T) {
 				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

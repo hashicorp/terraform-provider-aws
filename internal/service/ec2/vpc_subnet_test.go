@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -6,19 +6,24 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -132,7 +137,7 @@ func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetConfig_basic(rName),
@@ -175,7 +180,7 @@ func TestAccVPCSubnet_tags_ignoreTags(t *testing.T) {
 
 func TestAccVPCSubnet_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after awstypes.Subnet
+	var subnet awstypes.Subnet
 	resourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -186,11 +191,21 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSubnetConfig_ipv6(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &before),
-					testAccCheckSubnetIPv6BeforeUpdate(&before),
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(true),
+					),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -198,18 +213,58 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCSubnetConfig_ipv6UpdateAssignv6OnCreation(rName),
+				// Disable assign_ipv6_address_on_creation
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &after),
-					testAccCheckSubnetIPv6AfterUpdate(&after),
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(false),
+					),
+				},
 			},
 			{
-				Config: testAccVPCSubnetConfig_ipv6UpdateV6CIDR(rName),
+				// Change IPv6 CIDR block
+				// assign_ipv6_address_on_creation was false, so no replacement
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 3, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &after),
-					testAccCheckSubnetNotRecreated(t, &before, &after),
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(true),
+					),
+				},
+			},
+			{
+				// Force new by changing IPv6 CIDR block
+				// since assign_ipv6_address_on_creation was true
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(false),
+					),
+				},
 			},
 		},
 	})
@@ -241,7 +296,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCSubnetConfig_ipv6(rName),
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
@@ -305,7 +360,7 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -639,35 +694,114 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 	})
 }
 
-func testAccCheckSubnetIPv6BeforeUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
+func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet awstypes.Subnet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipv4IPAMAllocation(rName, 27),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_netmask_length", "27"),
+					testAccCheckSubnetCIDRPrefix(&subnet, "27"),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, "aws_vpc_ipam_pool.vpc", &subnet),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
+			},
+		},
+	})
+}
+
+func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet awstypes.Subnet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipv6IPAMAllocation(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv6_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "60"),
+					testAccCheckSubnetIPv6CIDRPrefix(&subnet, "60"),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, "aws_vpc_ipam_pool.vpc", &subnet),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv6_ipam_pool_id", "ipv6_netmask_length"},
+			},
+		},
+	})
+}
+
+func TestAccVPCSubnet_IPAM_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet awstypes.Subnet
+	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+	vpcResourceName := "aws_vpc.test"
+	poolResourceName := "aws_vpc_ipam_pool.vpc"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipamCrossRegion(rName, 28),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubnetExistsWithProvider(ctx, resourceName, &subnet, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", poolResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ipv4_netmask_length", "28"),
+					testAccCheckSubnetCIDRPrefix(&subnet, "28"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, poolResourceName, &subnet, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id", "ipv4_netmask_length"},
+			},
+		},
+	})
+}
+
+func testAccCheckSubnetIPv6CIDRBlockAssociationSet(subnet *awstypes.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
-		}
-
-		if !aws.ToBool(subnet.AssignIpv6AddressOnCreation) {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.ToBool(subnet.AssignIpv6AddressOnCreation))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSubnetIPv6AfterUpdate(subnet *awstypes.Subnet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToBool(subnet.AssignIpv6AddressOnCreation) {
-			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.ToBool(subnet.AssignIpv6AddressOnCreation))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckSubnetNotRecreated(t *testing.T, before, after *awstypes.Subnet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(before.SubnetId) != aws.ToString(after.SubnetId) {
-			t.Fatalf("Expected SubnetIDs not to change, but both got before: %s and after: %s",
-				aws.ToString(before.SubnetId), aws.ToString(after.SubnetId))
 		}
 		return nil
 	}
@@ -684,7 +818,7 @@ func testAccCheckSubnetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -724,11 +858,117 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *awstypes.Subnet)
 	}
 }
 
+func testAccCheckSubnetExistsWithProvider(ctx context.Context, n string, v *awstypes.Subnet, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Subnet ID is set")
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *awstypes.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.ToString(subnet.SubnetId), oldTags, newTags)
+	}
+}
+
+func testAccCheckSubnetCIDRPrefix(subnet *awstypes.Subnet, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		cidrBlock := aws.ToString(subnet.CidrBlock)
+		parts := strings.Split(cidrBlock, "/")
+		if len(parts) != 2 {
+			return fmt.Errorf("Bad cidr format: got %s, expected format <ip>/<prefix>", cidrBlock)
+		}
+		if parts[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected /%s", cidrBlock, expected)
+		}
+		return nil
+	}
+}
+
+func testAccCheckIPAMPoolAllocationExistsForSubnet(ctx context.Context, poolResourceName string, subnet *awstypes.Subnet, providerF ...func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[poolResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", poolResourceName)
+		}
+
+		poolID := rs.Primary.ID
+		subnetID := aws.ToString(subnet.SubnetId)
+		subnetCIDR := aws.ToString(subnet.CidrBlock)
+
+		var conn *conns.AWSClient
+		if len(providerF) > 0 && providerF[0] != nil {
+			conn = providerF[0]().Meta().(*conns.AWSClient)
+		} else {
+			conn = acctest.Provider.Meta().(*conns.AWSClient)
+		}
+
+		allocations, err := tfec2.FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID(ctx, conn.EC2Client(ctx), poolID, subnetID)
+		if err != nil {
+			return fmt.Errorf("error finding IPAM Pool (%s) allocations for subnet (%s): %w", poolID, subnetID, err)
+		}
+
+		if len(allocations) == 0 {
+			return fmt.Errorf("no IPAM Pool allocation found for subnet %s in pool %s", subnetID, poolID)
+		}
+
+		allocation := allocations[0]
+		if allocation.ResourceType != awstypes.IpamPoolAllocationResourceTypeSubnet {
+			return fmt.Errorf("expected allocation resource type 'subnet', got %s", allocation.ResourceType)
+		}
+
+		allocationCIDR := aws.ToString(allocation.Cidr)
+
+		// Check if allocation matches IPv4 CIDR
+		if allocationCIDR == subnetCIDR && subnetCIDR != "" {
+			return nil
+		}
+
+		// Check if allocation matches any IPv6 CIDR
+		for _, association := range subnet.Ipv6CidrBlockAssociationSet {
+			if association.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated {
+				subnetIPv6CIDR := aws.ToString(association.Ipv6CidrBlock)
+				if allocationCIDR == subnetIPv6CIDR {
+					return nil
+				}
+			}
+		}
+
+		return fmt.Errorf("allocation CIDR (%s) does not match subnet IPv4 CIDR (%s) or any associated IPv6 CIDR", allocationCIDR, subnetCIDR)
+	}
+}
+
+func testAccCheckSubnetIPv6CIDRPrefix(subnet *awstypes.Subnet, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, association := range subnet.Ipv6CidrBlockAssociationSet {
+			if association.Ipv6CidrBlockState != nil && association.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated {
+				if strings.Split(aws.ToString(association.Ipv6CidrBlock), "/")[1] != expected {
+					return fmt.Errorf("Bad IPv6 cidr prefix: got %s, expected /%s", aws.ToString(association.Ipv6CidrBlock), expected)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("No associated IPv6 CIDR block found")
 	}
 }
 
@@ -792,7 +1032,7 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
-func testAccVPCSubnetConfig_ipv6(rName string) string {
+func testAccVPCSubnetConfig_ipv6(rName string, ipv6CidrSubnetIndex int, assignIPv6AddressOnCreation bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.10.0.0/16"
@@ -806,62 +1046,14 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block                      = "10.10.1.0/24"
   vpc_id                          = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = true
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, %[2]d)
+  assign_ipv6_address_on_creation = %[3]t
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
-}
-
-func testAccVPCSubnetConfig_ipv6UpdateAssignv6OnCreation(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.10.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block                      = "10.10.1.0/24"
-  vpc_id                          = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCSubnetConfig_ipv6UpdateV6CIDR(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.10.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block                      = "10.10.1.0/24"
-  vpc_id                          = aws_vpc.test.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 3)
-  assign_ipv6_address_on_creation = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
+`, rName, ipv6CidrSubnetIndex, assignIPv6AddressOnCreation)
 }
 
 func testAccVPCSubnetConfig_availabilityZoneID(rName string) string {
@@ -1204,4 +1396,256 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName)
+}
+
+const testAccVPCSubnetConfig_ipamBase = `
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+}
+`
+
+func testAccVPCSubnetConfig_ipamIPv4(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamBase, fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCSubnetConfig_ipamIPv6(rName string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamBase, fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv6"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = 52
+}
+
+resource "aws_vpc" "test" {
+  cidr_block          = "10.1.0.0/16"
+  ipv6_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv6_netmask_length = 56
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv6"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.current.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCSubnetConfig_ipv4IPAMAllocation(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamIPv4(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.cidr_block
+}
+
+resource "aws_subnet" "test" {
+  vpc_id              = aws_vpc.test.id
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.vpc.id
+  ipv4_netmask_length = %[1]d
+  availability_zone   = data.aws_availability_zones.available.names[0]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+}
+`, netmaskLength))
+}
+
+func testAccVPCSubnetConfig_ipv6IPAMAllocation(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamIPv6(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.ipv6_cidr_block
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                                         = aws_vpc.test.id
+  ipv6_native                                    = true
+  assign_ipv6_address_on_creation                = true
+  ipv6_ipam_pool_id                              = aws_vpc_ipam_pool.vpc.id
+  ipv6_netmask_length                            = %[1]d
+  availability_zone                              = data.aws_availability_zones.available.names[0]
+  enable_resource_name_dns_aaaa_record_on_launch = true
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+}
+`, netmaskLength))
+}
+
+func testAccVPCSubnetConfig_ipamCrossRegion(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_availability_zones" "alternate" {
+  provider = awsalternate
+  state    = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+
+  operating_regions {
+    region_name = data.aws_region.alternate.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.alternate.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "test" {
+  provider = awsalternate
+
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipv4_netmask_length = 24
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "vpc" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.alternate.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+
+  source_resource {
+    resource_id     = aws_vpc.test.id
+    resource_owner  = data.aws_caller_identity.current.account_id
+    resource_region = data.aws_region.alternate.name
+    resource_type   = "vpc"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.cidr_block
+}
+
+resource "aws_subnet" "test" {
+  provider = awsalternate
+
+  vpc_id              = aws_vpc.test.id
+  ipv4_ipam_pool_id   = aws_vpc_ipam_pool.vpc.id
+  ipv4_netmask_length = %[2]d
+  availability_zone   = data.aws_availability_zones.alternate.names[0]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, netmaskLength))
 }

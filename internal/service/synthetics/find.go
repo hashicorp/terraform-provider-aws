@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -28,7 +28,7 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 		// error is not being asserted into type *awstypes.ResourceNotFoundException but has all the properties
 		// of the error.
 		if strings.Contains(err.Error(), errResourceNotFoundException.ErrorCode()) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -38,7 +38,7 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 	}
 
 	if output == nil || output.Canary == nil || output.Canary.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Canary, nil
@@ -51,7 +51,7 @@ func FindGroupByName(ctx context.Context, conn *synthetics.Client, name string) 
 	output, err := conn.GetGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -62,7 +62,7 @@ func FindGroupByName(ctx context.Context, conn *synthetics.Client, name string) 
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil
@@ -75,7 +75,7 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Client, canaryArn
 	out, err := conn.ListAssociatedGroups(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -86,7 +86,7 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Client, canaryArn
 	}
 
 	if out == nil || out.Groups == nil || len(out.Groups) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	var group awstypes.GroupSummary
@@ -97,7 +97,7 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Client, canaryArn
 	}
 
 	if group == (awstypes.GroupSummary{}) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &group, nil
@@ -112,7 +112,7 @@ func findRuntimeVersions(ctx context.Context, conn *synthetics.Client) ([]awstyp
 	}
 
 	if output == nil || output.RuntimeVersions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RuntimeVersions, nil

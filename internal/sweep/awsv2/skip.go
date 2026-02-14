@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package awsv2
@@ -106,6 +106,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
 		return true
 	}
+	// Example (athena): InvalidRequestException: Not authorized to make this request.
+	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "Not authorized to make this request") {
+		return true
+	}
 	// Example (GovCloud): InvalidSignatureException: Credential should be scoped to a valid region
 	if tfawserr.ErrMessageContains(err, "InvalidSignatureException", "Credential should be scoped to a valid region") {
 		return true
@@ -144,6 +148,10 @@ func SkipSweepError(err error) bool {
 	}
 	//  Example (ec2): UnsupportedOperation: The functionality you requested is not available in this region
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
+		return true
+	}
+	//  Example (ec2): UnsupportedOperation: The functionality you requested is not supported in this region
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not supported in this region") {
 		return true
 	}
 	//  Example (fsx): UnsupportedOperation: This operation is unsupported.

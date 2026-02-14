@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -22,9 +22,7 @@ func createResourceID(bucket, expectedBucketOwner string) string {
 	}
 
 	parts := []string{bucket, expectedBucketOwner}
-	id := strings.Join(parts, resourceIDSeparator)
-
-	return id
+	return strings.Join(parts, resourceIDSeparator)
 }
 
 // parseResourceID is a generic method for parsing an ID string

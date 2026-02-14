@@ -7,6 +7,16 @@
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]"
   },
   {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceSingle",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfListNestedObject[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
+    "source_type": "flex.awsInterfaceSingle"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",
@@ -37,19 +47,11 @@
   },
   {
     "@level": "error",
-    "@message": "AutoFlex Flatten; incompatible types",
+    "@message": "Source does not implement flex.Flattener",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]",
-    "from": 20,
-    "to": {
-      "ElemType": {
-        "AttrTypes": {
-          "field1": {}
-        }
-      }
-    }
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleStringField]"
   }
 ]

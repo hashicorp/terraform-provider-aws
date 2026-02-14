@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kendra
 
@@ -17,11 +19,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -167,7 +169,7 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 
 	out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kendra QuerySuggestionsBlockList (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -295,10 +297,10 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusQuerySuggestionsBlockList(conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -314,7 +316,7 @@ func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusCreating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
-		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
+		Refresh:                   statusQuerySuggestionsBlockList(conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -323,7 +325,7 @@ func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
 		if out.Status == types.QuerySuggestionsBlockListStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}
@@ -335,7 +337,7 @@ func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusUpdating),
 		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
-		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
+		Refresh:                   statusQuerySuggestionsBlockList(conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -344,7 +346,7 @@ func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
 		if out.Status == types.QuerySuggestionsBlockListStatusActiveButUpdateFailed || out.Status == types.QuerySuggestionsBlockListStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}
@@ -356,14 +358,14 @@ func waitQuerySuggestionsBlockListDeleted(ctx context.Context, conn *kendra.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.QuerySuggestionsBlockListStatusDeleting),
 		Target:  []string{},
-		Refresh: statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
+		Refresh: statusQuerySuggestionsBlockList(conn, id, indexId),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*kendra.DescribeQuerySuggestionsBlockListOutput); ok {
 		if out.Status == types.QuerySuggestionsBlockListStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(out.ErrorMessage)))
 		}
 		return out, err
 	}

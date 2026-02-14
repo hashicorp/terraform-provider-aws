@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -24,7 +24,7 @@ func waitPermissionsReady(ctx context.Context, conn *lakeformation.Client, input
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusIAMDelay},
 		Target:  []string{statusAvailable},
-		Refresh: statusPermissions(ctx, conn, input, filter),
+		Refresh: statusPermissions(conn, input, filter),
 		Timeout: permissionsReadyTimeout,
 	}
 

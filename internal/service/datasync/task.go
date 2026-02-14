@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datasync
 
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -373,7 +375,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findTaskByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -483,8 +485,7 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -493,17 +494,17 @@ func findTaskByARN(ctx context.Context, conn *datasync.Client, arn string) (*dat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTask(ctx context.Context, conn *datasync.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTask(conn *datasync.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -519,7 +520,7 @@ func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TaskStatusCreating, awstypes.TaskStatusUnavailable),
 		Target:  enum.Slice(awstypes.TaskStatusAvailable, awstypes.TaskStatusRunning),
-		Refresh: statusTask(ctx, conn, arn),
+		Refresh: statusTask(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -527,7 +528,7 @@ func waitTaskAvailable(ctx context.Context, conn *datasync.Client, arn string, t
 
 	if output, ok := outputRaw.(*datasync.DescribeTaskOutput); ok {
 		if errorCode, errorDetail := aws.ToString(output.ErrorCode), aws.ToString(output.ErrorDetail); errorCode != "" && errorDetail != "" {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
 		}
 
 		return output, err

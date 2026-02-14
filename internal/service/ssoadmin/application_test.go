@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,7 +87,7 @@ func TestAccSSOAdminApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, testAccApplicationProviderARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -302,7 +302,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfssoadmin.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

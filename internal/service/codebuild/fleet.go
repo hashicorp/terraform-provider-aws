@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codebuild
 
@@ -13,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -295,7 +297,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	fleet, err := findFleetByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -463,8 +465,7 @@ func findFleetByARN(ctx context.Context, conn *codebuild.Client, arn string) (*t
 
 	if statusCode := output.Status.StatusCode; statusCode == types.FleetStatusCodePendingDeletion {
 		return nil, &retry.NotFoundError{
-			Message:     string(statusCode),
-			LastRequest: input,
+			Message: string(statusCode),
 		}
 	}
 
@@ -491,17 +492,17 @@ func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.Ba
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Fleets, nil
 }
 
-func statusFleet(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFleet(conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFleetByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -517,7 +518,7 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeCreating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
-		Refresh:    statusFleet(ctx, conn, arn),
+		Refresh:    statusFleet(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -526,7 +527,7 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -538,7 +539,7 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeUpdating, types.FleetStatusCodeRotating),
 		Target:     enum.Slice(types.FleetStatusCodeActive),
-		Refresh:    statusFleet(ctx, conn, arn),
+		Refresh:    statusFleet(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -547,7 +548,7 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -559,7 +560,7 @@ func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.FleetStatusCodeDeleting),
 		Target:     []string{},
-		Refresh:    statusFleet(ctx, conn, arn),
+		Refresh:    statusFleet(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 15 * time.Second,
 		Delay:      15 * time.Second,
@@ -568,7 +569,7 @@ func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}

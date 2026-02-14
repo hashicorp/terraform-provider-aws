@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Request an Enhancement
 description: Choose this option when you would like to request an enhancement to an existing resource or data source (such as the addition of new arguments), or to the provider itself.
 labels:

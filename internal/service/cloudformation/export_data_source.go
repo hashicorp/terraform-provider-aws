@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudformation
 
@@ -65,7 +67,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if value == nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.NewEmptyResultError(name))
+		return sdkdiag.AppendFromErr(diags, tfresource.NewEmptyResultError())
 	}
 
 	d.SetId(fmt.Sprintf("cloudformation-exports-%s-%s", meta.(*conns.AWSClient).Region(ctx), name))

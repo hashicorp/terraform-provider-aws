@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ds
 
@@ -12,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -133,7 +135,7 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findRadiusSettingsByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) RADIUS Settings not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -216,17 +218,17 @@ func findRadiusSettingsByID(ctx context.Context, conn *directoryservice.Client, 
 	}
 
 	if output.RadiusSettings == nil {
-		return nil, tfresource.NewEmptyResultError(directoryID)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RadiusSettings, nil
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRadius(conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, directoryID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -242,7 +244,7 @@ func waitRadiusCompleted(ctx context.Context, conn *directoryservice.Client, dir
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RadiusStatusCreating),
 		Target:  enum.Slice(awstypes.RadiusStatusCompleted),
-		Refresh: statusRadius(ctx, conn, directoryID),
+		Refresh: statusRadius(conn, directoryID),
 		Timeout: timeout,
 	}
 

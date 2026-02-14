@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -207,7 +207,7 @@ func TestAccSageMakerHub_disappears(t *testing.T) {
 				Config: testAccHubConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHub(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHub(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,7 +226,7 @@ func testAccCheckHubDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindHubByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

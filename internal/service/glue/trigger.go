@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package glue
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -490,11 +492,9 @@ func findTriggerByName(ctx context.Context, conn *glue.Client, name string) (*gl
 	return output, nil
 }
 
-func statusTrigger(ctx context.Context, conn *glue.Client, triggerName string) retry.StateRefreshFunc {
-	const (
-		triggerStatusUnknown = "Unknown"
-	)
-	return func() (any, string, error) {
+func statusTrigger(conn *glue.Client, triggerName string) retry.StateRefreshFunc {
+	const triggerStatusUnknown = "Unknown"
+	return func(ctx context.Context) (any, string, error) {
 		input := &glue.GetTriggerInput{
 			Name: aws.String(triggerName),
 		}
@@ -524,7 +524,7 @@ func waitTriggerCreated(ctx context.Context, conn *glue.Client, triggerName stri
 			awstypes.TriggerStateActivated,
 			awstypes.TriggerStateCreated,
 		),
-		Refresh: statusTrigger(ctx, conn, triggerName),
+		Refresh: statusTrigger(conn, triggerName),
 		Timeout: timeout,
 	}
 
@@ -541,7 +541,7 @@ func waitTriggerDeleted(ctx context.Context, conn *glue.Client, triggerName stri
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TriggerStateDeleting),
 		Target:  []string{},
-		Refresh: statusTrigger(ctx, conn, triggerName),
+		Refresh: statusTrigger(conn, triggerName),
 		Timeout: timeout,
 	}
 

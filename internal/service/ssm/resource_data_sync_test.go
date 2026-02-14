@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,7 +57,7 @@ func TestAccSSMResourceDataSync_disappears(t *testing.T) {
 				Config: testAccResourceDataSyncConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceDataSyncExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceResourceDataSync(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceResourceDataSync(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +108,7 @@ func testAccCheckResourceDataSyncDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfssm.FindResourceDataSyncByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

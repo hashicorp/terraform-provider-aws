@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagentcore
 
@@ -24,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -272,7 +273,7 @@ func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -289,7 +290,7 @@ func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -323,9 +324,8 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	out, err := conn.GetMemory(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 
@@ -334,7 +334,7 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	}
 
 	if out == nil || out.Memory == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Memory, nil

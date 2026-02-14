@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +66,7 @@ func testAccTransitGatewayMulticastDomainAssociation_disappears(t *testing.T, se
 				Config: testAccTransitGatewayMulticastDomainAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomainAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayMulticastDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +95,7 @@ func testAccTransitGatewayMulticastDomainAssociation_Disappears_domain(t *testin
 				Config: testAccTransitGatewayMulticastDomainAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -163,7 +163,7 @@ func testAccCheckTransitGatewayMulticastDomainAssociationDestroy(ctx context.Con
 
 			_, err := tfec2.FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_multicast_domain_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID], rs.Primary.Attributes[names.AttrSubnetID])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

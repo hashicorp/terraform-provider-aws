@@ -1,0 +1,48 @@
+```release-note:enhancement
+resource/aws_alb: Enforce tag policy compliance for the `elasticloadbalancing:loadbalancer` tag type
+```
+```release-note:enhancement
+resource/aws_alb_listener: Enforce tag policy compliance for the `elasticloadbalancing:listener` tag type
+```
+```release-note:enhancement
+resource/aws_alb_listener_rule: Enforce tag policy compliance for the `elasticloadbalancing:listener-rule` tag type
+```
+```release-note:enhancement
+resource/aws_alb_target_group: Enforce tag policy compliance for the `elasticloadbalancing:targetgroup` tag type
+```
+```release-note:enhancement
+resource/aws_fsx_openzfs_snapshot: Enforce tag policy compliance for the `fsx:snapshot` tag type
+```
+```release-note:enhancement
+resource/aws_fsx_openzfs_volume: Enforce tag policy compliance for the `fsx:volume` tag type
+```
+```release-note:enhancement
+resource/aws_fsx_lustre_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type
+```
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type
+```
+```release-note:enhancement
+resource/aws_fsx_openzfs_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type
+```
+```release-note:enhancement
+resource/aws_fsx_windows_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type
+```
+```release-note:enhancement
+resource/aws_docdb_global_cluster: Enforce tag policy compliance for the `rds:global-cluster` tag type
+```
+```release-note:enhancement
+resource/aws_neptune_global_cluster: Enforce tag policy compliance for the `rds:global-cluster` tag type
+```
+```release-note:enhancement
+resource/aws_docdb_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type
+```
+```release-note:enhancement
+resource/aws_neptune_cluster_instance: Enforce tag policy compliance for the `rds:db` tag type
+```
+```release-note:enhancement
+resource/aws_neptune_cluster: Enforce tag policy compliance for the `rds:cluster` tag type
+```
+```release-note:enhancement
+resource/aws_rds_cluster: Enforce tag policy compliance for the `rds:cluster` tag type
+```

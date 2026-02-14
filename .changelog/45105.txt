@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket_server_side_encryption_configuration: Add `rule.blocked_encryption_types` argument
+```
+
+```release-note:note
+resource/aws_s3_bucket_server_side_encryption_configuration: Starting in March 2026, Amazon S3 will introduce a new default bucket security setting by automatically disabling server-side encryption with customer-provided keys (SSE-C) for all new buckets. Use the `blocked_encryption_types` argument to manage this behavior for specific buckets.
+```

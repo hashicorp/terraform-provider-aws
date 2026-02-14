@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func TestAccIAMRolePolicyAttachment_disappears(t *testing.T) {
 				Config: testAccRolePolicyAttachmentConfig_attach(roleName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -118,8 +118,8 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
 					// DeleteConflict: Cannot delete entity, must detach all policies first.
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), iamRoleResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), iamRoleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +138,7 @@ func testAccCheckRolePolicyAttachmentDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

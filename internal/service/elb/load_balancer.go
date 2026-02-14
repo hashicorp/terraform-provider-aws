@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elb
 
@@ -21,7 +23,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -281,7 +283,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
-	).Generate()
+	).Generate(ctx)
 	input := &elasticloadbalancing.CreateLoadBalancerInput{
 		Listeners:        listeners,
 		LoadBalancerName: aws.String(lbName),
@@ -323,7 +325,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	lb, err := findLoadBalancerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELB Classic Load Balancer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -743,8 +745,7 @@ func findLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Clie
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -764,8 +765,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -774,7 +774,7 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	}
 
 	if output == nil || output.LoadBalancerAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoadBalancerAttributes, nil

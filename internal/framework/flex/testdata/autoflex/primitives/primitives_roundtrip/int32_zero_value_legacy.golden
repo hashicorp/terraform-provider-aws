@@ -52,6 +52,16 @@
     "autoflex.target.type": "*"
   },
   {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*",
+    "source_type": "struct { Field1 *int32 }"
+  },
+  {
     "@level": "info",
     "@message": "Converting",
     "@module": "provider.autoflex",

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package docdb
 
@@ -12,16 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -105,7 +107,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
@@ -147,7 +149,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 
 	output, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -292,9 +294,7 @@ func findEventSubscriptionByName(ctx context.Context, conn *docdb.Client, name s
 
 	// Eventual consistency check.
 	if aws.ToString(output.CustSubscriptionId) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -319,8 +319,8 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 
 		if errs.IsA[*awstypes.SubscriptionNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastRequest: input,
-				LastError:   err,
+
+				LastError: err,
 			}
 		}
 
@@ -329,7 +329,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 		}
 
 		for _, v := range page.EventSubscriptionsList {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
@@ -339,10 +339,10 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 }
 
 func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findEventSubscriptionByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

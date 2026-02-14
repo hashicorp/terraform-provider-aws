@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -65,7 +65,7 @@ func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

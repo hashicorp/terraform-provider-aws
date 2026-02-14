@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -22,6 +22,7 @@ import (
 type ServicePackageResourceRegion struct {
 	IsOverrideEnabled             bool // Is per-resource Region override supported?
 	IsValidateOverrideInPartition bool // Is the per-resource Region override value validated againt the configured partition?
+	IsOverrideDeprecated          bool // Is per-resource Region override deprecated? i.e. the resource type is actually global
 }
 
 // ResourceRegionDefault returns the default resource region configuration.
@@ -36,6 +37,15 @@ func ResourceRegionDefault() ServicePackageResourceRegion {
 // ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
 func ResourceRegionDisabled() ServicePackageResourceRegion {
 	return ServicePackageResourceRegion{}
+}
+
+// ResourceRegionDeprecatedOverride returns the resource region configuration indicating that per-resource Region override is enabled but deprecated.
+func ResourceRegionDeprecatedOverride() ServicePackageResourceRegion {
+	return ServicePackageResourceRegion{
+		IsOverrideEnabled:             true,
+		IsValidateOverrideInPartition: true,
+		IsOverrideDeprecated:          true,
+	}
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.
@@ -144,6 +154,7 @@ type Identity struct {
 	IsCustomInherentRegion     bool
 	customInherentRegionParser RegionalCustomInherentRegionIdentityFunc
 	version                    int64
+	sdkv2IdentityUpgraders     []schema.IdentityUpgrader
 }
 
 func (i Identity) HasInherentRegion() bool {
@@ -164,6 +175,10 @@ func (i Identity) HasInherentRegion() bool {
 
 func (i Identity) Version() int64 {
 	return i.version
+}
+
+func (i Identity) SDKv2IdentityUpgraders() []schema.IdentityUpgrader {
+	return i.sdkv2IdentityUpgraders
 }
 
 func (i Identity) CustomInherentRegionParser() RegionalCustomInherentRegionIdentityFunc {
@@ -421,11 +436,6 @@ func RegionalSingletonIdentity(opts ...IdentityOptsFunc) Identity {
 	return identity
 }
 
-func VersionedIdentity(version int64, base Identity) Identity {
-	base.version = version
-	return base
-}
-
 type IdentityOptsFunc func(opts *Identity)
 
 func WithIdentityDuplicateAttrs(attrs ...string) IdentityOptsFunc {
@@ -457,6 +467,18 @@ func WithV6_0SDKv2Fix() IdentityOptsFunc {
 	}
 }
 
+func WithVersion(version int64) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.version = version
+	}
+}
+
+func WithSDKv2IdentityUpgraders(identityUpgraders ...schema.IdentityUpgrader) IdentityOptsFunc {
+	return func(opts *Identity) {
+		opts.sdkv2IdentityUpgraders = identityUpgraders
+	}
+}
+
 type ImportIDParser interface {
 	Parse(id string) (string, map[string]string, error)
 }
@@ -480,8 +502,4 @@ type SDKv2Import struct {
 	WrappedImport bool
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
-}
-
-type SDKv2Tagger interface {
-	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
 }

@@ -248,6 +248,7 @@ This resource supports the following arguments:
 * `private_ip` - (Optional) Private IP address to associate with the instance in a VPC.
 * `root_block_device` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
 * `secondary_private_ips` - (Optional) List of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e., referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
+* `secondary_network_interface` - (Optional) One or more secondary network interfaces to attach to the instance at launch time. See [Secondary Network Interface](#secondary-network-interface) below for more details.
 * `security_groups` - (Optional, EC2-Classic and default VPC only) List of security group names to associate with.
 
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
@@ -319,7 +320,7 @@ The `root_block_device` block supports the following:
 * `encrypted` - (Optional) Whether to enable volume encryption. Defaults to `false`. Must be configured to perform drift detection.
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
-* `tags` - (Optional) Map of tags to assign to the device.
+* `tags` - (Optional) Map of tags to assign to the device. **Note:** Tags specified here are applied after instance creation via a separate API call. This means they cannot be used with IAM policies that require tags during resource creation (e.g., ABAC policies with `ec2:CreateAction` conditions or SCPs requiring volume tags). For ABAC compliance, use `volume_tags` instead, which applies uniform tags to all volumes during instance creation.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
 * `volume_type` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to the volume type that the AMI uses.
@@ -334,7 +335,7 @@ Each `ebs_block_device` block supports the following:
 * `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `io1`, `io2` or `gp3`.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 * `snapshot_id` - (Optional) Snapshot ID to mount.
-* `tags` - (Optional) Map of tags to assign to the device.
+* `tags` - (Optional) Map of tags to assign to the device. **Note:** Tags specified here are applied after instance creation via a separate API call. This means they cannot be used with IAM policies that require tags during resource creation (e.g., ABAC policies with `ec2:CreateAction` conditions or SCPs requiring volume tags). For ABAC compliance, use `volume_tags` instead, which applies uniform tags to all volumes during instance creation.
 * `throughput` - (Optional) Throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `gp3`.
 * `volume_size` - (Optional) Size of the volume in gibibytes (GiB).
 * `volume_type` - (Optional) Type of volume. Valid values include `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1`, or `st1`. Defaults to `gp2`.
@@ -414,6 +415,20 @@ Each `primary_network_interface` block supports the following:
 
 * `delete_on_termination` - (Read-Only) Whether the network interface will be deleted when the instance terminates.
 * `network_interface_id` - (Required) ID of the network interface to attach.
+
+### Secondary Network Interface
+
+Represents secondary network interfaces attached to the EC2 Instance at launch time. These interfaces are created on secondary networks (e.g., RDMA networks) and are separate from the primary network interface.
+
+Each `secondary_network_interface` block supports the following:
+
+* `secondary_subnet_id` - (Required) ID of the secondary subnet in which to create the network interface. Forces replacement.
+* `network_card_index` - (Required) Network card index for the interface. Each network card can have one secondary interface. Forces replacement.
+* `device_index` - (Optional) Device index for the network interface attachment. Defaults to `0`. Forces replacement.
+* `interface_type` - (Optional) Type of network interface. Currently only `secondary` is supported. Defaults to `secondary`. Forces replacement.
+* `delete_on_termination` - (Optional) Whether the network interface should be destroyed when the instance is terminated. Defaults to `true`. Forces replacement.
+* `private_ip_address_count` - (Optional) Number of private IP addresses to assign to the network interface. Defaults to `1`. Forces replacement.
+* `private_ip_addresses` - (Optional) List of private IP addresses to assign to the network interface. If not specified, AWS will automatically assign IP addresses based on `private_ip_address_count`. Forces replacement.
 
 ### Private DNS Name Options
 

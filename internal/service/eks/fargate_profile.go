@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -14,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -159,7 +161,7 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	fargateProfile, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Fargate Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -235,8 +237,7 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -245,17 +246,17 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 	}
 
 	if output == nil || output.FargateProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FargateProfile, nil
 }
 
-func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFargateProfile(conn *eks.Client, clusterName, fargateProfileName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -271,7 +272,7 @@ func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterNam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.FargateProfileStatusCreating),
 		Target:  enum.Slice(types.FargateProfileStatusActive),
-		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
+		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
 		Timeout: timeout,
 	}
 
@@ -288,7 +289,7 @@ func waitFargateProfileDeleted(ctx context.Context, conn *eks.Client, clusterNam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.FargateProfileStatusActive, types.FargateProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
+		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
 		Timeout: timeout,
 	}
 

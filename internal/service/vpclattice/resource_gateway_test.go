@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -289,7 +289,7 @@ func TestAccVPCLatticeResourceGateway_disappears(t *testing.T) {
 				Config: testAccResourceGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGatewayExists(ctx, resourceName, &resourcegateway),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceResourceGateway, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceGateway, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -308,7 +308,7 @@ func testAccCheckResourceGatewayDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfvpclattice.FindResourceGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

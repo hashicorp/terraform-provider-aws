@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -117,6 +117,14 @@ func managedPrefixListAddressFamily_Values() []string {
 	}
 }
 
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpnConcentrator.html.
+const (
+	vpnConcentratorStateAvailable = "available"
+	vpnConcentratorStateDeleted   = "deleted"
+	vpnConcentratorStateDeleting  = "deleting"
+	vpnConcentratorStatePending   = "pending"
+)
+
 const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
@@ -143,6 +151,24 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 	}
 }
 
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecondaryNetwork.html.
+const (
+	SecondaryNetworkStateCreateComplete   = "create-complete"
+	SecondaryNetworkStateCreateInProgress = "create-in-progress"
+	SecondaryNetworkStateDeleteComplete   = "delete-complete"
+	SecondaryNetworkStateDeleteInProgress = "delete-in-progress"
+)
+
+// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecondarySubnet.html.
+// Note: Secondary subnet states are available as AWS SDK enum types (awstypes.SecondarySubnetState*)
+// but we define constants here for consistency and potential future use.
+const (
+	SecondarySubnetStateCreateComplete   = "create-complete"
+	SecondarySubnetStateCreateInProgress = "create-in-progress"
+	SecondarySubnetStateDeleteComplete   = "delete-complete"
+	SecondarySubnetStateDeleteInProgress = "delete-in-progress"
+)
+
 const (
 	vpnTunnelCloudWatchLogOutputFormatJSON = names.AttrJSON
 	vpnTunnelCloudWatchLogOutputFormatText = "text"
@@ -152,6 +178,18 @@ func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
 		names.AttrJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
+	}
+}
+
+const (
+	vpnTunnelCloudWatchLogBGPLogOutputFormatJSON = names.AttrJSON
+	vpnTunnelCloudWatchLogBGPLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogBGPLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogBGPLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogBGPLogOutputFormatText,
 	}
 }
 

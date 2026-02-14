@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Fix `origin_group` to use correct `id` attribute name and fix field mapping to resolve `missing required field` errors
+```

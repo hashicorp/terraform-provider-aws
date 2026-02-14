@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
 
 import (
 	"context"
+	"slices"
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -12,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresource"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,11 +24,20 @@ type WithRegionSpec interface {
 	SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion])
 }
 
+var _ Lister[listresource.InterceptorParamsSDK] = &ListResourceWithSDKv2Resource{}
+
 type ListResourceWithSDKv2Resource struct {
+	withListResourceConfigSchema
+	ResourceWithConfigure
 	resourceSchema *schema.Resource
 	identitySpec   inttypes.Identity
 	identitySchema *schema.ResourceIdentity
 	regionSpec     unique.Handle[inttypes.ServicePackageResourceRegion]
+	interceptors   []listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]
+}
+
+func (l *ListResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]) {
+	l.interceptors = append(l.interceptors, interceptor)
 }
 
 func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
@@ -70,6 +82,35 @@ func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Id
 	l.identitySchema = &identitySchema
 	l.resourceSchema.Identity = &identitySchema
 	l.identitySpec = identitySpec
+}
+
+func (l *ListResourceWithSDKv2Resource) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData, includeResource bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+	params := listresource.InterceptorParamsSDK{
+		C:               awsClient,
+		IncludeResource: includeResource,
+		ResourceData:    d,
+		When:            when,
+	}
+
+	switch when {
+	case listresource.Before:
+		for interceptor := range slices.Values(l.interceptors) {
+			diags.Append(interceptor.Read(ctx, params)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	case listresource.After:
+		for interceptor := range tfslices.BackwardValues(l.interceptors) {
+			diags.Append(interceptor.Read(ctx, params)...)
+			if diags.HasError() {
+				return diags
+			}
+		}
+	}
+
+	return diags
 }
 
 func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
@@ -133,7 +174,14 @@ func getAttributeOk(d resourceData, name string) (string, bool) {
 	}
 }
 
+// TODO modify to accept func() as parameter
+// will allow to use before interceptors as well
 func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd, includeResource); err.HasError() {
+		result.Diagnostics.Append(err...)
+		return
+	}
+
 	err := l.setResourceIdentity(ctx, awsClient, rd)
 	if err != nil {
 		result.Diagnostics.Append(diag.NewErrorDiagnostic(

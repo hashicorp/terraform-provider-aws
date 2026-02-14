@@ -35,6 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
 * `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.
+* `cloud_exadata_infrastructure_arn` - Cloud exadata infrastructure ARN associated with this cloud autonomous VM cluster.
 * `autonomous_data_storage_percentage` - The percentage of data storage currently in use for Autonomous Databases in the Autonomous VM cluster.
 * `autonomous_data_storage_size_in_tbs` - The data storage size allocated for Autonomous Databases in the Autonomous VM cluster, in TB.
 * `available_autonomous_data_storage_size_in_tbs` - The available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.
@@ -65,6 +66,7 @@ This data source exports the following attributes in addition to the arguments a
 * `oci_url` - The URL for accessing the OCI console page for this Autonomous VM cluster.
 * `ocid` - The Oracle Cloud Identifier (OCID) of the Autonomous VM cluster.
 * `odb_network_id` - The unique identifier of the ODB network associated with this Autonomous VM cluster.
+* `odb_network_arn` - The arn of the ODB network associated with this Autonomous VM cluster.
 * `percent_progress` - The progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `provisionable_autonomous_container_databases` - The number of Autonomous CDBs that can be provisioned in the Autonomous VM cluster.
 * `provisioned_autonomous_container_databases` - The number of Autonomous CDBs currently provisioned in the Autonomous VM cluster.

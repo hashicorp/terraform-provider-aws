@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_vpc_nat_gateway: Support regional NAT Gateways by adding `availability_mode`, `availability_zone_address`, and `vpc_id` arguments, and `auto_provision_zones`, `auto_scaling_ips`, `regional_nat_gateway_address`, and `route_table_id` attributes. This functionality requires the `ec2:DescribeAvailabilityZones` IAM permission
+```
+
+```release-note:enhancement
+resource/aws_vpc_nat_gateway: Make `subnet_id` argument optional to support regional NAT Gateways
+```
+
+```release-note:enhancement
+data-source/aws_vpc_nat_gateway: Support regional NAT Gateways by adding `auto_provision_zones`, `auto_scaling_ips`, `availability_mode`, `availability_zone_address`, `regional_nat_gateway_address`, and `route_table_id` attributes
+```
