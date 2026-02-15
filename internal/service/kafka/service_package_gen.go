@@ -32,6 +32,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Single SCRAM Secret Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newTopicResource,
+			TypeName: "aws_msk_topic",
+			Name:     "Topic",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute("cluster_arn", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      topicImportID{},
+			},
+		},
 	}
 }
 

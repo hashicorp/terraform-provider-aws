@@ -21,6 +21,7 @@ var (
 	FindSCRAMSecretAssociation                   = findSCRAMSecretAssociation
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
+	FindTopicByTwoPartKey                        = findTopicByTwoPartKey
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
 
 	ClusterUUIDFromARN    = clusterUUIDFromARN
