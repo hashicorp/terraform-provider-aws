@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -190,7 +191,7 @@ func testAccCheckMlflowAppDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			arn := rs.Primary.Attributes[names.AttrARN]
-			_, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, arn)
+			output, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, arn)
 
 			if retry.NotFound(err) {
 				continue
@@ -198,6 +199,10 @@ func testAccCheckMlflowAppDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			if err != nil {
 				return fmt.Errorf("reading SageMaker Mlflow App (%s): %w", arn, err)
+			}
+
+			if output.Status == awstypes.MlflowAppStatusDeleted {
+				continue
 			}
 
 			return fmt.Errorf("SageMaker Mlflow App %s still exists", arn)
