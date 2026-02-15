@@ -26,20 +26,26 @@ func TestAccSageMakerMlflowApp_basic(t *testing.T) {
 	var app sagemaker.DescribeMlflowAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
+	s3Bucket := os.Getenv("SAGEMAKER_S3_BUCKET")
+	roleArn := os.Getenv("SAGEMAKER_IAM_ROLE_ARN")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_IAM_ROLE_ARN")
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_S3_BUCKET")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlflowAppConfig_basic(rName),
+				Config: testAccMlflowAppConfig_basic(rName, s3Bucket, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, os.Getenv("SAGEMAKER_IAM_ROLE_ARN")),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/", os.Getenv("SAGEMAKER_S3_BUCKET"))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, roleArn),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/", s3Bucket)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`mlflow-app/app-.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -60,23 +66,29 @@ func TestAccSageMakerMlflowApp_update(t *testing.T) {
 	var app sagemaker.DescribeMlflowAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
+	s3Bucket := os.Getenv("SAGEMAKER_S3_BUCKET")
+	roleArn := os.Getenv("SAGEMAKER_IAM_ROLE_ARN")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_IAM_ROLE_ARN")
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_S3_BUCKET")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlflowAppConfig_update(rName),
+				Config: testAccMlflowAppConfig_update(rName, s3Bucket, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/updated/", os.Getenv("SAGEMAKER_S3_BUCKET"))),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/updated/", s3Bucket)),
 				),
 			},
 			{
-				Config: testAccMlflowAppConfig_basic(rName),
+				Config: testAccMlflowAppConfig_basic(rName, s3Bucket, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -91,15 +103,21 @@ func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 	var app sagemaker.DescribeMlflowAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
+	s3Bucket := os.Getenv("SAGEMAKER_S3_BUCKET")
+	roleArn := os.Getenv("SAGEMAKER_IAM_ROLE_ARN")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_IAM_ROLE_ARN")
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_S3_BUCKET")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlflowAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccMlflowAppConfig_tags1(rName, s3Bucket, roleArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -112,7 +130,7 @@ func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMlflowAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMlflowAppConfig_tags2(rName, s3Bucket, roleArn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -121,7 +139,7 @@ func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMlflowAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMlflowAppConfig_tags1(rName, s3Bucket, roleArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -137,15 +155,21 @@ func TestAccSageMakerMlflowApp_disappears(t *testing.T) {
 	var app sagemaker.DescribeMlflowAppOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
+	s3Bucket := os.Getenv("SAGEMAKER_S3_BUCKET")
+	roleArn := os.Getenv("SAGEMAKER_IAM_ROLE_ARN")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_IAM_ROLE_ARN")
+			acctest.SkipIfEnvVarNotSet(t, "SAGEMAKER_S3_BUCKET")
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlflowAppConfig_basic(rName),
+				Config: testAccMlflowAppConfig_basic(rName, s3Bucket, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowAppExists(ctx, resourceName, &app),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowApp, resourceName),
@@ -166,7 +190,7 @@ func testAccCheckMlflowAppDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			arn := rs.Primary.Attributes[names.AttrARN]
-			output, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, arn)
+			_, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, arn)
 
 			if retry.NotFound(err) {
 				continue
@@ -174,11 +198,6 @@ func testAccCheckMlflowAppDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			if err != nil {
 				return fmt.Errorf("reading SageMaker Mlflow App (%s): %w", arn, err)
-			}
-
-			// If status is Deleted, consider it destroyed
-			if output.Status == "Deleted" {
-				continue
 			}
 
 			return fmt.Errorf("SageMaker Mlflow App %s still exists", arn)
@@ -207,7 +226,7 @@ func testAccCheckMlflowAppExists(ctx context.Context, n string, app *sagemaker.D
 	}
 }
 
-func testAccMlflowAppConfig_base() string {
+func testAccMlflowAppConfig_base(s3Bucket, roleArn string) string {
 	return fmt.Sprintf(`
 data "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -216,13 +235,11 @@ data "aws_s3_bucket" "test" {
 locals {
   role_arn = %[2]q
 }
-`,
-		os.Getenv("SAGEMAKER_S3_BUCKET"),
-		os.Getenv("SAGEMAKER_IAM_ROLE_ARN"))
+`, s3Bucket, roleArn)
 }
 
-func testAccMlflowAppConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccMlflowAppConfig_base(), fmt.Sprintf(`
+func testAccMlflowAppConfig_basic(rName, s3Bucket, roleArn string) string {
+	return acctest.ConfigCompose(testAccMlflowAppConfig_base(s3Bucket, roleArn), fmt.Sprintf(`
 resource "aws_sagemaker_mlflow_app" "test" {
   name               = %[1]q
   artifact_store_uri = "s3://${data.aws_s3_bucket.test.bucket}/"
@@ -231,8 +248,8 @@ resource "aws_sagemaker_mlflow_app" "test" {
 `, rName))
 }
 
-func testAccMlflowAppConfig_update(rName string) string {
-	return acctest.ConfigCompose(testAccMlflowAppConfig_base(), fmt.Sprintf(`
+func testAccMlflowAppConfig_update(rName, s3Bucket, roleArn string) string {
+	return acctest.ConfigCompose(testAccMlflowAppConfig_base(s3Bucket, roleArn), fmt.Sprintf(`
 resource "aws_sagemaker_mlflow_app" "test" {
   name               = %[1]q
   artifact_store_uri = "s3://${data.aws_s3_bucket.test.bucket}/updated/"
@@ -241,8 +258,8 @@ resource "aws_sagemaker_mlflow_app" "test" {
 `, rName))
 }
 
-func testAccMlflowAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccMlflowAppConfig_base(), fmt.Sprintf(`
+func testAccMlflowAppConfig_tags1(rName, s3Bucket, roleArn, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccMlflowAppConfig_base(s3Bucket, roleArn), fmt.Sprintf(`
 resource "aws_sagemaker_mlflow_app" "test" {
   name               = %[1]q
   artifact_store_uri = "s3://${data.aws_s3_bucket.test.bucket}/"
@@ -255,8 +272,8 @@ resource "aws_sagemaker_mlflow_app" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccMlflowAppConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccMlflowAppConfig_base(), fmt.Sprintf(`
+func testAccMlflowAppConfig_tags2(rName, s3Bucket, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccMlflowAppConfig_base(s3Bucket, roleArn), fmt.Sprintf(`
 resource "aws_sagemaker_mlflow_app" "test" {
   name               = %[1]q
   artifact_store_uri = "s3://${data.aws_s3_bucket.test.bucket}/"

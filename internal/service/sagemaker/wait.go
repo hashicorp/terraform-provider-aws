@@ -705,8 +705,8 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 }
 func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{"Creating"},
-		Target:  []string{"Created"},
+		Pending: enum.Slice(awstypes.MlflowAppStatusCreating),
+		Target:  enum.Slice(awstypes.MlflowAppStatusCreated),
 		Refresh: statusMlflowApp(ctx, conn, arn),
 		Timeout: mlflowAppTimeout,
 	}
@@ -721,8 +721,8 @@ func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn strin
 }
 func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{"Updating"},
-		Target:  []string{"Updated"},
+		Pending: enum.Slice(awstypes.MlflowAppStatusUpdating),
+		Target:  enum.Slice(awstypes.MlflowAppStatusUpdated),
 		Refresh: statusMlflowApp(ctx, conn, arn),
 		Timeout: mlflowAppTimeout,
 	}
@@ -737,8 +737,8 @@ func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn strin
 }
 func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string) error {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{"Created", "Deleting"},
-		Target:  []string{"Deleted"},
+		Pending: enum.Slice(awstypes.MlflowAppStatusCreated, awstypes.MlflowAppStatusDeleting),
+		Target:  enum.Slice(awstypes.MlflowAppStatusDeleted),
 		Refresh: statusMlflowApp(ctx, conn, arn),
 		Timeout: mlflowAppTimeout,
 	}

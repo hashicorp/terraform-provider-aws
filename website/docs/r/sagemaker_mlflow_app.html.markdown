@@ -44,15 +44,15 @@ resource "aws_sagemaker_mlflow_app" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) A string identifying the MLflow app name. This string is not part of the tracking server ARN.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow App uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions.
-* `artifact_store_uri` - (Required) The S3 URI for a general purpose bucket to use as the MLflow App artifact store.
 * `account_default_status` - (Optional) Indicates whether this MLflow app is the default for the entire account. Valid values are `ENABLED` and `DISABLED`.
-* `model_registration_mode` - (Optional) Whether to enable or disable automatic registration of new MLflow models to the SageMaker Model Registry. Valid values are `AutoModelRegistrationEnabled` and `AutoModelRegistrationDisabled`. Defaults to `AutoModelRegistrationDisabled`.
+* `artifact_store_uri` - (Required) The S3 URI for a general purpose bucket to use as the MLflow App artifact store.
 * `default_domain_id_list` - (Optional) List of SageMaker domain IDs for which this MLflow App is used as the default.
-* `weekly_maintenance_window_start` - (Optional) The day and time of the week in Coordinated Universal Time (UTC) 24-hour standard time that weekly maintenance updates are scheduled. For example: `SUN:03:00`.
+* `model_registration_mode` - (Optional) Whether to enable or disable automatic registration of new MLflow models to the SageMaker Model Registry. Valid values are `AutoModelRegistrationEnabled` and `AutoModelRegistrationDisabled`. Defaults to `AutoModelRegistrationDisabled`.
+* `name` - (Required) A string identifying the MLflow app name. This string is not part of the tracking server ARN.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_arn` - (Required) The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow App uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `weekly_maintenance_window_start` - (Optional) The day and time of the week in Coordinated Universal Time (UTC) 24-hour standard time that weekly maintenance updates are scheduled. For example: `SUN:03:00`.
 
 ## Attribute Reference
 

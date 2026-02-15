@@ -121,7 +121,6 @@ func (r *mlflowAppResource) Create(ctx context.Context, request resource.CreateR
 	}
 
 	if _, err := waitMlflowAppCreated(ctx, conn, data.ARN.ValueString()); err != nil {
-		response.State.RemoveResource(ctx)
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) create", data.ARN.ValueString()), err.Error())
 		return
 	}
@@ -129,7 +128,6 @@ func (r *mlflowAppResource) Create(ctx context.Context, request resource.CreateR
 	// Read the resource to get all computed values
 	output2, err := findMlflowAppByARN(ctx, conn, data.ARN.ValueString())
 	if err != nil {
-		response.State.RemoveResource(ctx)
 		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker Mlflow App (%s) after create", data.ARN.ValueString()), err.Error())
 		return
 	}
@@ -152,7 +150,7 @@ func (r *mlflowAppResource) Read(ctx context.Context, request resource.ReadReque
 	conn := r.Meta().SageMakerClient(ctx)
 
 	output, err := findMlflowAppByARN(ctx, conn, data.ARN.ValueString())
-	if errs.IsA[*retry.NotFoundError](err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -177,42 +175,42 @@ func (r *mlflowAppResource) Read(ctx context.Context, request resource.ReadReque
 }
 
 func (r *mlflowAppResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new mlflowAppResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	var state, plan mlflowAppResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().SageMakerClient(ctx)
 
-	if !new.AccountDefaultStatus.Equal(old.AccountDefaultStatus) ||
-		!new.ArtifactStoreUri.Equal(old.ArtifactStoreUri) ||
-		!new.DefaultDomainIdList.Equal(old.DefaultDomainIdList) ||
-		!new.ModelRegistrationMode.Equal(old.ModelRegistrationMode) ||
-		!new.WeeklyMaintenanceWindowStart.Equal(old.WeeklyMaintenanceWindowStart) {
+	if !plan.AccountDefaultStatus.Equal(state.AccountDefaultStatus) ||
+		!plan.ArtifactStoreUri.Equal(state.ArtifactStoreUri) ||
+		!plan.DefaultDomainIdList.Equal(state.DefaultDomainIdList) ||
+		!plan.ModelRegistrationMode.Equal(state.ModelRegistrationMode) ||
+		!plan.WeeklyMaintenanceWindowStart.Equal(state.WeeklyMaintenanceWindowStart) {
 		var input sagemaker.UpdateMlflowAppInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		_, err := conn.UpdateMlflowApp(ctx, &input)
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating SageMaker Mlflow App (%s)", new.ARN.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating SageMaker Mlflow App (%s)", plan.ARN.ValueString()), err.Error())
 			return
 		}
 
-		if _, err := waitMlflowAppUpdated(ctx, conn, new.ARN.ValueString()); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) update", new.ARN.ValueString()), err.Error())
+		if _, err := waitMlflowAppUpdated(ctx, conn, plan.ARN.ValueString()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) update", plan.ARN.ValueString()), err.Error())
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *mlflowAppResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -224,23 +222,7 @@ func (r *mlflowAppResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().SageMakerClient(ctx)
 
-	output, err := findMlflowAppByARN(ctx, conn, data.ARN.ValueString())
-	if errs.IsA[*retry.NotFoundError](err) {
-		return
-	}
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker Mlflow App (%s) before delete", data.ARN.ValueString()), err.Error())
-		return
-	}
-
-	if output.Status == "Deleted" || output.Status == "Deleting" {
-		if err := waitMlflowAppDeleted(ctx, conn, data.ARN.ValueString()); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) delete", data.ARN.ValueString()), err.Error())
-		}
-		return
-	}
-
-	_, err = conn.DeleteMlflowApp(ctx, &sagemaker.DeleteMlflowAppInput{
+	_, err := conn.DeleteMlflowApp(ctx, &sagemaker.DeleteMlflowAppInput{
 		Arn: data.ARN.ValueStringPointer(),
 	})
 
@@ -295,6 +277,12 @@ func findMlflowAppByARN(ctx context.Context, conn *sagemaker.Client, arn string)
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
+	}
+
+	if output.Status == awstypes.MlflowAppStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message: "resource is deleted",
+		}
 	}
 
 	return output, nil
