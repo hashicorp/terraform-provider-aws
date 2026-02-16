@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -64,7 +64,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMBYOIPConfig_ipv4IPv6DefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "ipv6_netmask_length"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexache.MustCompile(`^vpc-cidr-assoc-.+`)),
@@ -75,13 +75,13 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6ExplicitNetmask(p, m, s, netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", strconv.Itoa(netmaskLength)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexache.MustCompile(`^vpc-cidr-assoc-.+`)),
@@ -92,14 +92,14 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
 				Config:   testAccIPAMBYOIPConfig_ipv6ExplicitCIDR(p, m, s, ipv6CidrVPC),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_association_id", regexache.MustCompile(`^vpc-cidr-assoc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ipv6CidrVPC),
@@ -110,14 +110,14 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config:   testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrVPC),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			// aws_vpc_ipv6_cidr_block_association
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationDefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
 					testAccCheckVPCAssociationIPv6CIDRPrefix(&associationIPv6, strconv.Itoa(netmaskLength)),
 				),
@@ -126,13 +126,14 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc)),
-				// vpc will still have association id because its based on the aws_vpc_ipv6_cidr_block_association resource
+					// vpc will still have association id because its based on the aws_vpc_ipv6_cidr_block_association resource
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
+				),
 			},
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{
@@ -146,13 +147,14 @@ func TestAccIPAM_byoipIPv6(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc)),
-				// vpc will still have association id because its based on the aws_vpc_ipv6_cidr_block_association resource
+					// vpc will still have association id because its based on the aws_vpc_ipv6_cidr_block_association resource
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
+				),
 			},
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBase(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, resourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", "")),
 			},
 			{

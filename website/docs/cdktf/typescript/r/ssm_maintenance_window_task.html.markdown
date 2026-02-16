@@ -295,8 +295,8 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 #### Optional
 
-- `accountId` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Maintenance Window Task using the `windowId` and `windowTaskId` separated by `/`. For example:
 
@@ -328,4 +328,4 @@ Using `terraform import`, import AWS Maintenance Window Task using the `windowId
 % terraform import aws_ssm_maintenance_window_task.example <window_id>/<window_task_id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-164f8c375a1e2cad63873f7f671fe4ffacd35c6a21a436e6e4eebe999e323c32 -->
+<!-- cache-key: cdktf-0.20.8 input-31a6f3156a7aa73769acba4cfdb46057c9766f4b23b259cea54a621621069c57 -->

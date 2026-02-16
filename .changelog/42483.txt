@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_cluster: Supports null `compute_config.node_role_arn` when disabling auto mode or built-in node pools
+```

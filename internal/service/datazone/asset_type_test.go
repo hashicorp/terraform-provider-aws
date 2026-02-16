@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -12,11 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -30,14 +28,12 @@ func TestAccDataZoneAssetType_basic(t *testing.T) {
 	}
 
 	var assettype datazone.GetAssetTypeOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_asset_type.test"
 	projectName := "aws_datazone_project.test"
 	domainName := "aws_datazone_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -45,12 +41,12 @@ func TestAccDataZoneAssetType_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssetTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckAssetTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssetTypeConfig_basic(rName, pName, dName),
+				Config: testAccAssetTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
+					testAccCheckAssetTypeExists(ctx, t, resourceName, &assettype),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "created_by"),
 					resource.TestCheckResourceAttrSet(resourceName, "revision"),
@@ -78,12 +74,10 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 	}
 
 	var assettype datazone.GetAssetTypeOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_asset_type.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID)
@@ -91,13 +85,13 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssetTypeDestroy(ctx),
+		CheckDestroy:             testAccCheckAssetTypeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssetTypeConfig_basic(rName, pName, dName),
+				Config: testAccAssetTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssetTypeExists(ctx, resourceName, &assettype),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceAssetType, resourceName),
+					testAccCheckAssetTypeExists(ctx, t, resourceName, &assettype),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceAssetType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,9 +99,9 @@ func TestAccDataZoneAssetType_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAssetTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAssetTypeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_asset_type" {
@@ -129,7 +123,7 @@ func testAccCheckAssetTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAssetTypeExists(ctx context.Context, name string, assettype *datazone.GetAssetTypeOutput) resource.TestCheckFunc {
+func testAccCheckAssetTypeExists(ctx context.Context, t *testing.T, name string, assettype *datazone.GetAssetTypeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -140,7 +134,7 @@ func testAccCheckAssetTypeExists(ctx context.Context, name string, assettype *da
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameAssetType, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		resp, err := tfdatazone.FindAssetTypeByID(ctx, conn, rs.Primary.Attributes["domain_identifier"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
@@ -164,8 +158,8 @@ func testAccAssetTypeImportStateIdFunc(resourceName string) resource.ImportState
 	}
 }
 
-func testAccAssetTypeConfig_basic(rName, pName, dName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(pName, dName), fmt.Sprintf(`
+func testAccAssetTypeConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_datazone_asset_type" "test" {
   description               = %[1]q
   domain_identifier         = aws_datazone_domain.test.id

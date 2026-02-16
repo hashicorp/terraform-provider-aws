@@ -6,7 +6,7 @@ description: |-
   Terraform data source for managing an AWS Security Hub Standards Control Associations.
 ---
 
-# Resource: aws_securityhub_standards_control_associations
+# Data Source: aws_securityhub_standards_control_associations
 
 Terraform data source for managing an AWS Security Hub Standards Control Associations.
 

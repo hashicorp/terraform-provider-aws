@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package synthetics
 
@@ -24,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -193,6 +196,21 @@ func ResourceCanary() *schema.Resource {
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return (new == "rate(0 minute)" || new == "rate(0 minutes)") && old == "rate(0 hour)"
+							},
+						},
+						"retry_config": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_retries": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(0, 2),
+									},
+								},
 							},
 						},
 					},
@@ -375,7 +393,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	canary, err := FindCanaryByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -687,7 +705,24 @@ func expandCanarySchedule(l []any) *awstypes.CanaryScheduleInput {
 		codeConfig.DurationInSeconds = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := m["retry_config"]; ok {
+		codeConfig.RetryConfig = expandCanaryScheduleRetryConfig(v.([]any))
+	}
+
 	return codeConfig
+}
+
+func expandCanaryScheduleRetryConfig(l []any) *awstypes.RetryConfigInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]any)
+
+	config := &awstypes.RetryConfigInput{
+		MaxRetries: aws.Int32(int32(m["max_retries"].(int))),
+	}
+
+	return config
 }
 
 func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []any {
@@ -698,6 +733,21 @@ func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []any 
 	m := map[string]any{
 		names.AttrExpression:  aws.ToString(canarySchedule.Expression),
 		"duration_in_seconds": aws.ToInt64(canarySchedule.DurationInSeconds),
+	}
+
+	if canarySchedule.RetryConfig != nil {
+		m["retry_config"] = flattenCanaryScheduleRetryConfig(canarySchedule.RetryConfig)
+	}
+
+	return []any{m}
+}
+
+func flattenCanaryScheduleRetryConfig(retryConfig *awstypes.RetryConfigOutput) []any {
+	if retryConfig == nil {
+		return []any{}
+	}
+	m := map[string]any{
+		"max_retries": aws.ToInt32(retryConfig.MaxRetries),
 	}
 
 	return []any{m}

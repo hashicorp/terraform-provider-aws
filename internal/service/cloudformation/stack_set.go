@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudformation
 
@@ -18,7 +20,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -311,7 +313,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta any)
 	callAs := d.Get("call_as").(string)
 	stackSet, err := findStackSetByName(ctx, conn, d.Id(), callAs)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -321,7 +323,11 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
-	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
+	// Only set administration_role_arn if auto_deployment is not configured.
+	// AWS returns this field for SERVICE_MANAGED StackSets, but it conflicts with auto_deployment.
+	if _, ok := d.GetOk("auto_deployment"); !ok {
+		d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
+	}
 	d.Set(names.AttrARN, stackSet.StackSetARN)
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)
@@ -480,15 +486,13 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 
 	if errs.IsA[*awstypes.StackSetNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
 	if callAs == string(awstypes.CallAsDelegatedAdmin) && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -497,17 +501,17 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	}
 
 	if output == nil || output.StackSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSet, nil
 }
 
-func statusStackSet(ctx context.Context, conn *cloudformation.Client, name, callAs string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStackSet(conn *cloudformation.Client, name, callAs string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStackSetByName(ctx, conn, name, callAs)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -524,7 +528,7 @@ func waitStackSetCreated(ctx context.Context, conn *cloudformation.Client, name,
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.StackSetStatusActive),
 		Timeout: timeout,
-		Refresh: statusStackSet(ctx, conn, name, callAs),
+		Refresh: statusStackSet(conn, name, callAs),
 		Delay:   15 * time.Second,
 	}
 
@@ -550,8 +554,7 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 
 	if errs.IsA[*awstypes.OperationNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -560,7 +563,7 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 	}
 
 	if output == nil || output.StackSetOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSetOperation, nil
@@ -595,11 +598,11 @@ func findStackSetOperationResultsByThreePartKey(ctx context.Context, conn *cloud
 	return findStackSetOperationResults(ctx, conn, input)
 }
 
-func statusStackSetOperation(ctx context.Context, conn *cloudformation.Client, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStackSetOperation(conn *cloudformation.Client, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStackSetOperationByThreePartKey(ctx, conn, stackSetName, operationID, callAs)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -618,7 +621,7 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StackSetOperationStatusRunning, awstypes.StackSetOperationStatusQueued),
 		Target:  enum.Slice(awstypes.StackSetOperationStatusSucceeded),
-		Refresh: statusStackSetOperation(ctx, conn, stackSetName, operationID, callAs),
+		Refresh: statusStackSetOperation(conn, stackSetName, operationID, callAs),
 		Timeout: timeout,
 		Delay:   stackSetOperationDelay,
 	}
@@ -628,7 +631,7 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	if output, ok := outputRaw.(*awstypes.StackSetOperation); ok {
 		if output.Status == awstypes.StackSetOperationStatusFailed {
 			if results, findErr := findStackSetOperationResultsByThreePartKey(ctx, conn, stackSetName, operationID, callAs); findErr == nil {
-				tfresource.SetLastError(err, stackSetOperationError(results))
+				retry.SetLastError(err, stackSetOperationError(results))
 			}
 		}
 

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_budgets_budget: Add `billing_view_arn` argument
+```
+
+```release-note:enhancement
+data-source/aws_budgets_budget: Add `billing_view_arn` attribute
+```

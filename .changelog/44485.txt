@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_lb: Fix `Invalid address to set: []string{"secondary_ips_auto_assigned_per_subnet"}` errors
+```

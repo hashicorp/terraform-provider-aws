@@ -130,6 +130,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeartifact_repository.example
+  identity = {
+    "arn" = "arn:aws:codeartifact:us-west-2:123456789012:repository/example-domain/example-repo"
+  }
+}
+
+resource "aws_codeartifact_repository" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
 
 ```python
@@ -153,4 +174,4 @@ Using `terraform import`, import CodeArtifact Repository using the CodeArtifact 
 % terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ea7a3231d8fc3a592c64a971dfc5e87436ddc7fd5a8933d9892b8f0913217ed7 -->
+<!-- cache-key: cdktf-0.20.8 input-222467f6ea55d32a2df216bccbb1e222dde73a9993c93ede0e73267aebbfc808 -->

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_job: Allow a zero (`0`) value for `timeout` for Apache Spark streaming ETL jobs. This allows the job to be configured with no timeout
+```

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -13,12 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -100,7 +101,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 
 	output, err := findDBClusterWithActivityStream(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Activity Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -159,11 +160,11 @@ func findDBClusterWithActivityStream(ctx context.Context, conn *rds.Client, arn 
 	return output, nil
 }
 
-func statusDBClusterActivityStream(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBClusterActivityStream(conn *rds.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBClusterWithActivityStream(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -182,7 +183,7 @@ func waitActivityStreamStarted(ctx context.Context, conn *rds.Client, arn string
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStarting),
 		Target:     enum.Slice(types.ActivityStreamStatusStarted),
-		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
+		Refresh:    statusDBClusterActivityStream(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -204,7 +205,7 @@ func waitActivityStreamStopped(ctx context.Context, conn *rds.Client, arn string
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ActivityStreamStatusStopping),
 		Target:     []string{},
-		Refresh:    statusDBClusterActivityStream(ctx, conn, arn),
+		Refresh:    statusDBClusterActivityStream(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

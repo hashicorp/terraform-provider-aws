@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -9,9 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -30,9 +29,11 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasource_tags":                   testAccGuardDutyDetectorDataSource_tagsSerial,
 		},
 		"DetectorFeature": {
-			acctest.CtBasic:            testAccDetectorFeature_basic,
-			"additional_configuration": testAccDetectorFeature_additionalConfiguration,
-			"multiple":                 testAccDetectorFeature_multiple,
+			acctest.CtBasic:                                testAccDetectorFeature_basic,
+			"multiple":                                     testAccDetectorFeature_multiple,
+			"additional_configuration":                     testAccDetectorFeature_additionalConfiguration,
+			"additional_configuration_new_order":           testAccDetectorFeature_additionalConfiguration_newOrder,
+			"additional_configuration_migrate_list_to_set": testAccDetectorFeature_additionalConfiguration_migrateListToSet,
 		},
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,
@@ -120,11 +121,11 @@ func testAccMemberAccountFromEnv(t *testing.T) string {
 
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		t.Skipf("reading this AWS account's single GuardDuty Detector: %s", err)
 	}
 
@@ -135,11 +136,11 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 // testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 

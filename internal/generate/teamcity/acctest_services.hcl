@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 service "amp" {
@@ -29,6 +29,10 @@ service "appintegrations" {
 
 service "appstream" {
   vpc_lock    = true
+  parallelism = 10
+}
+
+service "arcregionswitch" {
   parallelism = 10
 }
 
@@ -142,6 +146,10 @@ service "elasticsearch" {
   vpc_lock = true
 }
 
+service "elastictranscoder" {
+  skip = true
+}
+
 service "elb" {
   vpc_lock = true
 }
@@ -152,6 +160,14 @@ service "elbv2" {
 
 service "emr" {
   vpc_lock = true
+}
+
+service "evidently" {
+  skip = true
+}
+
+service "finspace" {
+  skip = true
 }
 
 service "fms" {
@@ -192,8 +208,16 @@ service "lambda" {
   vpc_lock = true
 }
 
+service "lexmodels" {
+  skip = true
+}
+
 service "lightsail" {
   region = "us-east-1"
+}
+
+service "m2" {
+  skip = true
 }
 
 service "mq" {
@@ -224,12 +248,17 @@ service "pricing" {
   region = "us-east-1"
 }
 
+service "qldb" {
+  skip = true
+}
+
 service "rds" {
   vpc_lock = true
 }
 
 service "redshift" {
-  vpc_lock = true
+  vpc_lock    = true
+  parallelism = 10 # Max Snapshot Copy Grants
 }
 
 service "resiliencehub" {
@@ -309,7 +338,11 @@ service "vpnsite" {
 }
 
 service "waf" {
-  region = "us-east-1"
+  skip = true
+}
+
+service "wafregional" {
+  skip = true
 }
 
 service "wavelength" {

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -13,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -87,7 +89,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 
 	connection, err := findInboundConnectionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Inbound Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -160,13 +162,12 @@ func findInboundConnectionByID(ctx context.Context, conn *opensearch.Client, id 
 	}
 
 	if output.ConnectionStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ConnectionStatus.StatusCode; status == awstypes.InboundConnectionStatusCodeDeleted || status == awstypes.InboundConnectionStatusCodeRejected {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -192,8 +193,7 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -207,11 +207,11 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 	return output, nil
 }
 
-func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInboundConnection(conn *opensearch.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInboundConnectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -227,14 +227,14 @@ func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeProvisioning, awstypes.InboundConnectionStatusCodeApproved),
 		Target:  enum.Slice(awstypes.InboundConnectionStatusCodeActive),
-		Refresh: statusInboundConnection(ctx, conn, id),
+		Refresh: statusInboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -246,14 +246,14 @@ func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeRejecting),
 		Target:  []string{},
-		Refresh: statusInboundConnection(ctx, conn, id),
+		Refresh: statusInboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -265,14 +265,14 @@ func waitInboundConnectionDeleted(ctx context.Context, conn *opensearch.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusInboundConnection(ctx, conn, id),
+		Refresh: statusInboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}

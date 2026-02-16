@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower_test
@@ -22,6 +22,11 @@ func TestAccControlTower_serial(t *testing.T) {
 			acctest.CtBasic:      testAccControl_basic,
 			acctest.CtDisappears: testAccControl_disappears,
 			"parameters":         testAccControl_parameters,
+		},
+		"Baseline": {
+			acctest.CtBasic:      testAccBaseline_basic,
+			acctest.CtDisappears: testAccBaseline_disappears,
+			"tags":               testAccBaseline_tags,
 		},
 	}
 

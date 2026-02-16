@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -124,7 +124,7 @@ func TestAccWorkSpacesWebIdentityProvider_disappears(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceIdentityProvider, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIdentityProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

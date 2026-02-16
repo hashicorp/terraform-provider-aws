@@ -91,14 +91,28 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { Route53Zone } from "./.gen/providers/aws/route53-zone";
+import { Vpc } from "./.gen/providers/aws/vpc";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    const primary = new Vpc(this, "primary", {
+      cidrBlock: "10.6.0.0/16",
+      enableDnsHostnames: true,
+      enableDnsSupport: true,
+    });
+    const secondary = new Vpc(this, "secondary", {
+      cidrBlock: "10.7.0.0/16",
+      enableDnsHostnames: true,
+      enableDnsSupport: true,
+    });
     new Route53Zone(this, "private", {
       name: "example.com",
       vpc: [
         {
-          vpcId: example.id,
+          vpcId: primary.id,
+        },
+        {
+          vpcId: secondary.id,
         },
       ],
     });
@@ -170,4 +184,4 @@ Using `terraform import`, import Route53 Zones using the zone `id`. For example:
 % terraform import aws_route53_zone.myzone Z1D633PJN98FT9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9c75d13012d076c4e45ee2eed2fab48617563530adc7f1351bafd11b5bd43f70 -->
+<!-- cache-key: cdktf-0.20.8 input-36b1e071614d9565eafcfeff03b67f03d2e97f15716be0f40a74b2e3fc843194 -->

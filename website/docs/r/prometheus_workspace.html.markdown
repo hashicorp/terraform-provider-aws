@@ -64,7 +64,7 @@ This resource supports the following arguments:
 
 The `logging_configuration` block supports the following arguments:
 
-* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist.
+* `log_group_arn` - (Required) The ARN of the CloudWatch log group to which the vended log data will be published. This log group must exist. The ARN must end with `:*`
 
 ## Attribute Reference
 

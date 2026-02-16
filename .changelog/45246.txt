@@ -1,0 +1,31 @@
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `routing_policies` and `attachment_routing_policy_rules` arguments
+```
+
+```release-note:bug
+data-source/aws_networkmanager_core_network_policy_document: Correct plan-time validation of `attachment_policies.conditions.type` to allow `account` instead of `account-id`
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_vpc_attachment: Add `routing_policy_label` argument
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_site_to_site_vpn_attachment: Add `routing_policy_label` argument
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_dx_gateway_attachment: Add `routing_policy_label` argument
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_transit_gateway_route_table_attachment: Add `routing_policy_label` argument
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_connect_attachment: Add `routing_policy_label` argument
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_connect_peer: Support 4 byte ASNs in `bgp_options.peer_asn`
+```

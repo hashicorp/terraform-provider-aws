@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkmonitor
 
@@ -22,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -135,7 +137,7 @@ func (r *monitorResource) Read(ctx context.Context, request resource.ReadRequest
 
 	output, err := findMonitorByName(ctx, conn, data.MonitorName.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -240,8 +242,7 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -250,17 +251,17 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMonitor(conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -279,7 +280,7 @@ func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name str
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.MonitorStatePending),
 		Target:     enum.Slice(awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
-		Refresh:    statusMonitor(ctx, conn, name),
+		Refresh:    statusMonitor(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -300,7 +301,7 @@ func waitMonitorDeleted(ctx context.Context, conn *networkmonitor.Client, name s
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.MonitorStateDeleting, awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
 		Target:     []string{},
-		Refresh:    statusMonitor(ctx, conn, name),
+		Refresh:    statusMonitor(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +88,7 @@ func TestAccIAMUserPolicy_disappears(t *testing.T) {
 				Config: testAccUserPolicyConfig_basic(rName, strconv.Quote(policy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(ctx, resourceName, &userPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -247,14 +247,9 @@ func testAccCheckUserPolicyExists(ctx context.Context, n string, v *string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		userName, policyName, err := tfiam.UserPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
+		output, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -275,14 +270,9 @@ func testAccCheckUserPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			userName, policyName, err := tfiam.UserPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			_, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.Attributes[names.AttrName])
 
-			_, err = tfiam.FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
-
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

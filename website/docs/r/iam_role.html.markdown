@@ -223,11 +223,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_role.example
+  identity = {
+    name = "developer_name"
+  }
+}
+
+resource "aws_iam_role" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the IAM role.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Roles using the `name`. For example:
 
 ```terraform
 import {
-  to = aws_iam_role.developer
+  to = aws_iam_role.example
   id = "developer_name"
 }
 ```
@@ -235,5 +260,5 @@ import {
 Using `terraform import`, import IAM Roles using the `name`. For example:
 
 ```console
-% terraform import aws_iam_role.developer developer_name
+% terraform import aws_iam_role.example developer_name
 ```

@@ -63,6 +63,7 @@ resource "aws_bedrockagent_agent" "example" {
   agent_name                  = "my-agent-name"
   agent_resource_role_arn     = aws_iam_role.example.arn
   idle_session_ttl_in_seconds = 500
+  instruction                 = "You are a friendly assistant who helps answer questions."
   foundation_model            = "anthropic.claude-v2"
 }
 ```
@@ -83,7 +84,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the agent.
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.
 * `idle_session_ttl_in_seconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
-* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 20000 characters.
+* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. If `prepare_agent` is `true` this argument is required. The valid range is 40 - 20000 characters.
 * `memory_configuration` (Optional) Configurations for the agent's ability to retain the conversational context.
 * `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `prompt_override_configuration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
@@ -102,7 +103,14 @@ The `guardrail_configuration` configuration block supports the following argumen
 The `memory_configuration` configuration block supports the following arguments:
 
 * `enabled_memory_types` - (Required) The type of memory being stored by the agent. See [AWS API documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_MemoryConfiguration.html) for possible values.
+* `session_summary_configuration` - (Optional) Configuration block for `SESSION_SUMMARY` memory type enabled for the agent. See [`session_summary_configuration` Block](#session_summary_configuration-block) for details.
 * `storage_days` - (Optional) The number of days the agent is configured to retain the conversational context. Minimum value of 0, maximum value of 30.
+
+### `session_summary_configuration` Block
+
+The `session_summary_configuration` configuration block supports the following arguments:
+
+* `max_recent_sessions` - (Optional) Maximum number of recent session summaries to include in the agent's prompt context.
 
 ### `prompt_override_configuration` Block
 

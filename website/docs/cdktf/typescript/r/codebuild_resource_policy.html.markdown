@@ -97,6 +97,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_resource_policy.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:report-group/report-group-name"
+  }
+}
+
+resource "aws_codebuild_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild resource.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Resource Policy using the CodeBuild Resource Policy arn. For example:
 
 ```typescript
@@ -127,4 +148,4 @@ Using `terraform import`, import CodeBuild Resource Policy using the CodeBuild R
 % terraform import aws_codebuild_resource_policy.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7d8e634ce85ee8770ec661323181e59e61b7f4c2f9a784b47fb89428de12e188 -->
+<!-- cache-key: cdktf-0.20.8 input-c2b5192ad689926f1eac2cbe4f9d521ec8e5a904469f5a62ef5504f7711ab7a1 -->

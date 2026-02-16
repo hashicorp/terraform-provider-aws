@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_odb_network: Add `delete_associated_resources` attribute to enable practitioner to delete associated oci resource.
+```

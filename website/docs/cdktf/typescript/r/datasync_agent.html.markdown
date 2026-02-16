@@ -120,6 +120,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_agent.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:agent/agent-12345678901234567"
+  }
+}
+
+resource "aws_datasync_agent" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync agent.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -150,4 +171,4 @@ Using `terraform import`, import `aws_datasync_agent` using the DataSync Agent A
 % terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-277ce9a9e8daac3a6f8a10f28dab4725882397430f8a07c1b9738289592bf8c0 -->
+<!-- cache-key: cdktf-0.20.8 input-17ddc91d96f5a4f1b3e60a9450bcb9d581aa1a9c2c0046e5e8f26ed9eac7bb87 -->

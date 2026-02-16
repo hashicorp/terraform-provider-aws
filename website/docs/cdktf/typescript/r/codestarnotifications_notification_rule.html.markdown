@@ -99,6 +99,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codestarnotifications_notification_rule.example
+  identity = {
+    "arn" = "arn:aws:codestar-notifications:us-west-2:123456789012:notificationrule/dc82df7a-9435-44d4-a696-78f67EXAMPLE"
+  }
+}
+
+resource "aws_codestarnotifications_notification_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeStar notification rule.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeStar notification rule using the ARN. For example:
 
 ```typescript
@@ -129,4 +150,4 @@ Using `terraform import`, import CodeStar notification rule using the ARN. For e
 % terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6443997cec5613029e2c7cd51d91c8131cd4f1409f68d8ba31cf0da45548076d -->
+<!-- cache-key: cdktf-0.20.8 input-001301542db15f2cefa29b57ff126aa9854895670108820764e0389a6fe7173f -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -430,7 +430,7 @@ func DataSetPhysicalTableMapSchema() *schema.Schema {
 									},
 								},
 							},
-							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 64),
+							names.AttrName: stringLenBetweenSchema(attrRequired, 1, 256),
 							names.AttrSchema: {
 								Type:     schema.TypeString,
 								Optional: true,

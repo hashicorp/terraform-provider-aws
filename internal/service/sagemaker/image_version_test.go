@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -150,7 +150,7 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -182,7 +182,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), imageResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceImage(), imageResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -352,7 +352,7 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 			version := flex.StringValueToInt32Value(rs.Primary.Attributes[names.AttrVersion])
 			_, err := tfsagemaker.FindImageVersionByTwoPartKey(ctx, conn, name, version)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

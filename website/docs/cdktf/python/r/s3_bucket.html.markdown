@@ -337,6 +337,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) Name of the S3 bucket.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket using the `bucket`. For example:
 
 ```python
@@ -351,13 +377,13 @@ from imports.aws.s3_bucket import S3Bucket
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        S3Bucket.generate_config_for_import(self, "bucket", "bucket-name")
+        S3Bucket.generate_config_for_import(self, "example", "bucket-name")
 ```
 
 Using `terraform import`, import S3 bucket using the `bucket`. For example:
 
 ```console
-% terraform import aws_s3_bucket.bucket bucket-name
+% terraform import aws_s3_bucket.example bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-288930506d55813ba7a37d2ccd67120c33117ceeb9845d2c55c037dc0dcff6f7 -->
+<!-- cache-key: cdktf-0.20.8 input-7345009d20a6fdaeaf3dc25b89aa6e9bfabb066e3defabda3d7ac42b8aa1f858 -->

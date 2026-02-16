@@ -147,6 +147,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bcmdataexports_export.example
+  identity = {
+    "arn" = "arn:aws:bcm-data-exports:us-east-1:123456789012:export/example-export"
+  }
+}
+
+resource "aws_bcmdataexports_export" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the BCM Data Exports export.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the export ARN. For example:
 
 ```typescript
@@ -177,4 +198,4 @@ Using `terraform import`, import BCM Data Exports Export using the export ARN. F
 % terraform import aws_bcmdataexports_export.example arn:aws:bcm-data-exports:us-east-1:123456789012:export/CostUsageReport-9f1c75f3-f982-4d9a-b936-1e7ecab814b7
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-db3e7652253e0e9c19b8d2774667b02c31f786f6cc243739bb3e4aafa28c58c9 -->
+<!-- cache-key: cdktf-0.20.8 input-038fd0ca0bfd8a2b65e6caad433b1dbf6d39d770bb2ec2ce5fef6a1727ea1041 -->

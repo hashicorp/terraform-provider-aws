@@ -60,6 +60,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - EC2 Instance Type.
 * `instanceType` - EC2 Instance Type.
+* `location` - Identifier for the location.
 
 ## Timeouts
 
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-cea329a574bb9d637aa260a1a03d720bdeac1729112175af91aefd0a746fd785 -->
+<!-- cache-key: cdktf-0.20.8 input-54954ccf1496d4080728535126f8b2ceaf72dff5f9092223992efd7a36d6a8c9 -->

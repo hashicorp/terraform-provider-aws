@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package connect
 
@@ -17,13 +19,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,16 +47,16 @@ var (
 
 // @SDKResource("aws_connect_instance", name="Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(preIdentityVersion="6.14.1")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
 		ReadWithoutTimeout:   resourceInstanceRead,
 		UpdateWithoutTimeout: resourceInstanceUpdate,
 		DeleteWithoutTimeout: resourceInstanceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -192,7 +194,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -334,8 +336,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -344,7 +345,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	}
 
 	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Instance, nil
@@ -364,8 +365,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -374,17 +374,17 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	}
 
 	if output == nil || output.Attribute == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attribute, nil
 }
 
-func statusInstance(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInstance(conn *connect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -400,7 +400,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.InstanceStatusActive),
-		Refresh: statusInstance(ctx, conn, id),
+		Refresh: statusInstance(conn, id),
 		Timeout: timeout,
 	}
 
@@ -408,7 +408,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err
@@ -421,7 +421,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InstanceStatusActive),
 		Target:  []string{},
-		Refresh: statusInstance(ctx, conn, id),
+		Refresh: statusInstance(conn, id),
 		Timeout: timeout,
 	}
 
@@ -429,7 +429,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err

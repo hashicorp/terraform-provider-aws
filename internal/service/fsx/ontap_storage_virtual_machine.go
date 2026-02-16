@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -14,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -280,7 +282,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 
 	storageVirtualMachine, err := findStorageVirtualMachineByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP Storage Virtual Machine (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -394,8 +396,7 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fs
 
 		if errs.IsA[*awstypes.StorageVirtualMachineNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -413,11 +414,11 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.Client, input *fs
 	return output, nil
 }
 
-func statusStorageVirtualMachine(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStorageVirtualMachine(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStorageVirtualMachineByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -433,7 +434,7 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecycleCreating, awstypes.StorageVirtualMachineLifecyclePending),
 		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Refresh: statusStorageVirtualMachine(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -442,7 +443,7 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err
@@ -455,7 +456,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StorageVirtualMachineLifecyclePending),
 		Target:  enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleMisconfigured),
-		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Refresh: statusStorageVirtualMachine(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -464,7 +465,7 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err
@@ -477,7 +478,7 @@ func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StorageVirtualMachineLifecycleCreated, awstypes.StorageVirtualMachineLifecycleDeleting),
 		Target:       []string{},
-		Refresh:      statusStorageVirtualMachine(ctx, conn, id),
+		Refresh:      statusStorageVirtualMachine(conn, id),
 		Timeout:      timeout,
 		Delay:        1 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -487,7 +488,7 @@ func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.Client, id 
 
 	if output, ok := outputRaw.(*awstypes.StorageVirtualMachine); ok {
 		if reason := output.LifecycleTransitionReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(reason.Message)))
 		}
 
 		return output, err

@@ -169,7 +169,7 @@ The following arguments are optional:
 * `map_jsonb_as_clob` - Optional When true, DMS migrates JSONB values as CLOB.
 * `map_long_varchar_as` - Optional When true, DMS migrates LONG values as VARCHAR.
 * `max_file_size` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
-* `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test_decoding`.
+* `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test-decoding`.
 * `service_access_role_arn` - (Optional) Specifies the IAM role to use to authenticate the connection.
 * `slot_name` - (Optional) Sets the name of a previously created logical replication slot for a CDC load of the PostgreSQL source instance.
 

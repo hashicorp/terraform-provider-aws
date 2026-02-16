@@ -72,6 +72,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_account.example
+  identity = {
+    id = "111111111111"
+  }
+}
+
+resource "aws_organizations_account" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the AWS Organizations account.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS member account using the `account_id`. For example:
 
 ```python
@@ -86,19 +111,19 @@ from imports.aws.organizations_account import OrganizationsAccount
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        OrganizationsAccount.generate_config_for_import(self, "myAccount", "111111111111")
+        OrganizationsAccount.generate_config_for_import(self, "example", "111111111111")
 ```
 
 Using `terraform import`, import the AWS member account using the `account_id`. For example:
 
 ```console
-% terraform import aws_organizations_account.my_account 111111111111
+% terraform import aws_organizations_account.example 111111111111
 ```
 
 To import accounts that have set iam_user_access_to_billing, use the following:
 
 ```console
-% terraform import aws_organizations_account.my_account 111111111111_ALLOW
+% terraform import aws_organizations_account.example 111111111111_ALLOW
 ```
 
 Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
@@ -126,4 +151,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8e8887e3741a0846efe266d58d6294d1394e4019b43b0d7ca53014a12b747e55 -->
+<!-- cache-key: cdktf-0.20.8 input-1b1856b7a46a18a233bf5fa4b6cfbb10931b3648621da6bd5c9d66d1bd4acbb3 -->

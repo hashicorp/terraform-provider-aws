@@ -69,6 +69,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_device_pool.example
+  identity = {
+    "arn" = "arn:aws:devicefarm:us-west-2:123456789012:devicepool:4e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_devicefarm_device_pool" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Device Farm device pool.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Device Pools using their ARN. For example:
 
 ```typescript
@@ -99,4 +120,4 @@ Using `terraform import`, import DeviceFarm Device Pools using their ARN. For ex
 % terraform import aws_devicefarm_device_pool.example arn:aws:devicefarm:us-west-2:123456789012:devicepool:4fa784c7-ccb4-4dbf-ba4f-02198320daa1/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-826441071fab720d342048d37635511d24452904b2d16f7b15165264699a7f50 -->
+<!-- cache-key: cdktf-0.20.8 input-c30bf857ef8c6c147e716f022b6a6e8decfe28680d79e5e02ce28e90263131e3 -->

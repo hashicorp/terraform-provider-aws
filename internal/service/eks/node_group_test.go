@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,21 +27,21 @@ func init() {
 func TestAccEKSNodeGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	eksClusterResourceName := "aws_eks_cluster.test"
 	iamRoleResourceName := "aws_iam_role.node"
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2023X8664Standard)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
@@ -81,19 +80,19 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "node_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "terraform-"),
 				),
@@ -110,19 +109,19 @@ func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "tf-acc-test-prefix-"),
 				),
@@ -139,20 +138,20 @@ func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 func TestAccEKSNodeGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceNodeGroup(), resourceName),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -163,19 +162,19 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 func TestAccEKSNodeGroup_amiType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_amiType(rName, string(types.AMITypesAl2X8664Gpu)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2X8664Gpu)),
 				),
 			},
@@ -191,19 +190,19 @@ func TestAccEKSNodeGroup_amiType(t *testing.T) {
 func TestAccEKSNodeGroup_CapacityType_spot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_capacityType(rName, string(types.CapacityTypesSpot)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "capacity_type", string(types.CapacityTypesSpot)),
 				),
 			},
@@ -219,19 +218,19 @@ func TestAccEKSNodeGroup_CapacityType_spot(t *testing.T) {
 func TestAccEKSNodeGroup_diskSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_diskSize(rName, 21),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "disk_size", "21"),
 				),
 			},
@@ -247,19 +246,19 @@ func TestAccEKSNodeGroup_diskSize(t *testing.T) {
 func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
 				),
 			},
@@ -272,7 +271,7 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
 				),
 			},
@@ -283,20 +282,20 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 	instanceTypes := fmt.Sprintf("%q, %q, %q, %q", "t2.medium", "t3.medium", "t2.large", "t3.large")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_instanceTypesMultiple(rName, instanceTypes),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.0", "t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.1", "t3.medium"),
@@ -316,19 +315,19 @@ func TestAccEKSNodeGroup_InstanceTypes_multiple(t *testing.T) {
 func TestAccEKSNodeGroup_InstanceTypes_single(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_instanceTypesSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 				),
 			},
@@ -344,19 +343,19 @@ func TestAccEKSNodeGroup_InstanceTypes_single(t *testing.T) {
 func TestAccEKSNodeGroup_labels(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2, nodeGroup3 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_labels1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key1", acctest.CtValue1),
 				),
@@ -369,7 +368,7 @@ func TestAccEKSNodeGroup_labels(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_labels2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "labels.key2", acctest.CtValue2),
@@ -378,7 +377,7 @@ func TestAccEKSNodeGroup_labels(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_labels1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup3),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup3),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "labels.key2", acctest.CtValue2),
 				),
@@ -390,21 +389,21 @@ func TestAccEKSNodeGroup_labels(t *testing.T) {
 func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_launchTemplateId1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName1, names.AttrID),
 				),
@@ -417,7 +416,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_launchTemplateId2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName2, names.AttrID),
@@ -430,21 +429,21 @@ func TestAccEKSNodeGroup_LaunchTemplate_id(t *testing.T) {
 func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_launchTemplateName1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName1, names.AttrName),
 				),
@@ -457,7 +456,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_launchTemplateName2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName2, names.AttrName),
@@ -470,20 +469,20 @@ func TestAccEKSNodeGroup_LaunchTemplate_name(t *testing.T) {
 func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	launchTemplateResourceName := "aws_launch_template.test"
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_launchTemplateVersion1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
@@ -496,7 +495,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_launchTemplateVersion2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
@@ -506,24 +505,124 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	})
 }
 
-func TestAccEKSNodeGroup_nodeRepairConfig(t *testing.T) {
+func TestAccEKSNodeGroup_nodeRepairConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_nodeRepairConfig(rName),
+				Config: testAccNodeGroupConfig_nodeRepairConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig_counts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigCounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_parallel_nodes_repaired_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_unhealthy_node_threshold_count", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig_percentages(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigPercentages(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_parallel_nodes_repaired_percentage", "25"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_unhealthy_node_threshold_percentage", "40"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig_overrides(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigOverrides(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.min_repair_wait_time_mins", "30"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.node_monitoring_condition", "NodeNotReady"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.node_unhealthy_reason", "NetworkUnavailable"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.repair_action", "Replace"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.min_repair_wait_time_mins", "60"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.node_monitoring_condition", "NodeNotReady"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.node_unhealthy_reason", "AutoScalingGroupNotFound"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.repair_action", "Reboot"),
 				),
 			},
 			{
@@ -538,20 +637,20 @@ func TestAccEKSNodeGroup_nodeRepairConfig(t *testing.T) {
 func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ssmParameterDataSourceName := "data.aws_ssm_parameter.test"
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_releaseVersion(rName, clusterVersion130),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, names.AttrValue),
 				),
 			},
@@ -563,7 +662,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_releaseVersion(rName, clusterVersion131),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, names.AttrValue),
 				),
@@ -575,7 +674,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 func TestAccEKSNodeGroup_RemoteAccess_ec2SSHKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -583,16 +682,16 @@ func TestAccEKSNodeGroup_RemoteAccess_ec2SSHKey(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_remoteAccessEC2SSHKey(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.0.ec2_ssh_key", rName),
 				),
@@ -609,7 +708,7 @@ func TestAccEKSNodeGroup_RemoteAccess_ec2SSHKey(t *testing.T) {
 func TestAccEKSNodeGroup_RemoteAccess_sourceSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -617,16 +716,16 @@ func TestAccEKSNodeGroup_RemoteAccess_sourceSecurityGroupIDs(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_remoteAccessSourceSecurityIds1(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.0.source_security_group_ids.#", "1"),
 				),
@@ -643,19 +742,19 @@ func TestAccEKSNodeGroup_RemoteAccess_sourceSecurityGroupIDs(t *testing.T) {
 func TestAccEKSNodeGroup_Scaling_desiredSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 2, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -670,7 +769,7 @@ func TestAccEKSNodeGroup_Scaling_desiredSize(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 1, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
@@ -685,19 +784,19 @@ func TestAccEKSNodeGroup_Scaling_desiredSize(t *testing.T) {
 func TestAccEKSNodeGroup_Scaling_maxSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 1, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -712,7 +811,7 @@ func TestAccEKSNodeGroup_Scaling_maxSize(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 1, 1, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
@@ -727,19 +826,19 @@ func TestAccEKSNodeGroup_Scaling_maxSize(t *testing.T) {
 func TestAccEKSNodeGroup_Scaling_minSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 2, 2, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "2"),
@@ -754,7 +853,7 @@ func TestAccEKSNodeGroup_Scaling_minSize(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 2, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "2"),
@@ -769,19 +868,19 @@ func TestAccEKSNodeGroup_Scaling_minSize(t *testing.T) {
 func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 0, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
@@ -796,7 +895,7 @@ func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 1, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "1"),
@@ -807,7 +906,7 @@ func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_scalingSizes(rName, 0, 1, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.desired_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.max_size", "1"),
@@ -821,19 +920,19 @@ func TestAccEKSNodeGroup_ScalingZeroDesiredSize_minSize(t *testing.T) {
 func TestAccEKSNodeGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2, nodeGroup3 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -846,7 +945,7 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -856,7 +955,7 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup3),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup3),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup2, &nodeGroup3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -869,19 +968,19 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 func TestAccEKSNodeGroup_taints(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_taints1(rName, acctest.CtKey1, acctest.CtValue1, "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						names.AttrKey:   acctest.CtKey1,
@@ -900,7 +999,7 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 					acctest.CtKey1, acctest.CtValue1Updated, "NO_EXECUTE",
 					acctest.CtKey2, acctest.CtValue2, "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						names.AttrKey:   acctest.CtKey1,
@@ -917,7 +1016,7 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_taints1(rName, acctest.CtKey2, acctest.CtValue2, "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						names.AttrKey:   acctest.CtKey2,
@@ -933,19 +1032,19 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 func TestAccEKSNodeGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_update1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
@@ -959,7 +1058,7 @@ func TestAccEKSNodeGroup_update(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_update2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "0"),
 					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "40"),
@@ -969,22 +1068,68 @@ func TestAccEKSNodeGroup_update(t *testing.T) {
 	})
 }
 
-func TestAccEKSNodeGroup_version(t *testing.T) {
+func TestAccEKSNodeGroup_updateStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_update1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
+				),
+			},
+			{
+				Config: testAccNodeGroupConfig_updateStrategy(rName, "DEFAULT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "DEFAULT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNodeGroupConfig_updateStrategy(rName, "MINIMAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "MINIMAL"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_version(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1, nodeGroup2 types.Nodegroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
 				),
 			},
@@ -996,7 +1141,7 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 			{
 				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					testAccCheckNodeGroupExists(ctx, t, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
 				),
@@ -1011,7 +1156,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
-func testAccCheckNodeGroupExists(ctx context.Context, n string, v *types.Nodegroup) resource.TestCheckFunc {
+func testAccCheckNodeGroupExists(ctx context.Context, t *testing.T, n string, v *types.Nodegroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1023,7 +1168,7 @@ func testAccCheckNodeGroupExists(ctx context.Context, n string, v *types.Nodegro
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		output, err := tfeks.FindNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
@@ -1037,9 +1182,9 @@ func testAccCheckNodeGroupExists(ctx context.Context, n string, v *types.Nodegro
 	}
 }
 
-func testAccCheckNodeGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNodeGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EKSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_node_group" {
@@ -1053,7 +1198,7 @@ func testAccCheckNodeGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfeks.FindNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2117,7 +2262,7 @@ resource "aws_eks_node_group" "test" {
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
 }
 
-func testAccNodeGroupConfig_nodeRepairConfig(rName string) string {
+func testAccNodeGroupConfig_nodeRepairConfigBasic(rName string) string {
 	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
@@ -2133,6 +2278,108 @@ resource "aws_eks_node_group" "test" {
 
   node_repair_config {
     enabled = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigCounts(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled                            = true
+    max_parallel_nodes_repaired_count  = 2
+    max_unhealthy_node_threshold_count = 3
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigPercentages(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled                                 = true
+    max_parallel_nodes_repaired_percentage  = 25
+    max_unhealthy_node_threshold_percentage = 40
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigOverrides(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled = true
+
+    node_repair_config_overrides {
+      min_repair_wait_time_mins = 30
+      node_monitoring_condition = "NodeNotReady"
+      node_unhealthy_reason     = "NetworkUnavailable"
+      repair_action             = "Replace"
+    }
+
+    node_repair_config_overrides {
+      min_repair_wait_time_mins = 60
+      node_monitoring_condition = "NodeNotReady"
+      node_unhealthy_reason     = "AutoScalingGroupNotFound"
+      repair_action             = "Reboot"
+    }
   }
 
   depends_on = [
@@ -2199,6 +2446,35 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccNodeGroupConfig_updateStrategy(rName, updateStrategy string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+    update_strategy = %[2]q
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName, updateStrategy))
 }
 
 func testAccNodeGroupConfig_version(rName, version string) string {

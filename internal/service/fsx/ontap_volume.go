@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -16,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -429,7 +431,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	volume, err := findONTAPVolumeByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx for NetApp ONTAP Volume (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -605,7 +607,7 @@ func findONTAPVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*aws
 	}
 
 	if output.OntapConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -649,8 +651,7 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 
 		if errs.IsA[*awstypes.VolumeNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -668,11 +669,11 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 	return output, nil
 }
 
-func statusVolume(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVolume(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVolumeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -688,7 +689,7 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VolumeLifecycleCreating, awstypes.VolumeLifecyclePending),
 		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
-		Refresh: statusVolume(ctx, conn, id),
+		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -697,7 +698,7 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		if output.Lifecycle == awstypes.VolumeLifecycleFailed && output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -710,7 +711,7 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VolumeLifecyclePending),
 		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
-		Refresh: statusVolume(ctx, conn, id),
+		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
@@ -731,12 +732,12 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 
 			if reason := output.LifecycleTransitionReason; reason != nil {
 				if message := aws.ToString(reason.Message); administrativeActionsError != nil {
-					tfresource.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
+					retry.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
 				} else {
-					tfresource.SetLastError(err, errors.New(message))
+					retry.SetLastError(err, errors.New(message))
 				}
 			} else {
-				tfresource.SetLastError(err, administrativeActionsError)
+				retry.SetLastError(err, administrativeActionsError)
 			}
 		}
 
@@ -750,7 +751,7 @@ func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting),
 		Target:       []string{},
-		Refresh:      statusVolume(ctx, conn, id),
+		Refresh:      statusVolume(conn, id),
 		Timeout:      timeout,
 		Delay:        30 * time.Second,
 		PollInterval: 10 * time.Second,
@@ -760,7 +761,7 @@ func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout
 
 	if output, ok := outputRaw.(*awstypes.Volume); ok {
 		if output.Lifecycle == awstypes.VolumeLifecycleFailed && output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -786,11 +787,11 @@ func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID
 	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVolumeAdministrativeAction(conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -806,7 +807,7 @@ func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
 		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
-		Refresh: statusVolumeAdministrativeAction(ctx, conn, volID, actionType),
+		Refresh: statusVolumeAdministrativeAction(conn, volID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -815,7 +816,7 @@ func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Clie
 
 	if output, ok := outputRaw.(*awstypes.AdministrativeAction); ok {
 		if output.Status == awstypes.StatusFailed && output.FailureDetails != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

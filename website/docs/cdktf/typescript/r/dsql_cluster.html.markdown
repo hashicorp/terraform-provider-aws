@@ -43,7 +43,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `deletionProtectionEnabled` - (Required) Whether deletion protection is enabled in this cluster.
+* `deletionProtectionEnabled` - (Optional) Whether deletion protection is enabled in this cluster.
+  Default value is `false`.
+* `forceDestroy` - (Optional) Destroys cluster even if `deletionProtectionEnabled` is set to `true`.
+  Default value is `false`.
 * `kmsEncryptionKey` - (Optional) The ARN of the AWS KMS key that encrypts data in the DSQL Cluster, or `"AWS_OWNED_KMS_KEY"`.
 * `multiRegionProperties` - (Optional) Multi-region properties of the DSQL Cluster.
     * `witnessRegion` - (Required) Witness region for the multi-region clusters. Setting this makes this cluster a multi-region cluster. Changing it recreates the resource.
@@ -104,4 +107,4 @@ Using `terraform import`, import DSQL Cluster using the `identifier`. For exampl
 % terraform import aws_dsql_cluster.example abcde1f234ghijklmnop5qr6st
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f51ceed27c21bd006ea16a9b891ac6b1c49ea2235656a57479efdd3faeb4f6a9 -->
+<!-- cache-key: cdktf-0.20.8 input-72bb60e8726c05b91e2b78d5786d012c225b3d36fcdf0bc4ca911c6e6fa4ab42 -->

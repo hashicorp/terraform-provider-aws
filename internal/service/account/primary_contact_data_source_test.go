@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package account_test
@@ -16,7 +16,7 @@ func testAccPrimaryContactDataSource_basic(t *testing.T) {
 	resourceName := "aws_account_primary_contact.test"
 	dataSourceName := "data.aws_account_primary_contact.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,7 +48,7 @@ func testAccPrimaryContactDataSource_accountID(t *testing.T) {
 	resourceName := "aws_account_primary_contact.test"
 	dataSourceName := "data.aws_account_primary_contact.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)

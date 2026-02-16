@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -13,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -169,7 +171,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 
 	oidc, err := findOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Identity Provider Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -247,8 +249,7 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -257,17 +258,17 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 	}
 
 	if output == nil || output.IdentityProviderConfig == nil || output.IdentityProviderConfig.Oidc == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IdentityProviderConfig.Oidc, nil
 }
 
-func statusOIDCIdentityProviderConfig(ctx context.Context, conn *eks.Client, clusterName, configName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOIDCIdentityProviderConfig(conn *eks.Client, clusterName, configName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -283,7 +284,7 @@ func waitOIDCIdentityProviderConfigCreated(ctx context.Context, conn *eks.Client
 	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigStatusCreating),
 		Target:  enum.Slice(types.ConfigStatusActive),
-		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
+		Refresh: statusOIDCIdentityProviderConfig(conn, clusterName, configName),
 		Timeout: timeout,
 	}
 
@@ -300,7 +301,7 @@ func waitOIDCIdentityProviderConfigDeleted(ctx context.Context, conn *eks.Client
 	stateConf := retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigStatusActive, types.ConfigStatusDeleting),
 		Target:  []string{},
-		Refresh: statusOIDCIdentityProviderConfig(ctx, conn, clusterName, configName),
+		Refresh: statusOIDCIdentityProviderConfig(conn, clusterName, configName),
 		Timeout: timeout,
 	}
 

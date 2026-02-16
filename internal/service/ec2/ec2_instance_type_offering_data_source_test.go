@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,6 +14,7 @@ import (
 func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
+	dataSourceOfferingsName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
@@ -24,7 +25,9 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrInstanceType),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, dataSourceOfferingsName, "instance_types.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrLocation, dataSourceOfferingsName, "locations.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "location_type", dataSourceOfferingsName, "location_types.0"),
 				),
 			},
 		},
@@ -34,6 +37,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
+	dataSourceOfferingsName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
@@ -44,7 +48,9 @@ func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrInstanceType),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceType, dataSourceOfferingsName, "instance_types.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrLocation, dataSourceOfferingsName, "locations.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "location_type", dataSourceOfferingsName, "location_types.0"),
 				),
 			},
 		},
@@ -65,6 +71,8 @@ func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.
 				Config: testAccInstanceTypeOfferingDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "t3.micro"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrLocation),
+					resource.TestCheckResourceAttrSet(dataSourceName, "location_type"),
 				),
 			},
 		},

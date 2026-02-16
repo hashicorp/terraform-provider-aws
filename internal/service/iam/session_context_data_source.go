@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,7 +64,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 	var roleName, sessionName string
 	var err error
 
-	if roleName, sessionName = RoleNameSessionFromARN(arn); roleName == "" {
+	if roleName, sessionName = roleNameSessionFromARN(arn); roleName == "" {
 		d.Set("issuer_arn", arn)
 		d.Set("issuer_id", "")
 		d.Set("issuer_name", "")
@@ -77,7 +80,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 
 		role, err = findRoleByName(ctx, conn, roleName)
 
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			return tfresource.RetryableError(err)
 		}
 
@@ -104,9 +107,9 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-// RoleNameSessionFromARN returns the role and session names in an ARN if any.
+// roleNameSessionFromARN returns the role and session names in an ARN if any.
 // Otherwise, it returns empty strings.
-func RoleNameSessionFromARN(rawARN string) (string, string) {
+func roleNameSessionFromARN(rawARN string) (string, string) {
 	parsedARN, err := arn.Parse(rawARN)
 
 	if err != nil {

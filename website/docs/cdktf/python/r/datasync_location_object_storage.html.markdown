@@ -61,6 +61,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datasync_location_object_storage.example
+  identity = {
+    "arn" = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567"
+  }
+}
+
+resource "aws_datasync_location_object_storage" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DataSync object storage location.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_object_storage` using the Amazon Resource Name (ARN). For example:
 
 ```python
@@ -84,4 +105,4 @@ Using `terraform import`, import `aws_datasync_location_object_storage` using th
 % terraform import aws_datasync_location_object_storage.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23ffbd5f596edf832e90250f2c0235731cac1c9e444c046908a454ea94e05529 -->
+<!-- cache-key: cdktf-0.20.8 input-a1ba3887ecea2e1a95063a9991b59fb8660f7e444b31e58e705275e129ba85b2 -->

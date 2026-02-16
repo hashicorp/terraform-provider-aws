@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package networkfirewall
 
@@ -121,12 +123,12 @@ func dataSourceFirewallPolicy() *schema.Resource {
 										},
 										"override": {
 											Type:     schema.TypeList,
-											Optional: true,
+											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													names.AttrAction: {
 														Type:     schema.TypeString,
-														Optional: true,
+														Computed: true,
 													},
 												},
 											},

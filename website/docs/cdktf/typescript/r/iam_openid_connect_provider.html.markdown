@@ -83,6 +83,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_openid_connect_provider.example
+  identity = {
+    "arn" = "arn:aws:iam::123456789012:oidc-provider/example.com"
+  }
+}
+
+resource "aws_iam_openid_connect_provider" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IAM OpenID Connect provider.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM OpenID Connect Providers using the `arn`. For example:
 
 ```typescript
@@ -113,4 +134,4 @@ Using `terraform import`, import IAM OpenID Connect Providers using the `arn`. F
 % terraform import aws_iam_openid_connect_provider.default arn:aws:iam::123456789012:oidc-provider/accounts.google.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e2cd1f4321555976006b3e49dc099c30a8186e7523e946ce333ba211831bd1b8 -->
+<!-- cache-key: cdktf-0.20.8 input-0fb8cdb253bc9ecd903bc1645431ab76141618cf92ca8e6f0236152bb613da19 -->

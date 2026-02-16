@@ -485,6 +485,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_appflow_flow.example
+  identity = {
+    name = "example-flow"
+  }
+}
+
+resource "aws_appflow_flow" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the AppFlow flow.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `name`. For example:
 
 ```typescript
@@ -511,4 +537,4 @@ Using `terraform import`, import AppFlow flows using the `name`. For example:
 % terraform import aws_appflow_flow.example example-flow
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7017a77d27953775f1b8ccb87ec79640089cb9073264163b987668fee1ed425c -->
+<!-- cache-key: cdktf-0.20.8 input-f1afa0438567a4cf1bea584d95bfbe21248a909997ec51fdcb4db8e0cbd12d93 -->

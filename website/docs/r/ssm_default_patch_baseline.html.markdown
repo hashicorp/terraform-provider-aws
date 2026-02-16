@@ -39,6 +39,7 @@ This resource supports the following arguments:
   `AMAZON_LINUX`,
   `AMAZON_LINUX_2`,
   `AMAZON_LINUX_2022`,
+  `AMAZON_LINUX_2023`,
   `CENTOS`,
   `DEBIAN`,
   `MACOS`,

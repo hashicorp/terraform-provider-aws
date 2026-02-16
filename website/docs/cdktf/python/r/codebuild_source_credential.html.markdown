@@ -105,6 +105,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_source_credential.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:token/github"
+  }
+}
+
+resource "aws_codebuild_source_credential" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild source credential.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:
 
@@ -129,4 +150,4 @@ Using `terraform import`, import CodeBuild Source Credential using the CodeBuild
 % terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da6d2c9de23fdd9e93ed468a09d92d5229183095c3cefe5b05acf97dc26ad8ec -->
+<!-- cache-key: cdktf-0.20.8 input-1f806a48b036ceae191b2f0f7b017bf64a191c11c7a1aa187c0578c146f409c2 -->

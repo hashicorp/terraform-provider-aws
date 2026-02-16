@@ -128,8 +128,8 @@ resource "aws_ssm_maintenance_window_target" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
 
@@ -154,4 +154,4 @@ Using `terraform import`, import SSM Maintenance Window targets using `WINDOW_ID
 % terraform import aws_ssm_maintenance_window_target.example mw-0c50858d01EXAMPLE/23639a0b-ddbc-4bca-9e72-78d96EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3809c04101a240828cbc81fcd484c417f1cd2af3c4ebb46a7650daaa51bad8d6 -->
+<!-- cache-key: cdktf-0.20.8 input-3a90a45f7edeb19456221d335d09db0b291cc3bb88ba2933bed5c8358ec69b15 -->

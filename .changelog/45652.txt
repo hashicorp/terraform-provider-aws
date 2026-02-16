@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `response_streaming_invoke_arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `response_streaming_invoke_arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Support `code_signing_config_arn` in AWS GovCloud (US) Regions
+```

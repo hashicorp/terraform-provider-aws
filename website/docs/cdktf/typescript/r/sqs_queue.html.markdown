@@ -239,6 +239,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sqs_queue.example
+  identity = {
+    url = "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
+  }
+}
+
+resource "aws_sqs_queue" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `url` (String) URL of the SQS queue.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queues using the queue `url`. For example:
 
 ```typescript
@@ -255,7 +281,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SqsQueue.generateConfigForImport(
       this,
-      "publicQueue",
+      "example",
       "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
     );
   }
@@ -266,7 +292,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import SQS Queues using the queue `url`. For example:
 
 ```console
-% terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
+% terraform import aws_sqs_queue.example https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ec54c5eaae6e7a43b4fc5f78778f370c551ccbe27e1307f1b97aee8c10ccbc88 -->
+<!-- cache-key: cdktf-0.20.8 input-544a3a13de54ae0d9f7af4143e60aa52a2da530829a47308342006553ef0eb69 -->

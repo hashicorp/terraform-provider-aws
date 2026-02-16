@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package fsx
 
@@ -14,13 +16,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -105,7 +107,7 @@ func resourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -205,8 +207,7 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 
 		if errs.IsA[*awstypes.SnapshotNotFound](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -224,11 +225,11 @@ func findSnapshots(ctx context.Context, conn *fsx.Client, input *fsx.DescribeSna
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshot(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -244,7 +245,7 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeo
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecycleCreating, awstypes.SnapshotLifecyclePending),
 		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -253,7 +254,7 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -266,7 +267,7 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeo
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecyclePending),
 		Target:  enum.Slice(awstypes.SnapshotLifecycleAvailable),
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
@@ -275,7 +276,7 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -288,7 +289,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeo
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotLifecyclePending, awstypes.SnapshotLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, id),
+		Refresh: statusSnapshot(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -297,7 +298,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err

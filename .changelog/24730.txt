@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_servicecatalog_portfolio_share: Add global mutex lock around create and delete operations to prevent `ThrottlingException` errors
+```

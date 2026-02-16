@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -15,12 +17,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,9 +32,11 @@ import (
 
 // @SDKResource("aws_s3_bucket_versioning", name="Bucket Versioning")
 // @IdentityAttribute("bucket")
-// @IdentityAttribute("expected_bucket_owner", optional="true")
-// @ImportIDHandler("resourceImportID")
+// @IdentityVersion(1)
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.31.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketVersioningCreate,
@@ -49,8 +54,8 @@ func resourceBucketVersioning() *schema.Resource {
 			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 			},
 			"mfa": {
 				Type:     schema.TypeString,
@@ -78,7 +83,7 @@ func resourceBucketVersioning() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
+		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// This CustomizeDiff acts as a plan-time validation to prevent MalformedXML errors
 				// when updating bucket versioning to "Disabled" on existing resources
@@ -94,6 +99,23 @@ func resourceBucketVersioning() *schema.Resource {
 					return fmt.Errorf("versioning_configuration.status cannot be updated from '%s' to '%s'", oldStatus, newStatus)
 				}
 
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+				if d.HasChange(names.AttrExpectedBucketOwner) {
+					o, n := d.GetChange(names.AttrExpectedBucketOwner)
+					os, ns := o.(string), n.(string)
+					if os == ns {
+						return nil
+					}
+					if os == "" && ns == meta.(*conns.AWSClient).AccountID(ctx) {
+						return nil
+					}
+					return d.ForceNew(names.AttrExpectedBucketOwner)
+				}
 				return nil
 			},
 		),
@@ -117,7 +139,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 	// supported within the aws_s3_bucket resource of the 3.x version of the provider.
 	// Thus, we essentially bring existing bucket versioning into adoption.
 	if string(versioningConfiguration.Status) != bucketVersioningStatusDisabled {
-		input := &s3.PutBucketVersioningInput{
+		input := s3.PutBucketVersioningInput{
 			Bucket:                  aws.String(bucket),
 			VersioningConfiguration: versioningConfiguration,
 		}
@@ -130,7 +152,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-			return conn.PutBucketVersioning(ctx, input)
+			return conn.PutBucketVersioning(ctx, &input)
 		}, errCodeNoSuchBucket)
 
 		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -166,7 +188,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -198,7 +220,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketVersioningInput{
+	input := s3.PutBucketVersioningInput{
 		Bucket:                  aws.String(bucket),
 		VersioningConfiguration: expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]any)),
 	}
@@ -210,7 +232,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 		input.MFA = aws.String(v.(string))
 	}
 
-	_, err = conn.PutBucketVersioning(ctx, input)
+	_, err = conn.PutBucketVersioning(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Versioning (%s): %s", d.Id(), err)
@@ -237,7 +259,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	input := &s3.PutBucketVersioningInput{
+	input := s3.PutBucketVersioningInput{
 		Bucket: aws.String(bucket),
 		VersioningConfiguration: &types.VersioningConfiguration{
 			// Status must be provided thus to "remove" this resource,
@@ -249,7 +271,7 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.PutBucketVersioning(ctx, input)
+	_, err = conn.PutBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 		return diags
@@ -312,17 +334,17 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []any {
 }
 
 func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	input := &s3.GetBucketVersioningInput{
+	input := s3.GetBucketVersioningInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	output, err := conn.GetBucketVersioning(ctx, input)
+	output, err := conn.GetBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -333,17 +355,17 @@ func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expected
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
+func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -360,7 +382,7 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 }
 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
 		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),

@@ -58,6 +58,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dynamodb_resource_policy.example
+  identity = {
+    "arn" = "arn:aws:dynamodb:us-west-2:123456789012:table/example-table"
+  }
+}
+
+resource "aws_dynamodb_resource_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DynamoDB table.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Resource Policy using the `resourceArn`. For example:
 
 ```typescript
@@ -88,4 +109,4 @@ Using `terraform import`, import DynamoDB Resource Policy using the `resourceArn
 % terraform import aws_dynamodb_resource_policy.example arn:aws:dynamodb:us-east-1:1234567890:table/my-table
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ee594c64d50982c7dc6c35cd63d48181422a6d8123b618dd154234fc6ed3b5fe -->
+<!-- cache-key: cdktf-0.20.8 input-0466139bf24aaf9aecdf2a65de4870f152b335080e3f3b1d895069a73c78f6e6 -->

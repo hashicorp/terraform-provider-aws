@@ -1,46 +1,41 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftDataShareAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_data_share_authorization.test"
 	callerIdentityDataSourceName := "data.aws_caller_identity.current"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataShareAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataShareAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataShareAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataShareAuthorizationExists(ctx, resourceName),
+					testAccCheckDataShareAuthorizationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "consumer_identifier", callerIdentityDataSourceName, names.AttrAccountID),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
@@ -57,23 +52,23 @@ func TestAccRedshiftDataShareAuthorization_basic(t *testing.T) {
 
 func TestAccRedshiftDataShareAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_data_share_authorization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataShareAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataShareAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataShareAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataShareAuthorizationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceDataShareAuthorization, resourceName),
+					testAccCheckDataShareAuthorizationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceDataShareAuthorization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,50 +76,44 @@ func TestAccRedshiftDataShareAuthorization_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDataShareAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataShareAuthorizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_data_share_authorization" {
 				continue
 			}
 
-			_, err := tfredshift.FindDataShareAuthorizationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindDataShareAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["data_share_arn"], rs.Primary.Attributes["consumer_identifier"])
 
-			if errs.IsA[*awstypes.ResourceNotFoundFault](err) || errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") {
-				return nil
+			if retry.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameDataShareAuthorization, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.Redshift, create.ErrActionCheckingDestroyed, tfredshift.ResNameDataShareAuthorization, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Redshift Data Share Authorization %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDataShareAuthorizationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckDataShareAuthorizationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareAuthorization, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareAuthorization, name, errors.New("not set"))
-		}
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
-		_, err := tfredshift.FindDataShareAuthorizationByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameDataShareAuthorization, rs.Primary.ID, err)
-		}
+		_, err := tfredshift.FindDataShareAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["data_share_arn"], rs.Primary.Attributes["consumer_identifier"])
 
-		return nil
+		return err
 	}
 }
 

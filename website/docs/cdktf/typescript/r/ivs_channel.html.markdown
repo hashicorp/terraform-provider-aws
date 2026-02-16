@@ -67,6 +67,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivs_channel.example
+  identity = {
+    "arn" = "arn:aws:ivs:us-west-2:123456789012:channel/abcdABCDefgh"
+  }
+}
+
+resource "aws_ivs_channel" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS channel.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Channel using the ARN. For example:
 
 ```typescript
@@ -97,4 +118,4 @@ Using `terraform import`, import IVS (Interactive Video) Channel using the ARN. 
 % terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9dd6f1ec0799f694a501c18e60fe39696da91a78e6bdb9d25e35b8482f0433bc -->
+<!-- cache-key: cdktf-0.20.8 input-a50eadcd0645baa7118176b36325f09d2c7ce5cc2d549f4b0d2ff9e4ed46bc50 -->

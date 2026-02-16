@@ -118,6 +118,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_infrastructure_configuration.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example"
+  }
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder infrastructure configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_infrastructure_configuration` using the Amazon Resource Name (ARN). For example:
 
 ```python
@@ -141,4 +162,4 @@ Using `terraform import`, import `aws_imagebuilder_infrastructure_configuration`
 % terraform import aws_imagebuilder_infrastructure_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:infrastructure-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-67e97cc22ff316a40bbdbc14feacb77a69fffc88f8d2c98b3a104d6fe39d9529 -->
+<!-- cache-key: cdktf-0.20.8 input-78ca630fa4c9c60385876008df5cb4e2a72055dfc38eed2ea6040f56873b6cc3 -->

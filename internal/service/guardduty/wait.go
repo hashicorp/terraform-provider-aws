@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -36,7 +36,7 @@ func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.Client, adminA
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
 		Target:  enum.Slice(awstypes.AdminStatusEnabled),
-		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
+		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
 		Timeout: adminAccountEnabledTimeout,
 	}
 
@@ -54,7 +54,7 @@ func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, admin
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AdminStatusDisableInProgress),
 		Target:  []string{adminStatusNotFound},
-		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
+		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
 		Timeout: adminAccountNotFoundTimeout,
 	}
 
@@ -72,7 +72,7 @@ func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.Clien
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PublishingStatusPendingVerification),
 		Target:  enum.Slice(awstypes.PublishingStatusPublishing),
-		Refresh: statusPublishingDestination(ctx, conn, destinationID, detectorID),
+		Refresh: statusPublishingDestination(conn, destinationID, detectorID),
 		Timeout: publishingDestinationCreatedTimeout,
 	}
 

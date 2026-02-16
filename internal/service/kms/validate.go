@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -42,7 +42,7 @@ func validNameForDataSource(v any, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
+			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
 	return
 }
@@ -56,7 +56,7 @@ func validNameForResource(v any, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
+			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
 	}
 	return
 }

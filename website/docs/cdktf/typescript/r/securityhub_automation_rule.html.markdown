@@ -230,6 +230,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_automation_rule.example
+  identity = {
+    "arn" = "arn:aws:securityhub:us-east-1:123456789012:automation-rule/a1b2c3d4-5678-90ab-cdef-EXAMPLE11111"
+  }
+}
+
+resource "aws_securityhub_automation_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Security Hub automation rule.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub Automation Rule using their ARN. For example:
 
 ```typescript
@@ -260,4 +281,4 @@ Using `terraform import`, import Security Hub automation rule using their ARN. F
 % terraform import aws_securityhub_automation_rule.example arn:aws:securityhub:us-west-2:123456789012:automation-rule/473eddde-f5c4-4ae5-85c7-e922f271fffc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81c18d1a12d6222b344403790788bd22ca4948c5eff97795f2391c81db89ad2a -->
+<!-- cache-key: cdktf-0.20.8 input-8f9c058cd88e28fd4a50e9670103e11aa45e98a959542aac490f89982468a511 -->

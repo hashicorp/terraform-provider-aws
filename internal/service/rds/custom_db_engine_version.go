@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package rds
 
@@ -15,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -257,7 +259,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 
 	out, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Custom DB Engine Version (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -403,8 +405,7 @@ func findDBEngineVersions(ctx context.Context, conn *rds.Client, input *rds.Desc
 
 		if errs.IsA[*types.CustomDBEngineVersionNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -431,11 +432,11 @@ const (
 	statusPendingValidation = "pending-validation" // Custom for SQL Server, ready for validation by an instance
 )
 
-func statusDBEngineVersion(ctx context.Context, conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBEngineVersion(conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -451,7 +452,7 @@ func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.Client, eng
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusCreating},
 		Target:                    []string{statusAvailable, statusPendingValidation},
-		Refresh:                   statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh:                   statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -470,7 +471,7 @@ func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.Client, eng
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusAvailable},
 		Target:  []string{statusAvailable, statusPendingValidation},
-		Refresh: statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh: statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout: timeout,
 	}
 
@@ -487,7 +488,7 @@ func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.Client, eng
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting},
 		Target:  []string{},
-		Refresh: statusDBEngineVersion(ctx, conn, engine, engineVersion),
+		Refresh: statusDBEngineVersion(conn, engine, engineVersion),
 		Timeout: timeout,
 	}
 
