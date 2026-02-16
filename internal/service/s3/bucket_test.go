@@ -2452,7 +2452,7 @@ func TestAccS3Bucket_Namespace_global(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Namespace_accountRegional(t *testing.T) {
+func TestAccS3Bucket_Namespace_AccountRegional_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
@@ -2464,7 +2464,7 @@ func TestAccS3Bucket_Namespace_accountRegional(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(bucketName),
 				},
@@ -2477,13 +2477,101 @@ func TestAccS3Bucket_Namespace_accountRegional(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringRegexp(regexache.MustCompile(`^`+bucketName+`-`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("")),
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(bucketName),
+				},
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Namespace_AccountRegional_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_generated/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrBucket, fmt.Sprintf("-%s-%s-an", acctest.AccountID(ctx), acctest.Region()))(s)
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact(id.UniqueIdPrefix)),
+				},
+			},
+			{
+				ConfigDirectory:   config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_generated/"),
+				ImportStateKind:   resource.ImportCommandWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Namespace_AccountRegional_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_prefix/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable("tf-prefix-"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					func(s *terraform.State) error {
+						return acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrBucket, "tf-prefix-", fmt.Sprintf("-%s-%s-an", acctest.AccountID(ctx), acctest.Region()))(s)
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceAccountRegional)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("tf-prefix-")),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/namespace_account-regional_name_prefix/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable("tf-prefix-"),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
 				ResourceName:      resourceName,

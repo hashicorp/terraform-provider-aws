@@ -742,7 +742,12 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrBucket).(string)), create.WithConfiguredPrefix(d.Get(names.AttrBucketPrefix).(string))}
+	switch types.BucketNamespace(d.Get("bucket_namespace").(string)) {
+	case types.BucketNamespaceAccountRegional:
+		optFns = append(optFns, create.WithSuffix(fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
+	}
+	bucket := create.NewNameGenerator(optFns...).Generate()
 	region := c.Region(ctx)
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
@@ -836,12 +841,18 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
 	d.Set(names.AttrBucket, d.Id())
 	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
+	var bucketNamespace types.BucketNamespace
 	if accountRegionalBucketNameRegex.MatchString(d.Id()) {
-		d.Set("bucket_namespace", types.BucketNamespaceAccountRegional)
+		bucketNamespace = types.BucketNamespaceAccountRegional
 	} else {
-		d.Set("bucket_namespace", types.BucketNamespaceGlobal)
+		bucketNamespace = types.BucketNamespaceGlobal
 	}
-	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+	d.Set("bucket_namespace", bucketNamespace)
+	if bucketNamespace == types.BucketNamespaceAccountRegional {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromNameWithSuffix(d.Id(), fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
+	} else {
+		d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+	}
 
 	//
 	// Bucket Policy.
