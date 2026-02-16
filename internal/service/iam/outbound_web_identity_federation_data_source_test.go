@@ -28,11 +28,11 @@ func TestAccIAMOutboundWebIdentityFederationDataSource_basic(t *testing.T) {
 				Config: testAccOutboundWebIdentityFederationDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_identifier", resourceName, "issuer_identifier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "issuer_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, "issuer_identifier"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("issuer_identifier"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 				},
 			},
 		},

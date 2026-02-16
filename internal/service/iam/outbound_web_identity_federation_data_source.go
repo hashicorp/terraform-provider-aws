@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_iam_outbound_web_identity_federation", name="Outbound Web Identity Federation")
@@ -29,7 +30,7 @@ type outboundWebIdentityFederationDataSource struct {
 func (d *outboundWebIdentityFederationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Computed: true,
 			},
 			"issuer_identifier": schema.StringAttribute{
