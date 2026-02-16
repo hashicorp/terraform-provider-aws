@@ -472,11 +472,11 @@ func statusCreateAccountState(ctx context.Context, conn *organizations.Client, i
 	return func() (any, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
 		if err != nil {
+			if retry.NotFound(err) {
+				return nil, "", nil
+			}
+
 			return nil, "", err
 		}
 
@@ -510,11 +510,11 @@ func statusAccountState(ctx context.Context, conn *organizations.Client, id stri
 	return func() (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
 		if err != nil {
+			if retry.NotFound(err) {
+				return nil, "", nil
+			}
+
 			return nil, "", err
 		}
 
