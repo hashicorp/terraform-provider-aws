@@ -78,6 +78,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_namespace", "global"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_region", region),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),

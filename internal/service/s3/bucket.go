@@ -831,6 +831,11 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
 	d.Set(names.AttrBucket, d.Id())
 	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
+	if accountRegionalBucketNameRegex.MatchString(d.Id()) {
+		d.Set("bucket_namespace", types.BucketNamespaceAccountRegional)
+	} else {
+		d.Set("bucket_namespace", types.BucketNamespaceGlobal)
+	}
 	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
 
 	//
