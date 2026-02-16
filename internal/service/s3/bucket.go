@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -728,6 +729,10 @@ func resourceBucket() *schema.Resource {
 				Computed:   true,
 				Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
 			},
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validateBucketName,
 		},
 	}
 }
@@ -1624,6 +1629,34 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
+}
+
+func validateBucketName(ctx context.Context, request schema.ValidateResourceConfigFuncRequest, response *schema.ValidateResourceConfigFuncResponse) {
+	bucket, bucketNamespace := request.RawConfig.GetAttr(names.AttrBucket), request.RawConfig.GetAttr("bucket_namespace")
+	if !bucket.IsKnown() || bucket.IsNull() || !bucketNamespace.IsKnown() || bucketNamespace.IsNull() {
+		return
+	}
+
+	switch bucket, bucketNamespace := bucket.AsString(), types.BucketNamespace(bucketNamespace.AsString()); bucketNamespace {
+	case types.BucketNamespaceAccountRegional:
+		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+			response.Diagnostics = append(response.Diagnostics, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Invalid Bucket",
+				Detail:        fmt.Sprintf("%s is not an account-regional namespace bucket", bucket),
+				AttributePath: cty.GetAttrPath(names.AttrBucket),
+			})
+		}
+	case types.BucketNamespaceGlobal:
+		if accountRegionalBucketNameRegex.MatchString(bucket) {
+			response.Diagnostics = append(response.Diagnostics, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Invalid Bucket",
+				Detail:        fmt.Sprintf("%s is an account-regional namespace bucket", bucket),
+				AttributePath: cty.GetAttrPath(names.AttrBucket),
+			})
+		}
+	}
 }
 
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
