@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,6 +47,12 @@ const (
 	// General timeout for S3 bucket changes to propagate.
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
 	bucketPropagationTimeout = 2 * time.Minute
+)
+
+var (
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html#general-purpose-bucket-names.
+	// e.g. example-123456789012-us-west-2-an or example-123456789012-usw2-an
+	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)|[a-z0-9]+)-an$`)
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")

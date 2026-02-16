@@ -2650,6 +2650,56 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}
 }
 
+func TestBucketNamespace(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		BucketName string
+		Expect     bool
+	}{
+		{
+			BucketName: "test-bucket",
+		},
+		{
+			BucketName: "test-bucket-an",
+		},
+		{
+			BucketName: "test-bucket-123456789012-an",
+		},
+		{
+			BucketName: "test-bucket-us-west-2-an",
+		},
+		{
+			BucketName: "test-bucket-123456789012-us-west-2",
+		},
+		{
+			BucketName: "test-bucket-1234567890123-us-west-2-an",
+		},
+		{
+			BucketName: "test-bucket-123456789012-us-west-2-an",
+			Expect:     true,
+		},
+		{
+			BucketName: "test-bucket-123456789012-eusc-de-east-1-an",
+			Expect:     true,
+		},
+		{
+			BucketName: "test-bucket-123456789012-us-gov-east-1-an",
+			Expect:     true,
+		},
+		{
+			BucketName: "test-bucket-123456789012-usw2-an",
+			Expect:     true,
+		},
+	}
+
+	for _, tc := range testCases {
+		if got, want := tfs3.AccountRegionalBucketNameRegex.MatchString(tc.BucketName), tc.Expect; got != want {
+			t.Errorf("MatchString(%q) = %v, want %v", tc.BucketName, got, want)
+		}
+	}
+}
+
 func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error { return testAccCheckBucketDestroyWithProvider(ctx)(s, acctest.Provider) }
 }
