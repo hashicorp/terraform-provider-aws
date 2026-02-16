@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add `bucket_namespace` argument
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket: Add `bucket_namespace` attribute
+```

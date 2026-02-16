@@ -117,6 +117,13 @@ func resourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bucket_namespace": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.BucketNamespace](),
+			},
 			names.AttrBucketPrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -749,6 +756,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		// Use default value previously available in v3.x of the provider.
 		input.ACL = types.BucketCannedACLPrivate
+	}
+
+	if v, ok := d.GetOk("bucket_namespace"); ok {
+		input.BucketNamespace = types.BucketNamespace(v.(string))
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
