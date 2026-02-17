@@ -2290,6 +2290,48 @@ func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T
 	})
 }
 
+func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange_payPerRequestRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_singleRangeKeyOnDemand(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleRangeKeyOnDemand(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_noChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -9382,6 +9424,76 @@ resource "aws_dynamodb_table" "test" {
     projection_type = "KEYS_ONLY"
     write_capacity  = 1
     read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_singleRangeKeyOnDemand(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "GSI"
+    hash_key        = "TestTableGSIHashKey"
+    range_key       = "TestGSIRangeKey"
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_singleRangeKeyOnDemand(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableGSIHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableGSIHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    projection_type = "ALL"
   }
 }
 `, rName)

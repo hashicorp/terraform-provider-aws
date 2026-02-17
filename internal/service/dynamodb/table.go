@@ -3587,13 +3587,17 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 
 	for name, vState := range state {
 		vPlan := plan[name]
+		planKeySchema := vPlan.GetAttr("key_schema")
 
 		for attrName := range vState.Type().AttributeTypes() {
 			s := vState.GetAttr(attrName)
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
 			case "hash_key":
-				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+				if !p.IsKnown() && hasKnownKeySchema(planKeySchema) {
+					continue
+				}
+				if p.IsNull() && !s.IsNull() && hasKnownKeySchema(planKeySchema) {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}
@@ -3602,7 +3606,10 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 				}
 
 			case "range_key":
-				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+				if !p.IsKnown() && hasKnownKeySchema(planKeySchema) {
+					continue
+				}
+				if p.IsNull() && !s.IsNull() && hasKnownKeySchema(planKeySchema) {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}
@@ -3611,10 +3618,16 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 				}
 
 			case "key_schema":
+				if !p.IsKnown() {
+					return nil
+				}
 				// key_schema is a block nested list, so the zero-value is an empty list
 				if p.LengthInt() == 0 && s.LengthInt() > 0 {
 					// "hash_key" is set
 					continue // change to "hash_key" will be caught by equality test
+				}
+				if gsiLegacyKeySchemaEquivalent(vState, vPlan) {
+					continue
 				}
 				if !ctyValueLegacyEquals(s, p) {
 					return nil
@@ -3640,6 +3653,68 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 	}
 
 	return diff.Clear("global_secondary_index")
+}
+
+func hasKnownKeySchema(keySchema cty.Value) bool {
+	return keySchema.IsKnown() && !keySchema.IsNull() && keySchema.LengthInt() > 0
+}
+
+func gsiLegacyKeySchemaEquivalent(vState, vPlan cty.Value) bool {
+	planKeySchema := vPlan.GetAttr("key_schema")
+	if !hasKnownKeySchema(planKeySchema) {
+		return false
+	}
+
+	hashKey, rangeKey, known := keySchemaHashRange(planKeySchema)
+	if !known {
+		return false
+	}
+
+	if !ctyStringMatches(vState.GetAttr("hash_key"), hashKey) {
+		return false
+	}
+	if !ctyStringMatches(vState.GetAttr("range_key"), rangeKey) {
+		return false
+	}
+
+	return true
+}
+
+func keySchemaHashRange(keySchema cty.Value) (string, string, bool) {
+	var hashKey, rangeKey string
+
+	for element := range tfcty.ValueElementValues(keySchema) {
+		if !element.IsKnown() || element.IsNull() {
+			return "", "", false
+		}
+
+		attributeName := element.GetAttr("attribute_name")
+		keyType := element.GetAttr("key_type")
+		if !attributeName.IsKnown() || attributeName.IsNull() || !keyType.IsKnown() || keyType.IsNull() {
+			return "", "", false
+		}
+
+		switch awstypes.KeyType(keyType.AsString()) {
+		case awstypes.KeyTypeHash:
+			hashKey = attributeName.AsString()
+		case awstypes.KeyTypeRange:
+			rangeKey = attributeName.AsString()
+		}
+	}
+
+	return hashKey, rangeKey, true
+}
+
+func ctyStringMatches(v cty.Value, s string) bool {
+	if !v.IsKnown() {
+		return false
+	}
+
+	if v.IsNull() {
+		return s == ""
+	}
+
+	return v.AsString() == s
 }
 
 func collectGSI(gsi cty.Value) map[string]cty.Value {
