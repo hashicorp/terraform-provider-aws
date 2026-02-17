@@ -47,7 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.5.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8 // indirect
@@ -117,8 +117,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.289.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.289.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10 // indirect
@@ -164,7 +164,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.72.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.48.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.21.16 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.47.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0 // indirect
@@ -172,7 +172,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.33.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kms v1.49.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kms v1.50.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.0 // indirect
@@ -253,7 +253,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.67.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.67.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.8 // indirect
