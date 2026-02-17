@@ -1,0 +1,133 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package observabilityadmin
+
+import (
+	"context"
+	"time"
+
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @FrameworkResource("aws_observabilityadmin_telemetry_pipeline", name="Telemetry Pipeline")
+// @Tags(identifierAttribute="arn")
+func newTelemetryPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &telemetryPipelineResource{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
+}
+
+type telemetryPipelineResource struct {
+	framework.ResourceWithModel[telemetryPipelineResourceModel]
+	framework.WithTimeouts
+}
+
+func (r *telemetryPipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"created_timestamp": schema.StringAttribute{
+				Computed: true,
+			},
+			"last_update_timestamp": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 28),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][a-z0-9\-]+$`), "must start with a lowercase letter and contain only lowercase letters, digits, and hyphens"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrStatusReason: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrConfiguration: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[telemetryPipelineConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"body": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
+	}
+}
+
+func (r *telemetryPipelineResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	// Implemented in a later task.
+}
+
+func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	// Implemented in a later task.
+}
+
+func (r *telemetryPipelineResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	// Implemented in a later task.
+}
+
+func (r *telemetryPipelineResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	// Implemented in a later task.
+}
+
+func (r *telemetryPipelineResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
+}
+
+type telemetryPipelineResourceModel struct {
+	ARN                 types.String                                                         `tfsdk:"arn"`
+	Configuration       fwtypes.ListNestedObjectValueOf[telemetryPipelineConfigurationModel] `tfsdk:"configuration"`
+	CreatedTimestamp    types.String                                                         `tfsdk:"created_timestamp"`
+	LastUpdateTimestamp types.String                                                         `tfsdk:"last_update_timestamp"`
+	Name                types.String                                                         `tfsdk:"name"`
+	Status              types.String                                                         `tfsdk:"status"`
+	StatusReason        types.String                                                         `tfsdk:"status_reason"`
+	Tags                tftags.Map                                                           `tfsdk:"tags"`
+	TagsAll             tftags.Map                                                           `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                                       `tfsdk:"timeouts"`
+}
+
+type telemetryPipelineConfigurationModel struct {
+	Body types.String `tfsdk:"body"`
+}
