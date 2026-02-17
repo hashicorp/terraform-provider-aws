@@ -307,7 +307,8 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 							Description: "An identifier for the assumed role session.",
 						},
 						"web_identity_token": schema.StringAttribute{
-							Optional: true,
+							Optional:    true,
+							Description: "Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider. Can also be set with the `TF_AWS_IDENTITY_TOKEN` environment variable.",
 						},
 						"web_identity_token_file": schema.StringAttribute{
 							Optional: true,

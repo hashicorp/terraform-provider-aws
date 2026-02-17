@@ -456,6 +456,8 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
 		})
+	} else if v := os.Getenv("TF_AWS_IDENTITY_TOKEN"); v != "" {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, nil)
 	}
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1036,6 +1038,7 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 				"web_identity_token": {
 					Type:         schema.TypeString,
 					Optional:     true,
+					Description:  "Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider. Can also be set with the `TF_AWS_IDENTITY_TOKEN` environment variable.",
 					ValidateFunc: validation.StringLenBetween(4, 20000),
 					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
 				},
@@ -1120,7 +1123,7 @@ func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (r
 }
 
 func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *awsbase.AssumeRoleWithWebIdentity {
-	if tfMap == nil {
+	if tfMap == nil && os.Getenv("TF_AWS_IDENTITY_TOKEN") == "" {
 		return nil
 	}
 
@@ -1148,6 +1151,8 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]any) *a
 	}
 
 	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
+		assumeRole.WebIdentityToken = v
+	} else if v := os.Getenv("TF_AWS_IDENTITY_TOKEN"); v != "" {
 		assumeRole.WebIdentityToken = v
 	}
 
