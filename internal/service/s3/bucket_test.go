@@ -2582,10 +2582,10 @@ func TestAccS3Bucket_Namespace_AccountRegional_namePrefix(t *testing.T) {
 	})
 }
 
-func TestBucketName(t *testing.T) {
+func TestValidBucketName(t *testing.T) {
 	t.Parallel()
 
-	validDnsNames := []string{
+	validUsWest2GlobalNames := []string{
 		"foobar",
 		"foo.bar",
 		"foo.bar.baz",
@@ -2594,13 +2594,13 @@ func TestBucketName(t *testing.T) {
 		strings.Repeat("x", 63),
 	}
 
-	for _, v := range validDnsNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err != nil {
+	for _, v := range validUsWest2GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceGlobal); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
 
-	invalidDnsNames := []string{
+	invalidUsWest2GlobalNames := []string{
 		"foo..bar",
 		"Foo.Bar",
 		"192.168.0.1",
@@ -2609,15 +2609,16 @@ func TestBucketName(t *testing.T) {
 		"bar.",
 		"foo_bar",
 		strings.Repeat("x", 64),
+		"test-bucket-123456789012-us-west-2-an",
 	}
 
-	for _, v := range invalidDnsNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err == nil {
+	for _, v := range invalidUsWest2GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceGlobal); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
 
-	validEastNames := []string{
+	validUsEast1GlobalNames := []string{
 		"foobar",
 		"foo_bar",
 		"127.0.0.1",
@@ -2628,19 +2629,40 @@ func TestBucketName(t *testing.T) {
 		strings.Repeat("x", 255),
 	}
 
-	for _, v := range validEastNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err != nil {
+	for _, v := range validUsEast1GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID, types.BucketNamespaceGlobal); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
 
-	invalidEastNames := []string{
+	invalidUsEast1GlobalNames := []string{
 		"foo;bar",
 		strings.Repeat("x", 256),
 	}
 
-	for _, v := range invalidEastNames {
-		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err == nil {
+	for _, v := range invalidUsEast1GlobalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID, types.BucketNamespaceGlobal); err == nil {
+			t.Fatalf("%q should not be a valid S3 bucket name", v)
+		}
+	}
+
+	validUsWest2AccountRegionalNames := []string{
+		"test-bucket-123456789012-us-west-2-an",
+		"test-bucket-123456789012-usw2-an",
+	}
+
+	for _, v := range validUsWest2AccountRegionalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceAccountRegional); err != nil {
+			t.Fatalf("%q should be a valid S3 bucket name", v)
+		}
+	}
+
+	invalidUsWest2AccountRegionalNames := []string{
+		"test-bucket",
+	}
+
+	for _, v := range invalidUsWest2AccountRegionalNames {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID, types.BucketNamespaceAccountRegional); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}

@@ -23,7 +23,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -730,10 +729,6 @@ func resourceBucket() *schema.Resource {
 				Deprecated: "website_endpoint is deprecated. Use the aws_s3_bucket_website_configuration resource instead.",
 			},
 		},
-
-		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
-			validateBucketName,
-		},
 	}
 }
 
@@ -742,14 +737,15 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
+	ns := types.BucketNamespace(d.Get("bucket_namespace").(string))
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrBucket).(string)), create.WithConfiguredPrefix(d.Get(names.AttrBucketPrefix).(string))}
-	switch types.BucketNamespace(d.Get("bucket_namespace").(string)) {
+	switch ns {
 	case types.BucketNamespaceAccountRegional:
 		optFns = append(optFns, create.WithSuffix(fmt.Sprintf("-%s-%s-an", c.AccountID(ctx), c.Region(ctx))))
 	}
 	bucket := create.NewNameGenerator(optFns...).Generate()
 	region := c.Region(ctx)
-	if err := validBucketName(bucket, region); err != nil {
+	if err := validBucketName(bucket, region, ns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
 	}
 
@@ -1640,34 +1636,6 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
-}
-
-func validateBucketName(ctx context.Context, request schema.ValidateResourceConfigFuncRequest, response *schema.ValidateResourceConfigFuncResponse) {
-	bucket, bucketNamespace := request.RawConfig.GetAttr(names.AttrBucket), request.RawConfig.GetAttr("bucket_namespace")
-	if !bucket.IsKnown() || bucket.IsNull() || !bucketNamespace.IsKnown() || bucketNamespace.IsNull() {
-		return
-	}
-
-	switch bucket, bucketNamespace := bucket.AsString(), types.BucketNamespace(bucketNamespace.AsString()); bucketNamespace {
-	case types.BucketNamespaceAccountRegional:
-		if !accountRegionalBucketNameRegex.MatchString(bucket) {
-			response.Diagnostics = append(response.Diagnostics, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Invalid Bucket",
-				Detail:        fmt.Sprintf("%s is not an account-regional namespace bucket", bucket),
-				AttributePath: cty.GetAttrPath(names.AttrBucket),
-			})
-		}
-	case types.BucketNamespaceGlobal:
-		if accountRegionalBucketNameRegex.MatchString(bucket) {
-			response.Diagnostics = append(response.Diagnostics, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Invalid Bucket",
-				Detail:        fmt.Sprintf("%s is an account-regional namespace bucket", bucket),
-				AttributePath: cty.GetAttrPath(names.AttrBucket),
-			})
-		}
-	}
 }
 
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
@@ -3042,34 +3010,46 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 // validBucketName validates any S3 bucket name that is not inside the us-east-1 region.
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
-func validBucketName(value string, region string) error {
+func validBucketName(bucket, region string, ns types.BucketNamespace) error {
 	if region != endpoints.UsEast1RegionID {
-		if (len(value) < 3) || (len(value) > 63) {
-			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
+		if (len(bucket) < 3) || (len(bucket) > 63) {
+			return fmt.Errorf("%q must contain from 3 to 63 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(value) {
-			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9a-z-.]+$`).MatchString(bucket) {
+			return fmt.Errorf("only lowercase alphanumeric characters and hyphens allowed in %q", bucket)
 		}
-		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(value) {
-			return fmt.Errorf("%q must not be formatted as an IP address", value)
+		if regexache.MustCompile(`^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$`).MatchString(bucket) {
+			return fmt.Errorf("%q must not be formatted as an IP address", bucket)
 		}
-		if strings.HasPrefix(value, `.`) {
-			return fmt.Errorf("%q cannot start with a period", value)
+		if strings.HasPrefix(bucket, `.`) {
+			return fmt.Errorf("%q cannot start with a period", bucket)
 		}
-		if strings.HasSuffix(value, `.`) {
-			return fmt.Errorf("%q cannot end with a period", value)
+		if strings.HasSuffix(bucket, `.`) {
+			return fmt.Errorf("%q cannot end with a period", bucket)
 		}
-		if strings.Contains(value, `..`) {
-			return fmt.Errorf("%q can be only one period between labels", value)
+		if strings.Contains(bucket, `..`) {
+			return fmt.Errorf("%q can be only one period between labels", bucket)
 		}
 	} else {
-		if len(value) > 255 {
-			return fmt.Errorf("%q must contain less than 256 characters", value)
+		if len(bucket) > 255 {
+			return fmt.Errorf("%q must contain less than 256 characters", bucket)
 		}
-		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(value) {
-			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", value)
+		if !regexache.MustCompile(`^[0-9A-Za-z_.-]+$`).MatchString(bucket) {
+			return fmt.Errorf("only alphanumeric characters, hyphens, periods, and underscores allowed in %q", bucket)
 		}
 	}
+
+	switch ns {
+	case types.BucketNamespaceAccountRegional:
+		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
+		}
+	default:
+		if accountRegionalBucketNameRegex.MatchString(bucket) {
+			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
+		}
+	}
+
 	return nil
 }
 
