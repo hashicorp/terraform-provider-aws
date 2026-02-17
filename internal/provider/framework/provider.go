@@ -308,7 +308,7 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 						},
 						"web_identity_token": schema.StringAttribute{
 							Optional:    true,
-							Description: "Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider. Can also be set with the `TF_AWS_IDENTITY_TOKEN` environment variable.",
+							Description: "Value of a web identity token. Can also be set with the `TF_AWS_IDENTITY_TOKEN` environment variable.",
 						},
 						"web_identity_token_file": schema.StringAttribute{
 							Optional: true,
