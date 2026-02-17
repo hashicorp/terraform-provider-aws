@@ -11,12 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
@@ -26,10 +24,10 @@ import (
 func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securityconfig types.SecurityConfigDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -37,12 +35,12 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
@@ -61,10 +59,10 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securityconfig types.SecurityConfigDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -72,12 +70,12 @@ func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", names.AttrDescription, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
@@ -88,7 +86,7 @@ func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 			{
 				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", "description updated", 40),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
@@ -103,10 +101,10 @@ func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securityconfig types.SecurityConfigDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
@@ -114,12 +112,12 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceSecurityConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -136,17 +134,17 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 func TestAccOpenSearchServerlessSecurityConfig_upgradeV6_0_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var securityconfig types.SecurityConfigDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_opensearchserverless_security_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckSecurityConfig(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		CheckDestroy: testAccCheckSecurityConfigDestroy(ctx),
+		CheckDestroy: testAccCheckSecurityConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -157,7 +155,7 @@ func TestAccOpenSearchServerlessSecurityConfig_upgradeV6_0_0(t *testing.T) {
 				},
 				Config: testAccSecurityConfig_samlOptions(rName, "test-fixtures/idp-metadata.xml", 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "60"),
@@ -167,7 +165,7 @@ func TestAccOpenSearchServerlessSecurityConfig_upgradeV6_0_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccSecurityConfig_samlOptions(rName, "test-fixtures/idp-metadata.xml", 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					testAccCheckSecurityConfigExists(ctx, t, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
@@ -183,9 +181,9 @@ func TestAccOpenSearchServerlessSecurityConfig_upgradeV6_0_0(t *testing.T) {
 	})
 }
 
-func testAccCheckSecurityConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSecurityConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opensearchserverless_security_config" {
@@ -209,7 +207,7 @@ func testAccCheckSecurityConfigDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckSecurityConfigExists(ctx context.Context, name string, securityconfig *types.SecurityConfigDetail) resource.TestCheckFunc {
+func testAccCheckSecurityConfigExists(ctx context.Context, t *testing.T, name string, securityconfig *types.SecurityConfigDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -220,7 +218,7 @@ func testAccCheckSecurityConfigExists(ctx context.Context, name string, security
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameSecurityConfig, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 		resp, err := tfopensearchserverless.FindSecurityConfigByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -234,7 +232,7 @@ func testAccCheckSecurityConfigExists(ctx context.Context, name string, security
 }
 
 func testAccPreCheckSecurityConfig(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).OpenSearchServerlessClient(ctx)
 
 	input := &opensearchserverless.ListSecurityConfigsInput{
 		Type: types.SecurityConfigTypeSaml,

@@ -495,13 +495,13 @@ func (secretVersionImportID) Create(d *schema.ResourceData) string {
 	return secretVersionCreateResourceID(secretID, versionID)
 }
 
-func (secretVersionImportID) Parse(id string) (string, map[string]string, error) {
+func (secretVersionImportID) Parse(id string) (string, map[string]any, error) {
 	secretID, versionID, err := secretVersionParseResourceID(id)
 	if err != nil {
 		return id, nil, err
 	}
 
-	results := map[string]string{
+	results := map[string]any{
 		"secret_id":  secretID,
 		"version_id": versionID,
 	}

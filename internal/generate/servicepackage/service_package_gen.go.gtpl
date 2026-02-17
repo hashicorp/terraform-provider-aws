@@ -10,6 +10,11 @@ inttypes.StringIdentityAttributeWithMappedName(
 	{{- if .Optional }}false{{ else }}true{{ end -}},
 	{{- .ResourceAttributeName -}}
 ),
+{{- else if and .ValueType (eq .ValueType "int") -}}
+inttypes.IntIdentityAttribute(
+	{{- .Name }},
+	{{- if .Optional }}false{{ else }}true{{ end -}}
+),
 {{- else -}}
 inttypes.StringIdentityAttribute(
 	{{- .Name }},

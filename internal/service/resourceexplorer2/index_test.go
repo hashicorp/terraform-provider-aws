@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,19 +22,19 @@ func testAccIndex_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_resourceexplorer2_index.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`index/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LOCAL"),
 				),
@@ -53,19 +52,19 @@ func testAccIndex_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_resourceexplorer2_index.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresourceexplorer2.ResourceIndex, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,19 +77,19 @@ func testAccIndex_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_resourceexplorer2_index.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -103,7 +102,7 @@ func testAccIndex_tags(t *testing.T) {
 			{
 				Config: testAccIndexConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -112,7 +111,7 @@ func testAccIndex_tags(t *testing.T) {
 			{
 				Config: testAccIndexConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -125,19 +124,19 @@ func testAccIndex_type(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_resourceexplorer2_index.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_type("AGGREGATOR"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AGGREGATOR"),
 				),
 			},
@@ -149,22 +148,22 @@ func testAccIndex_type(t *testing.T) {
 			{
 				Config: testAccIndexConfig_type("LOCAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LOCAL"),
 				),
 			},
 			{
 				Config:      testAccIndexConfig_type("AGGREGATOR"),
 				ExpectError: regexache.MustCompile("cool down period has expired"),
-				Check:       testAccCheckIndexDestroy(ctx),
+				Check:       testAccCheckIndexDestroy(ctx, t),
 			},
 		},
 	})
 }
 
-func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIndexDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResourceExplorer2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourceexplorer2_index" {
@@ -188,7 +187,7 @@ func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIndexExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckIndexExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -198,7 +197,7 @@ func testAccCheckIndexExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No Resource Explorer Index ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResourceExplorer2Client(ctx)
 
 		_, err := tfresourceexplorer2.FindIndex(ctx, conn)
 

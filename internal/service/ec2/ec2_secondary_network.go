@@ -23,14 +23,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -132,7 +130,7 @@ func (r *secondaryNetworkResource) Create(ctx context.Context, request resource.
 	}
 	data.ID = fwflex.StringToFramework(ctx, output.SecondaryNetwork.SecondaryNetworkId)
 
-	waitOutput, err := waitSecondaryNetworkResourceCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	waitOutput, err := waitSecondaryNetworkCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Secondary Network (%s) create", data.ID.ValueString()), err.Error())
 		return
@@ -158,7 +156,7 @@ func (r *secondaryNetworkResource) Read(ctx context.Context, request resource.Re
 	conn := r.Meta().EC2Client(ctx)
 	id := data.ID.ValueString()
 
-	output, err := findSecondaryNetworkResourceByID(ctx, conn, id)
+	output, err := findSecondaryNetworkByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -211,7 +209,7 @@ func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.
 		return
 	}
 
-	if _, err := waitSecondaryNetworkResourceDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitSecondaryNetworkDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Secondary Network (%s) delete", id), err.Error())
 		return
 	}
@@ -236,100 +234,4 @@ type IPv4CidrBlockAssociationModel struct {
 	AssociationID types.String `tfsdk:"association_id"`
 	CidrBlock     types.String `tfsdk:"cidr_block"`
 	State         types.String `tfsdk:"state"`
-}
-
-func findSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) ([]awstypes.SecondaryNetwork, error) {
-	output, err := conn.DescribeSecondaryNetworks(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return output.SecondaryNetworks, nil
-}
-
-func findSecondaryNetworkResourceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondaryNetwork, error) {
-	input := ec2.DescribeSecondaryNetworksInput{
-		SecondaryNetworkIds: []string{id},
-	}
-
-	output, err := findSecondaryNetworks(ctx, conn, &input)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := tfresource.AssertSingleValueResult(output)
-	if err != nil {
-		return nil, err
-	}
-
-	// Treat "delete-complete" state as NotFound
-	if result.State == awstypes.SecondaryNetworkStateDeleteComplete {
-		return nil, &retry.NotFoundError{
-			Message: "SecondaryNetwork is in delete-complete state",
-		}
-	}
-
-	return result, nil
-}
-
-func statusSecondaryNetworkResource(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findSecondaryNetworkResourceByID(ctx, conn, id)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		state := string(output.State)
-		return output, state, nil
-	}
-}
-
-func waitSecondaryNetworkResourceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondaryNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{SecondaryNetworkStateCreateInProgress},
-		Target:  []string{SecondaryNetworkStateCreateComplete},
-		Refresh: statusSecondaryNetworkResource(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondaryNetwork); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSecondaryNetworkResourceDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondaryNetwork, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: []string{SecondaryNetworkStateDeleteInProgress, SecondaryNetworkStateCreateComplete},
-		Target:  []string{},
-		Refresh: statusSecondaryNetworkResource(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondaryNetwork); ok {
-		return output, err
-	}
-
-	return nil, err
 }

@@ -24,7 +24,7 @@ func TestAccRoute53RecordsDataSource_basic(t *testing.T) {
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

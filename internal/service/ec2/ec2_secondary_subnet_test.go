@@ -45,7 +45,7 @@ func TestAccEC2SecondarySubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_network_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_network_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_subnet_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, tfec2.SecondarySubnetStateCreateComplete),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
 			{

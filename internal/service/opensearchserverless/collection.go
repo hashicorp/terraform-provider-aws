@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -40,7 +39,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
 // @Testing(preIdentityVersion="v6.28.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := collectionResource{}
 
@@ -322,10 +320,10 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
 		Target:     enum.Slice(awstypes.CollectionStatusActive),
-		Refresh:    statusCollection(ctx, conn, id),
+		Refresh:    statusCollection(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -345,10 +343,10 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 }
 
 func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusCollection(ctx, conn, id),
+		Refresh:    statusCollection(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -367,8 +365,8 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	return nil, err
 }
 
-func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCollection(conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {

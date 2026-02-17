@@ -396,7 +396,7 @@ func (permissionImportID) Create(d *schema.ResourceData) string {
 	return d.Get("statement_id").(string)
 }
 
-func (permissionImportID) Parse(id string) (string, map[string]string, error) {
+func (permissionImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return id, nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", id)
@@ -404,7 +404,7 @@ func (permissionImportID) Parse(id string) (string, map[string]string, error) {
 
 	functionName := parts[0]
 	statementID := parts[1]
-	results := map[string]string{
+	results := map[string]any{
 		"function_name": functionName,
 		"statement_id":  statementID,
 	}

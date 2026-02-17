@@ -135,8 +135,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.8 h1:ItMvyrgK3RB8kiOEUrP2
 github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.8/go.mod h1:yqufT4pFXtiF4kzw+XD2QERjmH8QGIFehaFKA8QDK+0=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.5 h1:sSgqtZi6Kp4Pc1V4turyaux7xUXxC1JwbEF6MzTQ9oE=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.5/go.mod h1:zweZsRPub5YhgUjoMGOeRWuXOOORt6YFiA51hpmNB4c=
-github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.53.1 h1:ElB5x0nrBHgQs+XcpQ1XJpSJzMFCq6fDTpT6WQCWOtQ=
-github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.53.1/go.mod h1:Cj+LUEvAU073qB2jInKV6Y0nvHX0k7bL7KAga9zZ3jw=
+github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.54.0 h1:wSPO/44H6qv5TfzFdGEpDNIyUPK3CVPWt/rvQMd9I9k=
+github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.54.0/go.mod h1:Cj+LUEvAU073qB2jInKV6Y0nvHX0k7bL7KAga9zZ3jw=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.63.1 h1:l65dmgr7tO26EcHe6WMdseRnFLoJ2nqdkPz1nJdXfaw=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.63.1/go.mod h1:wvnXh1w1pGS2UpEvPTKSjXYuxiXhuvob/IMaK2AWvek=
 github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.17 h1:vtCa0uidE65Tu1fuSpqCKDfqYG55LHpjzTAFVWchTo0=
@@ -171,8 +171,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4 h1:jaGFoZKK9tTDdUw
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4/go.mod h1:VhgQsYcslaHvaIHhKTEK6v/qJdxsqBJC+YM3w7WVzwE=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0 h1:n4XSHVt0MI30M6QO/WtDr9jyoOjDtuD4KE3co8NaaQg=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0/go.mod h1:NBQSTR2wDKdpLcDuX9ksjWgQfUtGeEhlPwa6CCmVOlY=
-github.com/aws/aws-sdk-go-v2/service/connect v1.161.0 h1:jiTZX7RG8mGO7WSy5GWKxBk6agJCh9vRc1bQaa0ISUc=
-github.com/aws/aws-sdk-go-v2/service/connect v1.161.0/go.mod h1:S6hWyUp+Fr+gC6VXtGHO8m1hvi6Obr+3y2F0wodhW+I=
+github.com/aws/aws-sdk-go-v2/service/connect v1.162.0 h1:J2Dyxu8BlTQckmd842W3C6oe7RhIRXdxZo787CL77tI=
+github.com/aws/aws-sdk-go-v2/service/connect v1.162.0/go.mod h1:S6hWyUp+Fr+gC6VXtGHO8m1hvi6Obr+3y2F0wodhW+I=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0 h1:FgMOsJ8DTR9q5YOsn91iNHD0PkM/lttNoAWalj1bSTY=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0/go.mod h1:jcFVRdIFKNMC3WR5TF31O5LQV6o2QkTHayjpGq1GgPs=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 h1:nyWkyh61ytkcmG/yy6KEBaylR21Zf+PQRir1zFSokkc=
@@ -221,8 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4 h1:/3WPkzhLW0wicMK6NSsNjfjz3MR
 github.com/aws/aws-sdk-go-v2/service/dsql v1.12.4/go.mod h1:eo6EwFewYxo7GDf4SH4DaA56aAL9anTxmK+kLZqFzVE=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0 h1:CyYoeHWjVSGimzMhlL0Z4l5gLCa++ccnRJKrsaNssxE=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.55.0/go.mod h1:ctEsEHY2vFQc6i4KU07q4n68v7BAmTbujv2Y+z8+hQY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.288.0 h1:cRu1CgKDK0qYNJRZBWaktwGZ6fvcFiKZm1Huzesc47s=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.288.0/go.mod h1:Uy+C+Sc58jozdoL1McQr8bDsEvNFx+/nBY+vpO1HVUY=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.289.0 h1:Ftj1M28RtAjgHpycBeQaFhfGx+aQ/swYEz+tBtIh9nE=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.289.0/go.mod h1:Uy+C+Sc58jozdoL1McQr8bDsEvNFx+/nBY+vpO1HVUY=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1 h1:B7f9R99lCF83XlolTg6d6Lvghyto+/VU83ZrneAVfK8=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.55.1/go.mod h1:cpYRXx5BkmS3mwWRKPbWSPKmyAUNL7aLWAPiiinwk/U=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9 h1:WxoqdNfGWj668u/NX7qBMPevmJu14LYNMMTRZthoclc=
@@ -293,8 +293,8 @@ github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.0 h1:o0ABq3BLGQSLXm1Vvkb
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.0/go.mod h1:Nx2G9D060YpVQ5KdiNw3/J7rzMD8UGb1XPdyetvHSrQ=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.16 h1:epnkeC+WSHKW+75Ekenh4W9KGq7Ru0xzJ6Vzy8B8/j8=
 github.com/aws/aws-sdk-go-v2/service/inspector v1.30.16/go.mod h1:zRcDVqo82RQOJ/N5UKNEkKsCo6hbTF8Qq+cY+DRSu4I=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.2 h1:mr4bOFrXVV237tX63Qg14ebsRVms2hPi3teYggreFFs=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.46.2/go.mod h1:epPjpQofjU2CJykeKBFJV4mKwHtUUbhKQnv/cg9ar2M=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.0 h1:xLyULYmGKMNPNpZHL4pkHet/DAyt/kEmf7EeO82i0D4=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.47.0/go.mod h1:epPjpQofjU2CJykeKBFJV4mKwHtUUbhKQnv/cg9ar2M=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.4 h1:0ryTNEdJbzUCEWkVXEXoqlXV72J5keC1GvILMOuD00E=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.4/go.mod h1:HQ4qwNZh32C3CBeO6iJLQlgtMzqeG17ziAA/3KDJFow=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.8 h1:Z5EiPIzXKewUQK0QTMkutjiaPVeVYXX7KIqhXu/0fXs=
@@ -483,8 +483,8 @@ github.com/aws/aws-sdk-go-v2/service/s3tables v1.14.0 h1:PrT+91Zc0K7w7v71Pkvhxrb
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.14.0/go.mod h1:1nxPz+DecxdsuL/ykEU9EN3WoaMhpX8K6S9CHbms6Eg=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.2 h1:WaiEcVt+PLQHKcVHTNLyNdEtSCJg66UgkZPz/7U1sRw=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.2/go.mod h1:jx5h7TDVkeiGejYTJ7zRiKIb80TMNzkf6LyLwvmXLkQ=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.232.0 h1:CezxPoYnbwbOZJrtIooW/ULold1Yuf1SP+h7zGsiOHA=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.232.0/go.mod h1:9CRmqEANAPnPXRj9r8RocG/zr5yopjf7m2bKo7Qeqyc=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.233.0 h1:hQacZrhdidFKYOZxJR42FkkdHHP7qYadLIcErk9OhQg=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.233.0/go.mod h1:9CRmqEANAPnPXRj9r8RocG/zr5yopjf7m2bKo7Qeqyc=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.31.2 h1:ZN16MDQcS3eyQ4gd/ArQwXxHT2gf23V22lOgfdGRQiw=
 github.com/aws/aws-sdk-go-v2/service/savingsplans v1.31.2/go.mod h1:gKwEJsDn3bWnlZwnCoQnE50bZZcq7BnMdFmQkP69vZs=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.18 h1:gEABqTCopzbmMWSTopOR8lieRoBBRIj9peQESB6pR3E=

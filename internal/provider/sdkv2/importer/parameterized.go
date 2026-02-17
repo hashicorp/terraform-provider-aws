@@ -127,11 +127,8 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 				if attr.Required() && !ok {
 					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
-				val, ok := valRaw.(string)
-				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
-				}
-				setAttribute(rd, attr.ResourceAttributeName(), val)
+
+				setAttribute(rd, attr.ResourceAttributeName(), valRaw)
 			}
 		}
 

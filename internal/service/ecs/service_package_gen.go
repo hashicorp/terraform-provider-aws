@@ -144,6 +144,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrFamily, true),
+				inttypes.IntIdentityAttribute("revision", true),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+				ImportID:     taskDefinitionImportID{},
+			},
 		},
 		{
 			Factory:  resourceTaskSet,

@@ -829,37 +829,42 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func modifyLoadBalancerAttributes(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, attributes []awstypes.LoadBalancerAttribute) error {
-	input := elasticloadbalancingv2.ModifyLoadBalancerAttributesInput{
-		Attributes:      attributes,
-		LoadBalancerArn: aws.String(arn),
-	}
-
-	// Not all attributes are supported in all partitions.
-	for {
-		if len(input.Attributes) == 0 {
-			return nil
+	// API only supports modifying 20 attributes at a time.
+	batchSize := 20
+	for chunk := range slices.Chunk(attributes, batchSize) {
+		input := elasticloadbalancingv2.ModifyLoadBalancerAttributesInput{
+			Attributes:      chunk,
+			LoadBalancerArn: aws.String(arn),
 		}
 
-		_, err := conn.ModifyLoadBalancerAttributes(ctx, &input)
+		// Not all attributes are supported in all partitions.
+		for {
+			_, err := conn.ModifyLoadBalancerAttributes(ctx, &input)
 
-		if err != nil {
-			// "Validation error: Load balancer attribute key 'routing.http.desync_mitigation_mode' is not recognized"
-			// "InvalidConfigurationRequest: Load balancer attribute key 'dns_record.client_routing_policy' is not supported on load balancers with type 'network'"
-			re := regexache.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not (recognized|supported)`)
-			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
-				key := sm[2]
-				input.Attributes = slices.DeleteFunc(input.Attributes, func(v awstypes.LoadBalancerAttribute) bool {
-					return aws.ToString(v.Key) == key
-				})
+			if err != nil {
+				// "Validation error: Load balancer attribute key 'routing.http.desync_mitigation_mode' is not recognized"
+				// "InvalidConfigurationRequest: Load balancer attribute key 'dns_record.client_routing_policy' is not supported on load balancers with type 'network'"
+				re := regexache.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not (recognized|supported)`)
+				if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
+					key := sm[2]
+					input.Attributes = slices.DeleteFunc(input.Attributes, func(v awstypes.LoadBalancerAttribute) bool {
+						return aws.ToString(v.Key) == key
+					})
+					if len(input.Attributes) == 0 {
+						break
+					}
 
-				continue
+					continue
+				}
+
+				return fmt.Errorf("modifying ELBv2 Load Balancer (%s) attributes: %w", arn, err)
 			}
 
-			return fmt.Errorf("modifying ELBv2 Load Balancer (%s) attributes: %w", arn, err)
+			break
 		}
-
-		return nil
 	}
+
+	return nil
 }
 
 func modifyCapacityReservation(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, minCapacity *awstypes.MinimumLoadBalancerCapacity) error {

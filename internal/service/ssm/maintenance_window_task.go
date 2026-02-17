@@ -870,7 +870,7 @@ func (maintenanceWindowTaskImportID) Create(d *schema.ResourceData) string {
 	return d.Id()
 }
 
-func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string, error) {
+func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 {
 		return id, nil, fmt.Errorf("maintenance_window_task id must be of the form <window_id>/<task_id>")
@@ -879,7 +879,7 @@ func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string
 	windowID := parts[0]
 	taskID := parts[1]
 
-	result := map[string]string{
+	result := map[string]any{
 		"window_id": windowID,
 	}
 	return taskID, result, nil

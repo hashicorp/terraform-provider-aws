@@ -1190,13 +1190,13 @@ func (userProfileImportID) Create(d *schema.ResourceData) string {
 	return createUserProfileID(d.Get("domain_id").(string), d.Get("user_profile_name").(string))
 }
 
-func (userProfileImportID) Parse(id string) (string, map[string]string, error) {
+func (userProfileImportID) Parse(id string) (string, map[string]any, error) {
 	domainID, userProfileName, err := parseUserProfileID(id)
 	if err != nil {
 		return "", nil, err
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"domain_id":         domainID,
 		"user_profile_name": userProfileName,
 	}

@@ -36,7 +36,7 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -47,7 +47,7 @@ func TestAccRoute53Record_Identity_basic(t *testing.T) {
 					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -134,7 +134,7 @@ func TestAccRoute53Record_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ServiceID),
-		CheckDestroy: testAccCheckRecordDestroy(ctx),
+		CheckDestroy: testAccCheckRecordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -144,7 +144,7 @@ func TestAccRoute53Record_Identity_ExistingResource_basic(t *testing.T) {
 					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -199,7 +199,7 @@ func TestAccRoute53Record_Identity_ExistingResource_noRefreshNoChange(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ServiceID),
-		CheckDestroy: testAccCheckRecordDestroy(ctx),
+		CheckDestroy: testAccCheckRecordDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -214,7 +214,7 @@ func TestAccRoute53Record_Identity_ExistingResource_noRefreshNoChange(t *testing
 					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
+					testAccCheckRecordExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

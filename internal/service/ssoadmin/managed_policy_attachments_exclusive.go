@@ -166,13 +166,13 @@ var _ inttypes.ImportIDParser = managedPolicyAttachmentsExclusiveImportID{}
 
 type managedPolicyAttachmentsExclusiveImportID struct{}
 
-func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]string, error) {
+func (managedPolicyAttachmentsExclusiveImportID) Parse(id string) (string, map[string]any, error) {
 	instanceARN, permissionSetARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, smarterr.NewError(fmt.Errorf("id \"%s\" should be in the format <instance-arn>"+intflex.ResourceIdSeparator+"<permission-set-arn>", id))
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"instance_arn":       instanceARN,
 		"permission_set_arn": permissionSetARN,
 	}

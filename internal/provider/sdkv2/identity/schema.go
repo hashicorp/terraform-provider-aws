@@ -20,6 +20,11 @@ func newIdentityAttribute(attribute inttypes.IdentityAttribute) *schema.Schema {
 	attr := &schema.Schema{
 		Type: schema.TypeString,
 	}
+	switch attribute.IdentityType() {
+	case inttypes.IntIdentityType:
+		attr.Type = schema.TypeInt
+	}
+
 	if attribute.Required() {
 		attr.RequiredForImport = true
 	} else {

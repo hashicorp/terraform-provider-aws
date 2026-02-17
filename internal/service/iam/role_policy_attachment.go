@@ -207,13 +207,13 @@ func (rolePolicyAttachmentImportID) create(roleName, policyARN string) string {
 	return fmt.Sprintf("%s/%s", roleName, policyARN)
 }
 
-func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {
+func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", nil, fmt.Errorf("unexpected format for Import ID (%q), expected <role-name>/<policy_arn>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrRole: parts[0],
 		"policy_arn":   parts[1],
 	}

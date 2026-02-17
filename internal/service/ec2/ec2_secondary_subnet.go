@@ -22,15 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -257,99 +254,4 @@ type SecondarySubnetResourceModel struct {
 	Tags                      tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                 `tfsdk:"timeouts"`
-}
-
-func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) ([]awstypes.SecondarySubnet, error) {
-	output, err := conn.DescribeSecondarySubnets(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return output.SecondarySubnets, nil
-}
-
-func findSecondarySubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondarySubnet, error) {
-	input := ec2.DescribeSecondarySubnetsInput{
-		SecondarySubnetIds: []string{id},
-	}
-
-	output, err := findSecondarySubnets(ctx, conn, &input)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := tfresource.AssertSingleValueResult(output)
-	if err != nil {
-		return nil, err
-	}
-
-	// Treat "delete-complete" state as NotFound
-	if result.State == awstypes.SecondarySubnetStateDeleteComplete {
-		return nil, &retry.NotFoundError{
-			Message: "SecondarySubnet is in delete-complete state",
-		}
-	}
-
-	return result, nil
-}
-
-func statusSecondarySubnet(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findSecondarySubnetByID(ctx, conn, id)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
-func waitSecondarySubnetCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SecondarySubnetStateCreateInProgress),
-		Target:  enum.Slice(awstypes.SecondarySubnetStateCreateComplete),
-		Refresh: statusSecondarySubnet(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSecondarySubnetDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SecondarySubnetStateDeleteInProgress, awstypes.SecondarySubnetStateCreateComplete),
-		Target:  []string{},
-		Refresh: statusSecondarySubnet(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
-		return output, err
-	}
-
-	return nil, err
 }

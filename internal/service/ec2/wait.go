@@ -3933,3 +3933,79 @@ func waitRouteServerPropagationDeleted(ctx context.Context, conn *ec2.Client, ro
 
 	return nil, err
 }
+
+func waitSecondaryNetworkCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondaryNetwork, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SecondaryNetworkStateCreateInProgress),
+		Target:  enum.Slice(awstypes.SecondaryNetworkStateCreateComplete),
+		Refresh: statusSecondaryNetwork(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecondaryNetwork); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSecondaryNetworkDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondaryNetwork, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SecondaryNetworkStateDeleteInProgress, awstypes.SecondaryNetworkStateCreateComplete),
+		Target:  []string{},
+		Refresh: statusSecondaryNetwork(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecondaryNetwork); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSecondarySubnetCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SecondarySubnetStateCreateInProgress),
+		Target:  enum.Slice(awstypes.SecondarySubnetStateCreateComplete),
+		Refresh: statusSecondarySubnet(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSecondarySubnetDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SecondarySubnetStateDeleteInProgress, awstypes.SecondarySubnetStateCreateComplete),
+		Target:  []string{},
+		Refresh: statusSecondarySubnet(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}

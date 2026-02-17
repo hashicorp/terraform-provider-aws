@@ -41,7 +41,7 @@ func TestAccEC2SecondaryNetwork_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`secondary-network/sn-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "secondary_network_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, tfec2.SecondaryNetworkStateCreateComplete),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func testAccCheckSecondaryNetworkExists(ctx context.Context, n string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindSecondaryNetworkResourceByID(ctx, conn, rs.Primary.ID)
+		_, err := tfec2.FindSecondaryNetworkByID(ctx, conn, rs.Primary.ID)
 		return err
 	}
 }
@@ -154,7 +154,7 @@ func testAccCheckSecondaryNetworkDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfec2.FindSecondaryNetworkResourceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindSecondaryNetworkByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				continue
 			}

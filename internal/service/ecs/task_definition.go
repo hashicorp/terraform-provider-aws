@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -39,6 +40,16 @@ import (
 
 // @SDKResource("aws_ecs_task_definition", name="Task Definition")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("family")
+// @IdentityAttribute("revision", valueType="int")
+// @MutableIdentity
+// @ImportIDHandler("taskDefinitionImportID")
+// @CustomImport
+// @Testing(preIdentityVersion="v6.32.0")
+// @Testing(idAttrDuplicates="family")
+// @Testing(importStateIdFunc=testAccTaskDefinitionImportStateIdFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.TaskDefinition")
+// @Testing(importIgnore="skip_destroy;track_latest", plannableImportAction="NoOp")
 func resourceTaskDefinition() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -49,19 +60,22 @@ func resourceTaskDefinition() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				d.Set(names.AttrARN, d.Id())
+				if err := importer.Import(ctx, d, meta); err != nil {
+					return nil, err
+				}
 
-				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
-				resARN, err := arn.Parse(d.Id())
-				if err != nil {
-					return nil, idErr
+				client := meta.(*conns.AWSClient)
+
+				family, revision := d.Get(names.AttrFamily).(string), d.Get("revision").(int)
+
+				region := client.Region(ctx)
+				if v, ok := d.GetOk(names.AttrRegion); ok {
+					region = v.(string)
 				}
-				familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
-				familyRevisionParts := strings.Split(familyRevision, ":")
-				if len(familyRevisionParts) != 2 {
-					return nil, idErr
-				}
-				d.SetId(familyRevisionParts[0])
+
+				taskDefinitionARN := client.RegionalARNWithRegion(ctx, names.ECS, region, "task-definition/"+family+":"+strconv.Itoa(revision))
+				d.Set(names.AttrARN, taskDefinitionARN)
+				d.SetId(family)
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -1248,4 +1262,45 @@ func taskDefinitionARNStripRevision(s string) string {
 		tdArn.Resource = parts[0]
 	}
 	return tdArn.String()
+}
+
+func parseRevisionParts(id string) (string, string, error) {
+	resARN, err := arn.Parse(id)
+	if err != nil {
+		return "", "", err
+	}
+
+	familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+	familyRevisionParts := strings.Split(familyRevision, ":")
+	if len(familyRevisionParts) != 2 {
+		return "", "", fmt.Errorf("expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", id)
+	}
+
+	return familyRevisionParts[0], familyRevisionParts[1], nil
+}
+
+type taskDefinitionImportID struct{}
+
+func (taskDefinitionImportID) Create(d *schema.ResourceData) string {
+	// pass through an unset id since it is not used and will be
+	// parsed in the custom import
+	return d.Id()
+}
+
+func (taskDefinitionImportID) Parse(id string) (string, map[string]any, error) {
+	family, revision, err := parseRevisionParts(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	rev, err := strconv.Atoi(revision)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		names.AttrFamily: family,
+		"revision":       rev,
+	}
+	return id, result, nil
 }

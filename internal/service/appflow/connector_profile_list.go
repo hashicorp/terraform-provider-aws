@@ -65,16 +65,7 @@ func (l *listResourceConnectorProfile) List(ctx context.Context, request list.Li
 			_ = rd.Set(names.AttrName, name)
 
 			tflog.Info(ctx, "Reading AppFlow Connector Profile")
-			diags := resourceConnectorProfileRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
-			}
+			resourceConnectorProfileFlatten(ctx, &item, rd)
 
 			result.DisplayName = aws.ToString(item.ConnectorProfileName)
 

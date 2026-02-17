@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
@@ -40,16 +39,16 @@ func TestAccRoute53RecordsExclusive_basic(t *testing.T) {
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", zoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_record_set.*", map[string]string{
@@ -84,16 +83,16 @@ func TestAccRoute53RecordsExclusive_disappears_Zone(t *testing.T) {
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceZone(), zoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,16 +111,16 @@ func TestAccRoute53RecordsExclusive_multiple(t *testing.T) {
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_multiple(zoneName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", zoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "18"),
 				),
@@ -239,16 +238,16 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 	resourceName := "aws_route53_records_exclusive.test"
 	zoneResourceName := "aws_route53_zone.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_upsert(zoneName.String(), recordName.String(), "30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", zoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 				),
@@ -273,7 +272,7 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 			{
 				Config: testAccRecordsExclusiveConfig_upsert(zoneName.String(), recordName.String(), "20"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", zoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 				),
@@ -298,7 +297,7 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 			{
 				Config: testAccRecordsExclusiveConfig_upsert(zoneName.String(), recordName.String(), "30"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", zoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 				),
@@ -337,16 +336,16 @@ func TestAccRoute53RecordsExclusive_empty(t *testing.T) {
 	resourceName := "aws_route53_records_exclusive.test"
 	recordResourceName := "aws_route53_record.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_empty(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
@@ -398,25 +397,25 @@ func TestAccRoute53RecordsExclusive_outOfBandAddition(t *testing.T) {
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
-					testAccCheckZoneExists(ctx, zoneResourceName, &zone),
-					testAccCheckRecordsExclusiveChangeRecord(ctx, &zone, types.ChangeActionCreate, &addRecord),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
+					testAccCheckZoneExists(ctx, t, zoneResourceName, &zone),
+					testAccCheckRecordsExclusiveChangeRecord(ctx, t, &zone, types.ChangeActionCreate, &addRecord),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -457,25 +456,25 @@ func TestAccRoute53RecordsExclusive_outOfBandRemoval(t *testing.T) {
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
-					testAccCheckZoneExists(ctx, zoneResourceName, &zone),
-					testAccCheckRecordsExclusiveChangeRecord(ctx, &zone, types.ChangeActionDelete, &removeRecord),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
+					testAccCheckZoneExists(ctx, t, zoneResourceName, &zone),
+					testAccCheckRecordsExclusiveChangeRecord(ctx, t, &zone, types.ChangeActionDelete, &removeRecord),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -516,25 +515,25 @@ func TestAccRoute53RecordsExclusive_outOfBandUpdate(t *testing.T) {
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
-					testAccCheckZoneExists(ctx, zoneResourceName, &zone),
-					testAccCheckRecordsExclusiveChangeRecord(ctx, &zone, types.ChangeActionUpsert, &updateRecord),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
+					testAccCheckZoneExists(ctx, t, zoneResourceName, &zone),
+					testAccCheckRecordsExclusiveChangeRecord(ctx, t, &zone, types.ChangeActionUpsert, &updateRecord),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccRecordsExclusiveConfig_basic(zoneName.String(), recordName.String()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordsExclusiveExists(ctx, resourceName),
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -547,9 +546,9 @@ func TestAccRoute53RecordsExclusive_outOfBandUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckRecordsExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRecordsExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_records_exclusive" {
@@ -572,7 +571,7 @@ func testAccCheckRecordsExclusiveDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckRecordsExclusiveExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckRecordsExclusiveExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -584,7 +583,7 @@ func testAccCheckRecordsExclusiveExists(ctx context.Context, name string) resour
 			return create.Error(names.Route53, create.ErrActionCheckingExistence, tfroute53.ResNameRecordsExclusive, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 		out, err := tfroute53.FindResourceRecordSetsForHostedZone(ctx, conn, zoneID)
 		if err != nil {
 			return create.Error(names.Route53, create.ErrActionCheckingExistence, tfroute53.ResNameRecordsExclusive, zoneID, err)
@@ -600,9 +599,9 @@ func testAccCheckRecordsExclusiveExists(ctx context.Context, name string) resour
 }
 
 // testAccCheckRecordsExclusiveChangeRecord is a test helper used to modify recordm sets out of band
-func testAccCheckRecordsExclusiveChangeRecord(ctx context.Context, zone *route53.GetHostedZoneOutput, action types.ChangeAction, record *types.ResourceRecordSet) resource.TestCheckFunc {
+func testAccCheckRecordsExclusiveChangeRecord(ctx context.Context, t *testing.T, zone *route53.GetHostedZoneOutput, action types.ChangeAction, record *types.ResourceRecordSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
 
 		out, err := conn.ChangeResourceRecordSets(ctx, &route53.ChangeResourceRecordSetsInput{
 			HostedZoneId: zone.HostedZone.Id,

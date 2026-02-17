@@ -1532,13 +1532,13 @@ func (targetImportID) Create(d *schema.ResourceData) string {
 	return targetCreateResourceID(eventBusName, rule, targetID)
 }
 
-func (targetImportID) Parse(id string) (string, map[string]string, error) {
+func (targetImportID) Parse(id string) (string, map[string]any, error) {
 	eventBusName, rule, targetID, err := targetParseImportID(id)
 	if err != nil {
 		return id, nil, err
 	}
 
-	results := map[string]string{
+	results := map[string]any{
 		"event_bus_name": eventBusName,
 		names.AttrRule:   rule,
 		"target_id":      targetID,

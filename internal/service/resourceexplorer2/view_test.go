@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,21 +23,21 @@ func testAccView_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v resourceexplorer2.GetViewOutput
 	resourceName := "aws_resourceexplorer2_view.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/`+rName+`/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "0"),
@@ -61,21 +59,21 @@ func testAccView_defaultView(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v resourceexplorer2.GetViewOutput
 	resourceName := "aws_resourceexplorer2_view.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccViewConfig_defaultView(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtTrue),
 				),
 			},
@@ -87,14 +85,14 @@ func testAccView_defaultView(t *testing.T) {
 			{
 				Config: testAccViewConfig_defaultView(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccViewConfig_defaultView(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtTrue),
 				),
 			},
@@ -106,21 +104,21 @@ func testAccView_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v resourceexplorer2.GetViewOutput
 	resourceName := "aws_resourceexplorer2_view.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresourceexplorer2.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -133,21 +131,21 @@ func testAccView_filter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v resourceexplorer2.GetViewOutput
 	resourceName := "aws_resourceexplorer2_view.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccViewConfig_filter(rName, "resourcetype:ec2:instance"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -166,7 +164,7 @@ func testAccView_filter(t *testing.T) {
 			{
 				Config: testAccViewConfig_filter(rName, "region:global"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
@@ -185,21 +183,21 @@ func testAccView_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v resourceexplorer2.GetViewOutput
 	resourceName := "aws_resourceexplorer2_view.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccViewConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -212,7 +210,7 @@ func testAccView_tags(t *testing.T) {
 			{
 				Config: testAccViewConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -221,7 +219,7 @@ func testAccView_tags(t *testing.T) {
 			{
 				Config: testAccViewConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName),
+					testAccCheckIndexExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -234,21 +232,21 @@ func testAccView_scope(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v resourceexplorer2.GetViewOutput
 	resourceName := "aws_resourceexplorer2_view.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		CheckDestroy:             testAccCheckViewDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccViewConfig_orgScopedView(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &v),
+					testAccCheckViewExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrScope),
 				),
@@ -262,9 +260,9 @@ func testAccView_scope(t *testing.T) {
 	})
 }
 
-func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckViewDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResourceExplorer2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourceexplorer2_iview" {
@@ -288,7 +286,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckViewExists(ctx context.Context, n string, v *resourceexplorer2.GetViewOutput) resource.TestCheckFunc {
+func testAccCheckViewExists(ctx context.Context, t *testing.T, n string, v *resourceexplorer2.GetViewOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -298,7 +296,7 @@ func testAccCheckViewExists(ctx context.Context, n string, v *resourceexplorer2.
 			return fmt.Errorf("No Resource Explorer View ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ResourceExplorer2Client(ctx)
 
 		output, err := tfresourceexplorer2.FindViewByARN(ctx, conn, rs.Primary.ID)
 

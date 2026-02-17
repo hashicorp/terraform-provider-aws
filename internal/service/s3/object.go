@@ -763,7 +763,7 @@ func (objectImportID) Create(d *schema.ResourceData) string {
 	return createObjectImportID(d)
 }
 
-func (objectImportID) Parse(id string) (string, map[string]string, error) {
+func (objectImportID) Parse(id string) (string, map[string]any, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")
@@ -771,7 +771,7 @@ func (objectImportID) Parse(id string) (string, map[string]string, error) {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrBucket: bucket,
 		names.AttrKey:    key,
 	}
