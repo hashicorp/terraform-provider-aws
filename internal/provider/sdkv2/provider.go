@@ -1038,14 +1038,12 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 				"web_identity_token": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					Description:  "Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider. Can also be set with the `TF_AWS_IDENTITY_TOKEN` environment variable.",
+					Description:  "Value of a web identity token. Can also be set with the `TF_AWS_IDENTITY_TOKEN` environment variable.",
 					ValidateFunc: validation.StringLenBetween(4, 20000),
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
 				},
 				"web_identity_token_file": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ExactlyOneOf: []string{"assume_role_with_web_identity.0.web_identity_token", "assume_role_with_web_identity.0.web_identity_token_file"},
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 			},
 		},
