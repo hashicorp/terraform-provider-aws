@@ -152,7 +152,6 @@ func resourceServer() *schema.Resource {
 			"identity_provider_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         true,
 				Default:          awstypes.IdentityProviderTypeServiceManaged,
 				ValidateDiagFunc: enum.Validate[awstypes.IdentityProviderType](),
 			},
@@ -714,6 +713,10 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		if d.HasChange("post_authentication_login_banner") {
 			input.PostAuthenticationLoginBanner = aws.String(d.Get("post_authentication_login_banner").(string))
 		}
+    
+                if d.HasChange("identity_provider_type") {
+                        input.IdentityProviderType = awstypes.IdentityProviderType(d.Get("identity_provider_type").(string))
+                }
 
 		if d.HasChange("pre_authentication_login_banner") {
 			input.PreAuthenticationLoginBanner = aws.String(d.Get("pre_authentication_login_banner").(string))
