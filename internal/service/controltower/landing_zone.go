@@ -174,7 +174,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
 
 	// Set remediation types if present
-	if landingZone.RemediationTypes != nil && len(landingZone.RemediationTypes) > 0 {
+	if len(landingZone.RemediationTypes) > 0 {
 		remediationTypeSet := schema.NewSet(schema.HashString, []interface{}{})
 		for _, rt := range landingZone.RemediationTypes {
 			remediationTypeSet.Add(string(rt))

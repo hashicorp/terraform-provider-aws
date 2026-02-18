@@ -90,13 +90,13 @@ func testAccLandingZone_remediationTypes(t *testing.T) {
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
-		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLandingZoneConfig_remediationTypes,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLandingZoneExists(ctx, resourceName),
+					testAccCheckLandingZoneExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "remediation_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "remediation_types.*", "INHERITANCE_DRIFT"),
 				),
