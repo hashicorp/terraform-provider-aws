@@ -4285,22 +4285,21 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id    = %[1]q
-  description             = "test description"
-  node_type               = "cache.t3.small"
-  port                    = 6379
-  apply_immediately       = true
-  engine                  = %[2]q
-  engine_version          = %[3]q
-  cluster_mode            = "disabled"
-  
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t3.small"
+  port                       = 6379
+  apply_immediately          = true
+  engine                     = %[2]q
+  engine_version             = %[3]q
+  cluster_mode               = "disabled"
   transit_encryption_enabled = true
 
   log_delivery_configuration {
-   destination      = aws_cloudwatch_log_group.test.name
-   destination_type = "cloudwatch-logs"
-   log_format       = "text"
-   log_type         = "slow-log"
+    destination      = aws_cloudwatch_log_group.test.name
+    destination_type = "cloudwatch-logs"
+    log_format       = "text"
+    log_type         = "slow-log"
   }
 }
 `, rName, engine, engineVersion)
