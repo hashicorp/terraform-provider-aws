@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,7 +50,6 @@ const (
 // @Testing(idAttrDuplicates="function_name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @CustomImport
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -1333,9 +1331,8 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	output, err := conn.GetDurableExecution(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1350,8 +1347,8 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	return output, nil
 }
 
-func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDurableExecution(conn *lambda.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDurableExecution(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -1367,10 +1364,10 @@ func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string
 }
 
 func waitDurableExecutionStopped(ctx context.Context, conn *lambda.Client, arn string, timeout time.Duration) (*lambda.GetDurableExecutionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExecutionStatusRunning),
 		Target:  enum.Slice(awstypes.ExecutionStatusStopped),
-		Refresh: statusDurableExecution(ctx, conn, arn),
+		Refresh: statusDurableExecution(conn, arn),
 		Timeout: timeout,
 		Delay:   2 * time.Second,
 	}
@@ -1396,9 +1393,8 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	output, err := conn.GetFunction(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1428,9 +1424,8 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	output, err := conn.GetFunctionConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1485,9 +1480,8 @@ func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *la
 	output, err := conn.GetFunctionConcurrency(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1563,8 +1557,8 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionLastUpdateStatus(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1579,8 +1573,8 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 	}
 }
 
-func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionState(conn *lambda.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1595,8 +1589,8 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 	}
 }
 
-func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lambda.Client, name, qualifier string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFunctionConfigurationLastUpdateStatus(conn *lambda.Client, name, qualifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFunctionConfigurationByTwoPartKey(ctx, conn, name, qualifier)
 
 		if retry.NotFound(err) {
@@ -1619,10 +1613,10 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 }
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatePending),
 		Target:  enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable),
-		Refresh: statusFunctionState(ctx, conn, name),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1639,10 +1633,10 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
-		Refresh: statusFunctionLastUpdateStatus(ctx, conn, name),
+		Refresh: statusFunctionLastUpdateStatus(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1659,10 +1653,10 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, name, qualifier string, timeout time.Duration) (*lambda.GetFunctionConfigurationOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
-		Refresh: statusFunctionConfigurationLastUpdateStatus(ctx, conn, name, qualifier),
+		Refresh: statusFunctionConfigurationLastUpdateStatus(conn, name, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1679,10 +1673,10 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 }
 
 func waitFunctionDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*lambda.GetFunctionOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable, awstypes.StatePending, awstypes.StateInactive, awstypes.StateFailed, awstypes.StateDeleting),
 		Target:  []string{},
-		Refresh: statusFunctionState(ctx, conn, name),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
