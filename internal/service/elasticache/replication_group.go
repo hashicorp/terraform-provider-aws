@@ -1674,7 +1674,7 @@ func checkIfEngineSupportsSlowLog(engine, engineVersion *string) bool {
 			(majorVersion >= 7 && aws.ToString(engine) == engineValkey))
 }
 
-func checkIfLogTypeSlowLog(currentLogDeliveryConfig []interface{}) bool {
+func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
 	logTypeSlowLogExists := false
 
 	for _, current := range currentLogDeliveryConfig {
