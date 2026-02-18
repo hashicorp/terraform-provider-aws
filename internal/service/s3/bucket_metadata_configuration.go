@@ -40,7 +40,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;awstypes;awstypes.MetadataConfigurationResult")
 // @Testing(importStateIdAttribute="bucket")
 // @Testing(preIdentityVersion="6.32.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newBucketMetadataConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &bucketMetadataConfigurationResource{}
 

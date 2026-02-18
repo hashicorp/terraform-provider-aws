@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +20,7 @@ import (
 
 func TestAccS3BucketPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_policy.bucket"
 	bucketResourceName := "aws_s3_bucket.bucket"
 
@@ -44,16 +42,16 @@ func TestAccS3BucketPolicy_basic(t *testing.T) {
   ]
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate, rName),
 				),
 			},
 			{
@@ -67,7 +65,7 @@ func TestAccS3BucketPolicy_basic(t *testing.T) {
 
 func TestAccS3BucketPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_policy.bucket"
 	bucketResourceName := "aws_s3_bucket.bucket"
 
@@ -89,16 +87,16 @@ func TestAccS3BucketPolicy_disappears(t *testing.T) {
   ]
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate, rName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -109,7 +107,7 @@ func TestAccS3BucketPolicy_disappears(t *testing.T) {
 
 func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.bucket"
 
 	expectedPolicyTemplate := `{
@@ -130,16 +128,16 @@ func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
   ]
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate, rName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -150,7 +148,7 @@ func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
 
 func TestAccS3BucketPolicy_policyUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_policy.bucket"
 	bucketResourceName := "aws_s3_bucket.bucket"
 
@@ -194,22 +192,22 @@ func TestAccS3BucketPolicy_policyUpdate(t *testing.T) {
   ]
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate1, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate1, rName),
 				),
 			},
 			{
 				Config: testAccBucketPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate2, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate2, rName),
 				),
 			},
 			{
@@ -224,13 +222,13 @@ func TestAccS3BucketPolicy_policyUpdate(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11801
 func TestAccS3BucketPolicy_IAMRoleOrder_policyDoc(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDoc(rName),
@@ -243,13 +241,13 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDoc(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/20456
 func TestAccS3BucketPolicy_IAMRoleOrder_policyDocNotPrincipal(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderIAMDocNotPrincipal(rName),
@@ -261,16 +259,16 @@ func TestAccS3BucketPolicy_IAMRoleOrder_policyDocNotPrincipal(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11801
 func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName3 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_policy.bucket"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_iamRoleOrderJSONEncode(rName1),
@@ -335,7 +333,7 @@ func TestAccS3BucketPolicy_IAMRoleOrder_jsonEncode(t *testing.T) {
 
 func TestAccS3BucketPolicy_migrate_noChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 
 	expectedPolicyTemplate := `{
@@ -356,22 +354,22 @@ func TestAccS3BucketPolicy_migrate_noChange(t *testing.T) {
   ]
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_policy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate, rName),
 				),
 			},
 			{
 				Config: testAccBucketPolicyConfig_migrateNoChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate, rName),
 				),
 			},
 		},
@@ -380,7 +378,7 @@ func TestAccS3BucketPolicy_migrate_noChange(t *testing.T) {
 
 func TestAccS3BucketPolicy_migrate_withChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketResourceName := "aws_s3_bucket.test"
 
 	expectedPolicyTemplate1 := `{
@@ -423,22 +421,22 @@ func TestAccS3BucketPolicy_migrate_withChange(t *testing.T) {
   ]
 }`
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_policy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate1, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate1, rName),
 				),
 			},
 			{
 				Config: testAccBucketPolicyConfig_migrateChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate2, rName),
+					testAccCheckBucketHasPolicy(ctx, t, bucketResourceName, expectedPolicyTemplate2, rName),
 				),
 			},
 		},
@@ -447,14 +445,14 @@ func TestAccS3BucketPolicy_migrate_withChange(t *testing.T) {
 
 func TestAccS3BucketPolicy_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyConfig_directoryBucket(rName),
@@ -466,17 +464,17 @@ func TestAccS3BucketPolicy_directoryBucket(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBucketPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+			conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 
 			if rs.Type != "aws_s3_bucket_policy" {
 				continue
 			}
 
 			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
@@ -496,16 +494,16 @@ func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTemplate string, bucketName string) resource.TestCheckFunc {
+func testAccCheckBucketHasPolicy(ctx context.Context, t *testing.T, n string, expectedPolicyTemplate string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 		}
 
 		policy, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
@@ -530,16 +528,16 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 	}
 }
 
-func testAccCheckBucketPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckBucketPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
-			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
 		}
 
 		_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)

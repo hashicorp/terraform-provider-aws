@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,19 +26,19 @@ import (
 func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.MetadataConfigurationResult
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_metadata_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -88,19 +86,19 @@ func TestAccS3BucketMetadataConfiguration_basic(t *testing.T) {
 func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.MetadataConfigurationResult
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_metadata_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetadataConfigurationConfig_encryption1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -153,7 +151,7 @@ func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 			{
 				Config: testAccBucketMetadataConfigurationConfig_encryption2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -200,21 +198,21 @@ func TestAccS3BucketMetadataConfiguration_update(t *testing.T) {
 func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.MetadataConfigurationResult
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_metadata_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetadataConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceBucketMetadataConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -226,19 +224,19 @@ func TestAccS3BucketMetadataConfiguration_disappears(t *testing.T) {
 func TestAccS3BucketMetadataConfiguration_expectedBucketOwner(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.MetadataConfigurationResult
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_metadata_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketMetadataConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketMetadataConfigurationConfig_expectedBucketOwner(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketMetadataConfigurationExists(ctx, resourceName, &v),
+					testAccCheckBucketMetadataConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), tfknownvalue.AccountID()),
@@ -258,9 +256,9 @@ func TestAccS3BucketMetadataConfiguration_expectedBucketOwner(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketMetadataConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBucketMetadataConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_metadata_configuration" {
@@ -284,14 +282,14 @@ func testAccCheckBucketMetadataConfigurationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckBucketMetadataConfigurationExists(ctx context.Context, n string, v *awstypes.MetadataConfigurationResult) resource.TestCheckFunc {
+func testAccCheckBucketMetadataConfigurationExists(ctx context.Context, t *testing.T, n string, v *awstypes.MetadataConfigurationResult) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
 
 		output, err := tfs3.FindBucketMetadataConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], rs.Primary.Attributes[names.AttrExpectedBucketOwner])
 

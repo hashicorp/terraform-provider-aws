@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -625,9 +624,8 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	output, err := conn.GetBucketLifecycleConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -662,8 +660,8 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 	return true
 }
 
-func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLifecycleConfigEquals(conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, owner)
 
 		if retry.NotFound(err) {
@@ -679,9 +677,9 @@ func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, o
 }
 
 func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
-		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
+		Refresh: statusLifecycleConfigEquals(conn, bucket, owner, transitionMinSize, rules),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 		// ContinuousTargetOccurence of 3 works in, e.g. us-west-2, but larger values are required in, e.g. eu-west-2

@@ -14,7 +14,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,12 +21,12 @@ import (
 
 func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -53,13 +52,13 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	dataSourceName := "data.aws_s3_bucket_object.test"
 	resourceName := "aws_s3_object.test"
 	accessPointResourceName := "aws_s3_access_point.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`" is expected.
@@ -81,12 +80,12 @@ func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -111,12 +110,12 @@ func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -143,12 +142,12 @@ func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -176,12 +175,12 @@ func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -223,12 +222,12 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -253,13 +252,13 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -290,10 +289,10 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 	dataSourceName2 := "data.aws_s3_bucket_object.obj2"
 	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
 
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 	resourceOnlyConf, conf := testAccBucketObjectDataSourceConfig_leadingSlash(rInt)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
@@ -337,10 +336,10 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 	dataSourceName2 := "data.aws_s3_bucket_object.obj2"
 	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
 
-	rInt := sdkacctest.RandInt()
+	rInt := acctest.RandInt(t)
 	resourceOnlyConf, conf := testAccBucketObjectDataSourceConfig_multipleSlashes(rInt)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:                acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
