@@ -73,6 +73,15 @@ func resourceLandingZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"remediation_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"INHERITANCE_DRIFT"}, false),
+				},
+				Description: "Specifies the types of remediations to perform on guardrail violations. Currently only supports the INHERITANCE_DRIFT value.",
+			},
 			"manifest_json": {
 				Type:                  schema.TypeString,
 				Required:              true,
@@ -107,6 +116,15 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 		Manifest: manifest,
 		Tags:     getTagsIn(ctx),
 		Version:  aws.String(d.Get(names.AttrVersion).(string)),
+	}
+
+	// Add remediation types if specified
+	if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
+		remediationTypes := make([]types.RemediationType, 0)
+		for _, t := range v.(*schema.Set).List() {
+			remediationTypes = append(remediationTypes, types.RemediationType(t.(string)))
+		}
+		input.RemediationTypes = remediationTypes
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
@@ -154,6 +172,20 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("drift_status", nil)
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
+
+	// Set remediation types if present
+	if landingZone.RemediationTypes != nil && len(landingZone.RemediationTypes) > 0 {
+		remediationTypeSet := schema.NewSet(schema.HashString, []interface{}{})
+		for _, rt := range landingZone.RemediationTypes {
+			remediationTypeSet.Add(string(rt))
+		}
+		if err := d.Set("remediation_types", remediationTypeSet); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting remediation_types: %s", err)
+		}
+	} else {
+		d.Set("remediation_types", nil)
+	}
+
 	if landingZone.Manifest != nil {
 		v, err := tfsmithy.DocumentToJSONString(landingZone.Manifest)
 
@@ -184,6 +216,15 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 			LandingZoneIdentifier: aws.String(d.Id()),
 			Manifest:              manifest,
 			Version:               aws.String(d.Get(names.AttrVersion).(string)),
+		}
+
+		// Add remediation types if specified
+		if v, ok := d.GetOk("remediation_types"); ok && v.(*schema.Set).Len() > 0 {
+			remediationTypes := make([]types.RemediationType, 0)
+			for _, t := range v.(*schema.Set).List() {
+				remediationTypes = append(remediationTypes, types.RemediationType(t.(string)))
+			}
+			input.RemediationTypes = remediationTypes
 		}
 
 		output, err := conn.UpdateLandingZone(ctx, input)
