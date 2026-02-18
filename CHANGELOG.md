@@ -1,7 +1,13 @@
 ## 6.33.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_networkmanager_attachment_routing_policy_label` ([#46489](https://github.com/hashicorp/terraform-provider-aws/issues/46489))
+
 ENHANCEMENTS:
 
+* data/aws_acmpca_certificate_authority: Add `custom_path` argument to `revocation_configuration.crl_configuration` configuration block ([#46487](https://github.com/hashicorp/terraform-provider-aws/issues/46487))
+* resource/aws_acmpca_certificate_authority: Add `custom_path` argument to `revocation_configuration.crl_configuration` configuration block ([#46487](https://github.com/hashicorp/terraform-provider-aws/issues/46487))
 * resource/aws_budgets_budget: Add `filter_expression` attribute ([#46501](https://github.com/hashicorp/terraform-provider-aws/issues/46501))
 * resource/aws_dms_endpoint: Add `access_alternate_directly`, `add_supplemental_logging`, `additional_archived_log_dest_id`, `allow_selected_nested_tables`, `archived_log_dest_id`, `archived_logs_only`, `asm_password`, `asm_server`, `asm_user`, `authentication_method`, `char_length_semantics`, `convert_timestamp_with_zone_to_utc`, `direct_path_no_log`, `direct_path_parallel_load`, `enable_homogenous_tablespace`, `extra_archived_log_dest_ids`, `fail_task_on_lob_truncation`, `number_datatype_scale`, `open_transaction_window`, `oracle_path_prefix`, `parallel_asm_read_threads`, `read_ahead_blocks`, `read_table_space_name`, `replace_path_prefix`, `retry_interval`, `secrets_manager_oracle_asm_access_role_arn`, `secrets_manager_oracle_asm_secret_id`, `security_db_encryption`, `security_db_encryption_name`, `spatial_data_option_to_geo_json_function_name`, `standby_delay_time`, `trim_space_in_char`, `use_alternate_folder_for_online, `use_bfile`, `use_direct_path_full_load`, `use_logminer_reader`, and `use_path_prefix` arguments to the `oracle_settings` configuration block ([#46516](https://github.com/hashicorp/terraform-provider-aws/issues/46516))
 * resource/aws_ecs_task_definition: Add resource identity support ([#46411](https://github.com/hashicorp/terraform-provider-aws/issues/46411))
@@ -13,6 +19,7 @@ BUG FIXES:
 * data-source/aws_route53_records: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `name_regex` is an invalid regular expression ([#46478](https://github.com/hashicorp/terraform-provider-aws/issues/46478))
 * resource/aws_cur_report_definition: Support `ap-southeast-5` and `eusc-de-east-1` as valid values for `s3_region` ([#46475](https://github.com/hashicorp/terraform-provider-aws/issues/46475))
 * resource/aws_lb: Fix `ValidationError ... Member must have length less than or equal to 20` errors when more than 20 load balancer attributes are being modified ([#46496](https://github.com/hashicorp/terraform-provider-aws/issues/46496))
+* resource/aws_subnet: Fix `expected ipv6_netmask_length to be one of [44 48 52 56 60], got 64` validation error ([#46515](https://github.com/hashicorp/terraform-provider-aws/issues/46515))
 
 ## 6.32.1 (February 13, 2026)
 
