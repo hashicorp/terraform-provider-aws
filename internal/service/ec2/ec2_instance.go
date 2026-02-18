@@ -3675,7 +3675,7 @@ func flattenCPUOptions(opts *awstypes.CpuOptions) []any {
 	}
 
 	m := map[string]any{
-		"amd_sev_snp":            opts.AmdSevSnp,
+		"amd_sev_snp":           opts.AmdSevSnp,
 		"nested_virtualization": opts.NestedVirtualization,
 	}
 
