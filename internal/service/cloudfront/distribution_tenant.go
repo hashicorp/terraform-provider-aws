@@ -14,7 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -153,12 +156,15 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
-			names.AttrDomain: schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[domainResultModel](ctx),
+			names.AttrDomain: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[domainResultModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrDomain: schema.StringAttribute{
 							Required: true,
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(regexp.MustCompile(`^[^A-Z]+$`), "must be lowercase: CloudFront requires all alternate domain names (CNAMEs) to be lowercase"),
+							},
 						},
 						names.AttrStatus: schema.StringAttribute{
 							Computed: true,
@@ -214,7 +220,7 @@ type distributionTenantResourceModel struct {
 	ConnectionGroupID         types.String                                                    `tfsdk:"connection_group_id"`
 	Customizations            fwtypes.ListNestedObjectValueOf[customizationsModel]            `tfsdk:"customizations"`
 	DistributionID            types.String                                                    `tfsdk:"distribution_id"`
-	Domains                   fwtypes.SetNestedObjectValueOf[domainResultModel]               `tfsdk:"domain" autoflex:",xmlwrapper=Items"`
+	Domains                   fwtypes.ListNestedObjectValueOf[domainResultModel]               `tfsdk:"domain" autoflex:",xmlwrapper=Items"`
 	Enabled                   types.Bool                                                      `tfsdk:"enabled"`
 	ETag                      types.String                                                    `tfsdk:"etag"`
 	ID                        types.String                                                    `tfsdk:"id"`
