@@ -20,10 +20,10 @@ require (
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.4 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.32.8 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.8 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.32.9 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.9 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.1 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chime v1.41.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.28.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.41.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.29.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.5 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.162.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.162.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9 // indirect
@@ -273,7 +273,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.26.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.30.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.10 // indirect
