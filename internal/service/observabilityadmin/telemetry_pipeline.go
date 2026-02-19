@@ -26,6 +26,7 @@ import (
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -149,7 +150,33 @@ func (r *telemetryPipelineResource) Create(ctx context.Context, request resource
 }
 
 func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	// Implemented in a later task.
+	var data telemetryPipelineResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().ObservabilityAdminClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	out, err := findTelemetryPipelineByName(ctx, conn, name)
+	if retry.NotFound(err) {
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *telemetryPipelineResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
