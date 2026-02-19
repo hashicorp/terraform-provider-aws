@@ -27,8 +27,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -106,7 +108,44 @@ func (r *telemetryPipelineResource) Schema(ctx context.Context, request resource
 }
 
 func (r *telemetryPipelineResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	// Implemented in a later task.
+	var data telemetryPipelineResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().ObservabilityAdminClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input observabilityadmin.CreateTelemetryPipelineInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreateTelemetryPipeline(ctx, &input)
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	// Set values for unknowns.
+	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if _, err := waitTelemetryPipelineReady(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
