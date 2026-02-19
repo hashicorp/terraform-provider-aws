@@ -180,7 +180,46 @@ func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.R
 }
 
 func (r *telemetryPipelineResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// Implemented in a later task.
+	var new, old telemetryPipelineResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().ObservabilityAdminClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		arn := fwflex.StringValueFromFramework(ctx, new.ARN)
+		var input observabilityadmin.UpdateTelemetryPipelineInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Additional fields.
+		input.PipelineIdentifier = aws.String(arn)
+
+		_, err := conn.UpdateTelemetryPipeline(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+
+		name := fwflex.StringValueFromFramework(ctx, new.Name)
+		if _, err := waitTelemetryPipelineReady(ctx, conn, name, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			return
+		}
+	}
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *telemetryPipelineResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
