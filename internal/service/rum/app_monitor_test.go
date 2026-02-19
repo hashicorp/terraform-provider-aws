@@ -39,6 +39,9 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
@@ -60,6 +63,9 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
@@ -233,6 +239,64 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 	})
 }
 
+func TestAccRUMAppMonitor_deobfuscationConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appMon awstypes.AppMonitor
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rum_app_monitor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppMonitorConfig_deobfuscationConfiguration(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.s3_uri", fmt.Sprintf("s3://%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppMonitorConfig_deobfuscationConfiguration(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deobfuscation_configuration.0.javascript_source_maps.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRUMAppMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appMon awstypes.AppMonitor
@@ -371,4 +435,66 @@ resource "aws_rum_app_monitor" "test" {
   domain_list = ["localhost", "terraform.*"]
 }
 `, rName)
+}
+
+func testAccAppMonitorConfig_deobfuscationConfiguration(rName, status string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "example-source-map.js.map"
+  content = "dummy content for source map"
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    principals {
+      identifiers = ["rum.amazonaws.com"]
+      type        = "Service"
+    }
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:rum:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:appmonitor/%[1]s"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "test" {
+  bucket = aws_s3_bucket.test.id
+  policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_rum_app_monitor" "test" {
+  name   = %[1]q
+  domain = "localhost"
+  deobfuscation_configuration {
+    javascript_source_maps {
+      status = %[2]q
+      s3_uri = "s3://${aws_s3_object.test.bucket}"
+    }
+  }
+}
+`, rName, status)
 }
