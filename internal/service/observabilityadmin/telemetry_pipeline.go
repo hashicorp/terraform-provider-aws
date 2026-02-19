@@ -5,9 +5,14 @@ package observabilityadmin
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -18,9 +23,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -130,4 +140,66 @@ type telemetryPipelineResourceModel struct {
 
 type telemetryPipelineConfigurationModel struct {
 	Body types.String `tfsdk:"body"`
+}
+
+func findTelemetryPipelineByName(ctx context.Context, conn *observabilityadmin.Client, name string) (*observabilityadmin.GetTelemetryPipelineOutput, error) {
+	input := observabilityadmin.GetTelemetryPipelineInput{
+		PipelineIdentifier: aws.String(name),
+	}
+
+	output, err := conn.GetTelemetryPipeline(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Pipeline == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusTelemetryPipeline(conn *observabilityadmin.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTelemetryPipelineByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return output, string(output.Pipeline.Status), nil
+	}
+}
+
+func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Client, name string, timeout time.Duration) (*observabilityadmin.GetTelemetryPipelineOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.TelemetryPipelineStatusCreating, awstypes.TelemetryPipelineStatusUpdating),
+		Target:                    enum.Slice(awstypes.TelemetryPipelineStatusActive),
+		Refresh:                   statusTelemetryPipeline(conn, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*observabilityadmin.GetTelemetryPipelineOutput); ok {
+		if out.Pipeline != nil && out.Pipeline.StatusReason != nil && out.Pipeline.StatusReason.Description != nil {
+			retry.SetLastError(err, fmt.Errorf("%s", aws.ToString(out.Pipeline.StatusReason.Description)))
+		}
+
+		return out, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
 }
