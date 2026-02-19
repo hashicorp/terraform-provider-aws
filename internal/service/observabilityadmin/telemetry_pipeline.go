@@ -223,7 +223,27 @@ func (r *telemetryPipelineResource) Update(ctx context.Context, request resource
 }
 
 func (r *telemetryPipelineResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	// Implemented in a later task.
+	var data telemetryPipelineResourceModel
+	smerr.AddEnrich(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().ObservabilityAdminClient(ctx)
+
+	arn := fwflex.StringValueFromFramework(ctx, data.ARN)
+	input := observabilityadmin.DeleteTelemetryPipelineInput{
+		PipelineIdentifier: aws.String(arn),
+	}
+
+	_, err := conn.DeleteTelemetryPipeline(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
+		return
+	}
 }
 
 func (r *telemetryPipelineResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
