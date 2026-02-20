@@ -40,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -167,26 +168,24 @@ func resourceInstance() *schema.Resource {
 							Computed:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.AmdSevSnpSpecification](),
-							// prevents ForceNew for the case where users launch EC2 instances without cpu_options
-							// then in a second apply set cpu_options.0.amd_sev_snp to "disabled"
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Id() != "" && old == "" && new == string(awstypes.AmdSevSnpSpecificationDisabled) {
-									return true
-								}
-								return false
-							},
+							DiffSuppressFunc: sdkv2.SuppressNewStringValueEquivalentToUnset(awstypes.AmdSevSnpSpecificationDisabled),
 						},
 						"core_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
+						},
+						"nested_virtualization": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.NestedVirtualizationSpecification](),
+							DiffSuppressFunc: sdkv2.SuppressNewStringValueEquivalentToUnset(awstypes.NestedVirtualizationSpecificationDisabled),
 						},
 						"threads_per_core": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 						},
 					},
 				},
@@ -1982,6 +1981,43 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if d.HasChange("cpu_options") && !d.IsNewResource() {
+		if v, ok := d.GetOk("cpu_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			// "InvalidState: The instance '...' is not in an allowed state: stopped".
+			if err := stopInstance(ctx, conn, d.Id(), false, instanceStopTimeout); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			tfMap := v.([]any)[0].(map[string]any)
+
+			input := ec2.ModifyInstanceCpuOptionsInput{
+				InstanceId: aws.String(d.Id()),
+			}
+
+			if d.HasChange("cpu_options.0.core_count") {
+				input.CoreCount = aws.Int32(int32(tfMap["core_count"].(int)))
+			}
+
+			if d.HasChange("cpu_options.0.nested_virtualization") {
+				input.NestedVirtualization = awstypes.NestedVirtualizationSpecification(tfMap["nested_virtualization"].(string))
+			}
+
+			if d.HasChange("cpu_options.0.threads_per_core") {
+				input.ThreadsPerCore = aws.Int32(int32(tfMap["threads_per_core"].(int)))
+			}
+
+			_, err := conn.ModifyInstanceCpuOptions(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying CPU options: %s", d.Id(), err)
+			}
+
+			if err := startInstance(ctx, conn, d.Id(), true, instanceStartTimeout); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
 	// TODO(mitchellh): wait for the attributes we modified to
 	// persist the change...
 
@@ -3595,6 +3631,10 @@ func expandCPUOptions(l []any) *awstypes.CpuOptionsRequest {
 		opts.AmdSevSnp = awstypes.AmdSevSnpSpecification(v)
 	}
 
+	if v, ok := m["nested_virtualization"].(string); ok && v != "" {
+		opts.NestedVirtualization = awstypes.NestedVirtualizationSpecification(v)
+	}
+
 	if v, ok := m["core_count"].(int); ok && v > 0 {
 		tc := m["threads_per_core"].(int)
 		if tc < 0 {
@@ -3656,7 +3696,8 @@ func flattenCPUOptions(opts *awstypes.CpuOptions) []any {
 	}
 
 	m := map[string]any{
-		"amd_sev_snp": opts.AmdSevSnp,
+		"amd_sev_snp":           opts.AmdSevSnp,
+		"nested_virtualization": opts.NestedVirtualization,
 	}
 
 	if v := opts.CoreCount; v != nil {

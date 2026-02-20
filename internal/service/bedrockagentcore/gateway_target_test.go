@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -30,7 +29,6 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -79,7 +77,6 @@ func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -115,7 +112,6 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -249,7 +245,6 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testin
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -301,7 +296,6 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -413,7 +407,6 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -477,23 +470,6 @@ func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
-func testAccPreCheckGatewayTargets(ctx context.Context, t *testing.T) {
-	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
-
-	input := bedrockagentcorecontrol.ListGatewayTargetsInput{
-		GatewayIdentifier: aws.String("test-guthipm3lw"), // Using a dummy ID for the precheck
-	}
-
-	_, err := conn.ListGatewayTargets(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccGatewayTargetConfig_infra(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -512,6 +488,22 @@ data "aws_iam_policy_document" "test" {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "lambda:*",
+    "Resource": "*"
+  }
+}
+  EOF
 }
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -548,6 +540,14 @@ resource "aws_bedrockagentcore_gateway" "test" {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test"]
+    }
+  }
+
+  protocol_configuration {
+    mcp {
+      instructions       = "Do something"
+      search_type        = "SEMANTIC"
+      supported_versions = ["2025-11-25"]
     }
   }
 
@@ -953,11 +953,13 @@ func testAccCredentialProvider_apiKey() string {
 
 func testAccCredentialProvider_oauth() string {
 	return `    oauth {
-      provider_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
-      scopes       = ["read", "write"]
+      provider_arn       = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
+      scopes             = ["read", "write"]
+	  grant_type         = "AUTHORIZATION_CODE"
+	  default_return_url = "https://example.com/callback"
+
       custom_parameters = {
         "client_type" = "confidential"
-        "grant_type"  = "authorization_code"
       }
     }`
 }

@@ -49,7 +49,6 @@ func isDirectoryBucket(bucket string) bool {
 // @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
 // @IdentityAttribute("bucket", identityDuplicateAttributes="id")
 // @Testing(importIgnore="force_destroy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Testing(preIdentityVersion="v6.31.0")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}

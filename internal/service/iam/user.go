@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,7 +31,6 @@ import (
 // @SDKResource("aws_iam_user", name="User")
 // @Tags(identifierAttribute="id", resourceType="User")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -285,9 +283,8 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 	output, err := conn.GetUser(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

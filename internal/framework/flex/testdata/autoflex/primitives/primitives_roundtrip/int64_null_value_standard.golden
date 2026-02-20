@@ -58,8 +58,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*",
-    "source_type": "struct { Field1 int64 }"
+    "autoflex.target.type": "*"
   },
   {
     "@level": "info",

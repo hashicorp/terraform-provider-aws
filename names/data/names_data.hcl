@@ -58,8 +58,9 @@ service "acm" {
   }
 
   names {
-    provider_name_upper = "ACM"
-    human_friendly      = "ACM (Certificate Manager)"
+    provider_name_upper  = "ACM"
+    human_friendly       = "ACM (Certificate Manager)"
+    human_friendly_short = "ACM"
   }
 
   endpoint_info {
@@ -7500,9 +7501,10 @@ service "s3" {
   }
 
   names {
-    aliases             = ["s3api"]
-    provider_name_upper = "S3"
-    human_friendly      = "S3 (Simple Storage)"
+    aliases              = ["s3api"]
+    provider_name_upper  = "S3"
+    human_friendly       = "S3 (Simple Storage)"
+    human_friendly_short = "S3"
   }
 
   env_var {
@@ -9358,8 +9360,9 @@ service "ec2" {
   }
 
   names {
-    provider_name_upper = "EC2"
-    human_friendly      = "EC2 (Elastic Compute Cloud)"
+    provider_name_upper  = "EC2"
+    human_friendly       = "EC2 (Elastic Compute Cloud)"
+    human_friendly_short = "EC2"
   }
 
   endpoint_info {
@@ -9523,8 +9526,9 @@ service "ec2" {
     }
 
     names {
-      provider_name_upper = "VPC"
-      human_friendly      = "VPC (Virtual Private Cloud)"
+      provider_name_upper  = "VPC"
+      human_friendly       = "VPC (Virtual Private Cloud)"
+      human_friendly_short = "VPC"
     }
 
     resource_prefix {

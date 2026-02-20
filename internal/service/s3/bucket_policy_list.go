@@ -70,8 +70,7 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 		dirInput := s3.ListDirectoryBucketsInput{
 			MaxDirectoryBuckets: aws.Int32(int32(limit)),
 		}
-		for result := range l.list(ctx, request, gpConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
-			count++
+		for result := range l.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
 			if !yield(result) {
 				return
 			}

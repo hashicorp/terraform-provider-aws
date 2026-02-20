@@ -87,7 +87,7 @@ func setFieldValue(structPtr any, fieldName string, value any) {
 	}
 }
 
-func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks) {
+func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks runChecks, opts ...cmp.Option) {
 	t.Helper()
 	for testName, tc := range testCases {
 		t.Run(testName, func(t *testing.T) {
@@ -131,7 +131,7 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 			}
 
 			if checks.CompareTarget && !diags.HasError() {
-				if diff := cmp.Diff(tc.Target, tc.WantTarget); diff != "" {
+				if diff := cmp.Diff(tc.Target, tc.WantTarget, opts...); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}

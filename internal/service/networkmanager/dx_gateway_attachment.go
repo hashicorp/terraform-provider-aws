@@ -219,7 +219,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 
 	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), id))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
-	if routingPolicyLabel, err := findRoutingPolicyLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id); err != nil && !retry.NotFound(err) {
+	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, data.CoreNetworkID.ValueString(), id); err != nil && !retry.NotFound(err) {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s) routing policy label", id), err.Error())
 		return
 	} else {

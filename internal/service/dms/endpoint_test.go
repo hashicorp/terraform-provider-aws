@@ -11,7 +11,11 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
@@ -686,6 +690,7 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.extract_doc_id", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.docs_to_investigate", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.use_update_lookup", acctest.CtTrue),
 				),
 			},
 			{
@@ -1017,6 +1022,61 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrPassword},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Oracle_settings(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_oracleSettings(rName, 2000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oracle_settings"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"add_supplemental_logging": knownvalue.Bool(false),
+						"read_ahead_blocks":        knownvalue.Int64Exact(2000),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
+			},
+			{
+				Config: testAccEndpointConfig_oracleSettings(rName, 20000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("oracle_settings"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"add_supplemental_logging": knownvalue.Bool(false),
+						"read_ahead_blocks":        knownvalue.Int64Exact(20000),
+					})})),
+				},
 			},
 		},
 	})
@@ -3038,6 +3098,7 @@ resource "aws_dms_endpoint" "test" {
     nesting_level       = "one"
     extract_doc_id      = "true"
     docs_to_investigate = "1001"
+    use_update_lookup   = true
   }
 }
 `, rName)
@@ -3263,6 +3324,27 @@ resource "aws_dms_endpoint" "test" {
   }
 }
 `, rName)
+}
+
+func testAccEndpointConfig_oracleSettings(rName string, readAheadBlocks int) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "oracle"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+
+  oracle_settings {
+    add_supplemental_logging = false
+    read_ahead_blocks        = %[2]d
+  }
+}
+`, rName, readAheadBlocks)
 }
 
 func testAccEndpointConfig_postgreSQL(rName string) string {

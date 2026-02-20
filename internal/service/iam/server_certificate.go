@@ -18,7 +18,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +34,6 @@ import (
 // @SDKResource("aws_iam_server_certificate", name="Server Certificate")
 // @Tags(identifierAttribute="name", resourceType="ServerCertificate")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.ServerCertificate", tlsKey=true, importStateId="rName", importIgnore="private_key")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCertificateCreate,
@@ -296,9 +294,8 @@ func findServerCertificate(ctx context.Context, conn *iam.Client, input *iam.Get
 	output, err := conn.GetServerCertificate(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

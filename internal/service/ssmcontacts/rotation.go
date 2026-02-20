@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -46,7 +45,6 @@ const (
 // Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &rotationResource{}
 
@@ -577,9 +575,8 @@ func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) 
 	out, err := conn.GetRotation(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

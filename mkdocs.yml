@@ -36,6 +36,7 @@ nav:
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
+      - AI Usage: ai-usage.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - AI Agents: ai-agents.md

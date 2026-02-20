@@ -36,6 +36,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(tagsTest=false)
+// @Testing(serialize=true)
 // @Testing(generator=false)
 // @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecondarySubnetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -49,7 +50,7 @@ func newSecondarySubnetResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type secondarySubnetResource struct {
-	framework.ResourceWithModel[SecondarySubnetResourceModel]
+	framework.ResourceWithModel[secondarySubnetResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
@@ -87,7 +88,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[IPv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[ipv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -132,7 +133,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 }
 
 func (r *secondarySubnetResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data SecondarySubnetResourceModel
+	var data secondarySubnetResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -171,7 +172,7 @@ func (r *secondarySubnetResource) Create(ctx context.Context, request resource.C
 }
 
 func (r *secondarySubnetResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data SecondarySubnetResourceModel
+	var data secondarySubnetResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -207,7 +208,7 @@ func (r *secondarySubnetResource) Read(ctx context.Context, request resource.Rea
 }
 
 func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data SecondarySubnetResourceModel
+	var data secondarySubnetResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -238,14 +239,14 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-type SecondarySubnetResourceModel struct {
+type secondarySubnetResourceModel struct {
 	framework.WithRegionModel
 	ARN                       types.String                                                   `tfsdk:"arn"`
 	AvailabilityZone          types.String                                                   `tfsdk:"availability_zone"`
 	AvailabilityZoneID        types.String                                                   `tfsdk:"availability_zone_id"`
 	ID                        types.String                                                   `tfsdk:"id"`
 	IPv4CidrBlock             types.String                                                   `tfsdk:"ipv4_cidr_block"`
-	IPv4CidrBlockAssociations fwtypes.ListNestedObjectValueOf[IPv4CidrBlockAssociationModel] `tfsdk:"ipv4_cidr_block_associations"`
+	IPv4CidrBlockAssociations fwtypes.ListNestedObjectValueOf[ipv4CidrBlockAssociationModel] `tfsdk:"ipv4_cidr_block_associations"`
 	OwnerID                   types.String                                                   `tfsdk:"owner_id"`
 	SecondaryNetworkID        types.String                                                   `tfsdk:"secondary_network_id"`
 	SecondaryNetworkType      types.String                                                   `tfsdk:"secondary_network_type"`

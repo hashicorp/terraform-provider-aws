@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,7 +30,6 @@ import (
 // @Tags
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog;servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Portfolio")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
@@ -209,9 +207,8 @@ func findPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id stri
 	output, err := conn.DescribePortfolio(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

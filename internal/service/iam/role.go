@@ -54,7 +54,6 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 // @Testing(idAttrDuplicates="name")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,

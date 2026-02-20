@@ -41,6 +41,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -211,12 +212,12 @@ func TestExpandXMLWrapperRule1StructElements(t *testing.T) {
 				WantTarget: &awsModel{Field: nil},
 			},
 			"empty set": {
-				Source:     &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{})},
+				Source:     &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{})},
 				Target:     &awsModel{},
 				WantTarget: &awsModel{Field: &testXMLWrapperStruct{Items: []testStructItem{}, Quantity: aws.Int32(0)}},
 			},
 			"single item": {
-				Source: &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+				Source: &tfModel{Field: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{
 					{
 						Name:  types.StringValue("test"),
 						Value: types.Int32Value(42),
@@ -316,7 +317,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 			"empty items": {
 				Source:     &sourceStruct{XMLWrapper: &testXMLWrapperStruct{Items: []testStructItem{}, Quantity: aws.Int32(0)}},
 				Target:     &targetStruct{},
-				WantTarget: &targetStruct{XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{})},
+				WantTarget: &targetStruct{XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{})},
 			},
 			"single item": {
 				Source: &sourceStruct{
@@ -329,7 +330,7 @@ func TestFlattenXMLWrapperRule1StructElements(t *testing.T) {
 				},
 				Target: &targetStruct{},
 				WantTarget: &targetStruct{
-					XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+					XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{
 						{Name: types.StringValue("test"), Value: types.Int32Value(42)},
 					}),
 				},
@@ -414,7 +415,7 @@ func TestXMLWrapperRule1Symmetry(t *testing.T) {
 
 		// Original Terraform value
 		original := tfSource{
-			XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust[testStructItemModel](ctx, []testStructItemModel{
+			XMLWrapper: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testStructItemModel{
 				{Name: types.StringValue("test"), Value: types.Int32Value(42)},
 			}),
 		}
@@ -491,7 +492,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 				WantTarget: &awsModel{Field: nil},
 			},
 			"empty items, enabled false": {
-				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
 						Enabled: types.BoolValue(false),
@@ -501,7 +502,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 				WantTarget: &awsModel{Field: &testXMLWrapperRule2{Items: []string{}, Quantity: aws.Int32(0), Enabled: aws.Bool(false)}},
 			},
 			"with items, enabled true": {
-				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
 						Enabled: types.BoolValue(true),
@@ -513,7 +514,7 @@ func TestExpandXMLWrapperRule2(t *testing.T) {
 		},
 		"TestXMLWrapperRule2DifferentOrder": {
 			"different field order": {
-				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+				Source: &tfModel{Field: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 					{
 						Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("item1")}),
 						Enabled: types.BoolValue(true),
@@ -597,7 +598,7 @@ func TestXMLWrapperRule2Symmetry(t *testing.T) {
 
 		// Original Terraform value (Rule 2 pattern)
 		original := tfSource{
-			XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust[testRule2Model](ctx, []testRule2Model{
+			XMLWrapper: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []testRule2Model{
 				{
 					Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("signer1"), types.StringValue("signer2")}),
 					Enabled: types.BoolValue(true),
@@ -660,7 +661,7 @@ func TestXMLWrapperRealCloudFrontTypes(t *testing.T) {
 		}
 
 		source := tfSource{
-			TrustedSigners: fwtypes.NewListNestedObjectValueOfValueSliceMust[trustedSignersModel](ctx, []trustedSignersModel{
+			TrustedSigners: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []trustedSignersModel{
 				{
 					Items:   fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("AKIAIOSFODNN7EXAMPLE")}),
 					Enabled: types.BoolValue(true),
@@ -1028,4 +1029,445 @@ func TestNestedXMLWrappers(t *testing.T) {
 			t.Error("Expected Enabled=true")
 		}
 	})
+}
+
+func TestFlattenXMLWrapperSplitNested(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	type awsModel = awstypes.DistributionConfig
+
+	type allowedMethodsModel struct {
+		Items         fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"items" autoflex:",xmlwrapper=Items"`
+		CachedMethods fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"cached_methods" autoflex:",xmlwrapper=Items"`
+	}
+
+	type defaultCacheBehaviorModel struct {
+		AllowedMethods fwtypes.ListNestedObjectValueOf[allowedMethodsModel] `tfsdk:"allowed_methods"`
+	}
+
+	type tfModel struct {
+		DefaultCacheBehavior fwtypes.ListNestedObjectValueOf[defaultCacheBehaviorModel] `tfsdk:"default_cache_behavior"`
+	}
+
+	testCases := autoFlexTestCases{
+		"nil source": {
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+				AllowedMethods: nil,
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
+					{
+						AllowedMethods: fwtypes.NewListNestedObjectValueOfNull[allowedMethodsModel](ctx),
+					},
+				}),
+			},
+		},
+		"empty items,nil cached": {
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+				AllowedMethods: &awstypes.AllowedMethods{
+					Items:         []awstypes.Method{},
+					Quantity:      aws.Int32(0),
+					CachedMethods: nil,
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
+					{
+						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+							{
+								Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+								CachedMethods: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.Method]](ctx),
+							},
+						}),
+					},
+				}),
+			},
+		},
+		"multi items,nil cached": {
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+				AllowedMethods: &awstypes.AllowedMethods{
+					Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
+					Quantity: aws.Int32(2),
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
+					{
+						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+							{
+								Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+									fwtypes.StringEnumValue(awstypes.MethodGet),
+									fwtypes.StringEnumValue(awstypes.MethodPost),
+								}),
+								CachedMethods: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.Method]](ctx),
+							},
+						}),
+					},
+				}),
+			},
+		},
+		"multi items,single cached": {
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+				AllowedMethods: &awstypes.AllowedMethods{
+					Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
+					Quantity: aws.Int32(2),
+					CachedMethods: &awstypes.CachedMethods{
+						Items:    []awstypes.Method{awstypes.MethodGet},
+						Quantity: aws.Int32(1),
+					},
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
+					{
+						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+							{
+								Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+									fwtypes.StringEnumValue(awstypes.MethodGet),
+									fwtypes.StringEnumValue(awstypes.MethodPost),
+								}),
+								CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+									fwtypes.StringEnumValue(awstypes.MethodGet),
+								}),
+							},
+						}),
+					},
+				}),
+			},
+		},
+
+		"empty items,empty cached": {
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+				AllowedMethods: &awstypes.AllowedMethods{
+					Items:    []awstypes.Method{},
+					Quantity: aws.Int32(0),
+					CachedMethods: &awstypes.CachedMethods{
+						Items:    []awstypes.Method{},
+						Quantity: aws.Int32(0),
+					},
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
+					{
+						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+							{
+								Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+								CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+							},
+						}),
+					},
+				}),
+			},
+		},
+
+		"empty items,single cached": {
+			Source: &awsModel{DefaultCacheBehavior: &awstypes.DefaultCacheBehavior{
+				AllowedMethods: &awstypes.AllowedMethods{
+					Items:    []awstypes.Method{},
+					Quantity: aws.Int32(0),
+					CachedMethods: &awstypes.CachedMethods{
+						Items:    []awstypes.Method{awstypes.MethodGet},
+						Quantity: aws.Int32(1),
+					},
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				DefaultCacheBehavior: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []defaultCacheBehaviorModel{
+					{
+						AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+							{
+								Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+								CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{fwtypes.StringEnumValue(awstypes.MethodGet)}),
+							},
+						}),
+					},
+				}),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+}
+
+func TestFlattenXMLWrapperSplit(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	// type awsModel = awstypes.DefaultCacheBehavior
+	type awsModel struct {
+		AllowedMethods *awstypes.AllowedMethods
+	}
+
+	type allowedMethodsModel struct {
+		Items         fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"items" autoflex:",xmlwrapper=Items"`
+		CachedMethods fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"cached_methods" autoflex:",xmlwrapper=Items"`
+	}
+
+	type tfModel struct {
+		AllowedMethods fwtypes.ListNestedObjectValueOf[allowedMethodsModel] `tfsdk:"allowed_methods"`
+	}
+
+	testCases := autoFlexTestCases{
+		"nil source": {
+			Source: &awsModel{AllowedMethods: nil},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfNull[allowedMethodsModel](ctx),
+			},
+		},
+		"empty items,nil cached": {
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:         []awstypes.Method{},
+				Quantity:      aws.Int32(0),
+				CachedMethods: nil,
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+						CachedMethods: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.Method]](ctx),
+					},
+				}),
+			},
+		},
+		"multi items,nil cached": {
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
+				Quantity: aws.Int32(2),
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+							fwtypes.StringEnumValue(awstypes.MethodGet),
+							fwtypes.StringEnumValue(awstypes.MethodPost),
+						}),
+						CachedMethods: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.Method]](ctx),
+					},
+				}),
+			},
+		},
+		"multi items,single cached": {
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
+				Quantity: aws.Int32(2),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{awstypes.MethodGet},
+					Quantity: aws.Int32(1),
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+							fwtypes.StringEnumValue(awstypes.MethodGet),
+							fwtypes.StringEnumValue(awstypes.MethodPost),
+						}),
+						CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+							fwtypes.StringEnumValue(awstypes.MethodGet),
+						}),
+					},
+				}),
+			},
+		},
+
+		"empty items,empty cached": {
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{},
+				Quantity: aws.Int32(0),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{},
+					Quantity: aws.Int32(0),
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+						CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+					},
+				}),
+			},
+		},
+
+		"empty items,single cached": {
+			Source: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{},
+				Quantity: aws.Int32(0),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{awstypes.MethodGet},
+					Quantity: aws.Int32(1),
+				},
+			}},
+			Target: &tfModel{},
+			WantTarget: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+						CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{fwtypes.StringEnumValue(awstypes.MethodGet)}),
+					},
+				}),
+			},
+		},
+	}
+
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+}
+
+func TestExpandXMLWrapperSplit(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	// type awsModel = awstypes.DefaultCacheBehavior
+	type awsModel struct {
+		AllowedMethods *awstypes.AllowedMethods
+	}
+
+	type allowedMethodsModel struct {
+		Items         fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"items" autoflex:",xmlwrapper=Items"`
+		CachedMethods fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.Method]] `tfsdk:"cached_methods" autoflex:",xmlwrapper=Items"`
+	}
+
+	type tfModel struct {
+		AllowedMethods fwtypes.ListNestedObjectValueOf[allowedMethodsModel] `tfsdk:"allowed_methods"`
+	}
+
+	testCases := autoFlexTestCases{
+		"nil source": {
+			Source: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfNull[allowedMethodsModel](ctx),
+			},
+			Target: &awsModel{},
+			WantTarget: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:         []awstypes.Method{},
+				Quantity:      aws.Int32(0),
+				CachedMethods: nil,
+			}},
+		},
+		"empty items,nil cached": {
+			Source: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+						CachedMethods: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.Method]](ctx),
+					},
+				}),
+			},
+			Target: &awsModel{},
+			WantTarget: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{},
+				Quantity: aws.Int32(0),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{},
+					Quantity: aws.Int32(0),
+				},
+			}},
+		},
+		"multi items,nil cached": {
+			Source: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+							fwtypes.StringEnumValue(awstypes.MethodGet),
+							fwtypes.StringEnumValue(awstypes.MethodPost),
+						}),
+						CachedMethods: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[awstypes.Method]](ctx),
+					},
+				}),
+			},
+			Target: &awsModel{},
+			WantTarget: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
+				Quantity: aws.Int32(2),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{},
+					Quantity: aws.Int32(0),
+				},
+			}},
+		},
+		"multi items,single cached": {
+			Source: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+							fwtypes.StringEnumValue(awstypes.MethodGet),
+							fwtypes.StringEnumValue(awstypes.MethodPost),
+						}),
+						CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{
+							fwtypes.StringEnumValue(awstypes.MethodGet),
+						}),
+					},
+				}),
+			},
+			Target: &awsModel{},
+			WantTarget: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{awstypes.MethodGet, awstypes.MethodPost},
+				Quantity: aws.Int32(2),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{awstypes.MethodGet},
+					Quantity: aws.Int32(1),
+				},
+			}},
+		},
+
+		"empty items,empty cached": {
+			Source: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+						CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+					},
+				}),
+			},
+			Target: &awsModel{},
+			WantTarget: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{},
+				Quantity: aws.Int32(0),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{},
+					Quantity: aws.Int32(0),
+				},
+			}},
+		},
+
+		"empty items,single cached": {
+			Source: &tfModel{
+				AllowedMethods: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []allowedMethodsModel{
+					{
+						Items:         fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{}),
+						CachedMethods: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[awstypes.Method]](ctx, []attr.Value{fwtypes.StringEnumValue(awstypes.MethodGet)}),
+					},
+				}),
+			},
+			Target: &awsModel{},
+			WantTarget: &awsModel{AllowedMethods: &awstypes.AllowedMethods{
+				Items:    []awstypes.Method{},
+				Quantity: aws.Int32(0),
+				CachedMethods: &awstypes.CachedMethods{
+					Items:    []awstypes.Method{awstypes.MethodGet},
+					Quantity: aws.Int32(1),
+				},
+			}},
+		},
+	}
+
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true}, cmpopts.IgnoreUnexported(
+		awstypes.AllowedMethods{},
+		awstypes.CachedMethods{},
+	))
 }

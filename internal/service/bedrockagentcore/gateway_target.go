@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -272,6 +273,15 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.MapOfStringType,
 										Optional:   true,
 									},
+									"default_return_url": schema.StringAttribute{
+										Optional:    true,
+										Description: "The URL where the end user's browser is redirected after obtaining the authorization code. Required when grant_type is AUTHORIZATION_CODE.",
+									},
+									"grant_type": schema.StringAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.StringEnumType[awstypes.OAuthGrantType](),
+										Description: "The OAuth grant type. Valid values are AUTHORIZATION_CODE and CLIENT_CREDENTIALS.",
+									},
 									"provider_arn": schema.StringAttribute{
 										Required: true,
 									},
@@ -516,7 +526,24 @@ func (r *gatewayTargetResource) Create(ctx context.Context, request resource.Cre
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
 
-	out, err := conn.CreateGatewayTarget(ctx, &input)
+	var (
+		out *bedrockagentcorecontrol.CreateGatewayTargetOutput
+		err error
+	)
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		out, err = conn.CreateGatewayTarget(ctx, &input)
+
+		// IAM propagation.
+		if tfawserr.ErrMessageContains(err, errCodeValidationException, "Gateway execution role lacks permission") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.Name.String())
 		return
@@ -1076,9 +1103,11 @@ type apiKeyCredentialProviderModel struct {
 }
 
 type oauthCredentialProviderModel struct {
-	CustomParameters fwtypes.MapOfString `tfsdk:"custom_parameters"`
-	ProviderARN      fwtypes.ARN         `tfsdk:"provider_arn"`
-	Scopes           fwtypes.SetOfString `tfsdk:"scopes"`
+	CustomParameters fwtypes.MapOfString                         `tfsdk:"custom_parameters"`
+	DefaultReturnURL types.String                                `tfsdk:"default_return_url"`
+	GrantType        fwtypes.StringEnum[awstypes.OAuthGrantType] `tfsdk:"grant_type"`
+	ProviderARN      fwtypes.ARN                                 `tfsdk:"provider_arn"`
+	Scopes           fwtypes.SetOfString                         `tfsdk:"scopes"`
 }
 
 type gatewayIAMRoleProviderModel struct {

@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -256,9 +255,8 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 	output, err := conn.DescribeFileSystemAssociations(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -273,8 +271,8 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 	return output.FileSystemAssociationInfoList, nil
 }
 
-func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFileSystemAssociation(conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemAssociationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -290,10 +288,10 @@ func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Clien
 }
 
 func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegateway.Client, fileSystemArn string, timeout time.Duration) (*awstypes.FileSystemAssociationInfo, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating},
 		Target:  []string{fileSystemAssociationStatusAvailable},
-		Refresh: statusFileSystemAssociation(ctx, conn, fileSystemArn),
+		Refresh: statusFileSystemAssociation(conn, fileSystemArn),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -310,10 +308,10 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 }
 
 func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.Client, fileSystemArn string, timeout time.Duration) (*awstypes.FileSystemAssociationInfo, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting},
 		Target:         []string{},
-		Refresh:        statusFileSystemAssociation(ctx, conn, fileSystemArn),
+		Refresh:        statusFileSystemAssociation(conn, fileSystemArn),
 		Timeout:        timeout,
 		Delay:          5 * time.Second,
 		NotFoundChecks: 1,

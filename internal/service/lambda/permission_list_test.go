@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -25,7 +24,7 @@ func TestAccLambdaPermission_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_lambda_permission.test[0]"
 	resourceName2 := "aws_lambda_permission.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	functionName := tfstatecheck.StateValue()
 	statementID1 := tfstatecheck.StateValue()
@@ -38,7 +37,7 @@ func TestAccLambdaPermission_List_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.31.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketVersioningCreate,
@@ -344,9 +342,8 @@ func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expected
 	output, err := conn.GetBucketVersioning(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -361,8 +358,8 @@ func findBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expected
 	return output, nil
 }
 
-func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBucketVersioning(conn *s3.Client, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
 
 		if retry.NotFound(err) {
@@ -382,10 +379,10 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 }
 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
-		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
+		Refresh:                   statusBucketVersioning(conn, bucket, expectedBucketOwner),
 		Timeout:                   bucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,

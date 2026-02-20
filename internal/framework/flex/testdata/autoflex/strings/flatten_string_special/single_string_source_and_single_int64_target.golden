@@ -13,8 +13,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsSingleStringValue",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field",
-    "source_type": "flex.awsSingleStringValue"
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfSingleInt64Field"
   },
   {
     "@level": "info",
@@ -47,13 +46,11 @@
   },
   {
     "@level": "error",
-    "@message": "AutoFlex Flatten; incompatible types",
+    "@message": "Flattening incompatible types",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "string",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value",
-    "from": 24,
-    "to": {}
+    "autoflex.target.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.Int64Value"
   }
 ]

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -263,9 +262,7 @@ func findStorediSCSIVolumeByARN(ctx context.Context, conn *storagegateway.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.VolumeARN) != arn {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -285,9 +282,8 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeStorediSCSIVolumes(ctx, input)
 
 	if isVolumeNotFoundErr(err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -302,8 +298,8 @@ func findStorediSCSIVolumes(ctx context.Context, conn *storagegateway.Client, in
 	return output.StorediSCSIVolumes, nil
 }
 
-func statusStorediSCSIVolume(ctx context.Context, conn *storagegateway.Client, volumeARN string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStorediSCSIVolume(conn *storagegateway.Client, volumeARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStorediSCSIVolumeByARN(ctx, conn, volumeARN)
 
 		if retry.NotFound(err) {
@@ -322,10 +318,10 @@ func waitStorediSCSIVolumeAvailable(ctx context.Context, conn *storagegateway.Cl
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"BOOTSTRAPPING", "CREATING", "RESTORING"},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusStorediSCSIVolume(ctx, conn, volumeARN),
+		Refresh: statusStorediSCSIVolume(conn, volumeARN),
 		Timeout: timeout,
 	}
 

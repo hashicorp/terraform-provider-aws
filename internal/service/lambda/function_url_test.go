@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,16 +33,16 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
@@ -73,16 +72,16 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_cors(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", acctest.CtTrue),
@@ -107,7 +106,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 			{
 				Config: testAccFunctionURLConfig_corsUpdated(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors.0.allow_credentials", acctest.CtFalse),
@@ -127,7 +126,7 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 			{
 				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "cors.#", "0"),
 				),
@@ -147,16 +146,16 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_alias(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "function_name", funcName),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", aliasName),
 				),
@@ -181,16 +180,16 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_two(funcName, aliasName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, latestResourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, latestResourceName, &conf),
 					resource.TestCheckResourceAttr(latestResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(latestResourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(latestResourceName, names.AttrFunctionARN),
@@ -199,7 +198,7 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 					resource.TestCheckResourceAttr(latestResourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrSet(latestResourceName, "url_id"),
 
-					testAccCheckFunctionURLExists(ctx, liveResourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, liveResourceName, &conf),
 					resource.TestCheckResourceAttr(liveResourceName, "authorization_type", string(awstypes.FunctionUrlAuthTypeNone)),
 					resource.TestCheckResourceAttr(liveResourceName, "cors.#", "0"),
 					resource.TestCheckResourceAttrSet(liveResourceName, names.AttrFunctionARN),
@@ -232,16 +231,16 @@ func TestAccLambdaFunctionURL_invokeMode(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx),
+		CheckDestroy:             testAccCheckFunctionURLDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_invokeMode(funcName, policyName, roleName, "BUFFERED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "BUFFERED"),
 				),
 			},
@@ -253,7 +252,7 @@ func TestAccLambdaFunctionURL_invokeMode(t *testing.T) {
 			{
 				Config: testAccFunctionURLConfig_invokeMode(funcName, policyName, roleName, "RESPONSE_STREAM"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "RESPONSE_STREAM"),
 				),
 			},
@@ -265,7 +264,7 @@ func TestAccLambdaFunctionURL_invokeMode(t *testing.T) {
 			{
 				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFunctionURLExists(ctx, resourceName, &conf),
+					testAccCheckFunctionURLExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "invoke_mode", "BUFFERED"),
 				),
 			},
@@ -278,14 +277,14 @@ func TestAccLambdaFunctionURL_invokeMode(t *testing.T) {
 	})
 }
 
-func testAccCheckFunctionURLExists(ctx context.Context, n string, v *lambda.GetFunctionUrlConfigOutput) resource.TestCheckFunc {
+func testAccCheckFunctionURLExists(ctx context.Context, t *testing.T, n string, v *lambda.GetFunctionUrlConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		output, err := tflambda.FindFunctionURLByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["qualifier"])
 
@@ -299,9 +298,9 @@ func testAccCheckFunctionURLExists(ctx context.Context, n string, v *lambda.GetF
 	}
 }
 
-func testAccCheckFunctionURLDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFunctionURLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_function_url" {

@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,9 +17,9 @@ func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,9 +43,9 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,7 +67,7 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 
 func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

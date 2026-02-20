@@ -570,6 +570,8 @@ rules:
     paths:
       include:
         - "/internal/service"
+      exclude:
+        - "*_test.go"
     patterns:
       - pattern-either:
           - pattern: errs.Must(...)

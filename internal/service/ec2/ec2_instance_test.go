@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -4527,7 +4528,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3, v4 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4545,11 +4546,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					// empty string set if amd_sev_snp is not specified
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": knownvalue.StringExact(""), // empty string set if amd_sev_snp is not specified
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4559,34 +4567,44 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			},
 			{
 				// test DiffSuppressFunc to suppress "" to "disabled"
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					// Since read is not triggered, empty string is returned
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				// expect recreation when it is enabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v3),
-					testAccCheckInstanceRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationEnabled),
+					})})),
+				},
 			},
 			{
-				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be enabled
+				// expect no recreation if the cpu options block is removed
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v4),
-					testAccCheckInstanceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -4594,7 +4612,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3, v4 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4612,11 +4630,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					// API returns empty string if amd_sev_snp is not specified
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ""),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": knownvalue.StringExact(""), // empty string set if amd_sev_snp is not specified
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4626,33 +4651,49 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			},
 			{
 				// expect recreation when it is enabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationEnabled),
+					})})),
+				},
 			},
 			{
 				// expect recreation when it is disabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v3),
-					testAccCheckInstanceRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationDisabled),
+					})})),
+				},
 			},
 			{
-				// expect no recreation if the cpu options block is removed - amd_sev_snp should still be disabled
+				// expect no recreation if the cpu options block is removed
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpUnspecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v4),
-					testAccCheckInstanceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -4660,7 +4701,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4676,12 +4717,20 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationEnabled),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4690,13 +4739,20 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationDisabled),
+					})})),
+				},
 			},
 		},
 	})
@@ -4704,7 +4760,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4720,12 +4776,20 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationDisabled),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4734,13 +4798,20 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, awstypes.AmdSevSnpSpecificationEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp": tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationEnabled),
+					})})),
+				},
 			},
 		},
 	})
@@ -4748,14 +4819,15 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	originalCoreCount := 2
-	updatedCoreCount := 3
-	originalThreadsPerCore := 2
-	updatedThreadsPerCore := 1
+	var (
+		originalCoreCount      int32 = 2
+		updatedCoreCount       int32 = 3
+		originalThreadsPerCore int32 = 2
+		updatedThreadsPerCore  int32 = 1
+	)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -4769,14 +4841,22 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationEnabled), originalCoreCount, originalThreadsPerCore),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, awstypes.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp":      tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationEnabled),
+						"core_count":       knownvalue.Int32Exact(originalCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(originalThreadsPerCore),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4785,15 +4865,40 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationDisabled), updatedCoreCount, updatedThreadsPerCore),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, awstypes.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp":      tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationDisabled),
+						"core_count":       knownvalue.Int32Exact(updatedCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(updatedThreadsPerCore),
+					})})),
+				},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, awstypes.AmdSevSnpSpecificationDisabled, originalCoreCount, originalThreadsPerCore),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"amd_sev_snp":      tfknownvalue.StringExact(awstypes.AmdSevSnpSpecificationDisabled),
+						"core_count":       knownvalue.Int32Exact(originalCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(originalThreadsPerCore),
+					})})),
+				},
 			},
 		},
 	})
@@ -4801,14 +4906,15 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	originalCoreCount := 2
-	updatedCoreCount := 3
-	originalThreadsPerCore := 2
-	updatedThreadsPerCore := 1
+	var (
+		originalCoreCount      int32 = 2
+		updatedCoreCount       int32 = 3
+		originalThreadsPerCore int32 = 2
+		updatedThreadsPerCore  int32 = 1
+	)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4819,11 +4925,19 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, originalCoreCount, originalThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(originalCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(originalThreadsPerCore),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4834,12 +4948,19 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, updatedCoreCount, updatedThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(updatedCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(updatedThreadsPerCore),
+					})})),
+				},
 			},
 		},
 	})
@@ -4847,12 +4968,13 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 awstypes.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	defaultCoreCount := 4
-	defaultThreadsPerCore := 2
+	var (
+		defaultCoreCount      int32 = 4
+		defaultThreadsPerCore int32 = 2
+	)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4863,11 +4985,19 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 			{
 				Config: testAccInstanceConfig_cpuOptionsUnspecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"core_count":       knownvalue.Int32Exact(defaultCoreCount),
+						"threads_per_core": knownvalue.Int32Exact(defaultThreadsPerCore),
+					})})),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -4876,15 +5006,306 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
-				// EC2 instance should not be recreated
 				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, defaultCoreCount, defaultThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v2),
-					testAccCheckInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(defaultCoreCount)),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(defaultThreadsPerCore)),
+					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsNestedVirtualizationUnspecifiedToDisabledToEnabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Nested virtualization currently only supported in us-west-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nested-virtualization.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualizationUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": knownvalue.StringExact(""), // empty string set if nested_virtualization is not specified
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				// test DiffSuppressFunc to suppress "" to "disabled"
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				// expect update when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationEnabled),
+					})})),
+				},
+			},
+			{
+				// expect no recreation if the cpu options block is removed
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualizationUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsNestedVirtualizationUnspecifiedToEnabledToDisabledToUnspecified(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Nested virtualization currently only supported in us-west-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nested-virtualization.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualizationUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": knownvalue.StringExact(""), // empty string set if nested_virtualization is not specified
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				// expect update when it is enabled
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationEnabled),
+					})})),
+				},
+			},
+			{
+				// update recreation when it is disabled
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationDisabled),
+					})})),
+				},
+			},
+			{
+				// expect no recreation if the cpu options block is removed
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualizationUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsNestedVirtualizationEnabledToDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Nested virtualization currently only supported in us-west-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nested-virtualization.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationEnabled),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationDisabled),
+					})})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_cpuOptionsNestedVirtualizationDisabledToEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// Nested virtualization currently only supported in us-west-2
+			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nested-virtualization.html
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationDisabled),
+					})})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_cpuOptionsNestedVirtualization(rName, awstypes.NestedVirtualizationSpecificationEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_options"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"nested_virtualization": tfknownvalue.StringExact(awstypes.NestedVirtualizationSpecificationEnabled),
+					})})),
+				},
 			},
 		},
 	})
@@ -4924,6 +5345,8 @@ func TestAccEC2Instance_upgradeV6CPUOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(2)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(2)),
+					resource.TestCheckNoResourceAttr(resourceName, "cpu_core_count"),
+					resource.TestCheckNoResourceAttr(resourceName, "cpu_threads_per_core"),
 				),
 				// The config plan check also ensures that the instance is not recreated
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -9456,7 +9879,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, amdSevSnp string) string {
+func testAccInstanceConfig_cpuOptionsAmdSevSnp(rName string, amdSevSnp awstypes.AmdSevSnpSpecification) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
@@ -9478,7 +9901,7 @@ resource "aws_instance" "test" {
 `, rName, amdSevSnp))
 }
 
-func testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, amdSevSnp string, coreCount, threadsPerCore int) string {
+func testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName string, amdSevSnp awstypes.AmdSevSnpSpecification, coreCount, threadsPerCore int32) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
@@ -9520,7 +9943,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_cpuOptionsCoreThreads(rName string, coreCount, threadsPerCore int) string {
+func testAccInstanceConfig_cpuOptionsCoreThreads(rName string, coreCount, threadsPerCore int32) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_vpcBase(rName, false, 0),
 		testAccLatestAmazonLinux2023AMIConfig(),
@@ -9541,6 +9964,46 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, coreCount, threadsPerCore))
+}
+
+func testAccInstanceConfig_cpuOptionsNestedVirtualizationUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c8i.large", "m8i.large"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_cpuOptionsNestedVirtualization(rName string, nestedVirtualization awstypes.NestedVirtualizationSpecification) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		testAccLatestAmazonLinux2023AMIConfig(),
+		acctest.AvailableEC2InstanceTypeForRegion("c8i.large", "m8i.large"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-linux-2023-ami.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  cpu_options {
+    nested_virtualization = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, nestedVirtualization))
 }
 
 // DO NOT use this style of configuration in v6+!

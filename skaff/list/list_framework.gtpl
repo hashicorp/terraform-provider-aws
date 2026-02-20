@@ -114,7 +114,7 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 				return
 			}
 
-			var data resource{{ .ListResource }}Model
+			var data {{ .ResourceLowerCamel }}ResourceModel
 	        {{ if .IncludeComments -}}
 	        // TIP: -- 4. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
@@ -126,18 +126,13 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 					return
 				}
 
-            	{{ if .IncludeComments -}}
-            	// TIP: -- 5. Set the display name
-            	{{- end }}
+				{{ if .IncludeComments -}}
+				// TIP: -- 5. Set the display name
+				{{- end }}
 				name := aws.ToString(item.{{ .ListResource }}Id)
 				data.Name = fwflex.StringValueToFramework(ctx, name)
 				result.DisplayName = name
 			})
-
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
 
 			if !yield(result) {
 				return
@@ -172,7 +167,7 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources: %w", err))
+				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }} resources: %w", err))
 				return
 			}
 

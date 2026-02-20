@@ -98,7 +98,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Get information about a resource from AWS
 	{{- end }}
-	tflog.Info(ctx, "Listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input {{ .SDKPackage }}.List{{ .ListResource }}sInput
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
@@ -109,26 +109,36 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 			}
 
 			arn := aws.ToString(item.{{ .ListResource }}Arn)
+	        {{- if .IncludeComments }}
+			// TIP: -- 4. Set identifying attributes for logging
+			// Set one or more logging fields with attributes that will identify the resource.
+			// Typically, these will be the attributes used in the Resource Identity
+	        {{- end }}
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(arn)
-	        {{ if .IncludeComments -}}
-	        // TIP: -- 4. Set the ID, arguments, and attributes
-	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
+
+			tflog.Info(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}")
+	        {{- if .IncludeComments }}
+			// TIP: -- 5. Populate the resource
+			// In many cases, the value in item will have sufficient information to populate the resource data.
+			// If this is the case, factor out the resource flattening from resource{{ .ListResource }}Read.
+			// See, for example, the implementation of `vpc_subnet_list`.
+			//
+			// If resource{{ .ListResource }}Read makes additional API calls to populate the resource data
+			// they should only be made if request.IncludeResource is true.
 	        {{- end }}
-			tflog.Info(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
 			diags := resource{{ .ListResource }}Read(ctx, rd, l.Meta())
 			if diags.HasError() {
-				tflog.Error(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}", map[string]any{
-					names.AttrID: arn,
-					"diags":      sdkdiag.DiagnosticsString(diags),
+				tflog.Error(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+					"diags": sdkdiag.DiagnosticsString(diags),
 				})
 				continue
 			}
 			if rd.Id() == "" {
-				// Resource is logically deleted
+				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
 				continue
 			}
 
@@ -173,7 +183,7 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources: %w", err))
+				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }} resources: %w", err))
 				return
 			}
 
@@ -185,4 +195,3 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		}
 	}
 }
-

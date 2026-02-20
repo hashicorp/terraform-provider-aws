@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,16 +31,16 @@ func TestAccSFNAlias_basic(t *testing.T) {
 	resourceName := "aws_sfn_alias.test"
 	functionArnResourcePart := fmt.Sprintf("stateMachine:%s:%s", stateMachineName, aliasName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineAliasConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(ctx, resourceName, &alias),
+					testAccCheckAliasExists(ctx, t, resourceName, &alias),
 					testAccCheckAliasAttributes(&alias),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, aliasName),
@@ -69,16 +68,16 @@ func TestAccSFNAlias_disappears(t *testing.T) {
 	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	resourceName := "aws_sfn_alias.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAliasDestroy(ctx),
+		CheckDestroy:             testAccCheckAliasDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineAliasConfig_basic(stateMachineName, aliasName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAliasExists(ctx, resourceName, &alias),
+					testAccCheckAliasExists(ctx, t, resourceName, &alias),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsfn.ResourceAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -101,9 +100,9 @@ func testAccCheckAliasAttributes(mapping *sfn.DescribeStateMachineAliasOutput) r
 	}
 }
 
-func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SFNClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sfn_alias" {
@@ -127,14 +126,14 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAliasExists(ctx context.Context, name string, v *sfn.DescribeStateMachineAliasOutput) resource.TestCheckFunc {
+func testAccCheckAliasExists(ctx context.Context, t *testing.T, name string, v *sfn.DescribeStateMachineAliasOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SFNClient(ctx)
 
 		output, err := tfsfn.FindAliasByARN(ctx, conn, rs.Primary.ID)
 

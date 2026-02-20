@@ -381,16 +381,13 @@ func resourceCluster() *schema.Resource {
 			},
 		},
 		CustomizeDiff: customdiff.All(
-			// if serverless_v2_scaling_configuration is newly set or deleted, ForceNew is required
-			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration",
-				func(_ context.Context, old, new, meta any) bool {
-					o := old != nil && len(old.([]any)) > 0
-					n := new != nil && len(new.([]any)) > 0
-					if (o && n) || (!o && !n) {
-						return false
-					}
-					return true
-				}),
+			// ForceNew only when removing serverless_v2_scaling_configuration; adding or modifying is supported in-place.
+			// AWS does not support removing this configuration via ModifyDBCluster, so recreation is required.
+			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration", func(_ context.Context, old, new, meta any) bool {
+				o := old != nil && len(old.([]any)) > 0
+				n := new != nil && len(new.([]any)) > 0
+				return o && !n
+			}),
 		),
 	}
 }

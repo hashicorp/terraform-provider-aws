@@ -602,8 +602,26 @@ func resourceCluster() *schema.Resource {
 								// configuration from AWS this dsf does allow the user to remove the block
 								// from their configuration without perpetual diffs.
 								// https://github.com/hashicorp/terraform-provider-aws/issues/40473
+
+								// NOTE: This is a poor pattern and should not be followed.
+								//  - The basic declarative contract is: config & state = infrastructure
+								//  - The API supports adding and updating SSC but not removing it.
+								//  - Add, update -> no ForceNew (supported by API)
+								//  - Remove -> ForceNew (standard Terraform solution for unsupported mutations)
+								//
+								// This suppress was added to avoid breaking existing users who had already
+								// removed the block from their config, rather than following the standard pattern.
 								config := d.GetRawConfig()
+
+								if config.IsNull() || !config.IsKnown() {
+									return false
+								}
+
 								raw := config.GetAttr("serverlessv2_scaling_configuration")
+
+								if raw.IsNull() || !raw.IsKnown() {
+									return false
+								}
 
 								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
 									return true

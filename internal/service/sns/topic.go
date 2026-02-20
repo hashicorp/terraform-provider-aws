@@ -20,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
@@ -221,7 +220,6 @@ var (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="map[string]string")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -511,9 +509,8 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	output, err := conn.GetTopicAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

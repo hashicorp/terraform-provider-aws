@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -65,18 +64,7 @@ func (l *listResourceMetricAlarm) List(ctx context.Context, request list.ListReq
 			rd.SetId(name)
 
 			tflog.Info(ctx, "Reading CloudWatch Metric Alarm")
-			diags := resourceMetricAlarmRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading CloudWatch Metric Alarm", map[string]any{
-					names.AttrID: name,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
-			}
+			resourceMetricAlarmFlatten(ctx, rd, &item)
 
 			result.DisplayName = name
 

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -44,7 +43,6 @@ const (
 // @Testing(importStateIdFunc="testAccSecretVersionImportStateIdFunc")
 // @Testing(importIgnore="has_secret_string_wo")
 // @Testing(plannableImportAction="NoOp")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretVersionCreate,
@@ -380,7 +378,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
-			return nil, &sdkretry.NotFoundError{}
+			return nil, &retry.NotFoundError{}
 		}
 
 		return output, nil
@@ -440,9 +438,8 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
 		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

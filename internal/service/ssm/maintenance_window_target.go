@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;types.MaintenanceWindowTarget")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(importStateIdFunc="testAccMaintenanceWindowTargetImportStateIdFunc")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTargetCreate,
@@ -246,9 +244,8 @@ func findMaintenanceWindowTargets(ctx context.Context, conn *ssm.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DoesNotExistException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
