@@ -178,7 +178,7 @@ func TestExpandXMLWrapperRule2SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
