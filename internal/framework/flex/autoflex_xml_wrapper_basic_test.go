@@ -60,7 +60,7 @@ func TestExpandXMLWrapperRule1SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 // Rule 1 + Complex Type: Fruits/Apples/Apple example from context
