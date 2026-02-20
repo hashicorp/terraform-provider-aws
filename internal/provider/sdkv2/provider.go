@@ -1044,8 +1044,9 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 					ValidateFunc: validation.StringLenBetween(4, 20000),
 				},
 				"web_identity_token_file": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Path to a file containing a web identity token. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.",
 				},
 			},
 		},
