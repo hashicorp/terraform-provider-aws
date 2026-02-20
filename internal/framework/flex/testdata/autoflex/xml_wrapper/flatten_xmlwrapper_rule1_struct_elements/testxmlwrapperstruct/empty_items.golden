@@ -1,0 +1,119 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "XMLWrapper",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.fieldname": "XMLWrapper",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting pointer to XML wrapper struct to collection via wrapper tag",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "XMLWrapper",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.fieldname": "XMLWrapper",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.targetStruct",
+    "wrapper_field": "Items"
+  },
+  {
+    "@level": "trace",
+    "@message": "Starting XML wrapper flatten",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Target is NestedObjectCollectionType - checking for Rule 2",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Rule 2 detection result",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]",
+    "field_count": 2,
+    "is_rule2": false
+  },
+  {
+    "@level": "trace",
+    "@message": "NOT Rule 2 - continuing with Rule 1",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Using target element type",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]",
+    "element_type": "ObjectTypeOf[flex.testStructItemModel]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Converting items to set elements",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]",
+    "items_count": 0,
+    "valid_count": 0
+  },
+  {
+    "@level": "trace",
+    "@message": "Creating set value",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.sourceStruct",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.SetNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.testStructItemModel]",
+    "element_count": 0
+  }
+]
