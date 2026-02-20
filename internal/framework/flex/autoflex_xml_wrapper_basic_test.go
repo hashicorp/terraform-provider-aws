@@ -214,7 +214,7 @@ func TestExpandXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 // Rule 2 + Complex Type: Trees/Oaks/Oak example from context
