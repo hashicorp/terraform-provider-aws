@@ -311,7 +311,8 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 							Description: "Value of a web identity token. Can also be set with the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable.",
 						},
 						"web_identity_token_file": schema.StringAttribute{
-							Optional: true,
+							Optional:    true,
+							Description: "Path to a file containing a web identity token. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.",
 						},
 					},
 				},
