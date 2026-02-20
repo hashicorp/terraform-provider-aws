@@ -287,7 +287,7 @@ func TestExpandXMLWrapperRule2ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 // Flatten tests for Rule 1 + Simple Type
