@@ -1572,3 +1572,118 @@ resource "aws_iam_role" "test" {
 }
 `, rName, acctest.AlternateRegion(), acctest.Region(), regionOverride)
 }
+
+func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanConfig_reportConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.0.report_output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.0.report_output.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "report_configuration.0.report_output.0.s3_configuration.0.bucket_path"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+			{
+				Config: testAccPlanConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPlanConfig_reportConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[3]q, %[2]q]
+  primary_region    = %[3]q
+
+  report_configuration {
+    report_output {
+      s3_configuration {
+        bucket_path = aws_s3_bucket.test.bucket
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[2]q
+
+    step {
+      name                 = "basic-step"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = %[3]q
+
+    step {
+      name                 = "basic-step-primary"
+      execution_block_type = "ManualApproval"
+
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 60
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), acctest.Region())
+}
