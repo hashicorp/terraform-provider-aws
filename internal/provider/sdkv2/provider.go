@@ -456,8 +456,6 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 			"tf_aws.assume_role_with_web_identity.role_arn":     config.AssumeRoleWithWebIdentity.RoleARN,
 			"tf_aws.assume_role_with_web_identity.session_name": config.AssumeRoleWithWebIdentity.SessionName,
 		})
-	} else if os.Getenv("TF_AWS_WEB_IDENTITY_TOKEN") != "" && os.Getenv("AWS_WEB_IDENTITY_TOKEN_FILE") != "" {
-		diags = append(diags, errs.NewAttributeConflictsWithError(cty.GetAttrPath("web_identity_token"), cty.GetAttrPath("web_identity_token_file")))
 	} else if v := os.Getenv("TF_AWS_WEB_IDENTITY_TOKEN"); v != "" {
 		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, nil)
 	}
