@@ -1807,7 +1807,7 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 		"key_schema syntax unchanged": {
 			// State has hash_key/range_key, config only has key_schema
 			Old: map[string]any{
-				"name":            "gsi2",
+				names.AttrName:    "gsi2",
 				"hash_key":        "gsi2pk",
 				"range_key":       "gsi2sk",
 				"projection_type": "ALL",
@@ -1817,7 +1817,7 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 				},
 			},
 			New: map[string]any{
-				"name":            "gsi2",
+				names.AttrName:    "gsi2",
 				"hash_key":        "",
 				"range_key":       "",
 				"projection_type": "ALL",
@@ -1830,7 +1830,7 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 		},
 		"hash_key syntax unchanged": {
 			Old: map[string]any{
-				"name":            "gsi1",
+				names.AttrName:    "gsi1",
 				"hash_key":        "pk",
 				"range_key":       "",
 				"projection_type": "ALL",
@@ -1839,7 +1839,7 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 				},
 			},
 			New: map[string]any{
-				"name":            "gsi1",
+				names.AttrName:    "gsi1",
 				"hash_key":        "pk",
 				"range_key":       "",
 				"projection_type": "ALL",
@@ -1852,14 +1852,14 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 		"hash_key changed with nil key_schema": {
 			// Both maps have key_schema: nil (hash_key syntax), but hash_key differs
 			Old: map[string]any{
-				"name":            "gsi1",
+				names.AttrName:    "gsi1",
 				"hash_key":        "pk1",
 				"range_key":       "",
 				"projection_type": "ALL",
 				"key_schema":      nil,
 			},
 			New: map[string]any{
-				"name":            "gsi1",
+				names.AttrName:    "gsi1",
 				"hash_key":        "pk2",
 				"range_key":       "",
 				"projection_type": "ALL",
@@ -1869,7 +1869,7 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 		},
 		"key_schema changed": {
 			Old: map[string]any{
-				"name":            "gsi1",
+				names.AttrName:    "gsi1",
 				"hash_key":        "pk1",
 				"range_key":       "",
 				"projection_type": "ALL",
@@ -1878,7 +1878,7 @@ func TestCheckIfGSIRecreateAttributesChanged(t *testing.T) {
 				},
 			},
 			New: map[string]any{
-				"name":            "gsi1",
+				names.AttrName:    "gsi1",
 				"hash_key":        "",
 				"range_key":       "",
 				"projection_type": "ALL",
