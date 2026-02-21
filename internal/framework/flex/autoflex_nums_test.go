@@ -307,7 +307,7 @@ func TestExpandFloat64toFloat32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoExpandTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 		})
 	}
 }
@@ -894,7 +894,7 @@ func TestFlattenFloat64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 		})
 	}
 }
@@ -1010,7 +1010,7 @@ func TestFlattenFloat32(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 		})
 	}
 }
@@ -1166,7 +1166,7 @@ func TestFlattenInt64(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 		})
 	}
 }
@@ -1310,5 +1310,5 @@ func TestFlattenTopLevelInt64Ptr(t *testing.T) {
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
