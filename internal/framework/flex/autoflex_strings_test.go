@@ -117,7 +117,7 @@ func TestExpandStringEnum(t *testing.T) {
 			WantTarget: &enum,
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 type tfSingleStringFieldOmitEmpty struct {
