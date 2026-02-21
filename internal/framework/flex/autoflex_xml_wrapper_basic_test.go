@@ -464,7 +464,7 @@ func TestFlattenXMLWrapperRule2SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
