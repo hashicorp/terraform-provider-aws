@@ -316,5 +316,5 @@ func TestFlattenTopLevelStringPtr(t *testing.T) {
 		},
 	}
 
-	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runTopLevelTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
