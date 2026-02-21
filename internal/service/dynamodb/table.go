@@ -2207,11 +2207,26 @@ func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
 
 	newAttributes := stripGSIUpdatableAttributes(newMap)
 
+	// Config uses either hash_key or key_schema syntax, but not both.
+	// If hash_key matches, key_schema is redundant, remove it.
 	oHk, oOk := oldAttributes["hash_key"]
 	nHk, nOk := newAttributes["hash_key"]
 	if oOk && nOk && oHk == nHk && oHk != "" {
 		delete(oldAttributes, "key_schema")
 		delete(newAttributes, "key_schema")
+	}
+
+	// If key_schema matches, hash_key/range_key are redundant, remove them.
+	// Only when key_schema is a non-empty list, to avoid matching on nil/empty defaults.
+	oKs, oKsOk := oldAttributes["key_schema"]
+	nKs, nKsOk := newAttributes["key_schema"]
+	oKsList, _ := oKs.([]any)
+	nKsList, _ := nKs.([]any)
+	if oKsOk && nKsOk && len(oKsList) > 0 && len(nKsList) > 0 && reflect.DeepEqual(oKs, nKs) {
+		delete(oldAttributes, "hash_key")
+		delete(newAttributes, "hash_key")
+		delete(oldAttributes, "range_key")
+		delete(newAttributes, "range_key")
 	}
 
 	return !reflect.DeepEqual(oldAttributes, newAttributes)
