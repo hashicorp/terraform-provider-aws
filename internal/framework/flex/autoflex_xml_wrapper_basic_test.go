@@ -508,7 +508,7 @@ func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 // Flatten tests for Rule 2 + Complex Type
