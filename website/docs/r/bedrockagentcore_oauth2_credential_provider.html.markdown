@@ -30,6 +30,23 @@ resource "aws_bedrockagentcore_oauth2_credential_provider" "github" {
 }
 ```
 
+### Microsoft OAuth Provider with Tenant ID
+
+```terraform
+resource "aws_bedrockagentcore_oauth2_credential_provider" "entra" {
+  name = "entra-oauth-provider"
+
+  credential_provider_vendor = "MicrosoftOauth2"
+  oauth2_provider_config {
+    microsoft_oauth2_provider_config {
+      client_id     = "your-microsoft-client-id"
+      client_secret = "your-microsoft-client-secret"
+      tenant_id     = "your-azure-tenant-id"
+    }
+  }
+}
+```
+
 ### Custom OAuth Provider with Discovery URL
 
 ```terraform
@@ -133,6 +150,19 @@ These predefined provider blocks support the following:
 * `client_id_wo` - (Optional) Write-only OAuth2 client ID. Cannot be used with `client_id`. Must be used together with `client_secret_wo` and `client_credentials_wo_version`.
 * `client_secret_wo` - (Optional) Write-only OAuth2 client secret. Cannot be used with `client_secret`. Must be used together with `client_id_wo` and `client_credentials_wo_version`.
 * `client_credentials_wo_version` - (Optional) Used together with write-only credentials to trigger an update. Increment this value when an update to `client_id_wo` or `client_secret_wo` is required.
+
+**Microsoft-Specific Configuration:**
+
+The Microsoft OAuth2 provider supports additional tenant-specific arguments:
+
+**Standard Tenant ID:**
+
+* `tenant_id` - (Optional, Microsoft only) Microsoft Entra (Azure AD) tenant ID. Cannot be used with `tenant_id_wo`.
+
+**Write-Only Tenant ID:**
+
+* `tenant_id_wo` - (Optional, Microsoft only) Write-only Microsoft Entra (Azure AD) tenant ID. Cannot be used with `tenant_id`. Must be used together with `tenant_id_wo_version`.
+* `tenant_id_wo_version` - (Optional, Microsoft only) Used together with write-only tenant ID to trigger an update. Increment this value when an update to `tenant_id_wo` is required.
 
 **Note:** These predefined providers automatically configure OAuth discovery settings based on their respective authorization servers.
 
