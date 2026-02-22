@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -93,6 +95,37 @@ func TestAccAppConfigConfigurationProfile_kmsKey(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", "alias/"+rName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppConfigConfigurationProfile_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_appconfig_configuration_profile.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationProfileConfig_forceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
+					testAccCheckConfigurationProfileCreatesHostedConfigurationVersion(ctx, t, resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrForceDestroy,
+				},
 			},
 		},
 	})
@@ -342,6 +375,27 @@ func testAccCheckConfigurationProfileExists(ctx context.Context, t *testing.T, n
 	}
 }
 
+func testAccCheckConfigurationProfileCreatesHostedConfigurationVersion(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).AppConfigClient(ctx)
+		input := appconfig.CreateHostedConfigurationVersionInput{
+			ApplicationId:          aws.String(rs.Primary.Attributes[names.AttrApplicationID]),
+			ConfigurationProfileId: aws.String(rs.Primary.Attributes["configuration_profile_id"]),
+			Content:                []byte(`{"enabled":true}`),
+			ContentType:            aws.String("application/json"),
+			Description:            aws.String("created by acceptance test"),
+		}
+		_, err := conn.CreateHostedConfigurationVersion(ctx, &input)
+
+		return err
+	}
+}
+
 func testAccConfigurationProfileConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_name(rName),
@@ -374,6 +428,19 @@ resource "aws_appconfig_configuration_profile" "test" {
   application_id = aws_appconfig_application.test.id
   name           = %q
   location_uri   = "hosted"
+}
+`, rName))
+}
+
+func testAccConfigurationProfileConfig_forceDestroy(rName string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_name(rName),
+		fmt.Sprintf(`
+resource "aws_appconfig_configuration_profile" "test" {
+  application_id = aws_appconfig_application.test.id
+  name           = %q
+  location_uri   = "hosted"
+  force_destroy  = true
 }
 `, rName))
 }

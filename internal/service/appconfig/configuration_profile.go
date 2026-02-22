@@ -76,6 +76,11 @@ func resourceConfigurationProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"location_uri": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -269,6 +274,31 @@ func resourceConfigurationProfileDelete(ctx context.Context, d *schema.ResourceD
 	configurationProfileID, applicationID, err := configurationProfileParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if d.Get(names.AttrForceDestroy).(bool) {
+		versions, err := findHostedConfigurationVersionSummariesByTwoPartKey(ctx, conn, applicationID, configurationProfileID)
+
+		if err != nil && !retry.NotFound(err) {
+			return sdkdiag.AppendErrorf(diags, "listing AppConfig Hosted Configuration Versions for Configuration Profile (%s) for Application (%s): %s", configurationProfileID, applicationID, err)
+		}
+
+		for _, v := range versions {
+			input := appconfig.DeleteHostedConfigurationVersionInput{
+				ApplicationId:          aws.String(applicationID),
+				ConfigurationProfileId: aws.String(configurationProfileID),
+				VersionNumber:          aws.Int32(v.VersionNumber),
+			}
+			_, err := conn.DeleteHostedConfigurationVersion(ctx, &input)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting AppConfig Hosted Configuration Version (%d) for Configuration Profile (%s) for Application (%s): %s", v.VersionNumber, configurationProfileID, applicationID, err)
+			}
+		}
 	}
 
 	log.Printf("[INFO] Deleting AppConfig Configuration Profile: %s", d.Id())
