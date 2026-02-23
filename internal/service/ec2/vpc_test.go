@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,7 +49,7 @@ func TestAccVPC_basic(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -98,7 +96,7 @@ func TestAccVPC_disappears(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,7 +129,7 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -186,7 +184,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -232,7 +230,7 @@ func TestAccVPC_tags_defaultAndIgnoreTags(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -242,7 +240,7 @@ func TestAccVPC_tags_defaultAndIgnoreTags(t *testing.T) {
 				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
-					testAccCheckVPCUpdateTags(ctx, &vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
+					testAccCheckVPCUpdateTags(ctx, t, &vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -288,7 +286,7 @@ func TestAccVPC_tags_ignoreTags(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -298,7 +296,7 @@ func TestAccVPC_tags_ignoreTags(t *testing.T) {
 				Config: testAccVPCConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
-					testAccCheckVPCUpdateTags(ctx, &vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckVPCUpdateTags(ctx, t, &vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -337,9 +335,9 @@ func TestAccVPC_tenancy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -400,9 +398,9 @@ func TestAccVPC_updateDNSHostnames(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -431,9 +429,9 @@ func TestAccVPC_bothDNSOptionsSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -461,9 +459,9 @@ func TestAccVPC_disabledDNSSupport(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -489,9 +487,9 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -517,9 +515,9 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -569,9 +567,9 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 	azDataSourceName := "data.aws_availability_zone.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
@@ -625,9 +623,9 @@ func TestAccVPC_IPAMIPv4BasicNetmask(t *testing.T) {
 
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -653,9 +651,9 @@ func TestAccVPC_IPAMIPv4BasicExplicitCIDR(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 	cidr := "172.2.0.32/28"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -681,9 +679,9 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 	ipamPoolResourceName := "aws_vpc_ipam_pool.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -711,7 +709,7 @@ func TestAccVPC_upgradeFromV5(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
 		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
@@ -763,7 +761,7 @@ func TestAccVPC_upgradeFromV5PlanRefreshFalse(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
 		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
@@ -820,7 +818,7 @@ func TestAccVPC_upgradeFromV5WithUpdatePlanRefreshFalse(t *testing.T) {
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
 		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
@@ -882,9 +880,9 @@ func TestAccVPC_upgradeFromV5WithDefaultRegionRefreshFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
 		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
@@ -946,9 +944,9 @@ func TestAccVPC_upgradeFromV5WithNewRegionRefreshFalse(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t),
 		CheckDestroy: testAccCheckVPCDestroy(ctx, t),
@@ -1011,9 +1009,9 @@ func TestAccVPC_regionCreateNull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1094,9 +1092,9 @@ func TestAccVPC_regionCreateNonNull(t *testing.T) {
 	ctx := acctest.Context(t)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1161,9 +1159,9 @@ func TestAccVPC_ramSharedImport(t *testing.T) {
 	providers := make(map[string]*schema.Provider)
 	var vpc awstypes.Vpc
 	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -1234,9 +1232,9 @@ func testAccCheckVPCExists(ctx context.Context, t *testing.T, n string, v *awsty
 	return acctest.CheckVPCExists(ctx, t, n, v)
 }
 
-func testAccCheckVPCUpdateTags(ctx context.Context, vpc *awstypes.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckVPCUpdateTags(ctx context.Context, t *testing.T, vpc *awstypes.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.ToString(vpc.VpcId), oldTags, newTags)
 	}

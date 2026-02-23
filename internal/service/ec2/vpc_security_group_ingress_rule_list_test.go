@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -25,7 +24,7 @@ func TestAccVPCSecurityGroupIngressRule_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_vpc_security_group_ingress_rule.test[0]"
 	resourceName2 := "aws_vpc_security_group_ingress_rule.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	ruleID1 := tfstatecheck.StateValue()
 	ruleID2 := tfstatecheck.StateValue()
@@ -37,7 +36,7 @@ func TestAccVPCSecurityGroupIngressRule_List_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -79,7 +78,7 @@ func TestAccVPCSecurityGroupIngressRule_List_filter(t *testing.T) {
 
 	resourceName1 := "aws_vpc_security_group_ingress_rule.expected[0]"
 	resourceName2 := "aws_vpc_security_group_ingress_rule.expected[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	ruleID1 := tfstatecheck.StateValue()
 	ruleID2 := tfstatecheck.StateValue()
@@ -91,7 +90,7 @@ func TestAccVPCSecurityGroupIngressRule_List_filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -143,7 +142,7 @@ func TestAccVPCSecurityGroupIngressRule_List_regionOverride(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		CheckDestroy: testAccCheckSecurityGroupIngressRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

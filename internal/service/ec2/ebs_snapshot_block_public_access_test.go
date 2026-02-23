@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,12 +31,12 @@ func testAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_snapshot_block_public_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		WorkingDir:               "/tmp",
-		CheckDestroy:             testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ResourceName: resourceName,
@@ -62,9 +61,9 @@ func testAccEC2EBSSnapshotBlockPublicAccess_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 		input := ec2.GetSnapshotBlockPublicAccessStateInput{}
 		response, err := conn.GetSnapshotBlockPublicAccessState(ctx, &input)
 		if err != nil {

@@ -8,7 +8,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -38,7 +37,7 @@ func TestAccVPCSubnet_List_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -102,7 +101,7 @@ func TestAccVPCSubnet_List_regionOverride(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -174,7 +173,7 @@ func TestAccVPCSubnet_List_filtered(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -246,7 +245,7 @@ func TestAccVPCSubnet_List_excludeDefaultSubnets(t *testing.T) {
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -307,7 +306,7 @@ func TestAccVPCSubnet_List_subnetIDs(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -366,7 +365,7 @@ func TestAccVPCSubnet_List_filteredSubnetIDs(t *testing.T) {
 	resourceNameNotExpected1 := "aws_subnet.not_expected[0]"
 	resourceNameNotExpected2 := "aws_subnet.not_expected[1]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	expected1 := tfstatecheck.StateValue()
 	expected2 := tfstatecheck.StateValue()
@@ -379,7 +378,7 @@ func TestAccVPCSubnet_List_filteredSubnetIDs(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
