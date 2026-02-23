@@ -1,0 +1,78 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Create Release Branch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-branch:
+    name: Create Release Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Determine Next Major Version
+        id: version
+        uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
+        with:
+          version: latest
+          args: next major
+
+      - name: Create Release Branch
+        id: parse
+        shell: bash
+        run: |
+          NEXT_VERSION="${{ steps.version.outputs.output }}"
+          MAJOR_VERSION=$(echo "$NEXT_VERSION" | cut -d. -f1)
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "major_version=$MAJOR_VERSION" >> $GITHUB_OUTPUT
+
+          git checkout -b "release/${MAJOR_VERSION}.x"
+
+      - name: Update Version File
+        shell: bash
+        run: echo "${{ steps.parse.outputs.next_version }}" > version/VERSION
+
+      - name: Create Changes Directory and Update Changie Config
+        shell: bash
+        run: |
+          CHANGES_DIR=".changes/${{ steps.parse.outputs.major_version }}.x"
+          mkdir -p "$CHANGES_DIR/unreleased"
+          touch "$CHANGES_DIR/unreleased/.gitkeep"
+          yq eval ".changesDir = \"$CHANGES_DIR\"" -i .changie.yaml
+
+      - name: Update Footer
+        shell: bash
+        run: |
+          PREV_MAJOR=$((${{ steps.parse.outputs.major_version }} - 1))
+          echo "* [${PREV_MAJOR}.x](https://github.com/hashicorp/terraform-provider-aws/blob/release/${PREV_MAJOR}.x/CHANGELOG.md)" > footer_entry.txt
+          
+          # Insert new entry after "For information on prior major releases" line
+          awk '/For information on prior major releases/ {print; print ""; system("cat footer_entry.txt"); next}1' .changes/footer.md > .changes/footer.md.tmp
+          mv .changes/footer.md.tmp .changes/footer.md
+          rm footer_entry.txt
+
+      - name: Commit and Push Changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version/VERSION .changes .changie.yaml
+          git commit -m "Prepare for v${{ steps.parse.outputs.next_version }} release cycle"
+          git push origin release/${{ steps.parse.outputs.major_version }}.x
+
+      - name: Output Summary
+        shell: bash
+        run: |
+          echo "## Release Branch Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`release/${{ steps.parse.outputs.major_version }}.x\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.parse.outputs.next_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The release branch has been created and pushed." >> $GITHUB_STEP_SUMMARY
