@@ -19,9 +19,7 @@ outputs:
     value: ${{ steps.calculate.outputs.prerelease }}
   version:
     description: "The concatenated version"
-    value: |
-      steps.calculate.outputs.prerelease == '' && steps.calculate.outputs.version ||
-      format('{0}-{1}', steps.calculate.outputs.version, steps.calculate.outputs.prerelease)
+    value: ${{ steps.calculate.outputs.prerelease == '' && steps.calculate.outputs.version || format('{0}-{1}', steps.calculate.outputs.version, steps.calculate.outputs.prerelease) }}
 
 runs:
   using: "composite"
