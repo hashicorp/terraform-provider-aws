@@ -52,7 +52,7 @@ jobs:
         run: |
           PREV_MAJOR=$((${{ steps.parse.outputs.major_version }} - 1))
           echo "* [${PREV_MAJOR}.x](https://github.com/hashicorp/terraform-provider-aws/blob/release/${PREV_MAJOR}.x/CHANGELOG.md)" > footer_entry.txt
-          
+
           # Insert new entry after "For information on prior major releases" line
           awk '/For information on prior major releases/ {print; print ""; system("cat footer_entry.txt"); next}1' .changes/footer.md > .changes/footer.md.tmp
           mv .changes/footer.md.tmp .changes/footer.md
