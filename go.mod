@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.8
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.10
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.2
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.290.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.72.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10
 	github.com/aws/aws-sdk-go-v2/service/eks v1.80.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9
@@ -250,13 +250,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.11
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.21
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.8
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.31.10
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.16
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.17
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.10
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.10
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6
 	github.com/aws/aws-sdk-go-v2/service/swf v1.33.12
