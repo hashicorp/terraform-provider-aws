@@ -205,6 +205,45 @@ func testAccCheckBaselineExists(ctx context.Context, t *testing.T, name string, 
 	}
 }
 
+func testAccBaseline_updateBaselineVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var baseline types.EnabledBaselineDetails
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_controltower_baseline.test"
+	baselineARN := acctest.SkipIfEnvVarNotSet(t, "TF_AWS_CONTROLTOWER_BASELINE_ENABLE_BASELINE_ARN")
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ControlTowerEndpointID)
+			testAccEnabledBaselinesPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBaselineDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBaselineConfig_baselineVersion(rName, baselineARN, "4.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, "baseline_version", "4.0"),
+				),
+			},
+			{
+				Config: testAccBaselineConfig_baselineVersion(rName, baselineARN, "5.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBaselineExists(ctx, t, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, "baseline_version", "5.0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccEnabledBaselinesPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ControlTowerClient(ctx)
 
@@ -314,4 +353,32 @@ resource "aws_controltower_baseline" "test" {
   ]
 }
 `, rName, baselineARN, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccBaselineConfig_baselineVersion(rName, baselineARN, baselineVersion string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_organizations_organization" "current" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+resource "aws_controltower_baseline" "test" {
+  baseline_identifier = "arn:${data.aws_partition.current.id}:controltower:${data.aws_region.current.region}::baseline/17BSJV3IGJ2QSGA2"
+  baseline_version    = %[3]q
+  target_identifier   = aws_organizations_organizational_unit.test.arn
+  parameters {
+    key   = "IdentityCenterEnabledBaselineArn"
+    value = %[2]q
+  }
+  depends_on = [
+    aws_organizations_organizational_unit.test
+  ]
+}
+`, rName, baselineARN, baselineVersion)
 }
