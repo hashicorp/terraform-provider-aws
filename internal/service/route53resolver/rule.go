@@ -103,13 +103,13 @@ func resourceRule() *schema.Resource {
 						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      53,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 65535),
 						},
 						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          awstypes.ProtocolDo53,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 						},
 					},
@@ -381,7 +381,7 @@ func expandRuleTargetIPs(vTargetIps *schema.Set) []awstypes.TargetAddress {
 		if vIpv6, ok := mTargetIp["ipv6"].(string); ok && vIpv6 != "" {
 			targetAddress.Ipv6 = aws.String(vIpv6)
 		}
-		if vPort, ok := mTargetIp[names.AttrPort].(int); ok {
+		if vPort, ok := mTargetIp[names.AttrPort].(int); ok && vPort != 0 {
 			targetAddress.Port = aws.Int32(int32(vPort))
 		}
 		if vProtocol, ok := mTargetIp[names.AttrProtocol].(string); ok && vProtocol != "" {
