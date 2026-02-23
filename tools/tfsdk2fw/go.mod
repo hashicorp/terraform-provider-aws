@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.35.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.39.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.53.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arcregionswitch v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.290.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.71.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.72.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.80.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9 // indirect
@@ -268,13 +268,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.21 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.31.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmquicksetup v1.8.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.30.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.43.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6 // indirect
