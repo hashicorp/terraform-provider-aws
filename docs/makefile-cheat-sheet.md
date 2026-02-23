@@ -95,6 +95,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `acctest-lint`<sup>M</sup> | Run all CI acceptance test checks | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `build`<sup>D</sup> | Build the provider |  |  | `GO_VER` |
 | `cache-info` | Display Go cache and GitHub Actions cache information |  |  |  |
+| `changelog-convert` | Convert go-changelog fragment to Changie format |  |  | `FILE` |
 | `changelog-misspell` | CHANGELOG Misspell / misspell | ✔️ |  |  |
 | `ci`<sup>M</sup> | Run all CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
 | `ci-quick`<sup>M</sup> | Run quicker CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |

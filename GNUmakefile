@@ -134,9 +134,16 @@ build: prereq-go fmt-check ## Build provider
 	@echo "make: Building provider..."
 	@$(GO_VER) install
 
+changelog-convert: ## Convert go-changelog fragment to Changie format
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make changelog-convert FILE=.changelog/12345.txt"; \
+		exit 1; \
+	fi
+	@.ci/scripts/convert-changelog.sh $(FILE)
+
 changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
-	@misspell -error -source text CHANGELOG.md .changelog
+	@misspell -error -source text CHANGELOG.md .changelog .changes
 
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
 
@@ -995,6 +1002,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/copyplop
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
+	cd .ci/tools && $(GO_VER) install github.com/miniscruff/changie
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
@@ -1165,6 +1173,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	cache-info \
+	changelog-convert \
 	changelog-misspell \
 	ci \
 	ci-quick \
