@@ -1,0 +1,103 @@
+name: "Changie Version Calculate"
+description: "Calculates the next version for Changie based on branch and event context"
+
+inputs:
+  manual-version:
+    description: "Manual version override (e.g., 1.2.3 or 1.2.3-beta1)"
+    required: false
+    default: ""
+
+outputs:
+  core-version:
+    description: "Core version (e.g., 1.2.3)"
+    value: ${{ steps.calculate.outputs.version }}
+  prerelease:
+    description: "Prerelease identifier (e.g., beta1)"
+    value: ${{ steps.calculate.outputs.prerelease }}
+  version:
+    description: "The concatenated version"
+    value: |
+      steps.calculate.outputs.prerelease == '' && steps.calculate.outputs.version ||
+      format('{0}-{1}', steps.calculate.outputs.version, steps.calculate.outputs.prerelease)
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Changie
+      uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
+      with:
+        version: latest
+
+    - name: Get Latest Version
+      id: latest
+      if: inputs.manual-version == ''
+      shell: bash
+      run: |
+        VERSION=$(changie latest)
+        if [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)(-([a-z]*)([0-9]*))?$ ]]; then
+          echo "core=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          echo "prefix=${BASH_REMATCH[3]}" >> $GITHUB_OUTPUT
+          echo "num=${BASH_REMATCH[4]}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Calculate New Version
+      id: calculate
+      shell: bash
+      env:
+        SCENARIO: |-
+          ${{ case(
+            inputs.manual-version != '', 'manual',
+            github.base_ref == 'main' && github.event_name == 'pull_request_target' && !startsWith(github.head_ref, 'release/'), 'main-normal',
+            github.base_ref == 'main' && github.event_name == 'pull_request_target' && startsWith(github.head_ref, 'release/'), 'main-ga',
+            startsWith(github.base_ref || github.ref_name, 'release/') && steps.latest.outputs.core == '0.0.0', 'release-first',
+            startsWith(github.base_ref || github.ref_name, 'release/') && steps.latest.outputs.prefix != '', 'release-next-prerelease',
+            startsWith(github.base_ref || github.ref_name, 'release/') && steps.latest.outputs.core != '0.0.0' && steps.latest.outputs.prefix == '', 'release-next-minor',
+            'unknown'
+          ) }}
+      run: |
+        case "$SCENARIO" in
+          manual)
+            # Manual version override provided via input
+            # Parse and validate the version string (e.g., "1.2.3" or "1.2.3-beta1")
+            VERSION="${{ inputs.manual-version }}"
+            if [[ "$VERSION" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)(-([a-z]*)([0-9]*))?$ ]]; then
+              echo "version=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+              [[ -n "${BASH_REMATCH[3]}" ]] && echo "prerelease=${BASH_REMATCH[3]}${BASH_REMATCH[4]}" >> $GITHUB_OUTPUT
+            else
+              echo "::error::Invalid manual version format: $VERSION"
+              exit 1
+            fi
+            ;;
+          main-normal)
+            # Normal PR to main branch (not from release branch)
+            # Increment minor version (e.g., 6.1.0 -> 6.2.0)
+            echo "version=$(changie next minor)" >> $GITHUB_OUTPUT
+            ;;
+          main-ga)
+            # PR from release branch to main (GA release merge)
+            # Use version from `version/VERSION`` file set during release process
+            echo "version=$(cat version/VERSION)" >> $GITHUB_OUTPUT
+            ;;
+          release-first)
+            # First prerelease on a new release branch
+            # Use `version/VERSION` file and start at `beta1`
+            echo "version=$(cat version/VERSION)" >> $GITHUB_OUTPUT
+            echo "prerelease=beta1" >> $GITHUB_OUTPUT
+            ;;
+          release-next-prerelease)
+            # Subsequent prerelease on existing release branch
+            # Increment prerelease number (e.g., `beta1` -> `beta2`)
+            echo "version=${{ steps.latest.outputs.core }}" >> $GITHUB_OUTPUT
+            echo "prerelease=${{ steps.latest.outputs.prefix }}$((${{ steps.latest.outputs.num }} + 1))" >> $GITHUB_OUTPUT
+            ;;
+          release-next-minor)
+            # New minor version on release branch (after GA release)
+            # Increment minor and start new beta cycle
+            echo "version=$(changie next minor)" >> $GITHUB_OUTPUT
+            echo "prerelease=beta1" >> $GITHUB_OUTPUT
+            ;;
+          *)
+            echo "::error::Unable to determine version calculation scenario"
+            exit 1
+            ;;
+        esac
