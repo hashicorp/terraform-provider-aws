@@ -307,12 +307,10 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 							Description: "An identifier for the assumed role session.",
 						},
 						"web_identity_token": schema.StringAttribute{
-							Optional:    true,
-							Description: "Value of a web identity token. Can also be set with the `TF_AWS_WEB_IDENTITY_TOKEN` environment variable.",
+							Optional: true,
 						},
 						"web_identity_token_file": schema.StringAttribute{
-							Optional:    true,
-							Description: "Path to a file containing a web identity token. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.",
+							Optional: true,
 						},
 					},
 				},
