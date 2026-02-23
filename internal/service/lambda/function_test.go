@@ -31,6 +31,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	// expectedSourceCodeHash is a lookup of expected hash values for each test fixture
+	expectedSourceCodeHash = map[string]string{
+		"lambda_func.js":          "8k4rLrkGteQRbNk8b1suO+fzwOMbF1/4jUoNm7LlWYM=",
+		"lambda_func_modified.js": "iuqvZS4PYKsiYL2YMow4YuB6ZdPzjDTiH5QhuQfLmdQ=",
+		"lambda_func.py":          "DhHL9LXWkDreFoZIv0PWn6wQx9ycpZSnt65JhKkkyRA=",
+		"lambda_func_modified.py": "9DEXvbwU6j4yE7XFZtj1MBTrhyHjwhdvOyuA8AhhhNE=",
+	}
+)
+
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(names.LambdaServiceID, testAccErrorCheckSkip)
 }
@@ -1978,7 +1988,7 @@ func TestAccLambdaFunction_LocalUpdate_sourceCodeHash(t *testing.T) {
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.js"]),
 				),
 			},
 			{
@@ -1997,7 +2007,7 @@ func TestAccLambdaFunction_LocalUpdate_sourceCodeHash(t *testing.T) {
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.js"]),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -2045,7 +2055,7 @@ func TestAccLambdaFunction_LocalUpdate_codeSha256(t *testing.T) {
 				Config: testAccFunctionConfig_local_codeSHA256(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.js"]),
 				),
 			},
 			{
@@ -2064,7 +2074,7 @@ func TestAccLambdaFunction_LocalUpdate_codeSha256(t *testing.T) {
 				Config: testAccFunctionConfig_local_codeSHA256(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.js"]),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -2112,7 +2122,7 @@ func TestAccLambdaFunction_LocalUpdate_sourceCodeHashToCodeSha256(t *testing.T) 
 				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.js"]),
 				),
 			},
 			{
@@ -2132,7 +2142,7 @@ func TestAccLambdaFunction_LocalUpdate_sourceCodeHashToCodeSha256(t *testing.T) 
 				Config: testAccFunctionConfig_local_codeSHA256(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.js"]),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -2184,7 +2194,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				Config: testAccFunctionConfig_localNameOnly(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.js"]),
 				),
 			},
 			{
@@ -2202,7 +2212,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 				Config: testAccFunctionConfig_localNameOnly(updatedPath, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.js"]),
 				),
 			},
 		},
@@ -2242,7 +2252,7 @@ func TestAccLambdaFunction_LocalUpdate_publish(t *testing.T) {
 				Config: testAccFunctionConfig_localPublish(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "dLPb9UCUTa8WVNATdCYpZIcIxLWEoR4TLDWvr9rajBw="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.py"]),
 				),
 			},
 			{
@@ -2261,7 +2271,7 @@ func TestAccLambdaFunction_LocalUpdate_publish(t *testing.T) {
 				Config: testAccFunctionConfig_localPublish(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7x43uxhWHTejc6xUvJlAcRvdVmRpqwGIYHpok5qDiYs="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.py"]),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -2301,7 +2311,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.js"]),
 				),
 			},
 			{
@@ -2320,7 +2330,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.js"]),
 				),
 			},
 		},
@@ -2357,7 +2367,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "MbW0T1Pcy1QPtrFC9dT7hUfircj1NXss2uXgakqzAbk="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func.js"]),
 				),
 			},
 			{
@@ -2376,7 +2386,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
-					testAccCheckSourceCodeHash(&conf, "7qn3LZOWCpWK5nm49qjw+VrbPQHfdu2ZrDjBsSUveKM="),
+					testAccCheckSourceCodeHash(&conf, expectedSourceCodeHash["lambda_func_modified.js"]),
 				),
 			},
 		},
