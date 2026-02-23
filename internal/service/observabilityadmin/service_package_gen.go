@@ -35,6 +35,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newTelemetryPipelineResource,
+			TypeName: "aws_observabilityadmin_telemetry_pipeline",
+			Name:     "Telemetry Pipeline",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
