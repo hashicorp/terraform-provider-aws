@@ -702,11 +702,12 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 
 	return nil, err
 }
+
 func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusCreating),
 		Target:  enum.Slice(awstypes.MlflowAppStatusCreated),
-		Refresh: statusMlflowApp(ctx, conn, arn),
+		Refresh: statusMlflowApp(conn, arn),
 		Timeout: mlflowAppTimeout,
 	}
 
@@ -718,11 +719,12 @@ func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn strin
 
 	return nil, err
 }
+
 func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusUpdating),
 		Target:  enum.Slice(awstypes.MlflowAppStatusUpdated),
-		Refresh: statusMlflowApp(ctx, conn, arn),
+		Refresh: statusMlflowApp(conn, arn),
 		Timeout: mlflowAppTimeout,
 	}
 
@@ -734,11 +736,12 @@ func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn strin
 
 	return nil, err
 }
+
 func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusCreated, awstypes.MlflowAppStatusDeleting),
 		Target:  enum.Slice(awstypes.MlflowAppStatusDeleted),
-		Refresh: statusMlflowApp(ctx, conn, arn),
+		Refresh: statusMlflowApp(conn, arn),
 		Timeout: mlflowAppTimeout,
 	}
 
