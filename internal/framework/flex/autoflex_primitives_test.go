@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 // TestPrimitivesRoundtrip is the proof of concept for string roundtrip testing
@@ -113,7 +113,7 @@ func testStringRoundtrip(t *testing.T) {
 		// Random value for property-based testing feel
 		{
 			name:        "random_value",
-			stringValue: acctest.RandomWithPrefix("tf-test"),
+			stringValue: sdkacctest.RandomWithPrefix("tf-test"),
 			variants:    []string{"standard", "legacy", "tf_to_aws_pointer", "legacy_tf_to_aws_pointer"},
 		},
 		// Omitempty tests - flatten-only (expand direction not defined in original tests)
@@ -176,7 +176,7 @@ func testStringRoundtrip(t *testing.T) {
 					runFlattenOnlyTest(t, testName, awsStruct, expectedTFResult)
 				} else {
 					// Use helper for all standard roundtrip cases
-					runBasicRoundtripTest(t, testName, variant, stringTypeInfo, tc.stringValue, tc.isNull, false, tc.isEmpty, runChecks{CompareTarget: true, GoldenLogs: true})
+					runBasicRoundtripTest(t, testName, variant, stringTypeInfo, tc.stringValue, tc.isNull, false, tc.isEmpty, runChecks{CompareTarget: true})
 				}
 			})
 		}
@@ -231,7 +231,7 @@ func testBoolRoundtrip(t *testing.T) {
 				// Use helper for all standard roundtrip cases
 				// Note: false value should be treated as "zero" for legacy mode
 				isZero := !tc.boolValue && !tc.isNull
-				runBasicRoundtripTest(t, testName, variant, boolTypeInfo, tc.boolValue, tc.isNull, isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, boolTypeInfo, tc.boolValue, tc.isNull, isZero, false, runChecks{CompareTarget: true})
 			})
 		}
 	}
@@ -279,7 +279,7 @@ func testInt64Roundtrip(t *testing.T) {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, int64TypeInfo, tc.int64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, int64TypeInfo, tc.int64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
 			})
 		}
 	}
@@ -327,7 +327,7 @@ func testInt32Roundtrip(t *testing.T) {
 			testName := tc.name + "_" + variant
 			t.Run(testName, func(t *testing.T) {
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, int32TypeInfo, tc.int32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, int32TypeInfo, tc.int32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
 			})
 		}
 	}
@@ -381,7 +381,7 @@ func testFloat64Roundtrip(t *testing.T) {
 				}
 
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, float64TypeInfo, tc.float64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, float64TypeInfo, tc.float64Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
 			})
 		}
 	}
@@ -435,7 +435,7 @@ func testFloat32Roundtrip(t *testing.T) {
 				}
 
 				// Use helper for all roundtrip cases
-				runBasicRoundtripTest(t, testName, variant, float32TypeInfo, tc.float32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true, GoldenLogs: true})
+				runBasicRoundtripTest(t, testName, variant, float32TypeInfo, tc.float32Value, tc.isNull, tc.isZero, false, runChecks{CompareTarget: true})
 			})
 		}
 	}
@@ -605,7 +605,7 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 
 	// Set up logging if golden logs are requested
 	var buf bytes.Buffer
-	if checks.GoldenLogs {
+	if !checks.SkipGoldenLogs {
 		ctx = tflogtest.RootLogger(ctx, &buf)
 		ctx = registerTestingLogger(ctx)
 	}
@@ -707,7 +707,7 @@ func runRoundtripTest[T any](t *testing.T, tc RoundtripTestCase[T], checks runCh
 	}
 
 	// Golden log validation (if requested)
-	if checks.GoldenLogs {
+	if !checks.SkipGoldenLogs {
 		lines, err := tflogtest.MultilineJSONDecode(&buf)
 		if err != nil {
 			t.Fatalf("decoding log lines: %s", err)

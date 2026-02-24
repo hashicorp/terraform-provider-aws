@@ -35,8 +35,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput")
 // @Testing(serialize=true, serializeParallelTests=true)
 // @Testing(importStateIdFunc=testAccStageImportStateIdFunc)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,

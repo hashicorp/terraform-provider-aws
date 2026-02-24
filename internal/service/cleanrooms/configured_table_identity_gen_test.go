@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCleanRoomsConfiguredTable_Identity_Basic(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cleanrooms.GetConfiguredTableOutput
@@ -107,7 +107,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCleanRoomsConfiguredTable_Identity_RegionOverride(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cleanrooms_configured_table.test"
@@ -195,7 +195,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cleanrooms.GetConfiguredTableOutput
@@ -253,7 +253,7 @@ func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCleanRoomsConfiguredTable_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v cleanrooms.GetConfiguredTableOutput

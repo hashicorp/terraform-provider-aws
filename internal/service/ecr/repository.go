@@ -38,7 +38,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecr/types;types.Repository")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(idAttrDuplicates="name")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -222,22 +221,20 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
 	}
 
+	resourceRepositoryFlatten(ctx, d, repository)
+
+	return diags
+}
+
+func resourceRepositoryFlatten(_ context.Context, d *schema.ResourceData, repository *types.Repository) {
 	d.Set(names.AttrARN, repository.RepositoryArn)
-	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
-	}
-	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
-	}
+	d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration))
+	d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration))
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
-	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(repository.ImageTagMutabilityExclusionFilters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
-	}
+	d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(repository.ImageTagMutabilityExclusionFilters))
 	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
-
-	return diags
 }
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

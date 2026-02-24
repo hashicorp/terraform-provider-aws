@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +18,19 @@ import (
 
 func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName),
+					testAccCheckAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "license_configuration_arn", "aws_licensemanager_license_configuration.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_instance.test", names.AttrARN),
 				),
@@ -48,19 +46,19 @@ func TestAccLicenseManagerAssociation_basic(t *testing.T) {
 
 func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAssociationExists(ctx, resourceName),
+					testAccCheckAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -69,22 +67,22 @@ func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LicenseManagerClient(ctx)
 
 		return tflicensemanager.FindAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN], rs.Primary.Attributes["license_configuration_arn"])
 	}
 }
 
-func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LicenseManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_association" {

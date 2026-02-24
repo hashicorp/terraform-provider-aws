@@ -22,16 +22,16 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrURL, resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
@@ -51,16 +51,16 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 	dataSourceName := "data.aws_iam_openid_connect_provider.test"
 	resourceName := "aws_iam_openid_connect_provider.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_url(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrURL, resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),

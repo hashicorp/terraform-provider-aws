@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
@@ -34,18 +32,18 @@ func TestAccNetworkManagerTransitGatewayConnectPeerAssociation_serial(t *testing
 func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_connect_peer_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, resourceName),
+					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -60,18 +58,18 @@ func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
 func testAccTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_connect_peer_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, resourceName),
+					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceTransitGatewayConnectPeerAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,18 +82,18 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_transit_gateway_connect_peer_association.test"
 	connetPeerResourceName := "aws_ec2_transit_gateway_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, resourceName),
+					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayConnectPeer(), connetPeerResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -104,9 +102,9 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 	})
 }
 
-func testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_customer_gateway_association" {
@@ -136,7 +134,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationDestroy(ctx context.Context
 	}
 }
 
-func testAccCheckTransitGatewayConnectPeerAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectPeerAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -147,7 +145,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(ctx context.Context,
 			return fmt.Errorf("No Network Manager Transit Gateway Connect Peer Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		globalNetworkID, connectPeerARN, err := tfnetworkmanager.TransitGatewayConnectPeerAssociationParseResourceID(rs.Primary.ID)
 

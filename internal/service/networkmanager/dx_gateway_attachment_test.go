@@ -11,12 +11,10 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,19 +45,19 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_basic(t *testing.T) {
 	for name, tc := range testCases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
-			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 			var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
 
-			resource.ParallelTest(t, resource.TestCase{
+			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+				CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 				Steps: []resource.TestStep{
 					{
 						Config: testAccDirectConnectGatewayAttachmentConfig_basic(rName, tc.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
-							testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+							testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
@@ -103,18 +101,18 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_disappears(t *testing.T
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
-			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-			resource.ParallelTest(t, resource.TestCase{
+			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+				CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 				Steps: []resource.TestStep{
 					{
 						Config: testAccDirectConnectGatewayAttachmentConfig_basic(rName, tc.acceptanceRequired),
 						Check: resource.ComposeTestCheckFunc(
-							testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+							testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 							acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkmanager.ResourceDirectConnectGatewayAttachment, resourceName),
 						),
 						ExpectNonEmptyPlan: true,
@@ -134,22 +132,22 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 	// Only edge locations can be updated.
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	coreNetworkResourceName := "aws_networkmanager_core_network.test"
 	edgeLocation1 := endpoints.UsEast1RegionID
 	edgeLocation2 := endpoints.UsWest2RegionID
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocations(rName, edgeLocation1, edgeLocation2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
@@ -170,7 +168,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 			{
 				Config: testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocationsUpdated(rName, edgeLocation1, edgeLocation2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
@@ -195,19 +193,19 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 func TestAccNetworkManagerDirectConnectGatewayAttachment_accepted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 				),
 			},
 		},
@@ -217,20 +215,20 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_accepted(t *testing.T) 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	label := "testlabel"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
 				),
 			},
@@ -246,28 +244,28 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabel(t *t
 func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabelUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	label1 := "testlabel1"
 	label2 := "testlabel2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
 				),
 			},
 			{
 				Config: testAccDirectConnectGatewayAttachmentConfig_routingPolicyLabel(rName, label2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, t, resourceName, &dxgatewayattachment),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
 				),
 			},
@@ -275,9 +273,9 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_routingPolicyLabelUpdat
 	})
 }
 
-func testAccCheckDirectConnectGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDirectConnectGatewayAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_dx_gateway_attachment" {
@@ -301,14 +299,14 @@ func testAccCheckDirectConnectGatewayAttachmentDestroy(ctx context.Context) reso
 	}
 }
 
-func testAccCheckDirectConnectGatewayAttachmentExists(ctx context.Context, n string, v *awstypes.DirectConnectGatewayAttachment) resource.TestCheckFunc {
+func testAccCheckDirectConnectGatewayAttachmentExists(ctx context.Context, t *testing.T, n string, v *awstypes.DirectConnectGatewayAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindDirectConnectGatewayAttachmentByID(ctx, conn, rs.Primary.ID)
 

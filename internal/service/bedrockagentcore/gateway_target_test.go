@@ -9,14 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,23 +22,22 @@ import (
 func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "target_id"),
@@ -74,23 +70,22 @@ func TestAccBedrockAgentCoreGatewayTarget_basic(t *testing.T) {
 func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceGatewayTarget, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -110,23 +105,22 @@ func TestAccBedrockAgentCoreGatewayTarget_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_primitive()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
@@ -144,7 +138,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_objectWithProperties()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -157,7 +151,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfPrimitives()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -170,7 +164,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfObjects()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -183,7 +177,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayOfArrays()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -196,7 +190,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_mixedNested()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -209,7 +203,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_targetConfiguration(rName, testAccSchema_arrayWithIgnoredKeywords()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -244,23 +238,22 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfiguration(t *testing.T) {
 func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, "https://knowledge-mcp.global.api.aws"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
@@ -276,7 +269,7 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testin
 			{
 				Config: testAccGatewayTargetConfig_targetConfigurationMCPServer(rName, "https://docs.mcp.cloudflare.com/mcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_configuration.0.mcp.#", "1"),
@@ -296,24 +289,23 @@ func TestAccBedrockAgentCoreGatewayTarget_targetConfigurationMCPServer(t *testin
 func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gatewayTarget, gatewayTargetPrev bedrockagentcorecontrol.GetGatewayTargetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_gateway_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Gateway IAM Role provider with Lambda target
 			{
 				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
@@ -330,7 +322,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_apiKey()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.api_key.#", "1"),
@@ -348,7 +340,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_credentialProviderNonLambda(rName, testAccCredentialProvider_oauth()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTarget),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.oauth.#", "1"),
@@ -366,7 +358,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_credentialProviderSmithy(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
@@ -383,7 +375,7 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 			{
 				Config: testAccGatewayTargetConfig_credentialProvider(rName, testAccCredentialProvider_gatewayIAMRole()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGatewayTargetExists(ctx, resourceName, &gatewayTargetPrev),
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTargetPrev),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential_provider_configuration.0.gateway_iam_role.#", "1"),
@@ -409,17 +401,16 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider(t *testing.T) {
 
 func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-			testAccPreCheckGatewayTargets(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Invalid: Multiple credential providers
 			{
@@ -434,9 +425,126 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 	})
 }
 
-func testAccCheckGatewayTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_metadataConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_response_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_query_parameters.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			// Update metadata configuration
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_response_headers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_query_parameters.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Remove metadata configuration
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Invalid: restricted header Authorization
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Authorization"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: restricted header Content-Type
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Content-Type"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: restricted header Host
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Host"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: X-Amzn- prefix
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "X-Amzn-Custom"),
+				ExpectError: regexache.MustCompile(`must not begin with \(case-insensitive\)`),
+			},
+			// Invalid: header with special characters
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Invalid Header!"),
+				ExpectError: regexache.MustCompile(`header names must contain only alphanumeric characters`),
+			},
+			// Valid: X-Amzn-Bedrock-AgentCore-Runtime-Custom- prefix is allowed
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "X-Amzn-Bedrock-AgentCore-Runtime-Custom-MyHeader"),
+			},
+		},
+	})
+}
+
+func testAccCheckGatewayTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_gateway_target" {
@@ -459,14 +567,14 @@ func testAccCheckGatewayTargetDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckGatewayTargetExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
+func testAccCheckGatewayTargetExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetGatewayTargetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindGatewayTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["gateway_identifier"], rs.Primary.Attributes["target_id"])
 		if err != nil {
@@ -476,23 +584,6 @@ func testAccCheckGatewayTargetExists(ctx context.Context, n string, v *bedrockag
 		*v = *resp
 
 		return nil
-	}
-}
-
-func testAccPreCheckGatewayTargets(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
-
-	input := bedrockagentcorecontrol.ListGatewayTargetsInput{
-		GatewayIdentifier: aws.String("test-guthipm3lw"), // Using a dummy ID for the precheck
-	}
-
-	_, err := conn.ListGatewayTargets(ctx, &input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -514,6 +605,22 @@ data "aws_iam_policy_document" "test" {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "lambda:*",
+    "Resource": "*"
+  }
+}
+  EOF
 }
 
 data "aws_iam_policy_document" "lambda_assume" {
@@ -550,6 +657,14 @@ resource "aws_bedrockagentcore_gateway" "test" {
     custom_jwt_authorizer {
       discovery_url    = "https://accounts.google.com/.well-known/openid-configuration"
       allowed_audience = ["test"]
+    }
+  }
+
+  protocol_configuration {
+    mcp {
+      instructions       = "Do something"
+      search_type        = "SEMANTIC"
+      supported_versions = ["2025-11-25"]
     }
   }
 
@@ -955,11 +1070,13 @@ func testAccCredentialProvider_apiKey() string {
 
 func testAccCredentialProvider_oauth() string {
 	return `    oauth {
-      provider_arn = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
-      scopes       = ["read", "write"]
+      provider_arn       = "arn:${data.aws_partition.current.partition}:iam::123456789012:oidc-provider/oauth.example.com"
+      scopes             = ["read", "write"]
+	  grant_type         = "AUTHORIZATION_CODE"
+	  default_return_url = "https://example.com/callback"
+
       custom_parameters = {
         "client_type" = "confidential"
-        "grant_type"  = "authorization_code"
       }
     }`
 }
@@ -973,4 +1090,88 @@ func testAccCredentialProvider_multipleProviders() string {
 
 func testAccCredentialProvider_empty() string {
 	return `    # No providers configured`
+}
+
+func testAccGatewayTargetConfig_metadataConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id"]
+    allowed_response_headers = ["x-rate-limit-remaining"]
+    allowed_query_parameters = ["version"]
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id", "x-request-id"]
+    allowed_response_headers = ["x-rate-limit-remaining", "x-request-id"]
+    allowed_query_parameters = ["version", "format"]
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers = [%[2]q]
+  }
+}
+`, rName, headerName))
 }

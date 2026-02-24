@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,7 +22,7 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
@@ -31,12 +30,12 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHTTPNamespaceExists(ctx, resourceName),
+					testAccCheckHTTPNamespaceExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "servicediscovery", "namespace/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -58,7 +57,7 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
@@ -66,12 +65,12 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHTTPNamespaceExists(ctx, resourceName),
+					testAccCheckHTTPNamespaceExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicediscovery.ResourceHTTPNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,7 +84,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
@@ -93,12 +92,12 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHTTPNamespaceExists(ctx, resourceName),
+					testAccCheckHTTPNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
@@ -116,7 +115,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
@@ -124,12 +123,12 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx),
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHTTPNamespaceExists(ctx, resourceName),
+					testAccCheckHTTPNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -142,7 +141,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 			{
 				Config: testAccHTTPNamespaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHTTPNamespaceExists(ctx, resourceName),
+					testAccCheckHTTPNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -151,7 +150,7 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 			{
 				Config: testAccHTTPNamespaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHTTPNamespaceExists(ctx, resourceName),
+					testAccCheckHTTPNamespaceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -160,9 +159,9 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckHTTPNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckHTTPNamespaceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceDiscoveryClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_service_discovery_http_namespace" {
@@ -186,14 +185,14 @@ func testAccCheckHTTPNamespaceDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckHTTPNamespaceExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckHTTPNamespaceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceDiscoveryClient(ctx)
 
 		_, err := tfservicediscovery.FindNamespaceByID(ctx, conn, rs.Primary.ID)
 

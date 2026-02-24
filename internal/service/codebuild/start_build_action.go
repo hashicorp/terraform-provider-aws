@@ -50,7 +50,7 @@ type environmentVariableModel struct {
 
 func (a *startBuildAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Starts a CodeBuild project build",
+		Description: "Starts a CodeBuild project build. This action is synchronous and waits for the build to complete. When using with action_trigger lifecycle events, use before_create to ensure dependent resources wait for build artifacts.",
 		Attributes: map[string]schema.Attribute{
 			"project_name": schema.StringAttribute{
 				Description: "Name of the CodeBuild project",

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,16 +27,16 @@ func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 	resourceName := "aws_lightsail_static_ip_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStaticIPAttachmentExists(ctx, resourceName),
+					testAccCheckStaticIPAttachmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIPAddress),
 				),
 			},
@@ -57,7 +56,7 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
 
 	staticIpDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 		_, err := conn.DetachStaticIp(ctx, &lightsail.DetachStaticIpInput{
 			StaticIpName: aws.String(staticIpName),
 		})
@@ -69,16 +68,16 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 		return nil
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckStaticIPAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStaticIPAttachmentExists(ctx, "aws_lightsail_static_ip_attachment.test"),
+					testAccCheckStaticIPAttachmentExists(ctx, t, "aws_lightsail_static_ip_attachment.test"),
 					staticIpDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,7 +86,7 @@ func TestAccLightsailStaticIPAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStaticIPAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckStaticIPAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -98,7 +97,7 @@ func testAccCheckStaticIPAttachmentExists(ctx context.Context, n string) resourc
 			return errors.New("No Lightsail Static IP Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		resp, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 			StaticIpName: aws.String(rs.Primary.ID),
@@ -119,14 +118,14 @@ func testAccCheckStaticIPAttachmentExists(ctx context.Context, n string) resourc
 	}
 }
 
-func testAccCheckStaticIPAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStaticIPAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_static_ip_attachment" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 			resp, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 				StaticIpName: aws.String(rs.Primary.ID),

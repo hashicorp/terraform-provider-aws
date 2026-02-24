@@ -23,7 +23,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,6 +40,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_elb", name="Classic Load Balancer")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types;awstypes;awstypes.LoadBalancerDescription")
+// @Testing(name="LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
@@ -284,7 +285,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
-	).Generate()
+	).Generate(ctx)
 	input := &elasticloadbalancing.CreateLoadBalancerInput{
 		Listeners:        listeners,
 		LoadBalancerName: aws.String(lbName),
@@ -745,9 +746,8 @@ func findLoadBalancerByName(ctx context.Context, conn *elasticloadbalancing.Clie
 	output, err := conn.DescribeLoadBalancers(ctx, input)
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -766,9 +766,8 @@ func findLoadBalancerAttributesByName(ctx context.Context, conn *elasticloadbala
 	output, err := conn.DescribeLoadBalancerAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.AccessPointNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

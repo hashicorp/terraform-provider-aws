@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -52,7 +51,6 @@ import (
 // @Testing(serialize=true)
 // @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -481,9 +479,8 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 	output, err := conn.GetCustomModel(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -510,9 +507,8 @@ func findModelCustomizationJobByID(ctx context.Context, conn *bedrock.Client, id
 	}
 
 	if status := output.Status; status == awstypes.ModelCustomizationJobStatusStopped {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -523,9 +519,8 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	output, err := conn.GetModelCustomizationJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -540,8 +535,8 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	return output, nil
 }
 
-func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusModelCustomizationJob(conn *bedrock.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &bedrock.GetModelCustomizationJobInput{
 			JobIdentifier: aws.String(id),
 		}
@@ -560,10 +555,10 @@ func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetModelCustomizationJobOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusInProgress),
 		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusCompleted),
-		Refresh: statusModelCustomizationJob(ctx, conn, id),
+		Refresh: statusModelCustomizationJob(conn, id),
 		Timeout: timeout,
 	}
 
@@ -579,10 +574,10 @@ func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Clien
 }
 
 func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetModelCustomizationJobOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusStopping),
 		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusStopped),
-		Refresh: statusModelCustomizationJob(ctx, conn, id),
+		Refresh: statusModelCustomizationJob(conn, id),
 		Timeout: timeout,
 	}
 

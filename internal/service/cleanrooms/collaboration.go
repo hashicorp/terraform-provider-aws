@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -226,32 +225,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameCollaboration, d.Id(), err)
 	}
 
-	collaboration := out.Collaboration
-	d.Set(names.AttrARN, collaboration.Arn)
-	d.Set(names.AttrName, collaboration.Name)
-	d.Set(names.AttrDescription, collaboration.Description)
-	d.Set("analytics_engine", collaboration.AnalyticsEngine)
-	d.Set("creator_display_name", collaboration.CreatorDisplayName)
-	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
-	d.Set("update_time", collaboration.UpdateTime.String())
-	d.Set("query_log_status", collaboration.QueryLogStatus)
-	if err := d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_encryption_metadata: %s", err)
-	}
-
-	membersOut, err := findMembersByCollaborationId(ctx, conn, d.Id())
-	if err != nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
-	}
-
-	if err := d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting member: %s", err)
-	}
-	if err := d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creator_member_abilities: %s", err)
-	}
-
-	return diags
+	return append(diags, resourceCollaborationFlatten(ctx, conn, d, out)...)
 }
 
 func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -446,4 +420,29 @@ func flattenMemberAbilities(abilities []types.MemberAbility) []string {
 		flattenedAbilities = append(flattenedAbilities, string(ability))
 	}
 	return flattenedAbilities
+}
+
+func resourceCollaborationFlatten(ctx context.Context, conn *cleanrooms.Client, d *schema.ResourceData, out *cleanrooms.GetCollaborationOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	collaboration := out.Collaboration
+	d.Set(names.AttrARN, collaboration.Arn)
+	d.Set(names.AttrName, collaboration.Name)
+	d.Set(names.AttrDescription, collaboration.Description)
+	d.Set("analytics_engine", collaboration.AnalyticsEngine)
+	d.Set("creator_display_name", collaboration.CreatorDisplayName)
+	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
+	d.Set("update_time", collaboration.UpdateTime.String())
+	d.Set("query_log_status", collaboration.QueryLogStatus)
+	d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata))
+
+	membersOut, err := findMembersByCollaborationId(ctx, conn, d.Id())
+	if err != nil {
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
+	}
+
+	d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId))
+	d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId))
+
+	return diags
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,10 +28,10 @@ func TestAccM2Application_basic_Content(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var application m2.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -41,12 +39,12 @@ func TestAccM2Application_basic_Content(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
@@ -77,10 +75,10 @@ func TestAccM2Application_basic_S3Location(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var application m2.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -88,12 +86,12 @@ func TestAccM2Application_basic_S3Location(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic_S3Location(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
@@ -140,10 +138,10 @@ func TestAccM2Application_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var application m2.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -151,12 +149,12 @@ func TestAccM2Application_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -170,22 +168,22 @@ func TestAccM2Application_full(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 	var application m2.GetApplicationOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckApplicationDestroy(ctx),
+			testAccCheckApplicationDestroy(ctx, t),
 		),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
@@ -217,10 +215,10 @@ func TestAccM2Application_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var application m2.GetApplicationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -228,19 +226,19 @@ func TestAccM2Application_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 2, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "current_version", "2"),
 				),
 			},
@@ -253,9 +251,9 @@ func TestAccM2Application_update(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_m2_application" {
@@ -279,14 +277,14 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, n string, v *m2.GetApplicationOutput) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, t *testing.T, n string, v *m2.GetApplicationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 		output, err := tfm2.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
@@ -301,7 +299,7 @@ func testAccCheckApplicationExists(ctx context.Context, n string, v *m2.GetAppli
 }
 
 func testAccApplicationPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 	input := &m2.ListApplicationsInput{}
 	_, err := conn.ListApplications(ctx, input)

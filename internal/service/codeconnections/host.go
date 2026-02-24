@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -40,7 +39,6 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Host")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newHostResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &hostResource{}
 
@@ -321,10 +319,10 @@ const (
 )
 
 func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{hostStatusVPCConfigInitializing},
 		Target:                    []string{hostStatusPending, hostStatusAvailable},
-		Refresh:                   statusHost(ctx, conn, id),
+		Refresh:                   statusHost(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -339,10 +337,10 @@ func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Clien
 }
 
 func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigDeleting},
 		Target:  []string{},
-		Refresh: statusHost(ctx, conn, id),
+		Refresh: statusHost(conn, id),
 		Timeout: timeout,
 	}
 
@@ -354,8 +352,8 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 	return nil, err
 }
 
-func statusHost(ctx context.Context, conn *codeconnections.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHost(conn *codeconnections.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findHostByARN(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -377,9 +375,8 @@ func findHostByARN(ctx context.Context, conn *codeconnections.Client, arn string
 	output, err := conn.GetHost(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

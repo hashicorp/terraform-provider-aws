@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -192,9 +191,8 @@ func findGroupPolicyAttachmentsByName(ctx context.Context, conn *iam.Client, gro
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return nil, &sdkretry.NotFoundError{
-					LastError:   err,
-					LastRequest: in,
+				return nil, &retry.NotFoundError{
+					LastError: err,
 				}
 			}
 			return policyARNs, err

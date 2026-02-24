@@ -38,7 +38,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector2/types;types.Filter")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(preIdentityVersion="6.19.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newFilterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &filterResource{}, nil
 }

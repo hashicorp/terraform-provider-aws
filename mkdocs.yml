@@ -19,6 +19,7 @@ nav:
           - Add a New Data Source Type: add-a-new-datasource.md
           - Add a New Ephemeral Resource Type: add-a-new-ephemeral-resource.md
           - Add a New Function: add-a-new-function.md
+          - Add a New List Resource Type: add-a-new-list-resource.md
           - Add a New AWS Region: add-a-new-region.md
           - Add Resource Identity Support: add-resource-identity-support.md
           - Add Resource Import Support: add-import-support.md
@@ -35,6 +36,7 @@ nav:
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
+      - AI Usage: ai-usage.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - AI Agents: ai-agents.md

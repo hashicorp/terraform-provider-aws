@@ -547,6 +547,8 @@ resource "aws_lambda_capacity_provider" "example" {
 }
 ```
 
+See [the `aws_lambda_capacity_provider` resource](lambda_capacity_provider.html) for more details, such as configuring instance requirements and the scaling policy.
+
 ## Specifying the Deployment Package
 
 AWS Lambda expects source code to be provided as a deployment package whose structure varies depending on which `runtime` is in use. See [Runtimes](https://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html#SSS-CreateFunction-request-Runtime) for the valid values of `runtime`. The expected structure of the deployment package can be found in [the AWS Lambda documentation for each runtime](https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html).
@@ -604,6 +606,8 @@ The following arguments are optional:
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-configuration-block).
 
 ### capacity_provider_config Configuration
+
+~> **NOTE:** If `capacity_provider_config` is set, `vpc_config` cannot be set.
 
 * `lambda_managed_instances_capacity_provider_config` - (Required) Configuration block for Lambda Managed Instances Capacity Provider. [See below](#lambda_managed_instances_capacity_provider_config-configuration-block).
 

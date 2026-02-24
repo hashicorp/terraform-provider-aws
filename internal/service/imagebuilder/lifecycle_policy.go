@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -42,7 +41,6 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("lifecycle-policy/{name}")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }
@@ -468,9 +466,8 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	output, err := conn.GetLifecyclePolicy(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

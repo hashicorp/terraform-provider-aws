@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,11 +28,11 @@ func TestAccAppRunnerDefaultAutoScalingConfigurationVersion_serial(t *testing.T)
 
 func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_default_auto_scaling_configuration_version.test"
 	var priorDefault *string
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +40,7 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
+					conn := acctest.ProviderMeta(ctx, t).AppRunnerClient(ctx)
 
 					output, err := tfapprunner.FindDefaultAutoScalingConfigurationSummary(ctx, conn)
 
@@ -70,7 +68,7 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 			{
 				Config: testAccDefaultAutoScalingConfigurationVersionConfig_basic(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDefaultAutoScalingConfigurationVersionRestore(ctx, &priorDefault),
+					testAccCheckDefaultAutoScalingConfigurationVersionRestore(ctx, t, &priorDefault),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,9 +76,9 @@ func testAccDefaultAutoScalingConfigurationVersion_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultAutoScalingConfigurationVersionRestore(ctx context.Context, priorDefault **string) resource.TestCheckFunc {
+func testAccCheckDefaultAutoScalingConfigurationVersionRestore(ctx context.Context, t *testing.T, priorDefault **string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppRunnerClient(ctx)
 
 		return tfapprunner.PutDefaultAutoScalingConfiguration(ctx, conn, aws.ToString(*priorDefault))
 	}

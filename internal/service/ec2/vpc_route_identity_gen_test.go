@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCRoute_Identity_Basic(t *testing.T) {
+func TestAccVPCRoute_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Route
@@ -110,7 +110,7 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
+func TestAccVPCRoute_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route.test"
@@ -203,7 +203,7 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
+func TestAccVPCRoute_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Route
@@ -260,7 +260,7 @@ func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccVPCRoute_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccVPCRoute_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Route

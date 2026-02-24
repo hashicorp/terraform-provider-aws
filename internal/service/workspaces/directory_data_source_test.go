@@ -23,7 +23,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 	resourceName := "aws_workspaces_directory.test"
 	dataSourceName := "data.aws_workspaces_directory.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)

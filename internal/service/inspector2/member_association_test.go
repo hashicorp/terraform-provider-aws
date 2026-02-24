@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +21,7 @@ func testAccMemberAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_member_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -32,12 +31,12 @@ func testAccMemberAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberAssociationExists(ctx, resourceName),
+					testAccCheckMemberAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_caller_identity.member", names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "delegated_admin_account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(types.RelationshipStatusEnabled)),
@@ -57,7 +56,7 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_inspector2_member_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
@@ -67,12 +66,12 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMemberAssociationExists(ctx, resourceName),
+					testAccCheckMemberAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceMemberAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,14 +80,14 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckMemberAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		_, err := tfinspector2.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -96,9 +95,9 @@ func testAccCheckMemberAssociationExists(ctx context.Context, n string) resource
 	}
 }
 
-func testAccCheckMemberAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMemberAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).Inspector2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_member_association" {

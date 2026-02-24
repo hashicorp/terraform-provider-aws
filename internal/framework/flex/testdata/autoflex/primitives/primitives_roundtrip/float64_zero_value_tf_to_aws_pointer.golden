@@ -49,8 +49,7 @@
     "autoflex.source.path": "",
     "autoflex.source.type": "",
     "autoflex.target.path": "",
-    "autoflex.target.type": "*",
-    "source_type": "struct { Field1 *float64 }"
+    "autoflex.target.type": "*"
   },
   {
     "@level": "info",

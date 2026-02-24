@@ -30,7 +30,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGlobalNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalNetworkCreate,

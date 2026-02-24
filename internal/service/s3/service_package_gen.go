@@ -58,12 +58,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_s3_bucket_lifecycle_configuration",
 			Name:     "Bucket Lifecycle Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newBucketMetadataConfigurationResource,
 			TypeName: "aws_s3_bucket_metadata_configuration",
 			Name:     "Bucket Metadata Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newDirectoryBucketResource,
@@ -74,8 +82,38 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				ResourceType:        "DirectoryBucket",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newBucketLifecycleConfigurationResourceAsListResource,
+			TypeName: "aws_s3_bucket_lifecycle_configuration",
+			Name:     "Bucket Lifecycle Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
+			Factory:  newDirectoryBucketResourceAsListResource,
+			TypeName: "aws_s3_directory_bucket",
+			Name:     "Directory Bucket",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "DirectoryBucket",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
@@ -162,16 +200,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_acl",
 			Name:     "Bucket ACL",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-				inttypes.StringIdentityAttribute("acl", false),
-			},
-				inttypes.WithMutableIdentity(),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
 			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      bucketACLImportID{},
 			},
 		},
 		{
@@ -185,13 +218,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_cors_configuration",
 			Name:     "Bucket CORS Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      resourceImportID{},
 			},
 		},
 		{
@@ -211,13 +242,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_logging",
 			Name:     "Bucket Logging",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      resourceImportID{},
 			},
 		},
 		{
@@ -307,13 +336,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
 			Name:     "Bucket Server Side Encryption Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      resourceImportID{},
 			},
 		},
 		{
@@ -321,13 +348,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_versioning",
 			Name:     "Bucket Versioning",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      resourceImportID{},
 			},
 		},
 		{
@@ -335,13 +360,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_s3_bucket_website_configuration",
 			Name:     "Bucket Website Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
-				inttypes.StringIdentityAttribute(names.AttrBucket, true),
-				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
-			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
 			Import: inttypes.SDKv2Import{
 				WrappedImport: true,
-				ImportID:      resourceImportID{},
 			},
 		},
 		{
@@ -387,6 +410,38 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				ResourceType:        "Bucket",
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
+			Factory:  newBucketACLResourceAsListResource,
+			TypeName: "aws_s3_bucket_acl",
+			Name:     "Bucket ACL",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
+		},
+		{
+			Factory:  newBucketPolicyResourceAsListResource,
+			TypeName: "aws_s3_bucket_policy",
+			Name:     "Bucket Policy",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
+			Factory:  newBucketPublicAccessBlockResourceAsListResource,
+			TypeName: "aws_s3_bucket_public_access_block",
+			Name:     "Bucket Public Access Block",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
+			Factory:  newBucketServerSideEncryptionConfigurationResourceAsListResource,
+			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
+			Name:     "Bucket Server Side Encryption Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
+				inttypes.WithVersion(1),
+			),
 		},
 		{
 			Factory:  newObjectResourceAsListResource,

@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -160,7 +159,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSnapshotInput{
 		ClusterName:  aws.String(d.Get(names.AttrClusterName).(string)),
 		SnapshotName: aws.String(name),
@@ -270,9 +269,8 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -286,8 +284,8 @@ func findSnapshots(ctx context.Context, conn *memorydb.Client, input *memorydb.D
 	return output, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshot(conn *memorydb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -303,10 +301,10 @@ func statusSnapshot(ctx context.Context, conn *memorydb.Client, name string) sdk
 }
 
 func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{snapshotStatusCreating},
 		Target:  []string{snapshotStatusAvailable},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: timeout,
 	}
 
@@ -320,10 +318,10 @@ func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, name stri
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Snapshot, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{snapshotStatusDeleting},
 		Target:  []string{},
-		Refresh: statusSnapshot(ctx, conn, name),
+		Refresh: statusSnapshot(conn, name),
 		Timeout: timeout,
 	}
 

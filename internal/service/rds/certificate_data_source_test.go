@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,7 +18,7 @@ func TestAccRDSCertificateDataSource_id(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCertificatePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -39,7 +38,7 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCertificatePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -66,7 +65,7 @@ func TestAccRDSCertificateDataSource_defaultForNewLaunches(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_certificate.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCertificatePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,7 +88,7 @@ func TestAccRDSCertificateDataSource_defaultForNewLaunches(t *testing.T) {
 }
 
 func testAccCertificatePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 	input := &rds.DescribeCertificatesInput{}
 

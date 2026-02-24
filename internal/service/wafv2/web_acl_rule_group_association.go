@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -19,10 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -66,6 +71,431 @@ type resourceWebACLRuleGroupAssociation struct {
 }
 
 func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	usernameFieldLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[usernameFieldModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrIdentifier: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.All(
+							stringvalidator.LengthBetween(1, 512),
+							stringvalidator.RegexMatches(
+								regexache.MustCompile(`\S`),
+								"can not be empty string",
+							),
+						),
+					},
+					Description: "Identifier of the username field",
+				},
+			},
+		},
+	}
+
+	passwordFieldLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[passwordFieldModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrIdentifier: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.All(
+							stringvalidator.LengthBetween(1, 512),
+							stringvalidator.RegexMatches(
+								regexache.MustCompile(`\S`),
+								"can not be empty string",
+							),
+						),
+					},
+					Description: "Identifier of the password field",
+				},
+			},
+		},
+	}
+
+	managedRulegroupConfigACFPRequestInspectionLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[requestInspectionACFPModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"payload_type": schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.PayloadType](),
+					Required:    true,
+					Description: "Payload type for inspection, either JSON or FORM_ENCODED.",
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"username_field": usernameFieldLNB,
+				"address_fields": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[addressFieldModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.SizeAtLeast(0),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"identifiers": schema.ListAttribute{
+								ElementType: types.StringType,
+								Required:    true,
+								Validators: []validator.List{
+									listvalidator.SizeAtLeast(1),
+								},
+								Description: "Identifiers of the address fields",
+							},
+						},
+					},
+				},
+				"email_field": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[emailFieldModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.SizeAtLeast(0),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrIdentifier: schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.All(
+										stringvalidator.LengthBetween(1, 512),
+										stringvalidator.RegexMatches(
+											regexache.MustCompile(`\S`),
+											"can not be empty string",
+										),
+									),
+								},
+								Description: "Identifier of the email field",
+							},
+						},
+					},
+				},
+				"password_field": passwordFieldLNB,
+				"phone_number_fields": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[phoneNumberFieldModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.SizeAtLeast(0),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"identifiers": schema.ListAttribute{
+								ElementType: types.StringType,
+								Required:    true,
+								Validators: []validator.List{
+									listvalidator.SizeAtLeast(1),
+								},
+								Description: "Identifiers of the phone number fields",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	managedRulegroupConfigATPRequestInspectionLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[requestInspectionModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"payload_type": schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.PayloadType](),
+					Required:    true,
+					Description: "Payload type for inspection, either JSON or FORM_ENCODED.",
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"password_field": passwordFieldLNB,
+				"username_field": usernameFieldLNB,
+			},
+		},
+	}
+	managedRulegroupConfigResponseInspectionLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[responseInspectionModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"body_contains": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[responseInspectionBodyContainsModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"failure_strings": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.StringType,
+								Description: "Strings that indicate a failed login or account creation attempt",
+							},
+							"success_strings": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.StringType,
+								Description: "Strings that indicate a successful login or account creation attempt",
+							},
+						},
+					},
+				},
+				names.AttrHeader: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[responseInspectionHeaderModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrName: schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 256),
+								},
+								Description: "Name of the HTTP header to inspect",
+							},
+							"failure_values": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.StringType,
+								Description: "Strings that indicate a failed login or account creation attempt",
+							},
+							"success_values": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.StringType,
+								Description: "Strings that indicate a successful login or account creation attempt",
+							},
+						},
+					},
+				},
+				names.AttrJSON: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[responseInspectionJsonModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrIdentifier: schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 256),
+								},
+								Description: "Identifier of the JSON field to inspect",
+							},
+							"failure_values": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.StringType,
+								Description: "Strings that indicate a failed login or account creation attempt",
+							},
+							"success_values": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.StringType,
+								Description: "Strings that indicate a successful login or account creation attempt",
+							},
+						},
+					},
+				},
+				names.AttrStatusCode: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[responseInspectionStatusCodeModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"failure_codes": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.Int32Type,
+								Description: "Status codes that indicate a failed login or account creation attempt",
+							},
+							"success_codes": schema.SetAttribute{
+								Required:    true,
+								ElementType: types.Int32Type,
+								Description: "Status codes that indicate a successful login or account creation attempt",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	managedRulegroupConfigLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[managedRuleGroupConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"aws_managed_rules_acfp_rule_set": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[awsManagedRulesACFPRuleSetModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"creation_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.All(
+										stringvalidator.LengthBetween(1, 256),
+										stringvalidator.RegexMatches(
+											regexache.MustCompile(`\S`),
+											"can not be empty string",
+										),
+									),
+								},
+								Description: "Path to the account creation endpoint on the protected website",
+							},
+							"enable_regex_in_path": schema.BoolAttribute{
+								Optional: true,
+								Computed: true,
+								Default:  booldefault.StaticBool(false),
+							},
+							"registration_page_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.All(
+										stringvalidator.LengthBetween(1, 256),
+										stringvalidator.RegexMatches(
+											regexache.MustCompile(`\S`),
+											"can not be empty string",
+										),
+									),
+								},
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"request_inspection":  managedRulegroupConfigACFPRequestInspectionLNB,
+							"response_inspection": managedRulegroupConfigResponseInspectionLNB,
+						},
+					},
+				},
+				"aws_managed_rules_anti_ddos_rule_set": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[awsManagedRulesAntiDDoSRuleSetModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"sensitivity_to_block": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.SensitivityToAct](),
+								Optional:   true,
+								Computed:   true,
+								Default:    stringdefault.StaticString(string(awstypes.SensitivityToActLow)),
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"client_side_action_config": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[clientSideActionConfigModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+									listvalidator.SizeAtLeast(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"challenge": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[clientSideActionModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+												listvalidator.SizeAtLeast(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Blocks: map[string]schema.Block{
+													"exempt_uri_regular_expression": schema.ListNestedBlock{
+														//CustomType: fwtypes.NewListNestedObjectTypeOf[exemptUriRegularExpressionModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[regexModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtMost(5),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																"regex_string": schema.StringAttribute{
+																	Optional: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 512),
+																	},
+																},
+															},
+														},
+													},
+												},
+												Attributes: map[string]schema.Attribute{
+													"sensitivity": schema.StringAttribute{
+														CustomType: fwtypes.StringEnumType[awstypes.SensitivityToAct](),
+														Optional:   true,
+														Computed:   true,
+														Default:    stringdefault.StaticString(string(awstypes.SensitivityToActHigh)),
+													},
+													"usage_of_action": schema.StringAttribute{
+														CustomType: fwtypes.StringEnumType[awstypes.UsageOfAction](),
+														Required:   true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"aws_managed_rules_atp_rule_set": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[awsManagedRulesATPRuleSetModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"enable_regex_in_path": schema.BoolAttribute{
+								Optional: true,
+								Computed: true,
+								Default:  booldefault.StaticBool(false),
+							},
+							"login_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.All(
+										stringvalidator.LengthBetween(1, 256),
+										stringvalidator.RegexMatches(
+											regexache.MustCompile(`\S`),
+											"can not be empty string",
+										),
+									),
+								},
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"request_inspection":  managedRulegroupConfigATPRequestInspectionLNB,
+							"response_inspection": managedRulegroupConfigResponseInspectionLNB,
+						},
+					},
+				},
+				"aws_managed_rules_bot_control_rule_set": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[awsManagedRulesBotControlRuleSetModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"enable_machine_learning": schema.BoolAttribute{
+								Optional: true,
+								Default:  booldefault.StaticBool(false),
+								Computed: true,
+							},
+							"inspection_level": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.InspectionLevel](),
+								Required:   true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 	ruleActionOverrideLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleActionOverrideModel](ctx),
 		Validators: []validator.List{
@@ -428,10 +858,43 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"rule_action_override": ruleActionOverrideLNB,
+						"rule_action_override":       ruleActionOverrideLNB,
+						"managed_rule_group_configs": managedRulegroupConfigLNB,
 					},
 				},
 				Description: "Managed rule group configuration.",
+			},
+			"visibility_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[visibilityConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"sampled_requests_enabled": schema.BoolAttribute{
+							Required:    true,
+							Description: "Indicates whether to store a sampling of the web requests that match the rule.",
+						},
+						"cloudwatch_metrics_enabled": schema.BoolAttribute{
+							Required:    true,
+							Description: "Indicates whether the rule is available for use in the metrics for the web ACL.",
+						},
+						names.AttrMetricName: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.All(
+									stringvalidator.LengthBetween(1, 128),
+									stringvalidator.RegexMatches(
+										regexache.MustCompile(`^[0-9A-Za-z_-]+$`),
+										"can only contain alphanumeric characters, hyphens, underscores, and colons",
+									),
+								),
+							},
+							Description: "A name for the metrics for this rule.",
+						},
+					},
+				},
+				Description: "Visibility configuration for the rule.",
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
@@ -553,6 +1016,44 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 				managedRuleGroupStatement.Version = aws.String(ruleGroupVersion)
 			}
 
+			// Add managed rule group configurations if specified
+			if !managedRuleGroupRef.ManagedRuleGroupConfig.IsNull() && !managedRuleGroupRef.ManagedRuleGroupConfig.IsUnknown() {
+				var tfManagedRuleGroupConfigModel managedRuleGroupConfigModel
+				var managedRuleGroupConfigs []awstypes.ManagedRuleGroupConfig
+
+				resp.Diagnostics.Append(managedRuleGroupRef.ManagedRuleGroupConfig.Elements()[0].(fwtypes.ObjectValueOf[managedRuleGroupConfigModel]).As(ctx, &tfManagedRuleGroupConfigModel, basetypes.ObjectAsOptions{})...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				if !tfManagedRuleGroupConfigModel.AWSManagedRulesACFPRuleSet.IsNull() && !tfManagedRuleGroupConfigModel.AWSManagedRulesACFPRuleSet.IsUnknown() {
+					// custom expand for ACFP Managed Rule Group Config
+					var tfACFPConfig awsManagedRulesACFPRuleSetModel
+					resp.Diagnostics.Append(tfManagedRuleGroupConfigModel.AWSManagedRulesACFPRuleSet.Elements()[0].(fwtypes.ObjectValueOf[awsManagedRulesACFPRuleSetModel]).As(ctx, &tfACFPConfig, basetypes.ObjectAsOptions{})...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+
+					var acfpConfig awstypes.AWSManagedRulesACFPRuleSet
+					resp.Diagnostics.Append(fwflex.Expand(ctx, tfACFPConfig, &acfpConfig)...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+
+					managedRuleGroupConfigs = append(managedRuleGroupConfigs, awstypes.ManagedRuleGroupConfig{
+						AWSManagedRulesACFPRuleSet: &acfpConfig,
+					})
+				} else {
+					// let auto flex handle expand
+					resp.Diagnostics.Append(fwflex.Expand(ctx, managedRuleGroupRef.ManagedRuleGroupConfig, &managedRuleGroupConfigs)...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+				}
+
+				managedRuleGroupStatement.ManagedRuleGroupConfigs = managedRuleGroupConfigs
+			}
+
 			// Add rule action overrides if specified
 			if !managedRuleGroupRef.RuleActionOverride.IsNull() && !managedRuleGroupRef.RuleActionOverride.IsUnknown() {
 				resp.Diagnostics.Append(fwflex.Expand(ctx, managedRuleGroupRef.RuleActionOverride, &ruleActionOverrides)...)
@@ -576,16 +1077,29 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		return
 	}
 
-	// Create new rule with the appropriate statement type
-	newRule := awstypes.Rule{
-		Name:      plan.RuleName.ValueStringPointer(),
-		Priority:  plan.Priority.ValueInt32(),
-		Statement: ruleStatement,
-		VisibilityConfig: &awstypes.VisibilityConfig{
+	// Build visibility config for the new rule
+	var visibilityConfig awstypes.VisibilityConfig
+	if !plan.VisibilityConfig.IsNull() && !plan.VisibilityConfig.IsUnknown() {
+		// Expand user-provided visibility_config into AWS SDK type
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan.VisibilityConfig, &visibilityConfig)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		// Use defaults when not provided in plan, for backward compatibility of this provider
+		visibilityConfig = awstypes.VisibilityConfig{
 			SampledRequestsEnabled:   true,
 			CloudWatchMetricsEnabled: true,
 			MetricName:               plan.RuleName.ValueStringPointer(),
-		},
+		}
+	}
+
+	// Create new rule with the appropriate statement type
+	newRule := awstypes.Rule{
+		Name:             plan.RuleName.ValueStringPointer(),
+		Priority:         plan.Priority.ValueInt32(),
+		Statement:        ruleStatement,
+		VisibilityConfig: &visibilityConfig,
 	}
 
 	// Set override action
@@ -759,8 +1273,18 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 								ruleActionOverrides = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
 							}
 
+							var managedRuleGroupConfigs fwtypes.ListNestedObjectValueOf[managedRuleGroupConfigModel]
+							if len(managedStmt.ManagedRuleGroupConfigs) > 0 {
+								resp.Diagnostics.Append(fwflex.Flatten(ctx, managedStmt.ManagedRuleGroupConfigs, &managedRuleGroupConfigs)...)
+								if resp.Diagnostics.HasError() {
+									return
+								}
+							} else {
+								managedRuleGroupConfigs = fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupConfigModel](ctx)
+							}
 							// Update the managed rule group nested structure
 							managedRuleGroupRef.RuleActionOverride = ruleActionOverrides
+							managedRuleGroupRef.ManagedRuleGroupConfig = managedRuleGroupConfigs
 							listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*managedRuleGroupModel{&managedRuleGroupRef}, nil)
 							resp.Diagnostics.Append(diags...)
 							if resp.Diagnostics.HasError() {
@@ -776,6 +1300,22 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 			if matchesRuleGroup {
 				found = true
 				state.Priority = types.Int32Value(rule.Priority)
+
+				var visibilityConfig fwtypes.ListNestedObjectValueOf[visibilityConfigModel]
+				// for backward compatibility, visibility_config to be read only if it's not set to default
+				if rule.VisibilityConfig != nil {
+					isDefault := rule.VisibilityConfig.SampledRequestsEnabled &&
+						rule.VisibilityConfig.CloudWatchMetricsEnabled &&
+						aws.ToString(rule.VisibilityConfig.MetricName) == aws.ToString(rule.Name)
+
+					if !isDefault {
+						resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.VisibilityConfig, &visibilityConfig)...)
+						if resp.Diagnostics.HasError() {
+							return
+						}
+						state.VisibilityConfig = visibilityConfig
+					}
+				}
 
 				// Determine override action
 				overrideAction := overrideActionNone
@@ -863,8 +1403,26 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 				}
 			}
 
+			// update visibility config if changed
+			var visibilityConfig awstypes.VisibilityConfig
+			if !plan.VisibilityConfig.IsNull() && !plan.VisibilityConfig.IsUnknown() {
+				resp.Diagnostics.Append(fwflex.Expand(ctx, plan.VisibilityConfig, &visibilityConfig)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				webACL.WebACL.Rules[i].VisibilityConfig = &visibilityConfig
+			} else {
+				visibilityConfig = awstypes.VisibilityConfig{
+					SampledRequestsEnabled:   true,
+					CloudWatchMetricsEnabled: true,
+					MetricName:               plan.RuleName.ValueStringPointer(),
+				}
+			}
+
 			// Update rule action overrides from nested structure (both custom and managed)
 			var overrides []awstypes.RuleActionOverride
+			var managedRuleGroupConfigs []awstypes.ManagedRuleGroupConfig
+
 			if !plan.RuleGroupReference.IsNull() && !plan.RuleGroupReference.IsUnknown() {
 				ruleGroupRefs := plan.RuleGroupReference.Elements()
 				if len(ruleGroupRefs) > 0 {
@@ -896,6 +1454,40 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 							return
 						}
 					}
+
+					if !managedRuleGroupRef.ManagedRuleGroupConfig.IsNull() && !managedRuleGroupRef.ManagedRuleGroupConfig.IsUnknown() {
+						var tfManagedRuleGroupConfigModel managedRuleGroupConfigModel
+
+						resp.Diagnostics.Append(managedRuleGroupRef.ManagedRuleGroupConfig.Elements()[0].(fwtypes.ObjectValueOf[managedRuleGroupConfigModel]).As(ctx, &tfManagedRuleGroupConfigModel, basetypes.ObjectAsOptions{})...)
+						if resp.Diagnostics.HasError() {
+							return
+						}
+
+						if !tfManagedRuleGroupConfigModel.AWSManagedRulesACFPRuleSet.IsNull() && !tfManagedRuleGroupConfigModel.AWSManagedRulesACFPRuleSet.IsUnknown() {
+							// custom expand for ACFP Managed Rule Group Config
+							var tfACFPConfig awsManagedRulesACFPRuleSetModel
+							resp.Diagnostics.Append(tfManagedRuleGroupConfigModel.AWSManagedRulesACFPRuleSet.Elements()[0].(fwtypes.ObjectValueOf[awsManagedRulesACFPRuleSetModel]).As(ctx, &tfACFPConfig, basetypes.ObjectAsOptions{})...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+
+							var acfpConfig awstypes.AWSManagedRulesACFPRuleSet
+							resp.Diagnostics.Append(fwflex.Expand(ctx, tfACFPConfig, &acfpConfig)...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+
+							managedRuleGroupConfigs = append(managedRuleGroupConfigs, awstypes.ManagedRuleGroupConfig{
+								AWSManagedRulesACFPRuleSet: &acfpConfig,
+							})
+						} else {
+							// let auto flex handle expand
+							resp.Diagnostics.Append(fwflex.Expand(ctx, managedRuleGroupRef.ManagedRuleGroupConfig, &managedRuleGroupConfigs)...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+						}
+					}
 				}
 			}
 
@@ -905,6 +1497,7 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 					webACL.WebACL.Rules[i].Statement.RuleGroupReferenceStatement.RuleActionOverrides = overrides
 				} else if webACL.WebACL.Rules[i].Statement.ManagedRuleGroupStatement != nil {
 					webACL.WebACL.Rules[i].Statement.ManagedRuleGroupStatement.RuleActionOverrides = overrides
+					webACL.WebACL.Rules[i].Statement.ManagedRuleGroupStatement.ManagedRuleGroupConfigs = managedRuleGroupConfigs
 				}
 			}
 
@@ -1131,6 +1724,8 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 			Name:               types.StringValue(ruleGroupName),
 			VendorName:         types.StringValue(vendorName),
 			RuleActionOverride: fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx),
+
+			ManagedRuleGroupConfig: fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupConfigModel](ctx),
 		}
 		if version != "" {
 			managedRuleGroupRef.Version = types.StringValue(version)
@@ -1194,7 +1789,14 @@ type resourceWebACLRuleGroupAssociationModel struct {
 	ManagedRuleGroup   fwtypes.ListNestedObjectValueOf[managedRuleGroupModel]   `tfsdk:"managed_rule_group"`
 	WebACLARN          types.String                                             `tfsdk:"web_acl_arn"`
 	OverrideAction     types.String                                             `tfsdk:"override_action"`
+	VisibilityConfig   fwtypes.ListNestedObjectValueOf[visibilityConfigModel]   `tfsdk:"visibility_config"`
 	Timeouts           timeouts.Value                                           `tfsdk:"timeouts"`
+}
+
+type visibilityConfigModel struct {
+	CloudWatchMetricsEnabled types.Bool   `tfsdk:"cloudwatch_metrics_enabled"`
+	MetricName               types.String `tfsdk:"metric_name"`
+	SampledRequestsEnabled   types.Bool   `tfsdk:"sampled_requests_enabled"`
 }
 
 type ruleGroupReferenceModel struct {
@@ -1207,6 +1809,325 @@ type managedRuleGroupModel struct {
 	VendorName         types.String                                             `tfsdk:"vendor_name"`
 	Version            types.String                                             `tfsdk:"version"`
 	RuleActionOverride fwtypes.ListNestedObjectValueOf[ruleActionOverrideModel] `tfsdk:"rule_action_override"`
+
+	ManagedRuleGroupConfig fwtypes.ListNestedObjectValueOf[managedRuleGroupConfigModel] `tfsdk:"managed_rule_group_configs"`
+}
+
+type managedRuleGroupConfigModel struct {
+	AWSManagedRulesACFPRuleSet       fwtypes.ListNestedObjectValueOf[awsManagedRulesACFPRuleSetModel]       `tfsdk:"aws_managed_rules_acfp_rule_set"`
+	AWSManagedRulesATPRuleSet        fwtypes.ListNestedObjectValueOf[awsManagedRulesATPRuleSetModel]        `tfsdk:"aws_managed_rules_atp_rule_set"`
+	AWSManagedRulesAntiDDoSRuleSet   fwtypes.ListNestedObjectValueOf[awsManagedRulesAntiDDoSRuleSetModel]   `tfsdk:"aws_managed_rules_anti_ddos_rule_set"`
+	AWSManagedRulesBotControlRuleSet fwtypes.ListNestedObjectValueOf[awsManagedRulesBotControlRuleSetModel] `tfsdk:"aws_managed_rules_bot_control_rule_set"`
+}
+
+type awsManagedRulesBotControlRuleSetModel struct {
+	InspectionLevel       types.String `tfsdk:"inspection_level"`
+	EnableMachineLearning types.Bool   `tfsdk:"enable_machine_learning"`
+}
+
+var _ fwflex.Flattener = &awsManagedRulesBotControlRuleSetModel{}
+
+func (m *awsManagedRulesBotControlRuleSetModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case *awstypes.AWSManagedRulesBotControlRuleSet:
+		m.InspectionLevel = types.StringValue(string(val.InspectionLevel))
+		if val.InspectionLevel == awstypes.InspectionLevelCommon && (val.EnableMachineLearning == nil || !*val.EnableMachineLearning) {
+			m.EnableMachineLearning = types.BoolValue(false)
+		} else {
+			m.EnableMachineLearning = fwflex.BoolToFramework(ctx, val.EnableMachineLearning)
+		}
+	case awstypes.AWSManagedRulesBotControlRuleSet:
+		m.InspectionLevel = types.StringValue(string(val.InspectionLevel))
+		if val.InspectionLevel == awstypes.InspectionLevelCommon && (val.EnableMachineLearning == nil || !*val.EnableMachineLearning) {
+			m.EnableMachineLearning = types.BoolValue(false)
+		} else {
+			m.EnableMachineLearning = fwflex.BoolToFramework(ctx, val.EnableMachineLearning)
+		}
+	default:
+		diags.AddError("Unexpected type", fmt.Sprintf("expected awstypes.AWSManagedRulesBotControlRuleSet, got %T", v))
+	}
+	return diags
+}
+
+type awsManagedRulesAntiDDoSRuleSetModel struct {
+	ClientSideActionConfig fwtypes.ListNestedObjectValueOf[clientSideActionConfigModel] `tfsdk:"client_side_action_config"`
+	SensitivityToBlock     types.String                                                 `tfsdk:"sensitivity_to_block"`
+}
+
+type clientSideActionConfigModel struct {
+	Challenge fwtypes.ListNestedObjectValueOf[clientSideActionModel] `tfsdk:"challenge"`
+}
+
+type clientSideActionModel struct {
+	UsageOfAction               types.String                                `tfsdk:"usage_of_action"`
+	ExemptUriRegularExpressions fwtypes.ListNestedObjectValueOf[regexModel] `tfsdk:"exempt_uri_regular_expression"`
+	Sensitivity                 types.String                                `tfsdk:"sensitivity"`
+}
+
+type regexModel struct {
+	RegexString types.String `tfsdk:"regex_string"`
+}
+
+type awsManagedRulesATPRuleSetModel struct {
+	LoginPath          types.String                                             `tfsdk:"login_path"`
+	EnableRegexInPath  types.Bool                                               `tfsdk:"enable_regex_in_path"`
+	RequestInspection  fwtypes.ListNestedObjectValueOf[requestInspectionModel]  `tfsdk:"request_inspection"`
+	ResponseInspection fwtypes.ListNestedObjectValueOf[responseInspectionModel] `tfsdk:"response_inspection"`
+}
+
+type requestInspectionModel struct {
+	PasswordField fwtypes.ListNestedObjectValueOf[passwordFieldModel] `tfsdk:"password_field"`
+	PayloadType   types.String                                        `tfsdk:"payload_type"`
+	UsernameField fwtypes.ListNestedObjectValueOf[usernameFieldModel] `tfsdk:"username_field"`
+}
+
+type usernameFieldModel struct {
+	Identifier types.String `tfsdk:"identifier"`
+}
+
+type passwordFieldModel struct {
+	Identifier types.String `tfsdk:"identifier"`
+}
+
+var (
+	_ fwflex.Expander = awsManagedRulesACFPRuleSetModel{}
+)
+
+type awsManagedRulesACFPRuleSetModel struct {
+	CreationPath         types.String                                                `tfsdk:"creation_path"`
+	RegistrationPagePath types.String                                                `tfsdk:"registration_page_path"`
+	RequestInspection    fwtypes.ListNestedObjectValueOf[requestInspectionACFPModel] `tfsdk:"request_inspection"`
+	EnableRegexInPath    types.Bool                                                  `tfsdk:"enable_regex_in_path"`
+	ResponseInspection   fwtypes.ListNestedObjectValueOf[responseInspectionModel]    `tfsdk:"response_inspection"`
+}
+
+func (m awsManagedRulesACFPRuleSetModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.AWSManagedRulesACFPRuleSet
+
+	r.CreationPath = m.CreationPath.ValueStringPointer()
+	r.RegistrationPagePath = m.RegistrationPagePath.ValueStringPointer()
+	r.EnableRegexInPath = m.EnableRegexInPath.ValueBool()
+
+	if !m.RequestInspection.IsNull() && len(m.RequestInspection.Elements()) > 0 {
+		var reqInspection requestInspectionACFPModel
+		diags.Append(m.RequestInspection.Elements()[0].(fwtypes.ObjectValueOf[requestInspectionACFPModel]).As(ctx, &reqInspection, basetypes.ObjectAsOptions{})...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		expanded, d := reqInspection.Expand(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.RequestInspection = expanded.(*awstypes.RequestInspectionACFP)
+	}
+
+	diags.Append(fwflex.Expand(ctx, m.ResponseInspection, &r.ResponseInspection)...)
+
+	return &r, diags
+}
+
+var (
+	_ fwflex.Expander  = awsManagedRulesACFPRuleSetModel{}
+	_ fwflex.Flattener = &awsManagedRulesACFPRuleSetModel{}
+	_ fwflex.Expander  = requestInspectionACFPModel{}
+	_ fwflex.Flattener = &requestInspectionACFPModel{}
+)
+
+func (m *requestInspectionACFPModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case *awstypes.RequestInspectionACFP:
+		m.PayloadType = types.StringValue(string(val.PayloadType))
+		diags.Append(fwflex.Flatten(ctx, val.EmailField, &m.EmailField)...)
+		diags.Append(fwflex.Flatten(ctx, val.PasswordField, &m.PasswordField)...)
+		diags.Append(fwflex.Flatten(ctx, val.UsernameField, &m.UsernameField)...)
+
+		if len(val.AddressFields) > 0 {
+			var identifiers []attr.Value
+			for _, af := range val.AddressFields {
+				identifiers = append(identifiers, types.StringValue(aws.ToString(af.Identifier)))
+			}
+			m.AddressFields = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*addressFieldModel{{
+				Identifiers: fwtypes.NewListValueOfMust[types.String](ctx, identifiers),
+			}})
+		}
+
+		if len(val.PhoneNumberFields) > 0 {
+			var identifiers []attr.Value
+			for _, pf := range val.PhoneNumberFields {
+				identifiers = append(identifiers, types.StringValue(aws.ToString(pf.Identifier)))
+			}
+			m.PhoneNumberFields = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*phoneNumberFieldModel{{
+				Identifiers: fwtypes.NewListValueOfMust[types.String](ctx, identifiers),
+			}})
+		}
+	case awstypes.RequestInspectionACFP:
+		m.PayloadType = types.StringValue(string(val.PayloadType))
+		diags.Append(fwflex.Flatten(ctx, val.EmailField, &m.EmailField)...)
+		diags.Append(fwflex.Flatten(ctx, val.PasswordField, &m.PasswordField)...)
+		diags.Append(fwflex.Flatten(ctx, val.UsernameField, &m.UsernameField)...)
+
+		if len(val.AddressFields) > 0 {
+			var identifiers []attr.Value
+			for _, af := range val.AddressFields {
+				identifiers = append(identifiers, types.StringValue(aws.ToString(af.Identifier)))
+			}
+			m.AddressFields = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*addressFieldModel{{
+				Identifiers: fwtypes.NewListValueOfMust[types.String](ctx, identifiers),
+			}})
+		}
+
+		if len(val.PhoneNumberFields) > 0 {
+			var identifiers []attr.Value
+			for _, pf := range val.PhoneNumberFields {
+				identifiers = append(identifiers, types.StringValue(aws.ToString(pf.Identifier)))
+			}
+			m.PhoneNumberFields = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*phoneNumberFieldModel{{
+				Identifiers: fwtypes.NewListValueOfMust[types.String](ctx, identifiers),
+			}})
+		}
+	default:
+		diags.AddError("Unexpected type", fmt.Sprintf("expected *awstypes.RequestInspectionACFP, got %T", v))
+	}
+	return diags
+}
+
+func (m *awsManagedRulesACFPRuleSetModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case *awstypes.AWSManagedRulesACFPRuleSet:
+		m.CreationPath = fwflex.StringToFramework(ctx, val.CreationPath)
+		m.RegistrationPagePath = fwflex.StringToFramework(ctx, val.RegistrationPagePath)
+		m.EnableRegexInPath = types.BoolValue(val.EnableRegexInPath)
+		m.ResponseInspection = fwtypes.NewListNestedObjectValueOfNull[responseInspectionModel](ctx)
+		diags.Append(fwflex.Flatten(ctx, val.RequestInspection, &m.RequestInspection)...)
+	case awstypes.AWSManagedRulesACFPRuleSet:
+		m.CreationPath = fwflex.StringToFramework(ctx, val.CreationPath)
+		m.RegistrationPagePath = fwflex.StringToFramework(ctx, val.RegistrationPagePath)
+		m.EnableRegexInPath = types.BoolValue(val.EnableRegexInPath)
+		m.ResponseInspection = fwtypes.NewListNestedObjectValueOfNull[responseInspectionModel](ctx)
+		diags.Append(fwflex.Flatten(ctx, val.RequestInspection, &m.RequestInspection)...)
+	default:
+		diags.AddError("Unexpected type", fmt.Sprintf("expected *awstypes.AWSManagedRulesACFPRuleSet, got %T", v))
+	}
+	return diags
+}
+
+type requestInspectionACFPModel struct {
+	PayloadType       types.String                                           `tfsdk:"payload_type"`
+	AddressFields     fwtypes.ListNestedObjectValueOf[addressFieldModel]     `tfsdk:"address_fields"`
+	EmailField        fwtypes.ListNestedObjectValueOf[emailFieldModel]       `tfsdk:"email_field"`
+	PasswordField     fwtypes.ListNestedObjectValueOf[passwordFieldModel]    `tfsdk:"password_field"`
+	UsernameField     fwtypes.ListNestedObjectValueOf[usernameFieldModel]    `tfsdk:"username_field"`
+	PhoneNumberFields fwtypes.ListNestedObjectValueOf[phoneNumberFieldModel] `tfsdk:"phone_number_fields"`
+}
+
+func (m requestInspectionACFPModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.RequestInspectionACFP
+
+	r.PayloadType = awstypes.PayloadType(m.PayloadType.ValueString())
+
+	for _, af := range m.AddressFields.Elements() {
+		var addressField addressFieldModel
+		diags.Append(af.(fwtypes.ObjectValueOf[addressFieldModel]).As(ctx, &addressField, basetypes.ObjectAsOptions{})...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		expanded, d := addressField.Expand(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.AddressFields = append(r.AddressFields, expanded.([]awstypes.AddressField)...)
+	}
+
+	for _, pf := range m.PhoneNumberFields.Elements() {
+		var phoneField phoneNumberFieldModel
+		diags.Append(pf.(fwtypes.ObjectValueOf[phoneNumberFieldModel]).As(ctx, &phoneField, basetypes.ObjectAsOptions{})...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		expanded, d := phoneField.Expand(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		r.PhoneNumberFields = append(r.PhoneNumberFields, expanded.([]awstypes.PhoneNumberField)...)
+	}
+
+	diags.Append(fwflex.Expand(ctx, m.EmailField, &r.EmailField)...)
+	diags.Append(fwflex.Expand(ctx, m.PasswordField, &r.PasswordField)...)
+	diags.Append(fwflex.Expand(ctx, m.UsernameField, &r.UsernameField)...)
+
+	return &r, diags
+}
+
+type phoneNumberFieldModel struct {
+	Identifiers fwtypes.ListValueOf[types.String] `tfsdk:"identifiers"`
+}
+
+var _ fwflex.Expander = phoneNumberFieldModel{}
+
+func (m phoneNumberFieldModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var phoneNumberFields []awstypes.PhoneNumberField
+
+	for _, identifier := range m.Identifiers.Elements() {
+		phoneNumberFields = append(phoneNumberFields, awstypes.PhoneNumberField{
+			Identifier: identifier.(types.String).ValueStringPointer(),
+		})
+	}
+
+	return phoneNumberFields, diags
+}
+
+type emailFieldModel struct {
+	Identifier types.String `tfsdk:"identifier"`
+}
+
+type addressFieldModel struct {
+	Identifiers fwtypes.ListValueOf[types.String] `tfsdk:"identifiers"`
+}
+
+var _ fwflex.Expander = addressFieldModel{}
+
+func (m addressFieldModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var addressFields []awstypes.AddressField
+
+	for _, identifier := range m.Identifiers.Elements() {
+		addressFields = append(addressFields, awstypes.AddressField{
+			Identifier: identifier.(types.String).ValueStringPointer(),
+		})
+	}
+
+	return addressFields, diags
+}
+
+type responseInspectionModel struct {
+	BodyContains fwtypes.ListNestedObjectValueOf[responseInspectionBodyContainsModel] `tfsdk:"body_contains"`
+	Header       fwtypes.ListNestedObjectValueOf[responseInspectionHeaderModel]       `tfsdk:"header"`
+	Json         fwtypes.ListNestedObjectValueOf[responseInspectionJsonModel]         `tfsdk:"json"`
+	StatusCode   fwtypes.ListNestedObjectValueOf[responseInspectionStatusCodeModel]   `tfsdk:"status_code"`
+}
+
+type responseInspectionBodyContainsModel struct {
+	FailureStrings fwtypes.SetValueOf[types.String] `tfsdk:"failure_strings"`
+	SuccessStrings fwtypes.SetValueOf[types.String] `tfsdk:"success_strings"`
+}
+
+type responseInspectionHeaderModel struct {
+	FailureValues fwtypes.SetValueOf[types.String] `tfsdk:"failure_values"`
+	Name          types.String                     `tfsdk:"name"`
+	SuccessValues fwtypes.SetValueOf[types.String] `tfsdk:"success_values"`
+}
+
+type responseInspectionJsonModel struct {
+	FailureValues fwtypes.SetValueOf[types.String] `tfsdk:"failure_values"`
+	Identifier    types.String                     `tfsdk:"identifier"`
+	SuccessValues fwtypes.SetValueOf[types.String] `tfsdk:"success_values"`
+}
+
+type responseInspectionStatusCodeModel struct {
+	FailureCodes fwtypes.SetValueOf[types.Int32] `tfsdk:"failure_codes"`
+	SuccessCodes fwtypes.SetValueOf[types.Int32] `tfsdk:"success_codes"`
 }
 
 type ruleActionOverrideModel struct {

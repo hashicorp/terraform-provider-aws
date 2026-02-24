@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,7 +32,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 	var v ecr.GetRegistryScanningConfigurationOutput
 	resourceName := "aws_ecr_registry_scanning_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +41,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
@@ -62,7 +61,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 	var v ecr.GetRegistryScanningConfigurationOutput
 	resourceName := "aws_ecr_registry_scanning_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -71,7 +70,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 			{
 				Config: testAccRegistryScanningConfigurationConfig_oneRule(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -92,7 +91,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 			{
 				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "CONTINUOUS_SCAN",
@@ -114,7 +113,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 			{
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
@@ -124,14 +123,14 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 	})
 }
 
-func testAccRegistryScanningConfigurationExists(ctx context.Context, n string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
+func testAccRegistryScanningConfigurationExists(ctx context.Context, t *testing.T, n string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECRClient(ctx)
 
 		output, err := tfecr.FindRegistryScanningConfiguration(ctx, conn)
 

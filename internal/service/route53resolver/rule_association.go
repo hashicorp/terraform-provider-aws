@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,7 +31,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(domainTfVar="domain")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleAssociationCreate,
@@ -151,9 +149,8 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	output, err := conn.GetResolverRuleAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -168,8 +165,8 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 	return output.ResolverRuleAssociation, nil
 }
 
-func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRuleAssociation(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResolverRuleAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -185,10 +182,10 @@ func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id
 }
 
 func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusCreating),
 		Target:     enum.Slice(awstypes.ResolverRuleAssociationStatusComplete),
-		Refresh:    statusRuleAssociation(ctx, conn, id),
+		Refresh:    statusRuleAssociation(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -206,10 +203,10 @@ func waitRuleAssociationCreated(ctx context.Context, conn *route53resolver.Clien
 }
 
 func waitRuleAssociationDeleted(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverRuleAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverRuleAssociationStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusRuleAssociation(ctx, conn, id),
+		Refresh:    statusRuleAssociation(conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

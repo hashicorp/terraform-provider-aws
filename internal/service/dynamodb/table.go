@@ -52,7 +52,6 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -3594,7 +3593,16 @@ func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff
 			p := vPlan.GetAttr(attrName)
 			switch attrName {
 			case "hash_key":
-				if p.IsNull() && !s.IsNull() {
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "range_key":
+				if p.IsNull() && !s.IsNull() && vPlan.GetAttr("key_schema").LengthInt() > 0 {
 					// "key_schema" is set
 					continue // change to "key_schema" will be caught by equality test
 				}

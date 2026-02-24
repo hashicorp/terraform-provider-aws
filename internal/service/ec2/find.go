@@ -7413,3 +7413,129 @@ func findRouteServerPropagationByTwoPartKey(ctx context.Context, conn *ec2.Clien
 
 	return findRouteServerPropagation(ctx, conn, &input)
 }
+
+func findSecondaryNetwork(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) (*awstypes.SecondaryNetwork, error) {
+	output, err := findSecondaryNetworks(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSecondaryNetworks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondaryNetworksInput) ([]awstypes.SecondaryNetwork, error) {
+	var output []awstypes.SecondaryNetwork
+
+	pages := ec2.NewDescribeSecondaryNetworksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondaryNetworkIdNotFound) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecondaryNetworks...)
+	}
+
+	return output, nil
+}
+
+func findSecondaryNetworkByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondaryNetwork, error) {
+	input := ec2.DescribeSecondaryNetworksInput{
+		SecondaryNetworkIds: []string{id},
+	}
+
+	output, err := findSecondaryNetwork(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Treat "delete-complete" state as NotFound.
+	if state := output.State; state == awstypes.SecondaryNetworkStateDeleteComplete {
+		return nil, &sdkretry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SecondaryNetworkId) != id {
+		return nil, &sdkretry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSecondarySubnet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) (*awstypes.SecondarySubnet, error) {
+	output, err := findSecondarySubnets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) ([]awstypes.SecondarySubnet, error) {
+	var output []awstypes.SecondarySubnet
+
+	pages := ec2.NewDescribeSecondarySubnetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecondarySubnets...)
+	}
+
+	return output, nil
+}
+
+func findSecondarySubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondarySubnet, error) {
+	input := ec2.DescribeSecondarySubnetsInput{
+		SecondarySubnetIds: []string{id},
+	}
+
+	output, err := findSecondarySubnet(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Treat "delete-complete" state as NotFound.
+	if state := output.State; state == awstypes.SecondarySubnetStateDeleteComplete {
+		return nil, &sdkretry.NotFoundError{
+			Message:     string(state),
+			LastRequest: &input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SecondarySubnetId) != id {
+		return nil, &sdkretry.NotFoundError{
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}

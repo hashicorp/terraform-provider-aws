@@ -33,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -550,9 +549,8 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	output, err := conn.GetAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -567,8 +565,8 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	return output.Agent, nil
 }
 
-func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgent(conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -584,10 +582,10 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkr
 }
 
 func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -603,10 +601,10 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -622,10 +620,10 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -641,10 +639,10 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 }
 
 func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusVersioning),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 
@@ -660,10 +658,10 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),
 		Target:  []string{},
-		Refresh: statusAgent(ctx, conn, id),
+		Refresh: statusAgent(conn, id),
 		Timeout: timeout,
 	}
 

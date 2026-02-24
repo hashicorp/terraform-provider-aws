@@ -22,7 +22,7 @@ func TestAccEC2EBSSnapshotBlockPublicAccess_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccEC2EBSSnapshotBlockPublicAccess_basic,
-		"Identity":      testAccEC2EBSEBSSnapshotBlockPublicAccess_IdentitySerial,
+		"Identity":      testAccEC2EBSEBSSnapshotBlockPublicAccess_identitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

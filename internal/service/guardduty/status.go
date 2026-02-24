@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -24,8 +24,8 @@ const (
 )
 
 // statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
-func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminAccountID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAdminAccountAdmin(conn *guardduty.Client, adminAccountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		adminAccount, err := getOrganizationAdminAccount(ctx, conn, adminAccountID)
 
 		if err != nil {
@@ -41,8 +41,8 @@ func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminA
 }
 
 // statusPublishingDestination fetches the PublishingDestination and its Status
-func statusPublishingDestination(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPublishingDestination(conn *guardduty.Client, destinationID, detectorID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &guardduty.DescribePublishingDestinationInput{
 			DetectorId:    aws.String(detectorID),
 			DestinationId: aws.String(destinationID),

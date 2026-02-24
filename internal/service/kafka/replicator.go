@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -399,10 +398,10 @@ func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitReplicatorCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeReplicatorOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ReplicatorStateCreating),
 		Target:  enum.Slice(types.ReplicatorStateRunning),
-		Refresh: statusReplicator(ctx, conn, arn),
+		Refresh: statusReplicator(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -419,10 +418,10 @@ func waitReplicatorCreated(ctx context.Context, conn *kafka.Client, arn string, 
 }
 
 func waitReplicatorUpdated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeReplicatorOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ReplicatorStateUpdating),
 		Target:  enum.Slice(types.ReplicatorStateRunning),
-		Refresh: statusReplicator(ctx, conn, arn),
+		Refresh: statusReplicator(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -439,10 +438,10 @@ func waitReplicatorUpdated(ctx context.Context, conn *kafka.Client, arn string, 
 }
 
 func waitReplicatorDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeReplicatorOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ReplicatorStateRunning, types.ReplicatorStateDeleting),
 		Target:  []string{},
-		Refresh: statusReplicator(ctx, conn, arn),
+		Refresh: statusReplicator(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -458,8 +457,8 @@ func waitReplicatorDeleted(ctx context.Context, conn *kafka.Client, arn string, 
 	return nil, err
 }
 
-func statusReplicator(ctx context.Context, conn *kafka.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicator(conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicatorByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -482,9 +481,8 @@ func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*
 	output, err := conn.DescribeReplicator(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

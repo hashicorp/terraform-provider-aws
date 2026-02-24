@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -257,9 +256,8 @@ func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Clie
 	output, err := conn.GetEndpointAccess(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -274,8 +272,8 @@ func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Clie
 	return output.Endpoint, nil
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpointAccess(conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -291,7 +289,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, 
 }
 
 func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"CREATING",
 			"MODIFYING",
@@ -299,7 +297,7 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.Clie
 		Target: []string{
 			"ACTIVE",
 		},
-		Refresh: statusEndpointAccess(ctx, conn, name),
+		Refresh: statusEndpointAccess(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 
@@ -313,12 +311,12 @@ func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.Clie
 }
 
 func waitEndpointAccessDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"DELETING",
 		},
 		Target:  []string{},
-		Refresh: statusEndpointAccess(ctx, conn, name),
+		Refresh: statusEndpointAccess(conn, name),
 		Timeout: 10 * time.Minute,
 	}
 

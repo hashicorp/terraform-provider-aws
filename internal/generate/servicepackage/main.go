@@ -471,6 +471,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if d.wrappedImport == common.TriBooleanUnset {
 			d.wrappedImport = common.TriBooleanTrue
 		}
+		if d.ImportIDHandler != "" {
+			if len(d.IdentityAttributes) < 2 {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: \"@ImportIDHandler\" should only be specified for Resource Identities with multiple attributes", v.packageName, v.functionName))
+			}
+		}
 	} else {
 		if d.HasNoPreExistingResource {
 			v.errs = append(v.errs, fmt.Errorf("hasNoPreExistingResource specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

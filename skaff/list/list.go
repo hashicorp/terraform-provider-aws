@@ -38,19 +38,19 @@ var queryTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	ListResource           string
-	ListResourceLower      string
-	ListResourceLowerCamel string
-	ListResourceSnake      string
-	IncludeComments        bool
-	HumanFriendlyService   string
-	SDKPackage             string
-	ServicePackage         string
-	Service                string
-	ServiceLower           string
-	AWSServiceName         string
-	HumanListResourceName  string
-	ProviderResourceName   string
+	ListResource              string
+	ListResourceLower         string
+	ListResourceLowerCamel    string
+	ListResourceSnake         string
+	IncludeComments           bool
+	HumanFriendlyService      string
+	HumanFriendlyServiceShort string
+	SDKPackage                string
+	ServicePackage            string
+	Service                   string
+	ServiceLower              string
+	HumanListResourceName     string
+	ProviderResourceName      string
 }
 
 func Create(listName, snakeName string, comments, framework, force bool) error {
@@ -83,19 +83,19 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 	}
 
 	templateData := TemplateData{
-		ListResource:           listName,
-		ListResourceLower:      strings.ToLower(listName),
-		ListResourceLowerCamel: convert.ToLowercasePrefix(listName),
-		ListResourceSnake:      snakeName,
-		HumanFriendlyService:   service.HumanFriendly(),
-		IncludeComments:        comments,
-		SDKPackage:             service.GoV2Package(),
-		ServicePackage:         servicePackage,
-		Service:                service.ProviderNameUpper(),
-		ServiceLower:           strings.ToLower(service.ProviderNameUpper()),
-		AWSServiceName:         service.FullHumanFriendly(),
-		HumanListResourceName:  convert.ToHumanResName(listName),
-		ProviderResourceName:   convert.ToProviderResourceName(servicePackage, snakeName),
+		ListResource:              listName,
+		ListResourceLower:         strings.ToLower(listName),
+		ListResourceLowerCamel:    convert.ToLowercasePrefix(listName),
+		ListResourceSnake:         snakeName,
+		HumanFriendlyService:      service.HumanFriendly(),
+		HumanFriendlyServiceShort: service.HumanFriendlyShort(),
+		IncludeComments:           comments,
+		SDKPackage:                service.GoV2Package(),
+		ServicePackage:            servicePackage,
+		Service:                   service.ProviderNameUpper(),
+		ServiceLower:              strings.ToLower(service.ProviderNameUpper()),
+		HumanListResourceName:     convert.ToHumanResName(listName),
+		ProviderResourceName:      convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := listTmplFramework
@@ -112,22 +112,16 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 		return fmt.Errorf("writing list resource test template: %w", err)
 	}
 
-	tcf := "main.tf"
-	{
-		tcf = filepath.Join("testdata", listName, "list_basic", tcf)
-		err = os.MkdirAll(filepath.Dir(tcf), 0755)
-		if err != nil {
-			return fmt.Errorf("creating test config directory: %w", err)
-		}
-	}
-	if err = writeTemplate("testconfig", tcf, lisTestConfigTmpl, force, templateData); err != nil {
-		return fmt.Errorf("writing list resource test config template: %w", err)
+	if err := testConfig(listName, "list_basic", force, templateData, false, false); err != nil {
+		return err
 	}
 
-	qf := "main.tfquery.hcl"
-	qf = filepath.Join("testdata", listName, "list_basic", "query.tfquery.hcl")
-	if err = writeTemplate("queryconfig", qf, queryTmpl, force, templateData); err != nil {
-		return fmt.Errorf("writing list resource query config template: %w", err)
+	if err := testConfig(listName, "list_include_resource", force, templateData, true, false); err != nil {
+		return err
+	}
+
+	if err := testConfig(listName, "list_region_override", force, templateData, false, true); err != nil {
+		return err
 	}
 
 	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)
@@ -139,7 +133,39 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 	return nil
 }
 
-func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
+type testConfigTemplateData struct {
+	IsIncludeResource bool
+	IsRegionOverride  bool
+	TemplateData
+}
+
+func testConfig(listName, path string, force bool, templateData TemplateData, includeResource, regionOverride bool) error {
+	tcf := "main.tf"
+	tcf = filepath.Join("testdata", listName, path, tcf)
+	if err := os.MkdirAll(filepath.Dir(tcf), 0755); err != nil {
+		return fmt.Errorf("creating test config directory: %w", err)
+	}
+
+	testConfig := testConfigTemplateData{
+		IsIncludeResource: includeResource,
+		IsRegionOverride:  regionOverride,
+		TemplateData:      templateData,
+	}
+
+	if err := writeTemplate("testconfig", tcf, lisTestConfigTmpl, force, testConfig); err != nil {
+		return fmt.Errorf("writing list resource test config template: %w", err)
+	}
+
+	qf := "main.tfquery.hcl"
+	qf = filepath.Join("testdata", listName, path, "query.tfquery.hcl")
+	if err := writeTemplate("queryconfig", qf, queryTmpl, force, testConfig); err != nil {
+		return fmt.Errorf("writing list resource query config template: %w", err)
+	}
+
+	return nil
+}
+
+func writeTemplate(templateName, filename, tmpl string, force bool, td any) error {
 	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}

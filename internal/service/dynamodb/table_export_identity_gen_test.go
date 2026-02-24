@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDynamoDBTableExport_Identity_Basic(t *testing.T) {
+func TestAccDynamoDBTableExport_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ExportDescription
@@ -108,7 +108,7 @@ func TestAccDynamoDBTableExport_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableExport_Identity_RegionOverride(t *testing.T) {
+func TestAccDynamoDBTableExport_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_dynamodb_table_export.test"
@@ -228,7 +228,7 @@ func TestAccDynamoDBTableExport_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableExport_Identity_ExistingResource(t *testing.T) {
+func TestAccDynamoDBTableExport_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ExportDescription
@@ -307,7 +307,7 @@ func TestAccDynamoDBTableExport_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTableExport_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccDynamoDBTableExport_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.ExportDescription

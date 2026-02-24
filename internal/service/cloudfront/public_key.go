@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -85,7 +84,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	input := &cloudfront.CreatePublicKeyInput{
 		PublicKeyConfig: &awstypes.PublicKeyConfig{
 			EncodedKey: aws.String(d.Get("encoded_key").(string)),
@@ -203,9 +202,8 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	output, err := conn.GetPublicKey(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

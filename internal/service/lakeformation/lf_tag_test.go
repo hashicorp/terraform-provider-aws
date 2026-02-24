@@ -14,11 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	providerslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -79,21 +77,21 @@ func TestReadLFTagID(t *testing.T) {
 func testAccLFTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLFTagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", names.AttrValue),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
@@ -111,21 +109,21 @@ func testAccLFTag_basic(t *testing.T) {
 func testAccLFTag_TagKey_complex(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
-	rName := fmt.Sprintf("%s:%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "subKey")
+	rName := fmt.Sprintf("%s:%s", acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "subKey")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLFTagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", names.AttrValue),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
@@ -138,21 +136,21 @@ func testAccLFTag_TagKey_complex(t *testing.T) {
 func testAccLFTag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLFTagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceLFTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -164,22 +162,22 @@ func testAccLFTag_disappears(t *testing.T) {
 func testAccLFTag_Values(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccLFTagConfig_values(rName, []string{acctest.CtValue1, acctest.CtValue2}),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
@@ -194,11 +192,11 @@ func testAccLFTag_Values(t *testing.T) {
 				// Test an update that adds, removes and retains a tag value
 				Config: testAccLFTagConfig_values(rName, []string{acctest.CtValue1, "value3"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value3"),
-					testAccCheckLFTagValuesLen(ctx, resourceName, 2),
+					testAccCheckLFTagValuesLen(ctx, t, resourceName, 2),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
@@ -209,38 +207,38 @@ func testAccLFTag_Values(t *testing.T) {
 func testAccLFTag_Values_overFifty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_lf_tag.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	generatedValues := generateLFTagValueList(1, 52)
 	generatedValues2 := slices.Clone(generatedValues)
 	generatedValues2 = append(generatedValues2, generateLFTagValueList(53, 120)...)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
+		CheckDestroy:             testAccCheckLFTagsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLFTagConfig_values(rName, generatedValues),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
-					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)),
+					testAccCheckLFTagValuesLen(ctx, t, resourceName, len(generatedValues)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
 				Config: testAccLFTagConfig_values(rName, generatedValues2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
-					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues2)),
+					testAccCheckLFTagValuesLen(ctx, t, resourceName, len(generatedValues2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value59"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
@@ -248,10 +246,10 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 			{
 				Config: testAccLFTagConfig_values(rName, providerslices.RemoveAll(generatedValues, "value36")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLFTagExists(ctx, resourceName),
+					testAccCheckLFTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
-					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)-1),
+					testAccCheckLFTagValuesLen(ctx, t, resourceName, len(generatedValues)-1),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
@@ -259,9 +257,9 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 	})
 }
 
-func testAccCheckLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLFTagsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_lf_tag" {
@@ -292,7 +290,7 @@ func testAccCheckLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLFTagExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckLFTagExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -313,14 +311,14 @@ func testAccCheckLFTagExists(ctx context.Context, name string) resource.TestChec
 			TagKey:    aws.String(tagKey),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 		_, err = conn.GetLFTag(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckLFTagValuesLen(ctx context.Context, name string, expectedLength int) resource.TestCheckFunc {
+func testAccCheckLFTagValuesLen(ctx context.Context, t *testing.T, name string, expectedLength int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -341,7 +339,7 @@ func testAccCheckLFTagValuesLen(ctx context.Context, name string, expectedLength
 			TagKey:    aws.String(tagKey),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LakeFormationClient(ctx)
 		output, err := conn.GetLFTag(ctx, input)
 
 		if len(output.TagValues) != expectedLength {

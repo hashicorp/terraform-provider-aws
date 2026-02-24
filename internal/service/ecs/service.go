@@ -955,6 +955,26 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"access_log_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrFormat: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectAccessLoggingFormat](),
+									},
+									"include_query_parameters": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectIncludeQueryParameters](),
+									},
+								},
+							},
+						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -2717,6 +2737,12 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{}
 
+		if v := apiObject.HookDetails; v != nil {
+			if jsonString, err := smithy.DocumentToJSONString(v); err == nil {
+				tfMap["hook_details"] = jsonString
+			}
+		}
+
 		if v := apiObject.HookTargetArn; v != nil {
 			tfMap["hook_target_arn"] = aws.ToString(v)
 		}
@@ -2726,17 +2752,7 @@ func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any 
 		}
 
 		if v := apiObject.LifecycleStages; len(v) > 0 {
-			stages := make([]string, 0, len(v))
-			for _, stage := range v {
-				stages = append(stages, string(stage))
-			}
-			tfMap["lifecycle_stages"] = stages
-		}
-
-		if v := apiObject.HookDetails; v != nil {
-			if jsonString, err := smithy.DocumentToJSONString(v); err == nil {
-				tfMap["hook_details"] = jsonString
-			}
+			tfMap["lifecycle_stages"] = v
 		}
 
 		tfList = append(tfList, tfMap)
@@ -3070,6 +3086,9 @@ func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectCon
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.ServiceConnectConfiguration{}
 
+	if v, ok := tfMap["access_log_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AccessLogConfiguration = expandServiceConnectAccessLogConfiguration(v)
+	}
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = v
 	}
@@ -3095,6 +3114,9 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
+	if v := apiObject.AccessLogConfiguration; v != nil {
+		tfMap["access_log_configuration"] = flattenServiceConnectAccessLogConfiguration(v)
+	}
 	if v := apiObject.LogConfiguration; v != nil {
 		tfMap["log_configuration"] = []any{flattenLogConfiguration(*v)}
 	}
@@ -3103,6 +3125,38 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 	}
 	if v := apiObject.Services; v != nil {
 		tfMap["service"] = flattenServiceConnectServices(v)
+	}
+
+	return []any{tfMap}
+}
+
+func expandServiceConnectAccessLogConfiguration(tfList []any) *awstypes.ServiceConnectAccessLogConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	config := &awstypes.ServiceConnectAccessLogConfiguration{}
+
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
+		config.Format = awstypes.ServiceConnectAccessLoggingFormat(v)
+	}
+
+	if v, ok := tfMap["include_query_parameters"].(string); ok && v != "" {
+		config.IncludeQueryParameters = awstypes.ServiceConnectIncludeQueryParameters(v)
+	}
+
+	return config
+}
+
+func flattenServiceConnectAccessLogConfiguration(config *awstypes.ServiceConnectAccessLogConfiguration) []any {
+	if config == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrFormat:           config.Format,
+		"include_query_parameters": config.IncludeQueryParameters,
 	}
 
 	return []any{tfMap}

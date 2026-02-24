@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	"github.com/aws/aws-sdk-go-v2/service/grafana/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func TestAccGrafanaWorkspaceServiceAccountToken_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_grafana_workspace_service_account_token.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var v types.ServiceAccountTokenSummary
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
@@ -34,12 +32,12 @@ func TestAccGrafanaWorkspaceServiceAccountToken_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceServiceAccountTokenDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceServiceAccountTokenDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountTokenConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceServiceAccountTokenExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceServiceAccountTokenExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account_token_id"),
@@ -54,7 +52,7 @@ func TestAccGrafanaWorkspaceServiceAccountToken_disappears(t *testing.T) {
 	var v types.ServiceAccountTokenSummary
 	resourceName := "aws_grafana_workspace_service_account_token.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID)
@@ -62,12 +60,12 @@ func TestAccGrafanaWorkspaceServiceAccountToken_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceServiceAccountTokenDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceServiceAccountTokenDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountTokenConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceServiceAccountTokenExists(ctx, resourceName, &v),
+					testAccCheckWorkspaceServiceAccountTokenExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfgrafana.ResourceWorkspaceServiceAccountToken, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,14 +74,14 @@ func TestAccGrafanaWorkspaceServiceAccountToken_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkspaceServiceAccountTokenExists(ctx context.Context, n string, v *types.ServiceAccountTokenSummary) resource.TestCheckFunc {
+func testAccCheckWorkspaceServiceAccountTokenExists(ctx context.Context, t *testing.T, n string, v *types.ServiceAccountTokenSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GrafanaClient(ctx)
 
 		output, err := tfgrafana.FindWorkspaceServiceAccountTokenByThreePartKey(ctx, conn, rs.Primary.Attributes["workspace_id"], rs.Primary.Attributes["service_account_id"], rs.Primary.Attributes["service_account_token_id"])
 
@@ -97,9 +95,9 @@ func testAccCheckWorkspaceServiceAccountTokenExists(ctx context.Context, n strin
 	}
 }
 
-func testAccCheckWorkspaceServiceAccountTokenDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkspaceServiceAccountTokenDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GrafanaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_grafana_workspace_service_account_token" {

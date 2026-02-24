@@ -150,6 +150,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
 		return true
 	}
+	//  Example (ec2): UnsupportedOperation: The functionality you requested is not supported in this region
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not supported in this region") {
+		return true
+	}
 	//  Example (fsx): UnsupportedOperation: This operation is unsupported.
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "This operation is unsupported") {
 		return true

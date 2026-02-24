@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSMContactsContactChannel_IdentitySerial(t *testing.T) {
+func testAccSSMContactsContactChannel_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSMContactsContactChannel_Identity_Basic,
-		"ExistingResource":          testAccSSMContactsContactChannel_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccSSMContactsContactChannel_Identity_basic,
+		"ExistingResource":          testAccSSMContactsContactChannel_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSSMContactsContactChannel_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
+func testAccSSMContactsContactChannel_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact_channel.test"
@@ -45,7 +45,7 @@ func testAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
+		CheckDestroy:             testAccCheckContactChannelDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -55,7 +55,7 @@ func testAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactChannelExists(ctx, resourceName),
+					testAccCheckContactChannelExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -119,7 +119,7 @@ func testAccSSMContactsContactChannel_Identity_Basic(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccSSMContactsContactChannel_Identity_ExistingResource(t *testing.T) {
+func testAccSSMContactsContactChannel_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact_channel.test"
@@ -131,7 +131,7 @@ func testAccSSMContactsContactChannel_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactChannelDestroy(ctx),
+		CheckDestroy: testAccCheckContactChannelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -140,7 +140,7 @@ func testAccSSMContactsContactChannel_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactChannelExists(ctx, resourceName),
+					testAccCheckContactChannelExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -174,7 +174,7 @@ func testAccSSMContactsContactChannel_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.14.1
-func testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSSMContactsContactChannel_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_contact_channel.test"
@@ -186,7 +186,7 @@ func testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChan
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckContactChannelDestroy(ctx),
+		CheckDestroy: testAccCheckContactChannelDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -200,7 +200,7 @@ func testAccSSMContactsContactChannel_Identity_ExistingResource_NoRefresh_NoChan
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContactChannelExists(ctx, resourceName),
+					testAccCheckContactChannelExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

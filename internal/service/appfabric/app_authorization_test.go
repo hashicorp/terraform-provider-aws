@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,10 +21,10 @@ import (
 func testAccAppAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -34,12 +32,12 @@ func testAccAppAuthorization_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
@@ -63,10 +61,10 @@ func testAccAppAuthorization_basic(t *testing.T) {
 func testAccAppAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appauthorization types.AppAuthorization
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -74,12 +72,12 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &appauthorization),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceAppAuthorization, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
@@ -99,10 +97,10 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -110,12 +108,12 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
@@ -135,7 +133,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 			{
 				Config: testAccAppAuthorizationConfig_updatedAPIkey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
@@ -159,10 +157,10 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 func testAccAppAuthorization_oath2Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -170,12 +168,12 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppAuthorizationConfig_oath2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "oauth2"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
@@ -196,7 +194,7 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 			{
 				Config: testAccAppAuthorizationConfig_updatedOath2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					testAccCheckAppAuthorizationExists(ctx, t, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "oauth2"),
 					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
@@ -218,9 +216,9 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 	})
 }
 
-func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAppAuthorizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appfabric_app_authorization" {
@@ -244,14 +242,14 @@ func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.AppAuthorization) resource.TestCheckFunc {
+func testAccCheckAppAuthorizationExists(ctx context.Context, t *testing.T, n string, v *types.AppAuthorization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		output, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_arn"])
 

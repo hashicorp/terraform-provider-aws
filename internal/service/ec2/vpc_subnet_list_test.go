@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCSubnet_List_Basic(t *testing.T) {
+func TestAccVPCSubnet_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_subnet.test[0]"
@@ -85,7 +85,7 @@ func TestAccVPCSubnet_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_List_RegionOverride(t *testing.T) {
+func TestAccVPCSubnet_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_subnet.test[0]"
@@ -155,7 +155,7 @@ func TestAccVPCSubnet_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_List_Filtered(t *testing.T) {
+func TestAccVPCSubnet_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_subnet.expected[0]"
@@ -230,7 +230,7 @@ func TestAccVPCSubnet_List_Filtered(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_List_ExcludeDefaultSubnets(t *testing.T) {
+func TestAccVPCSubnet_List_excludeDefaultSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	id := tfstatecheck.StateValue()
@@ -288,7 +288,7 @@ func TestAccVPCSubnet_List_ExcludeDefaultSubnets(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_List_SubnetIDs(t *testing.T) {
+func TestAccVPCSubnet_List_subnetIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_subnet.test[0]"
@@ -358,7 +358,7 @@ func TestAccVPCSubnet_List_SubnetIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_List_FilteredSubnetIDs(t *testing.T) {
+func TestAccVPCSubnet_List_filteredSubnetIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_subnet.expected[0]"
@@ -434,7 +434,7 @@ func TestAccVPCSubnet_List_FilteredSubnetIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_List_Filtered_DefaultForAZ(t *testing.T) {
+func TestAccVPCSubnet_List_Filtered_defaultForAZ(t *testing.T) {
 	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
 
 	ctx := acctest.Context(t)

@@ -28,7 +28,6 @@ import (
 // @SDKResource("aws_sns_topic_policy", name="Topic Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.8.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicPolicyUpsert,

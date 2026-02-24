@@ -19,7 +19,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +42,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,7 +65,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseClarify(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -88,7 +88,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDataWrangler(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -111,7 +111,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDebugger(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -134,7 +134,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseInferentiaNeoInferentiaPyTor
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -157,7 +157,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseInferentiaNeoTensorflowInfer
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -180,7 +180,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseXGBoostSparkML(t *testing.T)
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -203,7 +203,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseXGBoostHuggingFaceTEICPU(t *
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -226,7 +226,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerChai
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -249,7 +249,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerMXNe
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -272,7 +272,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerCustomSageMakerTens
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -295,7 +295,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningHuggingFacePyTor
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -318,7 +318,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningNVIDIATritionInf
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -341,7 +341,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseDeepLearningStabilityAI(t *t
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -364,7 +364,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerBasePython(t *testi
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -387,7 +387,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSageMakerRL(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -410,7 +410,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_caseSpark(t *testing.T) {
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

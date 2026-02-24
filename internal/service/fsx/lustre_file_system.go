@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -859,9 +858,8 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -879,8 +877,8 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 	return output, nil
 }
 
-func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFileSystem(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -896,10 +894,10 @@ func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) sdkretry
 }
 
 func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
-		Refresh: statusFileSystem(ctx, conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 
@@ -921,10 +919,10 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 }
 
 func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
-		Refresh: statusFileSystem(ctx, conn, id),
+		Refresh: statusFileSystem(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -961,10 +959,10 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 }
 
 func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting),
 		Target:       []string{},
-		Refresh:      statusFileSystem(ctx, conn, id),
+		Refresh:      statusFileSystem(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Minute,
 		PollInterval: 10 * time.Second,
@@ -1000,8 +998,8 @@ func findFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, f
 	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFileSystemAdministrativeAction(conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFileSystemAdministrativeAction(ctx, conn, fsID, actionType)
 
 		if retry.NotFound(err) {
@@ -1017,10 +1015,10 @@ func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client,
 }
 
 func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
 		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
-		Refresh: statusFileSystemAdministrativeAction(ctx, conn, fsID, actionType),
+		Refresh: statusFileSystemAdministrativeAction(conn, fsID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}

@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -51,13 +50,16 @@ const (
 	bucketPropagationTimeout = 2 * time.Minute
 )
 
+func isGeneralPurposeBucket(bucket string) bool {
+	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
+}
+
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
 // @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -725,7 +727,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
+	bucket := create.Name(ctx, d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
 	region := c.Region(ctx)
 	if err := validBucketName(bucket, region); err != nil {
 		return sdkdiag.AppendErrorf(diags, "validating S3 Bucket (%s) name: %s", bucket, err)
@@ -1638,9 +1640,8 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	// For directory buckets that no longer exist it's the CreateSession call invoked by HeadBucket that returns "NoSuchBucket",
 	// and that error code is flattend into HeadBucket's error message -- hence the 'errs.Contains' call.
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) || tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || errs.Contains(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1671,9 +1672,8 @@ func findBucketRegion(ctx context.Context, c *conns.AWSClient, bucket string, op
 	region, err := manager.GetBucketRegion(ctx, c.S3Client(ctx), bucket, optFns...)
 
 	if errs.IsA[manager.BucketNotFound](err) {
-		return "", &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: bucket,
+		return "", &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
