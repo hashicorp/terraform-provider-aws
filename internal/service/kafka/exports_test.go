@@ -12,6 +12,7 @@ var (
 	ResourceSCRAMSecretAssociation       = resourceSCRAMSecretAssociation
 	ResourceSingleSCRAMSecretAssociation = newSingleSCRAMSecretAssociationResource
 	ResourceServerlessCluster            = resourceServerlessCluster
+	ResourceTopic                        = resourceTopic
 	ResourceVPCConnection                = resourceVPCConnection
 
 	FindClusterByARN                             = findClusterByARN
@@ -21,6 +22,7 @@ var (
 	FindSCRAMSecretAssociation                   = findSCRAMSecretAssociation
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
+	FindTopicByTwoPartKey                        = findTopicByTwoPartKey
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
 
 	ClusterUUIDFromARN    = clusterUUIDFromARN
