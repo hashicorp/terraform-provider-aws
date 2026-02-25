@@ -40,7 +40,6 @@ const (
 	spaceDeletedTimeout               = 10 * time.Minute
 	spaceInServiceTimeout             = 10 * time.Minute
 	mlflowTrackingServerTimeout       = 45 * time.Minute
-	mlflowAppTimeout                  = 5 * time.Minute
 	hubTimeout                        = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
@@ -703,12 +702,12 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 	return nil, err
 }
 
-func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
+func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusCreating),
 		Target:  enum.Slice(awstypes.MlflowAppStatusCreated),
 		Refresh: statusMlflowApp(conn, arn),
-		Timeout: mlflowAppTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -720,12 +719,12 @@ func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn strin
 	return nil, err
 }
 
-func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
+func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusUpdating),
 		Target:  enum.Slice(awstypes.MlflowAppStatusUpdated),
 		Refresh: statusMlflowApp(conn, arn),
-		Timeout: mlflowAppTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -737,12 +736,12 @@ func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn strin
 	return nil, err
 }
 
-func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string) error {
+func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusCreated, awstypes.MlflowAppStatusDeleting),
 		Target:  enum.Slice(awstypes.MlflowAppStatusDeleted),
 		Refresh: statusMlflowApp(conn, arn),
-		Timeout: mlflowAppTimeout,
+		Timeout: timeout,
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)

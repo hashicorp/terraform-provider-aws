@@ -6,10 +6,12 @@ package sagemaker
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,11 +35,18 @@ import (
 // @FrameworkResource("aws_sagemaker_mlflow_app", name="Mlflow App")
 // @Tags(identifierAttribute="arn")
 func resourceMlflowApp(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &mlflowAppResource{}, nil
+	r := &mlflowAppResource{}
+
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
+	return r, nil
 }
 
 type mlflowAppResource struct {
 	framework.ResourceWithModel[mlflowAppResourceModel]
+	framework.WithTimeouts
 }
 
 func (r *mlflowAppResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -88,6 +97,13 @@ func (r *mlflowAppResource) Schema(ctx context.Context, request resource.SchemaR
 				},
 			},
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+		},
 	}
 }
 
@@ -123,7 +139,8 @@ func (r *mlflowAppResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
-	if _, err := waitMlflowAppCreated(ctx, conn, data.ARN.ValueString()); err != nil {
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	if _, err := waitMlflowAppCreated(ctx, conn, data.ARN.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) create", data.ARN.ValueString()), err.Error())
 		return
 	}
@@ -207,7 +224,8 @@ func (r *mlflowAppResource) Update(ctx context.Context, request resource.UpdateR
 			return
 		}
 
-		if _, err := waitMlflowAppUpdated(ctx, conn, plan.ARN.ValueString()); err != nil {
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		if _, err := waitMlflowAppUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) update", plan.ARN.ValueString()), err.Error())
 			return
 		}
@@ -238,7 +256,8 @@ func (r *mlflowAppResource) Delete(ctx context.Context, request resource.DeleteR
 		return
 	}
 
-	if err := waitMlflowAppDeleted(ctx, conn, data.ARN.ValueString()); err != nil {
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if err := waitMlflowAppDeleted(ctx, conn, data.ARN.ValueString(), deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) delete", data.ARN.ValueString()), err.Error())
 	}
 }
@@ -258,6 +277,7 @@ type mlflowAppResourceModel struct {
 	RoleArn                      fwtypes.ARN                                        `tfsdk:"role_arn"`
 	Tags                         tftags.Map                                         `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                         `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                     `tfsdk:"timeouts"`
 	WeeklyMaintenanceWindowStart types.String                                       `tfsdk:"weekly_maintenance_window_start"`
 }
 
