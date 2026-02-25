@@ -84,7 +84,7 @@ jobs:
           # For newer versions
           mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
           cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+      - uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
         with:
           terraform_version: ${{ matrix.terraform_version }}
           # Needed to use the output of `terraform validate -json`
