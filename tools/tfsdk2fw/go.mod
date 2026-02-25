@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.54.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.63.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.38.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.68.10 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.290.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.291.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.72.1 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.37.20 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.14 // indirect
@@ -185,7 +185,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.92.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.93.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.18 // indirect
@@ -205,9 +205,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.7.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.10.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/odb v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.58.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.11 // indirect
