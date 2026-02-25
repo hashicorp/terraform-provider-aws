@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -33,7 +34,7 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 				Config: testAccTopicConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`topic/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", "aws_msk_cluster.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "topic_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_count", "3"),
