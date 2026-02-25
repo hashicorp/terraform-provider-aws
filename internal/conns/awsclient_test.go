@@ -4,6 +4,7 @@
 package conns
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,6 +15,107 @@ var (
 	standardPartition, _ = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.UsEast1RegionID)
 	chinaPartition, _    = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.CnNorth1RegionID)
 )
+
+func TestAWSClientAwsConfig(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+
+	t.Run("nil config", func(t *testing.T) {
+		t.Parallel()
+
+		client := &AWSClient{}
+		got := client.AwsConfig(ctx)
+
+		if got.Region != "" {
+			t.Errorf("got region %q, expected empty region", got.Region)
+		}
+	})
+
+	t.Run("copy configured value", func(t *testing.T) {
+		t.Parallel()
+
+		client := &AWSClient{
+			awsConfig: &aws.Config{
+				Region: "us-west-2", //lintignore:AWSAT003
+			},
+		}
+
+		got := client.AwsConfig(ctx)
+		if got.Region != "us-west-2" { //lintignore:AWSAT003
+			t.Errorf("got region %q, expected %q", got.Region, "us-west-2")
+		}
+
+		got.Region = "eu-west-1"                    //lintignore:AWSAT003
+		if client.awsConfig.Region != "us-west-2" { //lintignore:AWSAT003
+			t.Errorf("AwsConfig should return a copy; original region changed to %q", client.awsConfig.Region)
+		}
+	})
+}
+
+func TestAWSClientRegion(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Context   func(testing.TB) context.Context
+		Expected  string
+	}{
+		{
+			Name: "configured region",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
+			},
+			Context: func(tb testing.TB) context.Context {
+				return tb.Context()
+			},
+			Expected: "us-west-2", //lintignore:AWSAT003
+		},
+		{
+			Name:      "nil config",
+			AWSClient: &AWSClient{},
+			Context: func(tb testing.TB) context.Context {
+				return tb.Context()
+			},
+			Expected: "",
+		},
+		{
+			Name: "override region",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "us-west-2", //lintignore:AWSAT003
+				},
+			},
+			Context: func(tb testing.TB) context.Context {
+				return NewResourceContext(tb.Context(), "test", "Test", "aws_test_test", "eu-west-1")
+			},
+			Expected: "eu-west-1", //lintignore:AWSAT003
+		},
+		{
+			Name:      "override region with nil config",
+			AWSClient: &AWSClient{},
+			Context: func(tb testing.TB) context.Context {
+				return NewResourceContext(tb.Context(), "test", "Test", "aws_test_test", "eu-west-1")
+			},
+			Expected: "eu-west-1", //lintignore:AWSAT003
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.Region(testCase.Context(t))
+
+			if got != testCase.Expected {
+				t.Errorf("got %q, expected %q", got, testCase.Expected)
+			}
+		})
+	}
+}
 
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
