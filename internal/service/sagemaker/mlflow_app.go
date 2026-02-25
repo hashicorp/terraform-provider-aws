@@ -108,7 +108,10 @@ func (r *mlflowAppResource) Create(ctx context.Context, request resource.CreateR
 
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateMlflowApp(ctx, &input)
+	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateMlflowAppOutput, error) {
+		return conn.CreateMlflowApp(ctx, &input)
+	}, ErrCodeValidationException, "SageMaker is unable to perform: sts:AssumeRole")
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating SageMaker Mlflow App (%s)", data.Name.ValueString()), err.Error())
 		return
