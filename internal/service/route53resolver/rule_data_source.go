@@ -31,6 +31,12 @@ func dataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"delegation_record": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
 			names.AttrDomainName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -150,9 +156,14 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.SetId(aws.ToString(rule.Id))
 	arn := aws.ToString(rule.Arn)
 	d.Set(names.AttrARN, arn)
+	if rule.DelegationRecord != nil {
+		d.Set("delegation_record", trimTrailingPeriod(aws.ToString(rule.DelegationRecord)))
+	}
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
-	d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
+	if rule.DomainName != nil {
+		d.Set(names.AttrDomainName, trimTrailingPeriod(aws.ToString(rule.DomainName)))
+	}
 	d.Set(names.AttrName, rule.Name)
 	d.Set(names.AttrOwnerID, rule.OwnerId)
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
