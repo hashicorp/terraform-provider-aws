@@ -106,7 +106,7 @@ func (l *permissionListResource) List(ctx context.Context, request list.ListRequ
 				rd.Set("qualifier", qualifier)
 			}
 
-			diags := resourcePermissionRead(ctx, rd, awsClient)
+			diags := resourcePermissionFlatten(ctx, rd, awsClient, &statement, functionName)
 			if diags.HasError() || rd.Id() == "" {
 				tflog.Error(ctx, "Reading Lambda permission", map[string]any{
 					names.AttrID: id,

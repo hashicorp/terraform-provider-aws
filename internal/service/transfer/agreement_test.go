@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,9 +23,9 @@ func testAccAgreement_basic(t *testing.T) {
 	baseDirectory1 := "/DOC-EXAMPLE-BUCKET/home/mydirectory1"
 	baseDirectory2 := "/DOC-EXAMPLE-BUCKET/home/mydirectory2"
 	resourceName := "aws_transfer_agreement.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -35,12 +33,12 @@ func testAccAgreement_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
+		CheckDestroy:             testAccCheckAgreementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgreementConfig_basic(rName, baseDirectory1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgreementExists(ctx, resourceName, &conf),
+					testAccCheckAgreementExists(ctx, t, resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "agreement/{server_id}/{agreement_id}"),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -56,7 +54,7 @@ func testAccAgreement_basic(t *testing.T) {
 			{
 				Config: testAccAgreementConfig_basic(rName, baseDirectory2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgreementExists(ctx, resourceName, &conf),
+					testAccCheckAgreementExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -71,9 +69,9 @@ func testAccAgreement_disappears(t *testing.T) {
 	var conf awstypes.DescribedAgreement
 	resourceName := "aws_transfer_agreement.test"
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -81,12 +79,12 @@ func testAccAgreement_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
+		CheckDestroy:             testAccCheckAgreementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgreementConfig_basic(rName, baseDirectory),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAgreementExists(ctx, resourceName, &conf),
+					testAccCheckAgreementExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceAgreement(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,9 +98,9 @@ func testAccAgreement_tags(t *testing.T) {
 	var conf awstypes.DescribedAgreement
 	baseDirectory := "/DOC-EXAMPLE-BUCKET/home/mydirectory"
 	resourceName := "aws_transfer_agreement.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
@@ -110,12 +108,12 @@ func testAccAgreement_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
+		CheckDestroy:             testAccCheckAgreementDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgreementConfig_tags1(rName, baseDirectory, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgreementExists(ctx, resourceName, &conf),
+					testAccCheckAgreementExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -129,7 +127,7 @@ func testAccAgreement_tags(t *testing.T) {
 			{
 				Config: testAccAgreementConfig_tags2(rName, baseDirectory, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgreementExists(ctx, resourceName, &conf),
+					testAccCheckAgreementExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -138,7 +136,7 @@ func testAccAgreement_tags(t *testing.T) {
 			{
 				Config: testAccAgreementConfig_tags1(rName, baseDirectory, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgreementExists(ctx, resourceName, &conf),
+					testAccCheckAgreementExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -147,14 +145,14 @@ func testAccAgreement_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAgreementExists(ctx context.Context, n string, v *awstypes.DescribedAgreement) resource.TestCheckFunc {
+func testAccCheckAgreementExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedAgreement) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		output, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["agreement_id"])
 
@@ -168,9 +166,9 @@ func testAccCheckAgreementExists(ctx context.Context, n string, v *awstypes.Desc
 	}
 }
 
-func testAccCheckAgreementDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgreementDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_agreement" {

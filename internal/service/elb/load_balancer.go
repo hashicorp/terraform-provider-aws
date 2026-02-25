@@ -39,17 +39,17 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 )
 
 // @SDKResource("aws_elb", name="Classic Load Balancer")
+// @IdentityAttribute("name")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types;awstypes;awstypes.LoadBalancerDescription")
+// @Testing(name="LoadBalancer")
+// @Testing(preIdentityVersion="v6.33.0")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,
 		ReadWithoutTimeout:   resourceLoadBalancerRead,
 		UpdateWithoutTimeout: resourceLoadBalancerUpdate,
 		DeleteWithoutTimeout: resourceLoadBalancerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.All(
 			customdiff.ForceNewIfChange(names.AttrSubnets, func(_ context.Context, o, n, meta any) bool {

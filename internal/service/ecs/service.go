@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
@@ -48,6 +49,15 @@ import (
 
 // @SDKResource("aws_ecs_service", name="Service")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("cluster")
+// @IdentityAttribute("name)
+// @ImportIDHandler("serviceImportID")
+// @CustomImport
+// @Testing(preIdentityVersion="v6.33.0")
+// @Testing(idAttrDuplicates="arn")
+// @Testing(importStateIdFunc=testAccServiceImportStateIdFunc)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;types.Service")
+// @Testing(importIgnore="wait_for_steady_state;task_definition")
 func resourceService() *schema.Resource {
 	// Resource with v0 schema (provider v5.58.0).
 	resourceV0 := &schema.Resource{
@@ -2011,12 +2021,15 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 }
 
 func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
+	if err := importer.Import(ctx, d, meta); err != nil {
+		return nil, err
 	}
-	clusterName := parts[0]
-	serviceName := parts[1]
+
+	clusterName, serviceName, err := parseServiceImportID(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+
 	log.Printf("[DEBUG] Importing ECS service %s from cluster %s", serviceName, clusterName)
 
 	region := d.Get(names.AttrRegion).(string)
@@ -3897,4 +3910,37 @@ func serviceNameFromARN(s string) string {
 	default:
 		return ""
 	}
+}
+
+func parseServiceImportID(id string) (string, string, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", id)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+type serviceImportID struct{}
+
+func (serviceImportID) Create(d *schema.ResourceData) string {
+	cluster := d.Get("cluster").(string)
+	if arn.IsARN(cluster) {
+		cluster = clusterNameFromARN(cluster)
+	}
+
+	return fmt.Sprintf("%s/%s", cluster, d.Get(names.AttrName).(string))
+}
+
+func (serviceImportID) Parse(id string) (string, map[string]any, error) {
+	cluster, service, err := parseServiceImportID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"cluster":      cluster,
+		names.AttrName: service,
+	}
+	return id, result, nil
 }

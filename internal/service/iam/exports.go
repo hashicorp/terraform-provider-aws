@@ -13,6 +13,7 @@ var (
 )
 
 type (
-	IAMPolicyDoc       = iamPolicyDoc
-	IAMPolicyStatement = iamPolicyStatement
+	IAMPolicyDoc                   = iamPolicyDoc
+	IAMPolicyStatement             = iamPolicyStatement
+	IAMPolicyStatementPrincipalSet = iamPolicyStatementPrincipalSet
 )

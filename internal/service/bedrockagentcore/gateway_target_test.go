@@ -425,6 +425,123 @@ func TestAccBedrockAgentCoreGatewayTarget_credentialProvider_invalid(t *testing.
 	})
 }
 
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gatewayTarget bedrockagentcorecontrol.GetGatewayTargetOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagentcore_gateway_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayTargetConfig_metadataConfiguration(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_response_headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_query_parameters.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "gateway_identifier", "target_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "target_id",
+			},
+			// Update metadata configuration
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_request_headers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_response_headers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.allowed_query_parameters.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			// Remove metadata configuration
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayTargetExists(ctx, t, resourceName, &gatewayTarget),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreGatewayTarget_metadataConfiguration_invalidHeaders(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayTargetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Invalid: restricted header Authorization
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Authorization"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: restricted header Content-Type
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Content-Type"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: restricted header Host
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Host"),
+				ExpectError: regexache.MustCompile(`none of \(case-insensitive\)`),
+			},
+			// Invalid: X-Amzn- prefix
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "X-Amzn-Custom"),
+				ExpectError: regexache.MustCompile(`must not begin with \(case-insensitive\)`),
+			},
+			// Invalid: header with special characters
+			{
+				Config:      testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "Invalid Header!"),
+				ExpectError: regexache.MustCompile(`header names must contain only alphanumeric characters`),
+			},
+			// Valid: X-Amzn-Bedrock-AgentCore-Runtime-Custom- prefix is allowed
+			{
+				Config: testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, "X-Amzn-Bedrock-AgentCore-Runtime-Custom-MyHeader"),
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -973,4 +1090,88 @@ func testAccCredentialProvider_multipleProviders() string {
 
 func testAccCredentialProvider_empty() string {
 	return `    # No providers configured`
+}
+
+func testAccGatewayTargetConfig_metadataConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id"]
+    allowed_response_headers = ["x-rate-limit-remaining"]
+    allowed_query_parameters = ["version"]
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers  = ["x-correlation-id", "x-tenant-id", "x-request-id"]
+    allowed_response_headers = ["x-rate-limit-remaining", "x-request-id"]
+    allowed_query_parameters = ["version", "format"]
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccGatewayTargetConfig_metadataConfigurationInvalidHeader(rName, headerName string) string {
+	return acctest.ConfigCompose(testAccGatewayTargetConfig_infra(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_gateway_target" "test" {
+  name               = %[1]q
+  gateway_identifier = aws_bedrockagentcore_gateway.test.gateway_id
+
+  target_configuration {
+    mcp {
+      mcp_server {
+        endpoint = "https://docs.mcp.cloudflare.com/mcp"
+      }
+    }
+  }
+
+  metadata_configuration {
+    allowed_request_headers = [%[2]q]
+  }
+}
+`, rName, headerName))
 }

@@ -273,6 +273,10 @@ service "route53resolver" {
   vpc_lock = true
 }
 
+service "glacier" {
+  skip = true
+}
+
 service "sagemaker" {
   vpc_lock = true
 }

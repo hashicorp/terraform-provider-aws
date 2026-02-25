@@ -60,7 +60,7 @@ func TestExpandXMLWrapperRule1SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Rule 1 + Complex Type: Fruits/Apples/Apple example from context
@@ -113,7 +113,7 @@ func TestExpandXMLWrapperRule1ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Rule 2 + Simple Type: Birds/Parrots example from context
@@ -178,7 +178,7 @@ func TestExpandXMLWrapperRule2SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 func TestExpandXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
@@ -214,7 +214,7 @@ func TestExpandXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Rule 2 + Complex Type: Trees/Oaks/Oak example from context
@@ -287,7 +287,7 @@ func TestExpandXMLWrapperRule2ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Flatten tests for Rule 1 + Simple Type
@@ -335,7 +335,7 @@ func TestFlattenXMLWrapperRule1SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Flatten tests for Rule 1 + Complex Type
@@ -388,7 +388,7 @@ func TestFlattenXMLWrapperRule1ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, PrintLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true, PrintLogs: true})
 }
 
 // Flatten tests for Rule 2 + Simple Type
@@ -464,7 +464,7 @@ func TestFlattenXMLWrapperRule2SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
@@ -508,7 +508,7 @@ func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Flatten tests for Rule 2 + Complex Type
@@ -592,5 +592,5 @@ func TestFlattenXMLWrapperRule2ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }

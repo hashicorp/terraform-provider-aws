@@ -6,6 +6,7 @@ package s3_test
 import (
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,6 +20,7 @@ import (
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
 	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,11 +73,11 @@ func TestAccS3Object_List_basic(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"/"+rName+"-0")),
 					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"/"+rName+"-1")),
 					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -132,7 +134,7 @@ func TestAccS3Object_List_includeResource(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"/"+rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("acl"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNNoAccountIDExact("s3", rName+"/"+rName+"-0")),
@@ -289,11 +291,11 @@ func TestAccS3Object_List_directoryBucket(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+tfs3.DirectoryBucketNameSuffixRegexPattern+"/"+rName+"-0"+`$`))),
 					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringRegexp(regexache.MustCompile(`^`+rName+tfs3.DirectoryBucketNameSuffixRegexPattern+"/"+rName+"-1"+`$`))),
 					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 				},
 			},
@@ -362,11 +364,11 @@ func TestAccS3Object_List_prefix(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity1.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact("prefix-"+rName+"-0")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"/prefix-"+rName+"-0")),
 					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
 
 					tfquerycheck.ExpectIdentityFunc("aws_s3_object.test", identity2.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact("prefix-"+rName+"-1")),
+					querycheck.ExpectResourceDisplayName("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"/prefix-"+rName+"-1")),
 					tfquerycheck.ExpectNoResourceObject("aws_s3_object.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
 
 					tfquerycheck.ExpectNoIdentityFunc("aws_s3_object.test", identity3.Checks()),

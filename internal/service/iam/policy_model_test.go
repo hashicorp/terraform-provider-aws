@@ -428,3 +428,80 @@ func TestPolicyUnmarshalServicePrincipalOrder(t *testing.T) {
 		t.Fatalf("should be equal, but was:\n%#v\nVS\n%#v\n", data1, data2)
 	}
 }
+
+func TestIAMPolicyStatementPrincipalSet_UnmarshalJSON(t *testing.T) { // nosemgrep:ci.iam-in-func-name
+	t.Parallel()
+
+	testcases := map[string]struct {
+		b       []byte
+		want    tfiam.IAMPolicyStatementPrincipalSet
+		wantErr bool
+	}{
+		"wildcard, wildcard": {
+			b: []byte(`{"*": "*"}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "*", Identifiers: "*"},
+			},
+		},
+		"single key, wildcard": {b: []byte(`{"AWS": "*"}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: "*"},
+			},
+		},
+		"single key, single value": {
+			b: []byte(`{"AWS": "111122223333"}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: "111122223333"},
+			},
+		},
+		"single key, multiple value": {
+			b: []byte(`{"AWS": ["111122223333", "444455556666"]}`),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: []string{"111122223333", "444455556666"}},
+			},
+		},
+		"multiple key": {
+			b: []byte(`{
+  "AWS": "111122223333",
+  "CanonicalUser": "abcdef123456"
+}`,
+			),
+			want: tfiam.IAMPolicyStatementPrincipalSet{
+				{Type: "AWS", Identifiers: "111122223333"},
+				{Type: "CanonicalUser", Identifiers: "abcdef123456"},
+			},
+		},
+		"invalid json": {
+			b:       []byte(`{{{"*"}`),
+			wantErr: true,
+		},
+		"invalid data type": {
+			b:       []byte(`["AWS"]`),
+			wantErr: true,
+		},
+		"invalid value type": {
+			b:       []byte(`{"AWS": 0}`),
+			wantErr: true,
+		},
+		"invalid array value type": {
+			b:       []byte(`{"AWS": ["111122223333", 0]}`),
+			wantErr: true,
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var got tfiam.IAMPolicyStatementPrincipalSet
+			err := got.UnmarshalJSON(tc.b)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("IAMPolicyStatementPrincipalSet.UnmarshalJSON() error = %v, wantErr %t", err, tc.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("IAMPolicyStatementPrincipalSet.UnmarshalJSON() = %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}

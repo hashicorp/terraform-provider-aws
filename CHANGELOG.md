@@ -4,19 +4,34 @@ FEATURES:
 
 * **New List Resource:** `aws_ec2_secondary_network` ([#46552](https://github.com/hashicorp/terraform-provider-aws/issues/46552))
 * **New List Resource:** `aws_ec2_secondary_subnet` ([#46552](https://github.com/hashicorp/terraform-provider-aws/issues/46552))
+* **New List Resource:** `aws_ecr_task_definition` ([#46628](https://github.com/hashicorp/terraform-provider-aws/issues/46628))
 * **New List Resource:** `aws_s3_bucket_lifecycle_configuration` ([#46531](https://github.com/hashicorp/terraform-provider-aws/issues/46531))
 * **New Resource:** `aws_networkmanager_prefix_list_association` ([#46566](https://github.com/hashicorp/terraform-provider-aws/issues/46566))
 
 ENHANCEMENTS:
 
+* data-source/aws_grafana_workspace: Add `kms_key_id` attribute ([#46584](https://github.com/hashicorp/terraform-provider-aws/issues/46584))
+* resource/aws_bedrockagentcore_api_key_credential_provider: Add tagging support ([#46591](https://github.com/hashicorp/terraform-provider-aws/issues/46591))
+* resource/aws_bedrockagentcore_gateway_target: Add `metadata_configuration` block for HTTP header and query parameter propagation ([#45808](https://github.com/hashicorp/terraform-provider-aws/issues/45808))
+* resource/aws_bedrockagentcore_oauth2_credential_provider: Add tagging support ([#46590](https://github.com/hashicorp/terraform-provider-aws/issues/46590))
 * resource/aws_ecs_service: Add `service_connect_configuration.access_log_configuration` argument ([#45820](https://github.com/hashicorp/terraform-provider-aws/issues/45820))
+* resource/aws_ecs_service: Add resource identity support ([#46644](https://github.com/hashicorp/terraform-provider-aws/issues/46644))
+* resource/aws_eip_domain_name: Add import support ([#46582](https://github.com/hashicorp/terraform-provider-aws/issues/46582))
+* resource/aws_grafana_workspace: Add `kms_key_id` argument ([#46584](https://github.com/hashicorp/terraform-provider-aws/issues/46584))
 * resource/aws_instance: Allow `cpu_options.core_count`, `cpu_options.nested_virtualization`, and `cpu_options.threads_per_core` to be updated in-place ([#46568](https://github.com/hashicorp/terraform-provider-aws/issues/46568))
 * resource/aws_opensearch_domain: Add `jwt_options` attribute ([#46439](https://github.com/hashicorp/terraform-provider-aws/issues/46439))
+* resource/aws_wafv2_web_acl_rule_group_association: Add support for `managed_rule_group_configs` within `managed_rule_group` and root-level `visibility_config` block for CloudWatch metrics configuration ([#44426](https://github.com/hashicorp/terraform-provider-aws/issues/44426))
 
 BUG FIXES:
 
+* data-source/aws_dms_endpoint: Add missing `mongodb_settings.use_update_lookup` attribute to fix "invalid address to set" error ([#46616](https://github.com/hashicorp/terraform-provider-aws/issues/46616))
+* data-source/aws_iam_policy_document: Fix crash when `statement.principals.identifiers` contains a non-string value ([#46226](https://github.com/hashicorp/terraform-provider-aws/issues/46226))
+* list-resource/aws_s3_object: Includes parent bucket in display name. ([#46596](https://github.com/hashicorp/terraform-provider-aws/issues/46596))
+* resource/aws_autoscaling_group: Fix `couldn't find resource (21 retries)` errors updating `load_balancers`, `target_group_arns`, and `traffic_source` ([#46622](https://github.com/hashicorp/terraform-provider-aws/issues/46622))
 * resource/aws_bedrockagentcore_gateway_target: Add `credential_provider_configuration.oauth.default_return_url` and `credential_provider_configuration.oauth.grant_type` arguments ([#46127](https://github.com/hashicorp/terraform-provider-aws/issues/46127))
 * resource/aws_bedrockagentcore_gateway_target: Retry IAM eventual consistency errors on Create ([#46127](https://github.com/hashicorp/terraform-provider-aws/issues/46127))
+* resource/aws_billing_view: Fix "inconsistent result after apply" errors caused by ordering of `data_filter_expression.dimensions.values` ([#46462](https://github.com/hashicorp/terraform-provider-aws/issues/46462))
+* resource/aws_s3tables_table_bucket: Change `encryption_configuration` to Optional and Computed, fixing `unexpected new value: .encryption_configuration: was null, but now cty.ObjectVal(map[string]cty.Value{"kms_key_arn":cty.NullVal(cty.String),"sse_algorithm":cty.StringVal("AES256")})` errors ([#46150](https://github.com/hashicorp/terraform-provider-aws/issues/46150))
 * resource/aws_subnet: Fixed IPv6 CIDR block validation and assignment to IPAM-provisioned subnets. ([#46556](https://github.com/hashicorp/terraform-provider-aws/issues/46556))
 * resource/aws_vpc_endpoint: Fix `InvalidParameter: DnsOptions PrivateDnsOnlyForInboundResolverEndpoint is applicable only to Interface VPC Endpoints` errors when creating S3Tables VPC endpoints ([#46102](https://github.com/hashicorp/terraform-provider-aws/issues/46102))
 

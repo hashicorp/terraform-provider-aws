@@ -6,6 +6,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -36,6 +37,20 @@ func TestAccEC2EIPDomainName_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPDomainNameExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "ptr_record"),
+				),
+			},
+			{
+				ImportState:       true,
+				ImportStateVerify: true,
+				ResourceName:      resourceName,
+				ImportStateVerifyIgnore: []string{
+					names.AttrDomainName,
+				},
+				ImportStateCheck: acctest.ImportCheckResourceAttr(
+					names.AttrDomainName,
+					// ptr_record used as domain_name when importing includes a trailing dot.
+					// Ignore the trailing dot when comparing to the config value.
+					strings.TrimSuffix(domain, ".")+".",
 				),
 			},
 		},

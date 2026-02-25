@@ -20,7 +20,7 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,7 +48,7 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -76,7 +76,7 @@ func testAccWorkspaceBundleDataSource_byOwnerNameMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -102,7 +102,7 @@ func testAccWorkspaceBundleDataSource_byOwnerNameMultiple(t *testing.T) {
 
 func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -120,7 +120,7 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_bundle.test"
 	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccBundlePreCheck(t)

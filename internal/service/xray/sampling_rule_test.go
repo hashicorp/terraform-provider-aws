@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
+					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "5"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
@@ -64,20 +62,20 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	updatedPriority := sdkacctest.RandIntRange(0, 9999)
-	updatedReservoirSize := sdkacctest.RandIntRange(0, 2147483647)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	updatedPriority := acctest.RandIntRange(t, 0, 9999)
+	updatedReservoirSize := acctest.RandIntRange(t, 0, 2147483647)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
+				Config: testAccSamplingRuleConfig_update(rName, acctest.RandIntRange(t, 0, 9999), acctest.RandIntRange(t, 0, 2147483647)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
+					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPriority),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
@@ -95,7 +93,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 			{ // Update attributes
 				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
+					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, strconv.Itoa(updatedPriority)),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", strconv.Itoa(updatedReservoirSize)),
@@ -123,18 +121,18 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
+					testAccCheckSamplingRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -143,7 +141,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSamplingRuleExists(ctx context.Context, n string, v *types.SamplingRule) resource.TestCheckFunc {
+func testAccCheckSamplingRuleExists(ctx context.Context, t *testing.T, n string, v *types.SamplingRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,7 +152,7 @@ func testAccCheckSamplingRuleExists(ctx context.Context, n string, v *types.Samp
 			return fmt.Errorf("No XRay Sampling Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 		output, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 
@@ -168,14 +166,14 @@ func testAccCheckSamplingRuleExists(ctx context.Context, n string, v *types.Samp
 	}
 }
 
-func testAccCheckSamplingRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSamplingRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_xray_sampling_rule" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).XRayClient(ctx)
 
 			_, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 

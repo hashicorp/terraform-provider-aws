@@ -677,54 +677,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
 	}
 
-	d.SetId(aws.ToString(taskDefinition.Family))
-	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
-	d.Set("cpu", taskDefinition.Cpu)
-	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
-	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
-	}
-	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
-	d.Set(names.AttrFamily, taskDefinition.Family)
-	d.Set("ipc_mode", taskDefinition.IpcMode)
-	d.Set("memory", taskDefinition.Memory)
-	d.Set("network_mode", taskDefinition.NetworkMode)
-	d.Set("pid_mode", taskDefinition.PidMode)
-	if err := d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
-	}
-	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting proxy_configuration: %s", err)
-	}
-	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
-	d.Set("revision", taskDefinition.Revision)
-	if err := d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime_platform: %s", err)
-	}
-	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set("track_latest", d.Get("track_latest"))
-	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
-	}
-
-	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
-	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
-	// some other property changes).
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
-	containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
-
-	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("container_definitions", defs)
-
-	setTagsOut(ctx, tags)
-
-	return diags
+	return append(diags, resourceTaskDefinitionFlatten(ctx, d, taskDefinition, tags)...)
 }
 
 func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1246,6 +1199,49 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	tfMap["size_in_gib"] = apiObject.SizeInGiB
 
 	return []any{tfMap}
+}
+
+func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, taskDefinition *awstypes.TaskDefinition, tags []awstypes.Tag) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.SetId(aws.ToString(taskDefinition.Family))
+	arn := aws.ToString(taskDefinition.TaskDefinitionArn)
+	d.Set(names.AttrARN, arn)
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(arn))
+	d.Set("cpu", taskDefinition.Cpu)
+	d.Set("enable_fault_injection", taskDefinition.EnableFaultInjection)
+	d.Set("ephemeral_storage", flattenEphemeralStorage(taskDefinition.EphemeralStorage))
+	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
+	d.Set(names.AttrFamily, taskDefinition.Family)
+	d.Set("ipc_mode", taskDefinition.IpcMode)
+	d.Set("memory", taskDefinition.Memory)
+	d.Set("network_mode", taskDefinition.NetworkMode)
+	d.Set("pid_mode", taskDefinition.PidMode)
+	d.Set("placement_constraints", flattenTaskDefinitionPlacementConstraints(taskDefinition.PlacementConstraints))
+	d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration))
+	d.Set("requires_compatibilities", taskDefinition.RequiresCompatibilities)
+	d.Set("revision", taskDefinition.Revision)
+	d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform))
+	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+	d.Set("track_latest", d.Get("track_latest"))
+	d.Set("volume", flattenVolumes(taskDefinition.Volumes))
+
+	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
+	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
+	// some other property changes).
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderContainers()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderEnvironmentVariables()
+	containerDefinitions(taskDefinition.ContainerDefinitions).orderSecrets()
+
+	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set("container_definitions", defs)
+
+	setTagsOut(ctx, tags)
+
+	return diags
 }
 
 // taskDefinitionARNStripRevision strips the trailing revision number from a task definition ARN

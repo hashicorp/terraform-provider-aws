@@ -5,13 +5,15 @@ package ecr
 
 import (
 	"context"
+	"fmt"
+	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -47,44 +49,50 @@ func (l *repositoryListResource) List(ctx context.Context, request list.ListRequ
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &ecr.DescribeRepositoriesInput{}
-
-		paginator := ecr.NewDescribeRepositoriesPaginator(conn, input)
-
-		for paginator.HasMorePages() {
-			page, err := paginator.NextPage(ctx)
+		for item, err := range listRepositories(ctx, conn, input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			for _, repo := range page.Repositories {
-				name := aws.ToString(repo.RepositoryName)
-				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), name)
+			name := aws.ToString(item.RepositoryName)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), name)
 
-				result := request.NewListResult(ctx)
+			result := request.NewListResult(ctx)
 
-				rd := l.ResourceData()
-				rd.SetId(name)
+			rd := l.ResourceData()
+			rd.SetId(name)
 
-				diags := resourceRepositoryRead(ctx, rd, awsClient)
-				if diags.HasError() || rd.Id() == "" {
-					tflog.Error(ctx, "Reading ECR repository", map[string]any{
-						names.AttrID: name,
-						"diags":      sdkdiag.DiagnosticsString(diags),
-					})
-					continue
-				}
+			resourceRepositoryFlatten(ctx, rd, &item)
 
-				result.DisplayName = name
+			result.DisplayName = name
 
-				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
-				if result.Diagnostics.HasError() {
-					yield(result)
-					return
-				}
+			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 
-				if !yield(result) {
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func listRepositories(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoriesInput) iter.Seq2[awstypes.Repository, error] {
+	return func(yield func(awstypes.Repository, error) bool) {
+		pages := ecr.NewDescribeRepositoriesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.Repository{}, fmt.Errorf("listing ECR Repository resources: %w", err))
+				return
+			}
+
+			for _, item := range page.Repositories {
+				if !yield(item, nil) {
 					return
 				}
 			}

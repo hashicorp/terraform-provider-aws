@@ -110,7 +110,7 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 				continue
 			}
 
-			result.DisplayName = key
+			result.DisplayName = fmt.Sprintf("%s/%s", bucket, key)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {

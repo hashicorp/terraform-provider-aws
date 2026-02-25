@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +25,16 @@ func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
+		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`geomatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, geoMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
@@ -65,16 +64,16 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
+		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &before),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, geoMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 				),
@@ -82,7 +81,7 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccGeoMatchSetConfig_changeName(geoMatchSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &after),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, geoMatchSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 				),
@@ -102,16 +101,16 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
+		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceGeoMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -126,16 +125,16 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
+		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_basic(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &before),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
@@ -151,7 +150,7 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 			{
 				Config: testAccGeoMatchSetConfig_changeConstraints(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &after),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
@@ -179,16 +178,16 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("geoMatchSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_geo_match_set.geo_match_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx),
+		CheckDestroy:             testAccCheckGeoMatchSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGeoMatchSetConfig_noConstraints(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGeoMatchSetExists(ctx, resourceName, &ipset),
+					testAccCheckGeoMatchSetExists(ctx, t, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "0"),
 				),
@@ -202,14 +201,14 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
+func testAccCheckGeoMatchSetExists(ctx context.Context, t *testing.T, n string, v *awstypes.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 		output, err := tfwaf.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
 
@@ -223,14 +222,14 @@ func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.Ge
 	}
 }
 
-func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGeoMatchSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_waf_geo_match_set" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 			_, err := tfwaf.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
 

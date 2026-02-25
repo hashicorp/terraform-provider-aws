@@ -35,6 +35,8 @@ linters:
       alias:
         - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
           alias: sdkretry
+        - pkg: "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+          alias: sdkacctest
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/types
           alias: inttypes
         - pkg: github.com/hashicorp/terraform-provider-aws/internal/retry

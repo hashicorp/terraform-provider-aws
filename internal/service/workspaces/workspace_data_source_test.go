@@ -22,7 +22,7 @@ func testAccWorkspaceDataSource_byWorkspaceID(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,7 +57,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_workspace.test"
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -88,7 +88,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -9,11 +9,13 @@ import (
 	"math"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -3227,6 +3229,32 @@ func TestAccECSService_CanaryDeployment_waitServiceActive(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccServiceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		cluster := rs.Primary.Attributes["cluster"]
+		if arn.IsARN(cluster) {
+			clusterArn, err := arn.Parse(cluster)
+			if err != nil {
+				return "", err
+			}
+
+			clusterParts := strings.Split(clusterArn.Resource, "/")
+			if len(clusterParts) != 2 {
+				return "", fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", clusterArn)
+			}
+
+			cluster = clusterParts[1]
+		}
+
+		return fmt.Sprintf("%s/%s", cluster, rs.Primary.Attributes[names.AttrName]), nil
+	}
 }
 
 func testAccCheckServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

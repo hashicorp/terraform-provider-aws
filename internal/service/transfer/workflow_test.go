@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +25,16 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
@@ -66,16 +65,16 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_onExceptionSteps(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.copy_step_details.#", "0"),
@@ -113,16 +112,16 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_description(rName, "testing"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
 				),
 			},
@@ -141,16 +140,16 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -163,7 +162,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -172,7 +171,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -187,16 +186,16 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -211,16 +210,16 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_allSteps(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &conf),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.#", "5"),
@@ -296,7 +295,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkflowExists(ctx context.Context, n string, v *awstypes.DescribedWorkflow) resource.TestCheckFunc {
+func testAccCheckWorkflowExists(ctx context.Context, t *testing.T, n string, v *awstypes.DescribedWorkflow) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -307,7 +306,7 @@ func testAccCheckWorkflowExists(ctx context.Context, n string, v *awstypes.Descr
 			return fmt.Errorf("No Transfer Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		output, err := tftransfer.FindWorkflowByID(ctx, conn, rs.Primary.ID)
 
@@ -321,9 +320,9 @@ func testAccCheckWorkflowExists(ctx context.Context, n string, v *awstypes.Descr
 	}
 }
 
-func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkflowDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_workflow" {

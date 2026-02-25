@@ -60,11 +60,24 @@ func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[i
 	}
 }
 
+func identityAttributeSchemaType(it inttypes.IdentityType) schema.ValueType {
+	switch it {
+	case inttypes.BoolIdentityType:
+		return schema.TypeBool
+	case inttypes.IntIdentityType, inttypes.Int64IdentityType:
+		return schema.TypeInt
+	case inttypes.FloatIdentityType, inttypes.Float64IdentityType:
+		return schema.TypeFloat
+	default:
+		return schema.TypeString
+	}
+}
+
 func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
 	out := make(map[string]*schema.Schema)
 	for _, v := range identitySpec.Attributes {
 		out[v.Name()] = &schema.Schema{
-			Type: schema.TypeString,
+			Type: identityAttributeSchemaType(v.IdentityType()),
 		}
 		if v.Required() {
 			out[v.Name()].Required = true
@@ -163,14 +176,14 @@ type resourceData interface {
 	GetOk(string) (any, bool)
 }
 
-func getAttributeOk(d resourceData, name string) (string, bool) {
+func getAttributeOk(d resourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
-		return "", false
+		return nil, false
 	} else {
-		return v.(string), true
+		return v, true
 	}
 }
 

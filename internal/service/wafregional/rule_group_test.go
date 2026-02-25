@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,17 +30,17 @@ func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
-					testAccCheckRuleGroupExists(ctx, resourceName, &group),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test", &rule),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rulegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
@@ -72,17 +71,17 @@ func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_tags1(ruleName, groupName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
-					testAccCheckRuleGroupExists(ctx, resourceName, &group),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test", &rule),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -95,8 +94,8 @@ func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_tags2(ruleName, groupName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
-					testAccCheckRuleGroupExists(ctx, resourceName, &group),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test", &rule),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -105,8 +104,8 @@ func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_tags1(ruleName, groupName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
-					testAccCheckRuleGroupExists(ctx, resourceName, &group),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test", &rule),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -124,16 +123,16 @@ func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	newGroupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &before),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
@@ -142,7 +141,7 @@ func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_basic(ruleName, newGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &after),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, newGroupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, newGroupName),
@@ -164,16 +163,16 @@ func TestAccWAFRegionalRuleGroup_disappears(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &group),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &group),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -194,17 +193,17 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	ruleName3 := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_basic(ruleName1, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule0),
-					testAccCheckRuleGroupExists(ctx, resourceName, &groupBefore),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test", &rule0),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &groupBefore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					computeActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
@@ -220,9 +219,9 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "3"),
-					testAccCheckRuleGroupExists(ctx, resourceName, &groupAfter),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &groupAfter),
 
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule1),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test", &rule1),
 					computeActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "BLOCK",
@@ -230,7 +229,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test2", &rule2),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test2", &rule2),
 					computeActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
@@ -238,7 +237,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 
-					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test3", &rule3),
+					testAccCheckRuleExists(ctx, t, "aws_wafregional_rule.test3", &rule3),
 					computeActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "BLOCK",
@@ -262,16 +261,16 @@ func TestAccWAFRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_rule_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_noActivateds(groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleGroupExists(ctx, resourceName, &group),
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
 				),
@@ -280,14 +279,14 @@ func TestAccWAFRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRuleGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafregional_rule_group" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFRegionalClient(ctx)
 
 			_, err := tfwafregional.FindRuleGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -306,14 +305,14 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRuleGroupExists(ctx context.Context, n string, v *awstypes.RuleGroup) resource.TestCheckFunc {
+func testAccCheckRuleGroupExists(ctx context.Context, t *testing.T, n string, v *awstypes.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFRegionalClient(ctx)
 
 		output, err := tfwafregional.FindRuleGroupByID(ctx, conn, rs.Primary.ID)
 
