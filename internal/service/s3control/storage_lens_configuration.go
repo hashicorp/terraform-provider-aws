@@ -354,6 +354,49 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											},
 										},
 									},
+									"storage_lens_table_destination": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrEnabled: {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"encryption": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sse_kms": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		names.AttrKeyID: {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: verify.ValidARN,
+																		},
+																	},
+																},
+															},
+															"sse_s3": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -937,6 +980,10 @@ func expandStorageLensDataExport(tfMap map[string]any) *types.StorageLensDataExp
 		apiObject.S3BucketDestination = expandS3BucketDestination(v[0].(map[string]any))
 	}
 
+	if v, ok := tfMap["storage_lens_table_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StorageLensTableDestination = expandStorageLensTableDestination(v[0].(map[string]any))
+	}
+
 	return apiObject
 }
 
@@ -983,6 +1030,24 @@ func expandS3BucketDestination(tfMap map[string]any) *types.S3BucketDestination 
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandStorageLensTableDestination(tfMap map[string]any) *types.StorageLensTableDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.StorageLensTableDestination{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.IsEnabled = v
+	}
+
+	if v, ok := tfMap["encryption"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]any))
 	}
 
 	return apiObject
@@ -1292,6 +1357,10 @@ func flattenStorageLensDataExport(apiObject *types.StorageLensDataExport) map[st
 		tfMap["s3_bucket_destination"] = []any{flattenS3BucketDestination(v)}
 	}
 
+	if v := apiObject.StorageLensTableDestination; v != nil {
+		tfMap["storage_lens_table_destination"] = []any{flattenStorageLensTableDestination(v)}
+	}
+
 	return tfMap
 }
 
@@ -1331,6 +1400,22 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 
 	if v := apiObject.Prefix; v != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenStorageLensTableDestination(apiObject *types.StorageLensTableDestination) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
+
+	if v := apiObject.Encryption; v != nil {
+		tfMap["encryption"] = []any{flattenStorageLensDataExportEncryption(v)}
 	}
 
 	return tfMap
