@@ -220,10 +220,10 @@ data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test.json
+  assume_role_policy = data.aws_iam_policy_document.test_trust.json
 }
 
-data "aws_iam_policy_document" "test" {
+data "aws_iam_policy_document" "test_trust" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -234,14 +234,45 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+data "aws_iam_policy_document" "test_perms" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:Get*",
+      "s3:Put*",
+      "s3:List*",
+    ]
+
+    resources = [
+      "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
+      "arn:aws:s3:::${aws_s3_bucket.test.bucket}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "sagemaker:AddTags",
+      "sagemaker:CreateModelPackageGroup",
+      "sagemaker:CreateModelPackage",
+      "sagemaker:UpdateModelPackage",
+      "sagemaker:DescribeModelPackageGroup",
+    ]
+
+    resources = ["*"]
+  }
 }
 
-resource "aws_iam_role_policy_attachment" "test2" {
+resource "aws_iam_policy" "test" {
+  name   = %[1]q
+  policy = data.aws_iam_policy_document.test_perms.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonS3FullAccess"
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_s3_bucket" "test" {
@@ -258,10 +289,7 @@ resource "aws_sagemaker_mlflow_app" "test" {
   artifact_store_uri = "s3://${aws_s3_bucket.test.bucket}/"
   role_arn           = aws_iam_role.test.arn
 
-  depends_on = [
-		aws_iam_role_policy_attachment.test,
-		aws_iam_role_policy_attachment.test2,
-	]
+  depends_on = [ aws_iam_role_policy_attachment.test ]
 }
 `, rName))
 }
