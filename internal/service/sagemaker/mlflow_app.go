@@ -174,12 +174,6 @@ func (r *mlflowAppResource) Read(ctx context.Context, request resource.ReadReque
 		return
 	}
 
-	if output.Status == awstypes.MlflowAppStatusDeleted {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(fmt.Errorf("status: %s", output.Status)))
-		response.State.RemoveResource(ctx)
-		return
-	}
-
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -296,6 +290,10 @@ func findMlflowAppByARN(ctx context.Context, conn *sagemaker.Client, arn string)
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
+	}
+
+	if output.Status == awstypes.MlflowAppStatusDeleted {
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

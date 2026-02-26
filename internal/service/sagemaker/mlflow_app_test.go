@@ -174,7 +174,7 @@ func testAccCheckMlflowAppDestroy(ctx context.Context, t *testing.T) resource.Te
 			}
 
 			arn := rs.Primary.Attributes[names.AttrARN]
-			output, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, arn)
+			_, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, arn)
 
 			if retry.NotFound(err) {
 				continue
@@ -182,10 +182,6 @@ func testAccCheckMlflowAppDestroy(ctx context.Context, t *testing.T) resource.Te
 
 			if err != nil {
 				return fmt.Errorf("reading SageMaker Mlflow App (%s): %w", arn, err)
-			}
-
-			if output.Status == awstypes.MlflowAppStatusDeleted {
-				continue
 			}
 
 			return fmt.Errorf("SageMaker Mlflow App %s still exists", arn)
