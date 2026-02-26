@@ -1690,7 +1690,7 @@ resource "aws_network_interface" "test" {
 func testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName string, enaSrdEnabled, enaSrdUdpEnabled bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		acctest.AvailableEC2InstanceTypeForRegion("c6in.large", "c6i.large", "m6in.large", "c5n.large"),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.large", "m6in.large", "r6in.large"),
 		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "test2" {
@@ -1743,7 +1743,7 @@ resource "aws_network_interface" "test" {
 func testAccVPCNetworkInterfaceConfig_enaSrdSpecificationDisabled(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		acctest.AvailableEC2InstanceTypeForRegion("c6in.large", "c6i.large", "m6in.large", "c5n.large"),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.large", "m6in.large", "r6in.large"),
 		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "test2" {
