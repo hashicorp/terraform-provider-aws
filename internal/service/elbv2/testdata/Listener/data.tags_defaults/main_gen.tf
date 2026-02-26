@@ -13,7 +13,7 @@ data "aws_lb_listener" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 

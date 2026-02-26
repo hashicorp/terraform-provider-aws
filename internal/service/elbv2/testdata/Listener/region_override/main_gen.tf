@@ -4,7 +4,7 @@
 resource "aws_lb_listener" "test" {
   region = var.region
 
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 

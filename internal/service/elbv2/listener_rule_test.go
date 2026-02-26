@@ -2518,7 +2518,7 @@ resource "aws_lb_target_group" "test" {
 func testAccListenerRuleConfig_baseWithHTTPListener(rName string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -2537,7 +2537,7 @@ resource "aws_lb_listener" "test" {
 func testAccListenerRuleConfig_baseWithHTTPSListener(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -2667,7 +2667,7 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -2822,7 +2822,7 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3167,7 +3167,7 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3439,7 +3439,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3552,7 +3552,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3680,7 +3680,7 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_lb_listener" "test2" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "8080"
 
@@ -3953,7 +3953,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4034,7 +4034,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4100,7 +4100,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4164,7 +4164,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4299,7 +4299,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4408,7 +4408,7 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4514,7 +4514,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -4720,7 +4720,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
+  load_balancer_arn = aws_lb.alb_test.arn
   protocol          = "HTTP"
   port              = "80"
 

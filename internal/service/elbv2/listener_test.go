@@ -2464,7 +2464,7 @@ func testAccListenerConfig_Application_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   port              = "80"
 
   default_action {
@@ -2516,7 +2516,7 @@ func testAccListenerConfig_Network_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "TCP"
   port              = "80"
 
@@ -2566,7 +2566,7 @@ func testAccListenerConfig_Gateway_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
 
   default_action {
     target_group_arn = aws_lb_target_group.test.id
@@ -2611,7 +2611,7 @@ resource "aws_lb_target_group" "test" {
 func testAccListenerConfig_Forward_basic(rName, targetName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "440"
 
@@ -2672,7 +2672,7 @@ resource "aws_lb_target_group" "test2" {
 func testAccListenerConfig_Forward_weighted(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -2756,7 +2756,7 @@ resource "aws_lb_target_group" "test2" {
 func testAccListenerConfig_Forward_changeWeightedStickiness(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -2851,7 +2851,7 @@ func testAccListenerConfig_Forward_tgARNAndForward(rName string, sameTG bool) st
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "440"
 
@@ -2942,7 +2942,7 @@ func testAccListenerConfig_Forward_targetGroup(rName string, useDATG bool) strin
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "440"
 
@@ -3008,7 +3008,7 @@ func testAccListenerConfig_Forward_tgARN(rName, key, certificate string) string 
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -3070,7 +3070,7 @@ func testAccListenerConfig_Forward_cert(rName, key, certificate string) string {
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "440"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -3136,7 +3136,7 @@ func testAccListenerConfig_Forward_stickiness(rName, key, certificate string) st
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "440"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -3207,7 +3207,7 @@ func testAccListenerConfig_Forward_weightAndStickiness(rName, key, certificate s
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -3279,7 +3279,7 @@ func testAccListenerConfig_Forward_addAction(rName, key, certificate string) str
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -3362,7 +3362,7 @@ func testAccListenerConfig_Forward_multiTargetWithIgnore(rName, key, certificate
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "440"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -3502,7 +3502,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
 
   default_action {
     target_group_arn = aws_lb_target_group.test.id
@@ -3522,7 +3522,7 @@ func testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName string, sec
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "TCP"
   port              = "80"
 
@@ -3748,7 +3748,7 @@ resource "aws_iam_server_certificate" "test" {
 func testAccListenerConfig_Forward_changeWeightedToBasic(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -3821,7 +3821,7 @@ resource "aws_lb_target_group" "test2" {
 func testAccListenerConfig_basicUDP(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "UDP"
   port              = "514"
 
@@ -3927,7 +3927,7 @@ resource "aws_alb_target_group" "test" {
 func testAccListenerConfig_https(rName, key, certificate string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4003,7 +4003,7 @@ resource "aws_lb_trust_store" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4076,7 +4076,7 @@ resource "aws_lb_trust_store" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4142,7 +4142,7 @@ func testAccListenerConfig_mutualAuthenticationPassthrough(rName, key, certifica
 	return acctest.ConfigCompose(
 		testAccListenerConfig_baseHTTPS(rName, key, certificate), `
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4165,7 +4165,7 @@ func testAccListenerConfig_mutualAuthentication_validate_Advertise(rName, mode, 
 		testAccListenerConfig_baseHTTPS(rName, key, certificate),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4189,7 +4189,7 @@ func testAccListenerConfig_mutualAuthentication_validate_IgnoreClient(rName, mod
 		testAccListenerConfig_baseHTTPS(rName, key, certificate),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4214,7 +4214,7 @@ func testAccListenerConfig_mutualAuthentication_validate_TrustStore(rName, mode,
 		testAccTrustStoreConfig_baseS3BucketCA(rName),
 		fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4251,7 +4251,7 @@ resource "aws_lb_trust_store" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4357,7 +4357,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
 
   default_action {
     target_group_arn = aws_lb_target_group.test.id
@@ -4471,7 +4471,7 @@ resource "aws_lb_target_group" "test" {
 func testAccListenerConfig_redirect(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -4505,7 +4505,7 @@ resource "aws_lb" "test" {
 func testAccListenerConfig_fixedResponse(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -4612,7 +4612,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4691,7 +4691,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4773,7 +4773,7 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4810,7 +4810,7 @@ func testAccListenerConfig_DefaultAction_defaultOrder(rName, key, certificate st
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4884,7 +4884,7 @@ func testAccListenerConfig_DefaultAction_specifyOrder(rName, key, certificate st
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
@@ -4959,7 +4959,7 @@ resource "aws_lb_target_group" "test" {
 func testAccListenerConfig_DefaultAction_empty(rName string, action awstypes.ActionTypeEnum) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
@@ -5009,7 +5009,7 @@ resource "aws_lb_target_group" "test" {
 func testAccListenerConfig_redirectWithTargetGroupARN(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
+  load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
 
