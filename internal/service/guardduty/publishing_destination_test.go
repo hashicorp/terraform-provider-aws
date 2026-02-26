@@ -41,7 +41,10 @@ func testAccPublishingDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, bucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "destination_type", "S3")),
+					resource.TestCheckResourceAttr(resourceName, "destination_type", "S3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -78,9 +81,56 @@ func testAccPublishingDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccPublishingDestinationConfig_basic(bucketName string) string {
-	return fmt.Sprintf(`
+func testAccPublishingDestination_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_publishing_destination.test"
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublishingDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPublishingDestinationConfig_tags1(bucketName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublishingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPublishingDestinationConfig_tags2(bucketName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublishingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccPublishingDestinationConfig_tags1(bucketName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublishingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccPublishingDestinationConfig_base(bucketName string) string {
+	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
@@ -122,7 +172,6 @@ data "aws_iam_policy_document" "bucket_pol" {
 }
 
 data "aws_iam_policy_document" "kms_pol" {
-
   statement {
     sid = "Allow GuardDuty to encrypt findings"
     actions = [
@@ -154,7 +203,6 @@ data "aws_iam_policy_document" "kms_pol" {
       identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
-
 }
 
 resource "aws_guardduty_detector" "test_gd" {
@@ -177,7 +225,13 @@ resource "aws_kms_key" "gd_key" {
   enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.kms_pol.json
 }
+`, bucketName)
+}
 
+func testAccPublishingDestinationConfig_basic(bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccPublishingDestinationConfig_base(bucketName),
+		`
 resource "aws_guardduty_publishing_destination" "test" {
   detector_id     = aws_guardduty_detector.test_gd.id
   destination_arn = aws_s3_bucket.gd_bucket.arn
@@ -186,7 +240,49 @@ resource "aws_guardduty_publishing_destination" "test" {
   depends_on = [
     aws_s3_bucket_policy.gd_bucket_policy,
   ]
-}`, bucketName)
+}
+`)
+}
+
+func testAccPublishingDestinationConfig_tags1(bucketName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccPublishingDestinationConfig_base(bucketName),
+		fmt.Sprintf(`
+resource "aws_guardduty_publishing_destination" "test" {
+  detector_id     = aws_guardduty_detector.test_gd.id
+  destination_arn = aws_s3_bucket.gd_bucket.arn
+  kms_key_arn     = aws_kms_key.gd_key.arn
+
+  tags = {
+    %[1]q = %[2]q
+  }
+
+  depends_on = [
+    aws_s3_bucket_policy.gd_bucket_policy,
+  ]
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccPublishingDestinationConfig_tags2(bucketName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccPublishingDestinationConfig_base(bucketName),
+		fmt.Sprintf(`
+resource "aws_guardduty_publishing_destination" "test" {
+  detector_id     = aws_guardduty_detector.test_gd.id
+  destination_arn = aws_s3_bucket.gd_bucket.arn
+  kms_key_arn     = aws_kms_key.gd_key.arn
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+
+  depends_on = [
+    aws_s3_bucket_policy.gd_bucket_policy,
+  ]
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCheckPublishingDestinationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {

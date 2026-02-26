@@ -20,11 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_publishing_destination", name="Publishing Destination")
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
 func resourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublishingDestinationCreate,
@@ -58,6 +61,8 @@ func resourcePublishingDestination() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -65,6 +70,9 @@ func resourcePublishingDestination() *schema.Resource {
 func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -74,6 +82,10 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
 		},
 		DestinationType: awstypes.DestinationType(d.Get("destination_type").(string)),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = svcTags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreatePublishingDestination(ctx, &input)
@@ -96,6 +108,9 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
@@ -122,6 +137,15 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("destination_type", gdo.DestinationType)
 	d.Set(names.AttrKMSKeyARN, gdo.DestinationProperties.KmsKeyArn)
 	d.Set(names.AttrDestinationARN, gdo.DestinationProperties.DestinationArn)
+
+	tags := keyValueTags(ctx, gdo.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+	}
 	return diags
 }
 
@@ -135,17 +159,19 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
-	input := guardduty.UpdatePublishingDestinationInput{
-		DestinationId: aws.String(destinationId),
-		DetectorId:    aws.String(detectorId),
-		DestinationProperties: &awstypes.DestinationProperties{
-			DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
-			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
-		},
-	}
+	if d.HasChanges(names.AttrDestinationARN, names.AttrKMSKeyARN, "destination_type") {
+		input := guardduty.UpdatePublishingDestinationInput{
+			DestinationId: aws.String(destinationId),
+			DetectorId:    aws.String(detectorId),
+			DestinationProperties: &awstypes.DestinationProperties{
+				DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
+				KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
+			},
+		}
 
-	if _, err = conn.UpdatePublishingDestination(ctx, &input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
+		if _, err = conn.UpdatePublishingDestination(ctx, &input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)

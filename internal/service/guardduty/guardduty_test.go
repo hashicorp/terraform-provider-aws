@@ -84,6 +84,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		"PublishingDestination": {
 			acctest.CtBasic:      testAccPublishingDestination_basic,
 			acctest.CtDisappears: testAccPublishingDestination_disappears,
+			"tags":               testAccPublishingDestination_tags,
 		},
 	}
 
