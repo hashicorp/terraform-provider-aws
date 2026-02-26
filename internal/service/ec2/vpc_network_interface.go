@@ -543,7 +543,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := ec2.ModifyNetworkInterfaceAttributeInput{
-			NetworkInterfaceId: aws.String(d.Id()),
+			NetworkInterfaceId:  aws.String(d.Id()),
 			EnaSrdSpecification: expandEnaSrdSpecification(v.([]any)[0].(map[string]any)),
 		}
 
