@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.11
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.7
-	github.com/aws/aws-sdk-go-v2/service/batch v1.60.1
+	github.com/aws/aws-sdk-go-v2/service/batch v1.60.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.11
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.4
@@ -105,7 +105,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.10
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.12.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.291.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.292.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.55.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.10
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.72.1
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.11
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.10
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.1
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.1
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.87.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.39.18
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.3
@@ -179,7 +179,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.16
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.19
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.6
-	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.10
+	github.com/aws/aws-sdk-go-v2/service/neptune v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.18
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.4
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.11.6
@@ -271,7 +271,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.8
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.17
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.18
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.70.8
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.18
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.16
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.66.1
