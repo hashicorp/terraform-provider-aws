@@ -76,9 +76,6 @@ func (r *mlflowAppResource) Schema(ctx context.Context, request resource.SchemaR
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -196,6 +193,7 @@ func (r *mlflowAppResource) Update(ctx context.Context, request resource.UpdateR
 		!plan.ArtifactStoreUri.Equal(state.ArtifactStoreUri) ||
 		!plan.DefaultDomainIdList.Equal(state.DefaultDomainIdList) ||
 		!plan.ModelRegistrationMode.Equal(state.ModelRegistrationMode) ||
+		!plan.Name.Equal(state.Name) ||
 		!plan.WeeklyMaintenanceWindowStart.Equal(state.WeeklyMaintenanceWindowStart) {
 		var input sagemaker.UpdateMlflowAppInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
