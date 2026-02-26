@@ -1,0 +1,362 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package wafv2_test
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccWAFV2WebACLRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_ipSetReference(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_ipSetReference(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "statement.0.ip_set_reference_statement.0.arn", "aws_wafv2_ip_set.test", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_deletionOrdering(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_ipSetReference(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, resourceName),
+				),
+			},
+			{
+				// Delete everything - verifies correct deletion order
+				// Rule should be deleted before IPSet to avoid WAFAssociatedItemException
+				Config: testAccWebACLRuleConfig_webACLOnly(rName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceWebACLRule, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckWebACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_wafv2_web_acl_rule" {
+				continue
+			}
+
+			webACLARN := rs.Primary.Attributes["web_acl_arn"]
+			ruleName := rs.Primary.Attributes[names.AttrName]
+
+			// Parse ARN to get Web ACL details
+			webACLID, webACLName, webACLScope, err := parseWebACLARNForTest(webACLARN)
+			if err != nil {
+				return err
+			}
+
+			output, err := conn.GetWebACL(ctx, &wafv2.GetWebACLInput{
+				Id:    aws.String(webACLID),
+				Name:  aws.String(webACLName),
+				Scope: awstypes.Scope(webACLScope),
+			})
+
+			if err != nil {
+				// Web ACL doesn't exist, rule is gone
+				continue
+			}
+
+			// Check if rule still exists in Web ACL
+			for _, rule := range output.WebACL.Rules {
+				if aws.ToString(rule.Name) == ruleName {
+					return fmt.Errorf("WAFv2 Web ACL Rule %s still exists", ruleName)
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckWebACLRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+
+		webACLARN := rs.Primary.Attributes["web_acl_arn"]
+		ruleName := rs.Primary.Attributes[names.AttrName]
+
+		webACLID, webACLName, webACLScope, err := parseWebACLARNForTest(webACLARN)
+		if err != nil {
+			return err
+		}
+
+		output, err := conn.GetWebACL(ctx, &wafv2.GetWebACLInput{
+			Id:    aws.String(webACLID),
+			Name:  aws.String(webACLName),
+			Scope: awstypes.Scope(webACLScope),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		for _, rule := range output.WebACL.Rules {
+			if aws.ToString(rule.Name) == ruleName {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("WAFv2 Web ACL Rule %s not found in Web ACL", ruleName)
+	}
+}
+
+func parseWebACLARNForTest(arnStr string) (id, name, scope string, err error) {
+	// ARN format: arn:aws:wafv2:region:account:scope/webacl/name/id
+	// Example: arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-acl/abc123
+	parts := splitARN(arnStr)
+	if len(parts) < 4 {
+		return "", "", "", fmt.Errorf("invalid Web ACL ARN: %s", arnStr)
+	}
+
+	scope = parts[0]
+	if scope == "regional" {
+		scope = "REGIONAL"
+	} else if scope == "global" {
+		scope = "CLOUDFRONT"
+	}
+	name = parts[2]
+	id = parts[3]
+
+	return id, name, scope, nil
+}
+
+func splitARN(arn string) []string {
+	// Split on : to get resource part, then split on /
+	var result []string
+	colonParts := make([]string, 0)
+	start := 0
+	for i, c := range arn {
+		if c == ':' {
+			colonParts = append(colonParts, arn[start:i])
+			start = i + 1
+		}
+	}
+	colonParts = append(colonParts, arn[start:])
+
+	if len(colonParts) < 6 {
+		return result
+	}
+
+	resource := colonParts[5]
+	start = 0
+	for i, c := range resource {
+		if c == '/' {
+			result = append(result, resource[start:i])
+			start = i + 1
+		}
+	}
+	result = append(result, resource[start:])
+
+	return result
+}
+
+func testAccWebACLRuleConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US", "CA"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_ipSetReference(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test" {
+  name               = %[1]q
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    ip_set_reference_statement {
+      arn = aws_wafv2_ip_set.test.arn
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_webACLOnly(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName)
+}
