@@ -35,7 +35,7 @@ type listResourceListener struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-func (_ *listResourceListener) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+func (l *listResourceListener) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"load_balancer_arn": listschema.StringAttribute{

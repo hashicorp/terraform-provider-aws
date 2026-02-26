@@ -74,7 +74,7 @@ type listResource{{ .ListResource }} struct {
 // This is only needed if the resource type requires any attributes for listing, such as a parent ID.
 // Otherwise, it can be removed.
 {{- end }}
-// func (_ *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// func (l *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 // 	response.Schema = listschema.Schema{
 // 		Attributes: map[string]listschema.Attribute{
 // 			"parent_id": listschema.StringAttribute{
