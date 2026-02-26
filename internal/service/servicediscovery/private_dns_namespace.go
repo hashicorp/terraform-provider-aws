@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -82,7 +82,7 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 
 	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreatePrivateDnsNamespaceInput{
-		CreatorRequestId: aws.String(id.UniqueId()),
+		CreatorRequestId: aws.String(sdkid.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 		Vpc:              aws.String(d.Get("vpc").(string)),
@@ -148,7 +148,7 @@ func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDa
 			Namespace: &awstypes.PrivateDnsNamespaceChange{
 				Description: aws.String(d.Get(names.AttrDescription).(string)),
 			},
-			UpdaterRequestId: aws.String(id.UniqueId()),
+			UpdaterRequestId: aws.String(sdkid.UniqueId()),
 		}
 
 		output, err := conn.UpdatePrivateDnsNamespace(ctx, input)

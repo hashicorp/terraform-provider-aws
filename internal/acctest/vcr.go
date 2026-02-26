@@ -457,6 +457,24 @@ func RandIntRange(t *testing.T, minInt int, maxInt int) int {
 	return rand.New(s.source).Intn(maxInt-minInt) + minInt
 }
 
+// RandString is a VCR-friendly replacement for sdkacctest.RandString
+func RandString(t *testing.T, strlen int) string {
+	t.Helper()
+
+	return RandStringFromCharSet(t, strlen, sdkacctest.CharSetAlphaNum)
+}
+
+// RandStringFromCharSet is a VCR-friendly replacement for sdkacctest.RandStringFromCharSet
+func RandStringFromCharSet(t *testing.T, strlen int, charSet string) string {
+	t.Helper()
+
+	result := make([]byte, strlen)
+	for i := range strlen {
+		result[i] = charSet[RandIntRange(t, 0, len(charSet))]
+	}
+	return string(result)
+}
+
 func vcrFileName(name string) string {
 	return strings.ReplaceAll(name, "/", "_")
 }

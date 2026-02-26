@@ -113,7 +113,7 @@ func testStringRoundtrip(t *testing.T) {
 		// Random value for property-based testing feel
 		{
 			name:        "random_value",
-			stringValue: sdkacctest.RandomWithPrefix("tf-test"),
+			stringValue: sdkacctest.RandomWithPrefix("tf-test"), // nosemgrep:ci.semgrep.acctest.vcr.use-acctest-randomwithprefix
 			variants:    []string{"standard", "legacy", "tf_to_aws_pointer", "legacy_tf_to_aws_pointer"},
 		},
 		// Omitempty tests - flatten-only (expand direction not defined in original tests)

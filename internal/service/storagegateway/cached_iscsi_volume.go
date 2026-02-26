@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -126,7 +126,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
-		ClientToken:        aws.String(id.UniqueId()),
+		ClientToken:        aws.String(sdkid.UniqueId()),
 		GatewayARN:         aws.String(d.Get("gateway_arn").(string)),
 		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		Tags:               getTagsIn(ctx),

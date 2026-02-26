@@ -22,7 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -136,7 +136,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, sdkid.UniqueIdPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrBucket),
 				),
 			},
@@ -165,7 +165,7 @@ func TestAccS3Bucket_Basic_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, sdkid.UniqueIdPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrBucket),
 				),
 			},
@@ -647,7 +647,7 @@ func TestAccS3Bucket_tags_withSystemTags(t *testing.T) {
 				// Tear down CF stack.
 				conn := acctest.ProviderMeta(ctx, t).CloudFormationClient(ctx)
 
-				requestToken := id.UniqueId()
+				requestToken := sdkid.UniqueId()
 				req := &cloudformation.DeleteStackInput{
 					StackName:          aws.String(stackID),
 					ClientRequestToken: aws.String(requestToken),
@@ -3010,7 +3010,7 @@ func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, t *testing.T
   }
 }`, n)
 
-		requestToken := id.UniqueId()
+		requestToken := sdkid.UniqueId()
 		input := &cloudformation.CreateStackInput{
 			ClientRequestToken: aws.String(requestToken),
 			StackName:          aws.String(stackName),

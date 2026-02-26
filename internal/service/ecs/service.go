@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -1381,7 +1381,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	schedulingStrategy := awstypes.SchedulingStrategy(d.Get("scheduling_strategy").(string))
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategyItems(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set)),
-		ClientToken:              aws.String(id.UniqueId()),
+		ClientToken:              aws.String(sdkid.UniqueId()),
 		DeploymentConfiguration:  &awstypes.DeploymentConfiguration{},
 		DeploymentController:     deploymentController,
 		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),

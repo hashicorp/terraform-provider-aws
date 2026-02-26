@@ -6,6 +6,7 @@ package iam_test
 import (
 	"encoding/json"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -499,6 +500,19 @@ func TestIAMPolicyStatementPrincipalSet_UnmarshalJSON(t *testing.T) { // nosemgr
 				t.Errorf("IAMPolicyStatementPrincipalSet.UnmarshalJSON() error = %v, wantErr %t", err, tc.wantErr)
 				return
 			}
+			// Sort both slices by Type to ensure deterministic comparison
+			// (JSON object key iteration order is non-deterministic)
+			sortByType := func(a, b tfiam.IAMPolicyStatementPrincipal) int {
+				if a.Type < b.Type {
+					return -1
+				}
+				if a.Type > b.Type {
+					return 1
+				}
+				return 0
+			}
+			slices.SortFunc(got, sortByType)
+			slices.SortFunc(tc.want, sortByType)
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("IAMPolicyStatementPrincipalSet.UnmarshalJSON() = %+v, want %+v", got, tc.want)
 			}

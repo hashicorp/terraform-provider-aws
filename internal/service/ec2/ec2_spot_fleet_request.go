@@ -17,7 +17,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -882,7 +882,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
 	spotFleetConfig := &awstypes.SpotFleetRequestConfigData{
-		ClientToken:                      aws.String(id.UniqueId()),
+		ClientToken:                      aws.String(sdkid.UniqueId()),
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		InstanceInterruptionBehavior:     awstypes.InstanceInterruptionBehavior(d.Get("instance_interruption_behaviour").(string)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),

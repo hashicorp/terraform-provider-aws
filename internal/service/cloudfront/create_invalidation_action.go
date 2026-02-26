@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -134,7 +134,7 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 	// Set caller reference if not provided
 	callerReference := config.CallerReference.ValueString()
 	if callerReference == "" {
-		callerReference = id.UniqueId()
+		callerReference = sdkid.UniqueId()
 	}
 
 	// Set default timeout if not provided

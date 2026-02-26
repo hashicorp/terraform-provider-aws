@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -27,7 +26,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}.test[0]"
 	resourceName2 := "aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -41,7 +40,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_basic(t *testing.T) {
 			testAcc{{ .ListResource }}PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx),
+		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -87,7 +86,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_includeResource(t *testing.T)
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}.test[0]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -100,7 +99,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_includeResource(t *testing.T)
 			testAcc{{ .ListResource }}PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx),
+		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -160,7 +159,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_regionOverride(t *testing.T) 
 
 	resourceName1 := "aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}.test[0]"
 	resourceName2 := "aws_{{ .ServicePackage }}_{{ .ListResourceSnake }}.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -175,7 +174,7 @@ func TestAcc{{ .Service }}{{ .ListResource }}_List_regionOverride(t *testing.T) 
 			testAcc{{ .ListResource }}PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx),
+		CheckDestroy: testAccCheck{{ .ListResource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

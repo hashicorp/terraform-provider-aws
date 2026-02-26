@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -585,7 +585,7 @@ func (r *scheduledQueryResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	clientToken := id.UniqueId()
+	clientToken := sdkid.UniqueId()
 	input.ClientToken = aws.String(clientToken)
 
 	input.Tags = getTagsIn(ctx)

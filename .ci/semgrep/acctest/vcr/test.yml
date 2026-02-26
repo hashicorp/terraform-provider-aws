@@ -1,0 +1,75 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-acctest-test
+    languages: [go]
+    message: "Use acctest.Test instead of resource.Test for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      resource.Test($T, $TC)
+    fix: |
+      acctest.Test(ctx, $T, $TC)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/apigatewayv2"
+        - "/internal/service/arcregionswitch"
+        - "/internal/service/billing"
+        - "/internal/service/cleanrooms"
+        - "/internal/service/docdb"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/observabilityadmin"
+        - "/internal/service/odb"
+        - "/internal/service/savingsplans"
+
+  - id: use-acctest-paralleltest
+    languages: [go]
+    message: "Use acctest.ParallelTest instead of resource.ParallelTest for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      resource.ParallelTest($T, $TC)
+    fix: |
+      acctest.ParallelTest(ctx, $T, $TC)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/apigatewayv2"
+        - "/internal/service/arcregionswitch"
+        - "/internal/service/billing"
+        - "/internal/service/cleanrooms"
+        - "/internal/service/docdb"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/observabilityadmin"
+        - "/internal/service/odb"
+        - "/internal/service/savingsplans"
+
+  - id: use-acctest-providermeta
+    languages: [go]
+    message: "Use acctest.ProviderMeta instead of acctest.Provider.Meta for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      acctest.Provider.Meta().(*conns.AWSClient).$C(ctx)
+    fix: |
+      acctest.ProviderMeta(ctx, t).$C(ctx)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/apigatewayv2"
+        - "/internal/service/arcregionswitch"
+        - "/internal/service/billing"
+        - "/internal/service/cleanrooms"
+        - "/internal/service/docdb"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/observabilityadmin"
+        - "/internal/service/odb"
+        - "/internal/service/savingsplans"

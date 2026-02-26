@@ -192,6 +192,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_alb_target_group_attachment",
 			Name:     "Target Group Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("target_group_arn", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+				inttypes.IntIdentityAttribute(names.AttrPort, false),
+				inttypes.StringIdentityAttribute(names.AttrAvailabilityZone, false),
+				inttypes.StringIdentityAttribute("quic_server_id", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      targetGroupAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceLoadBalancer,
@@ -265,6 +278,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_lb_target_group_attachment",
 			Name:     "Target Group Attachment",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("target_group_arn", true),
+				inttypes.StringIdentityAttribute("target_id", true),
+				inttypes.IntIdentityAttribute(names.AttrPort, false),
+				inttypes.StringIdentityAttribute(names.AttrAvailabilityZone, false),
+				inttypes.StringIdentityAttribute("quic_server_id", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      targetGroupAttachmentImportID{},
+			},
 		},
 		{
 			Factory:  resourceTrustStore,

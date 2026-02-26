@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -26,7 +25,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_s3_bucket_server_side_encryption_configuration.test[0]"
 	resourceName2 := "aws_s3_bucket_server_side_encryption_configuration.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -85,7 +84,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_List_includeResource(t *te
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_s3_bucket_server_side_encryption_configuration.test[0]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 
@@ -143,7 +142,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_List_regionOverride(t *tes
 
 	resourceName1 := "aws_s3_bucket_server_side_encryption_configuration.test[0]"
 	resourceName2 := "aws_s3_bucket_server_side_encryption_configuration.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -202,7 +201,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_List_directoryBucket(t *te
 
 	resourceName1 := "aws_s3_bucket_server_side_encryption_configuration.test[0]"
 	resourceName2 := "aws_s3_bucket_server_side_encryption_configuration.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()

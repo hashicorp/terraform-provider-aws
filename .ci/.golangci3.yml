@@ -33,6 +33,8 @@ linters:
     importas:
       no-unaliased: true
       alias:
+        - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/id
+          alias: sdkid
         - pkg: github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry
           alias: sdkretry
         - pkg: "github.com/hashicorp/terraform-plugin-testing/helper/acctest"

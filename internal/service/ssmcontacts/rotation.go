@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -237,7 +237,7 @@ func (r *rotationResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	input := &ssmcontacts.CreateRotationInput{
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(sdkid.UniqueId()),
 		ContactIds:       fwflex.ExpandFrameworkStringValueList(ctx, plan.ContactIds),
 		Name:             fwflex.StringFromFramework(ctx, plan.Name),
 		Recurrence: &awstypes.RecurrenceSettings{

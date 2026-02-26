@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -109,7 +109,7 @@ func (r *profilingGroupResource) Create(ctx context.Context, req resource.Create
 	}
 
 	in.ProfilingGroupName = flex.StringFromFramework(ctx, plan.Name)
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(sdkid.UniqueId())
 	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateProfilingGroup(ctx, in)

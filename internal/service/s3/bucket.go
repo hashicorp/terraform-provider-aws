@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -128,7 +128,7 @@ func resourceBucket() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrBucket},
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
+					validation.StringLenBetween(0, 63-sdkid.UniqueIDSuffixLength),
 				),
 			},
 			"bucket_region": {
@@ -2171,7 +2171,7 @@ func expandBucketLifecycleRules(ctx context.Context, tfList []any) []types.Lifec
 		if v, ok := tfMap[names.AttrID].(string); ok {
 			apiObject.ID = aws.String(v)
 		} else {
-			apiObject.ID = aws.String(id.PrefixedUniqueId("tf-s3-lifecycle-"))
+			apiObject.ID = aws.String(sdkid.PrefixedUniqueId("tf-s3-lifecycle-"))
 		}
 
 		if v, ok := tfMap["noncurrent_version_expiration"].([]any); ok && len(v) > 0 && v[0] != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -390,7 +390,7 @@ func testAccCheckIPAMScopeCreate(ctx context.Context, ipam *awstypes.Ipam) resou
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		input := ec2.CreateIpamScopeInput{
-			ClientToken: aws.String(id.UniqueId()),
+			ClientToken: aws.String(sdkid.UniqueId()),
 			IpamId:      ipam.IpamId,
 		}
 		_, err := conn.CreateIpamScope(ctx, &input)
