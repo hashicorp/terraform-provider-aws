@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -134,7 +134,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 							Computed: true,
 							Default:  booldefault.StaticBool(true),
 						},
-						"metric_name": schema.StringAttribute{
+						names.AttrMetricName: schema.StringAttribute{
 							Optional: true,
 							Computed: true,
 						},
@@ -617,7 +617,7 @@ func (r *resourceWebACLRule) ImportState(ctx context.Context, req resource.Impor
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func splitImportID(id string, count int) []string {
@@ -747,7 +747,7 @@ func (m *webACLRuleActionModel) Flatten(ctx context.Context, v any) (diags diag.
 
 func (m *webACLRuleActionModel) flattenAction(ctx context.Context, action *awstypes.RuleAction) diag.Diagnostics {
 	var diags diag.Diagnostics
-	
+
 	// Initialize all to null
 	m.Allow = fwtypes.NewListNestedObjectValueOfNull[webACLRuleEmptyModel](ctx)
 	m.Block = fwtypes.NewListNestedObjectValueOfNull[webACLRuleBlockActionModel](ctx)
@@ -862,7 +862,7 @@ func (m *webACLRuleStatementModel) Flatten(ctx context.Context, v any) (diags di
 
 func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *awstypes.Statement) diag.Diagnostics {
 	var diags diag.Diagnostics
-	
+
 	// Initialize both to null
 	m.IPSetReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIPSetReferenceStatementModel](ctx)
 	m.GeoMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleGeoMatchStatementModel](ctx)

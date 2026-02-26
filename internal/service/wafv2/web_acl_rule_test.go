@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,16 +23,16 @@ func TestAccWAFV2WebACLRule_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLRuleExists(ctx, resourceName),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 				),
@@ -52,16 +51,16 @@ func TestAccWAFV2WebACLRule_ipSetReference(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLRuleConfig_ipSetReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLRuleExists(ctx, resourceName),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "statement.0.ip_set_reference_statement.0.arn", "aws_wafv2_ip_set.test", names.AttrARN),
 				),
@@ -75,16 +74,16 @@ func TestAccWAFV2WebACLRule_deletionOrdering(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLRuleConfig_ipSetReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLRuleExists(ctx, resourceName),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -101,16 +100,16 @@ func TestAccWAFV2WebACLRule_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebACLRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLRuleExists(ctx, resourceName),
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceWebACLRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -119,9 +118,9 @@ func TestAccWAFV2WebACLRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckWebACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWebACLRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafv2_web_acl_rule" {
@@ -137,11 +136,12 @@ func testAccCheckWebACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			output, err := conn.GetWebACL(ctx, &wafv2.GetWebACLInput{
+			input := wafv2.GetWebACLInput{
 				Id:    aws.String(webACLID),
 				Name:  aws.String(webACLName),
 				Scope: awstypes.Scope(webACLScope),
-			})
+			}
+			output, err := conn.GetWebACL(ctx, &input)
 
 			if err != nil {
 				// Web ACL doesn't exist, rule is gone
@@ -160,14 +160,14 @@ func testAccCheckWebACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWebACLRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckWebACLRuleExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 		webACLARN := rs.Primary.Attributes["web_acl_arn"]
 		ruleName := rs.Primary.Attributes[names.AttrName]
@@ -177,11 +177,12 @@ func testAccCheckWebACLRuleExists(ctx context.Context, n string) resource.TestCh
 			return err
 		}
 
-		output, err := conn.GetWebACL(ctx, &wafv2.GetWebACLInput{
+		input := wafv2.GetWebACLInput{
 			Id:    aws.String(webACLID),
 			Name:  aws.String(webACLName),
 			Scope: awstypes.Scope(webACLScope),
-		})
+		}
+		output, err := conn.GetWebACL(ctx, &input)
 
 		if err != nil {
 			return err
