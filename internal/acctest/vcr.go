@@ -351,7 +351,6 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	if ok {
 		if !t.Failed() {
 			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
-				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)
 				}
@@ -372,7 +371,6 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			t.Log("persisting randomness seed")
 			if err := writeSeedToFile(s.seed, vcrSeedFile(vcr.Path(), t.Name())); err != nil {
 				t.Error(err)
 			}
