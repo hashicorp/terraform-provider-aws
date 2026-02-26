@@ -471,6 +471,21 @@ func TestAccVPCNetworkInterface_enaSrdSpecification(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccVPCNetworkInterfaceConfig_enaSrdSpecificationDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.#", "0"),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_enaSrdSpecification(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ena_srd_specification.0.ena_srd_enabled", acctest.CtTrue),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1723,6 +1738,51 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName, enaSrdEnabled, enaSrdUdpEnabled))
+}
+
+func testAccVPCNetworkInterfaceConfig_enaSrdSpecificationDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.large", "c6i.large", "m6in.large", "c5n.large"),
+		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "test2" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "172.16.11.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test2.id
+  associate_public_ip_address = false
+  private_ip                  = "172.16.11.50"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["172.16.10.100"]
+  security_groups = [aws_security_group.test.id]
+
+  attachment {
+    instance     = aws_instance.test.id
+    device_index = 1
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName string, networkCardIndex int) string {

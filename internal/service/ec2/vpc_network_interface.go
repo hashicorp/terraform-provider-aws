@@ -91,26 +91,22 @@ func resourceNetworkInterface() *schema.Resource {
 			"ena_srd_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ena_srd_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Computed: true,
 						},
 						"ena_srd_udp_specification": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ena_srd_udp_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Computed: true,
 									},
 								},
 							},
