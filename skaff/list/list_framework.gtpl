@@ -108,6 +108,9 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 	{{- end }}
 	parentID := query.ParentID.ValueString()
 
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+		logging.ResourceAttributeKey("parent_id"): parentID,
+	})
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Get information about a resource from AWS
 	{{- end }}
