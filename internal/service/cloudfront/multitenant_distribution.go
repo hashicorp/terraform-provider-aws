@@ -8,6 +8,7 @@ package cloudfront
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -785,6 +787,11 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		return
 	}
 
+	response.Diagnostics.Append(sortAssociations(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -818,6 +825,11 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Distribution.DistributionConfig, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(sortAssociations(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -916,6 +928,11 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		return
 	}
 
+	response.Diagnostics.Append(sortAssociations(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
@@ -934,6 +951,80 @@ func mtDistributionHasChanges(old, new multiTenantDistributionResourceModel) boo
 		!old.Restrictions.Equal(new.Restrictions) ||
 		!old.TenantConfig.Equal(new.TenantConfig) ||
 		!old.ViewerCertificate.Equal(new.ViewerCertificate)
+}
+
+// sortAssociations sorts function_association and lambda_function_association lists
+// by event_type within the model's default_cache_behavior and cache_behavior blocks.
+// The AWS API may return these in a different order than sent, causing
+// "inconsistent result after apply" errors since they are List (ordered) blocks.
+func sortAssociations(ctx context.Context, data *multiTenantDistributionResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Sort default_cache_behavior associations.
+	if dcbs, d := data.DefaultCacheBehavior.ToSlice(ctx); !d.HasError() && len(dcbs) > 0 {
+		dcb := dcbs[0]
+		changed := false
+
+		if fas, d := dcb.FunctionAssociation.ToSlice(ctx); !d.HasError() && len(fas) > 1 {
+			sort.Slice(fas, func(i, j int) bool {
+				return fas[i].EventType.ValueString() < fas[j].EventType.ValueString()
+			})
+			v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, fas, nil)
+			diags.Append(d...)
+			dcb.FunctionAssociation = v
+			changed = true
+		}
+
+		if las, d := dcb.LambdaFunctionAssociation.ToSlice(ctx); !d.HasError() && len(las) > 1 {
+			sort.Slice(las, func(i, j int) bool {
+				return las[i].EventType.ValueString() < las[j].EventType.ValueString()
+			})
+			v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, las, nil)
+			diags.Append(d...)
+			dcb.LambdaFunctionAssociation = v
+			changed = true
+		}
+
+		if changed {
+			v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, dcbs, nil)
+			diags.Append(d...)
+			data.DefaultCacheBehavior = v
+		}
+	}
+
+	// Sort cache_behavior associations.
+	if cbs, d := data.CacheBehaviors.ToSlice(ctx); !d.HasError() && len(cbs) > 0 {
+		changed := false
+		for _, cb := range cbs {
+			if fas, d := cb.FunctionAssociation.ToSlice(ctx); !d.HasError() && len(fas) > 1 {
+				sort.Slice(fas, func(i, j int) bool {
+					return fas[i].EventType.ValueString() < fas[j].EventType.ValueString()
+				})
+				v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, fas, nil)
+				diags.Append(d...)
+				cb.FunctionAssociation = v
+				changed = true
+			}
+
+			if las, d := cb.LambdaFunctionAssociation.ToSlice(ctx); !d.HasError() && len(las) > 1 {
+				sort.Slice(las, func(i, j int) bool {
+					return las[i].EventType.ValueString() < las[j].EventType.ValueString()
+				})
+				v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, las, nil)
+				diags.Append(d...)
+				cb.LambdaFunctionAssociation = v
+				changed = true
+			}
+		}
+
+		if changed {
+			v, d := fwtypes.NewListNestedObjectValueOfSlice(ctx, cbs, nil)
+			diags.Append(d...)
+			data.CacheBehaviors = v
+		}
+	}
+
+	return diags
 }
 
 func (r *multiTenantDistributionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
