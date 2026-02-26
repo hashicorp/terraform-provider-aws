@@ -140,19 +140,13 @@ func (r *mlflowAppResource) Create(ctx context.Context, request resource.CreateR
 	}
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if _, err := waitMlflowAppCreated(ctx, conn, data.ARN.ValueString(), createTimeout); err != nil {
+	outputWait, err := waitMlflowAppCreated(ctx, conn, data.ARN.ValueString(), createTimeout)
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) create", data.ARN.ValueString()), err.Error())
 		return
 	}
 
-	// Read the resource to get all computed values
-	output2, err := findMlflowAppByARN(ctx, conn, data.ARN.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker Mlflow App (%s) after create", data.ARN.ValueString()), err.Error())
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output2, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputWait, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -197,9 +191,6 @@ func (r *mlflowAppResource) Read(ctx context.Context, request resource.ReadReque
 func (r *mlflowAppResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var state, plan mlflowAppResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -218,15 +209,20 @@ func (r *mlflowAppResource) Update(ctx context.Context, request resource.UpdateR
 			return
 		}
 
-		_, err := conn.UpdateMlflowApp(ctx, &input)
-		if err != nil {
+		if _, err := conn.UpdateMlflowApp(ctx, &input); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating SageMaker Mlflow App (%s)", plan.ARN.ValueString()), err.Error())
 			return
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		if _, err := waitMlflowAppUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout); err != nil {
+		outputWait, err := waitMlflowAppUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
+		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) update", plan.ARN.ValueString()), err.Error())
+			return
+		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, outputWait, &plan)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -243,14 +239,14 @@ func (r *mlflowAppResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().SageMakerClient(ctx)
 
-	_, err := conn.DeleteMlflowApp(ctx, &sagemaker.DeleteMlflowAppInput{
+	input := sagemaker.DeleteMlflowAppInput{
 		Arn: data.ARN.ValueStringPointer(),
-	})
+	}
 
+	_, err := conn.DeleteMlflowApp(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return
 	}
-
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting SageMaker Mlflow App (%s)", data.ARN.ValueString()), err.Error())
 		return
