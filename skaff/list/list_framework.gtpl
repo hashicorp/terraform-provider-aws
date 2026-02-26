@@ -73,6 +73,22 @@ type {{ .ListResourceLowerCamel }}ListResource struct {
 	framework.WithList
 }
 
+{{- if .IncludeComments }}
+// TIP: ==== LIST RESOURCE SCHEMA ===
+// This is only needed if the resource type requires any attributes for listing, such as a parent ID.
+// Otherwise, it can be removed.
+{{- end }}
+// func (_ *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// 	response.Schema = listschema.Schema{
+// 		Attributes: map[string]listschema.Attribute{
+// 			"parent_id": listschema.StringAttribute{
+// 				Required:    true,
+// 				Description: "ID of the Parent to list {{ .ListResource }}s from.",
+// 			},
+// 		},
+// 	}
+// }
+
 func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
 	// TIP: ==== LIST RESOURCE LIST ====
