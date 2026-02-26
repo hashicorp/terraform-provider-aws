@@ -585,7 +585,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("attachment", nil)
 	}
-	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil {
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil && aws.ToBool(eni.Attachment.EnaSrdSpecification.EnaSrdEnabled) {
 		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ena_srd_specification: %s", err)
 		}
