@@ -88,6 +88,36 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"ena_srd_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ena_srd_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"ena_srd_udp_specification": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ena_srd_udp_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"interface_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -515,6 +545,19 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			EnaSrdSpecification: expandEnaSrdSpecification(v.([]any)[0].(map[string]any)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) ENA SRD specification: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
@@ -545,6 +588,13 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	} else {
 		d.Set("attachment", nil)
+	}
+	if eni.Attachment != nil && eni.Attachment.EnaSrdSpecification != nil {
+		if err := d.Set("ena_srd_specification", []any{flattenAttachmentEnaSrdSpecification(eni.Attachment.EnaSrdSpecification)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ena_srd_specification: %s", err)
+		}
+	} else {
+		d.Set("ena_srd_specification", nil)
 	}
 	d.Set(names.AttrDescription, eni.Description)
 	d.Set("interface_type", eni.InterfaceType)
@@ -1080,6 +1130,26 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChange("ena_srd_specification") {
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("ena_srd_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.EnaSrdSpecification = expandEnaSrdSpecification(v.([]any)[0].(map[string]any))
+		} else {
+			input.EnaSrdSpecification = &awstypes.EnaSrdSpecification{
+				EnaSrdEnabled: aws.Bool(false),
+			}
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) ENA SRD specification: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
@@ -1513,6 +1583,70 @@ func flattenIPv6PrefixSpecifications(apiObjects []awstypes.Ipv6PrefixSpecificati
 	}
 
 	return tfList
+}
+
+func expandEnaSrdSpecification(tfMap map[string]any) *awstypes.EnaSrdSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdSpecification{}
+
+	if v, ok := tfMap["ena_srd_enabled"].(bool); ok {
+		apiObject.EnaSrdEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["ena_srd_udp_specification"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EnaSrdUdpSpecification = expandEnaSrdUdpSpecification(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandEnaSrdUdpSpecification(tfMap map[string]any) *awstypes.EnaSrdUdpSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EnaSrdUdpSpecification{}
+
+	if v, ok := tfMap["ena_srd_udp_enabled"].(bool); ok {
+		apiObject.EnaSrdUdpEnabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenAttachmentEnaSrdSpecification(apiObject *awstypes.AttachmentEnaSrdSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnaSrdEnabled; v != nil {
+		tfMap["ena_srd_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EnaSrdUdpSpecification; v != nil {
+		tfMap["ena_srd_udp_specification"] = []any{flattenAttachmentEnaSrdUdpSpecification(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAttachmentEnaSrdUdpSpecification(apiObject *awstypes.AttachmentEnaSrdUdpSpecification) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.EnaSrdUdpEnabled; v != nil {
+		tfMap["ena_srd_udp_enabled"] = aws.ToBool(v)
+	}
+
+	return tfMap
 }
 
 // Some AWS services creates ENIs behind the scenes and keeps these around for a while
