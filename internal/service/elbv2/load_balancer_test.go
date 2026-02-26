@@ -2582,50 +2582,6 @@ func testAccCheckLoadBalancerDestroy(ctx context.Context, t *testing.T) resource
 	}
 }
 
-func matchApplicationLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
-	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)+`$`))
-}
-
-func matchGatewayLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
-	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(gatewayLoadBalancerARNPattern(lbName)+`$`))
-}
-
-func matchNetworkLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
-	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(networkLoadBalancerARNPattern(lbName)+`$`))
-}
-
-func generalLoadBalancerPatternString(lbName string) string {
-	return fmt.Sprintf(`%s/[a-z0-9]{16}`, lbName)
-}
-
-func applicationPatternString(lbName string) string {
-	return `app/` + generalLoadBalancerPatternString(lbName)
-}
-
-func gatewayPatternString(lbName string) string {
-	return `gwy/` + generalLoadBalancerPatternString(lbName)
-}
-
-func networkPatternString(lbName string) string {
-	return `net/` + generalLoadBalancerPatternString(lbName)
-}
-
-func applicationLoadBalancerARNPattern(lbName string) string {
-	return loadBalancerARNPattern(applicationPatternString(lbName))
-}
-
-func gatewayLoadBalancerARNPattern(lbName string) string {
-	return loadBalancerARNPattern(gatewayPatternString(lbName))
-}
-
-func networkLoadBalancerARNPattern(lbName string) string {
-	return loadBalancerARNPattern(networkPatternString(lbName))
-}
-
-func loadBalancerARNPattern(s string) string {
-	return `loadbalancer/` + s
-}
-
 func testAccPreCheckGatewayLoadBalancer(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
@@ -2652,6 +2608,50 @@ func testAccPreCheckGatewayLoadBalancer(ctx context.Context, t *testing.T) {
 	}
 
 	t.Skip("skipping acceptance testing: region does not support ELBv2 Gateway Load Balancers")
+}
+
+func matchApplicationLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)+`$`))
+}
+
+func matchGatewayLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(gatewayLoadBalancerARNPattern(lbName)+`$`))
+}
+
+func matchNetworkLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(networkLoadBalancerARNPattern(lbName)+`$`))
+}
+
+func applicationLoadBalancerARNPattern(lbName string) string {
+	return loadBalancerARNPattern(applicationPattern(lbName))
+}
+
+func gatewayLoadBalancerARNPattern(lbName string) string {
+	return loadBalancerARNPattern(gatewayPattern(lbName))
+}
+
+func networkLoadBalancerARNPattern(lbName string) string {
+	return loadBalancerARNPattern(networkPattern(lbName))
+}
+
+func loadBalancerARNPattern(s string) string {
+	return `loadbalancer/` + s
+}
+
+func generalLoadBalancerPattern(lbName string) string {
+	return fmt.Sprintf(`%s/[a-z0-9]{16}`, lbName)
+}
+
+func applicationPattern(lbName string) string {
+	return `app/` + generalLoadBalancerPattern(lbName)
+}
+
+func gatewayPattern(lbName string) string {
+	return `gwy/` + generalLoadBalancerPattern(lbName)
+}
+
+func networkPattern(lbName string) string {
+	return `net/` + generalLoadBalancerPattern(lbName)
 }
 
 func testAccLoadBalancerConfig_baseInternal(rName string, subnetCount int) string {
