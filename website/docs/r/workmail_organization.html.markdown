@@ -32,6 +32,7 @@ The following arguments are optional:
 * `directory_id` - (Optional) ID of an existing directory to associate with the organization. Changing this creates a new resource.
 * `interoperability_enabled` - (Optional) Whether to enable interoperability between WorkMail and Microsoft Exchange. Changing this creates a new resource.
 * `kms_key_arn` - (Optional) ARN of a customer-managed KMS key to encrypt the organization's data. If omitted, AWS managed keys are used. Changing this creates a new resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -44,6 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `migration_admin` - User ID of the migration admin if migration is enabled.
 * `organization_id` - ID of the WorkMail Organization.
 * `state` - State of the organization.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

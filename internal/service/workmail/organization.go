@@ -31,11 +31,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_workmail_organization", name="Organization")
+// @Tags(identifierAttribute="arn")
 func newOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &organizationResource{}
 
@@ -125,6 +127,8 @@ func (r *organizationResource) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags: tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -181,6 +185,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, findOutput, &plan))
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := createTags(ctx, conn, *findOutput.ARN, getTagsIn(ctx)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, *findOutput.ARN)
 		return
 	}
 
