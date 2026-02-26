@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -96,12 +97,23 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 			return
 		}
 	}
+
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Get information about a resource from AWS
+	// TIP: -- 3. Retrieve required attributes
+	// If the resource type requires any attributes for listing, such as a parent ID, retrieve them here.
 	{{- end }}
-	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}")
+	parentID := query.ParentID.ValueString()
+
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+		logging.ResourceAttributeKey("parent_id"): parentID,
+	})
+	{{ if .IncludeComments }}
+	// TIP: -- 4. Get information about a resource from AWS
+	{{- end }}
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input {{ .SDKPackage }}.List{{ .ListResource }}sInput
+		input := {{ .SDKPackage }}.List{{ .ListResource }}sInput{
+			ParentId: parentID,
+		}
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
@@ -162,6 +174,11 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 {{- end }}
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
+	{{ if .InclueComments }}
+	// TIP: -- 1. Include required attributes
+	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
+	{{ end }}
+	ParentID types.String `tfsdk:"parent_id"`
 }
 {{ if .IncludeComments }}
 // TIP: ==== LISTING FUNCTION ====
