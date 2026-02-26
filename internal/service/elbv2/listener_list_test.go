@@ -158,7 +158,7 @@ func TestAccELBV2Listener_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_access_control_expose_headers_header_value"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_access_control_max_age_header_value"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_content_security_policy_header_value"), knownvalue.StringExact("")),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_server_enabled"), knownvalue.StringExact("")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_server_enabled"), knownvalue.Bool(true)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_strict_transport_security_header_value"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_x_content_type_options_header_value"), knownvalue.StringExact("")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("routing_http_response_x_frame_options_header_value"), knownvalue.StringExact("")),
