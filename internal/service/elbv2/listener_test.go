@@ -42,7 +42,7 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "application"),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -133,7 +133,7 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "network"),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchNetworkListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -224,7 +224,7 @@ func TestAccELBV2Listener_Gateway_basic(t *testing.T) {
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "gateway"),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchGatewayListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -445,7 +445,7 @@ func TestAccELBV2Listener_Forward_weighted(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -468,7 +468,7 @@ func TestAccELBV2Listener_Forward_weighted(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -491,7 +491,7 @@ func TestAccELBV2Listener_Forward_weighted(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1062,7 +1062,7 @@ func TestAccELBV2Listener_Forward_ignoreFields(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "440"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1390,7 +1390,7 @@ func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckListenerExists(ctx, t, resourceName, &conf),
 							resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+							matchNetworkListenerARN(ctx, resourceName, names.AttrARN, rName),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(testcase)),
 							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 							resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1431,7 +1431,7 @@ func TestAccELBV2Listener_Protocol_udp(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchNetworkListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "UDP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "514"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1471,7 +1471,7 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_alb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1515,7 +1515,7 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1568,7 +1568,7 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationVerify),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_authentication.0.trust_store_arn", "aws_lb_trust_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1615,7 +1615,7 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1858,7 +1858,7 @@ func TestAccELBV2Listener_redirect(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1900,7 +1900,7 @@ func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -1941,7 +1941,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -1987,7 +1987,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -2037,7 +2037,7 @@ func TestAccELBV2Listener_jwtValidation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -2281,7 +2281,7 @@ func TestAccELBV2Listener_redirectWithTargetGroupARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					matchApplicationListenerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
@@ -2390,6 +2390,34 @@ func testAccCheckListenerDestroy(ctx context.Context, t *testing.T) resource.Tes
 
 		return nil
 	}
+}
+
+func matchApplicationListenerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(applicationListenerARNPattern(lbName)+`$`))
+}
+
+func matchGatewayListenerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(gatewayListenerARNPattern(lbName)+`$`))
+}
+
+func matchNetworkListenerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(networkListenerARNPattern(lbName)+`$`))
+}
+
+func applicationListenerARNPattern(lbName string) string {
+	return listenerARNPattern(applicationPattern(lbName))
+}
+
+func gatewayListenerARNPattern(lbName string) string {
+	return listenerARNPattern(gatewayPattern(lbName))
+}
+
+func networkListenerARNPattern(lbName string) string {
+	return listenerARNPattern(networkPattern(lbName))
+}
+
+func listenerARNPattern(s string) string {
+	return `listener/` + s + `/[a-z0-9]{16}`
 }
 
 func testAccListenerConfig_base(rName string) string {
