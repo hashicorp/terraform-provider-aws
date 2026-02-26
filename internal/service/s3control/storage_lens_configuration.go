@@ -362,7 +362,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												names.AttrEnabled: {
 													Type:     schema.TypeBool,
-													Optional: true,
+													Required: true,
 												},
 												"encryption": {
 													Type:     schema.TypeList,
@@ -477,7 +477,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												names.AttrEnabled: {
 													Type:     schema.TypeBool,
-													Optional: true,
+													Required: true,
 												},
 												"encryption": {
 													Type:     schema.TypeList,
