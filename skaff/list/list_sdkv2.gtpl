@@ -193,11 +193,11 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 // It should replace most of the body of the resource type's Read function (`resource{{ .ListResource }}Read`) and take the API results
 // as parameters.
 // The replaced section of the Read function should be
-// 	if err := resource{{ .ListResource }}Flatten(ctx, meta.(*conns.AWSClient), lb, d); err != nil {
+// 	if err := resource{{ .ListResource }}Flatten(ctx, meta.(*conns.AWSClient), {{ .ListResourceLowerCamel }}, d); err != nil {
 // 		return sdkdiag.AppendFromErr(diags, err)
 // 	}
 {{- end }}
-func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AWSClient, lb *awstypes.{{ .ListResource }}, d *schema.ResourceData) error {
+func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AWSClient, {{ .ListResourceLowerCamel }} *awstypes.{{ .ListResource }}, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "{{ .ARNNamespace }}", "{{ .ListResourceLower }}/"+d.Id()))
 	if err := d.Set("some_collection", flattenSomeCollection(someCollection)); err != nil {
 		return fmt.Errorf("setting some_collection: %w", err)
