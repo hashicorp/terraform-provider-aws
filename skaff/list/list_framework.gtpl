@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 {{ if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
@@ -144,10 +145,18 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 				return
 			}
 
+	 		{{- if .IncludeComments }}
+			// TIP: -- 5. Set identifying attributes for logging
+			// Set one or more logging fields with attributes that will identify the resource.
+			// Typically, these will be the attributes used in the Resource Identity
+			{{- end }}
+			arn := aws.ToString(item.{{ .ListResource }}Arn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+
 			result := request.NewListResult(ctx)
 			var data {{ .ListResourceLowerCamel }}ResourceModel
 	        {{ if .IncludeComments -}}
-	        // TIP: -- 5. Set the ID, arguments, and attributes
+	        // TIP: -- 6. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
@@ -158,7 +167,7 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 				}
 
 				{{ if .IncludeComments -}}
-				// TIP: -- 6. Set the display name
+				// TIP: -- 7. Set the display name
 				{{- end }}
 				name := aws.ToString(item.{{ .ListResource }}Id)
 				data.Name = fwflex.StringValueToFramework(ctx, name)
