@@ -642,7 +642,7 @@ func sweepMlflowApps(ctx context.Context, client *conns.AWSClient) ([]sweep.Swee
 
 		for _, v := range page.Summaries {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMlflowAppResource, client,
-				framework.NewAttribute("arn", aws.ToString(v.Arn))))
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn))))
 		}
 	}
 
