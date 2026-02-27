@@ -250,11 +250,15 @@ func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AW
 {{- define "Factory" -}}
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // {{ template "Annotation" . }}
-func new{{ .ListResource }}ResourceAsListResource() inttypes.ListResourceForSDK {
+func {{ template "FactoryFunctionName" . }}() inttypes.ListResourceForSDK {
 	l := {{ template "ListResourceStructName" . }}{}
 	l.SetResourceSchema(resource{{ .ListResource }}())
 	return &l
 }
+{{- end }}
+
+{{- define "FactoryFunctionName" -}}
+new{{ .ListResource }}ResourceAsListResource
 {{- end }}
 
 {{- define "Annotation" -}}

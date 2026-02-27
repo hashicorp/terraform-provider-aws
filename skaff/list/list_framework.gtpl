@@ -222,9 +222,13 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 {{- define "Factory" -}}
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // {{ template "Annotation" . }}
-func new{{ .ListResource }}ResourceAsListResource() list.ListResourceWithConfigure {
+func {{ template "FactoryFunctionName" . }}() list.ListResourceWithConfigure {
 	return &{{ template "ListResourceStructName" . }}{}
 }
+{{- end }}
+
+{{- define "FactoryFunctionName" -}}
+new{{ .ListResource }}ResourceAsListResource
 {{- end }}
 
 {{- define "Annotation" -}}
