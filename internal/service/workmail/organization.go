@@ -17,7 +17,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workmail/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -38,6 +37,11 @@ import (
 
 // @FrameworkResource("aws_workmail_organization", name="Organization")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("organization_id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workmail;workmail.DescribeOrganizationOutput")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importIgnore="delete_directory")
+// @Testing(importStateIdAttribute="organization_id")
 func newOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &organizationResource{}
 
@@ -54,6 +58,7 @@ const (
 type organizationResource struct {
 	framework.ResourceWithModel[organizationResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *organizationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -127,7 +132,7 @@ func (r *organizationResource) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags: tftags.TagsAttribute(),
+			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
@@ -282,10 +287,6 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *organizationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("organization_id"), req, resp)
-}
-
 const (
 	statusActive   = "Active"
 	statusDeleting = "Deleting"
@@ -378,5 +379,7 @@ type organizationResourceModel struct {
 	OrganizationAlias       types.String      `tfsdk:"organization_alias"`
 	OrganizationId          types.String      `tfsdk:"organization_id"`
 	State                   types.String      `tfsdk:"state"`
+	Tags                    tftags.Map        `tfsdk:"tags"`
+	TagsAll                 tftags.Map        `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value    `tfsdk:"timeouts"`
 }
