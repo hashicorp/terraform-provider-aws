@@ -147,30 +147,8 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			// TIP: -- 6. Populate additional attributes needed for Resource Identity
-			rd.Set(names.AttrName, name)
-
-			if request.IncludeResource {
-				if err := resource{{ .ListResource }}Flatten(ctx, l.Meta(), &item, rd); err != nil {
-					tflog.Error(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			{{ if .IncludeComments -}}
-			// TIP: -- 7. Set the display name
-			{{- end }}
-			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
+			
+			{{ template "ReadBody" . }}
 
 			if !yield(result) {
 				return
@@ -275,4 +253,31 @@ listResource{{ .ListResource }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+{{- end }}
+
+{{- define "ReadBody" -}}
+			rd := l.ResourceData()
+			rd.SetId(arn)
+			// TIP: -- 6. Populate additional attributes needed for Resource Identity
+			rd.Set(names.AttrName, name)
+
+			if request.IncludeResource {
+				if err := resource{{ .ListResource }}Flatten(ctx, l.Meta(), &item, rd); err != nil {
+					tflog.Error(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
+			}
+
+			{{ if .IncludeComments -}}
+			// TIP: -- 7. Set the display name
+			{{- end }}
+			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
+
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
 {{- end }}

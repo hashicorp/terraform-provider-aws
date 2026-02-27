@@ -147,23 +147,8 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
 			result := request.NewListResult(ctx)
-			var data {{ .ListResourceLowerCamel }}ResourceModel
-	        {{ if .IncludeComments -}}
-	        // TIP: -- 6. Set the ID, arguments, and attributes
-	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
-	        {{- end }}
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
-					result.Diagnostics.Append(diags...)
-					yield(result)
-					return
-				}
-
-				{{ if .IncludeComments -}}
-				// TIP: -- 7. Set the display name
-				{{- end }}
-				result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
-			})
+			
+			{{ template "ReadBody" . }}
 
 			if !yield(result) {
 				return
@@ -245,4 +230,24 @@ type {{ template "ListResourceStructName" . }} struct {
 
 {{- define "GoImports" -}}
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+{{- end }}
+
+{{- define "ReadBody" -}}
+			var data {{ .ListResourceLowerCamel }}ResourceModel
+			{{ if .IncludeComments -}}
+			// TIP: -- 6. Set the ID, arguments, and attributes
+			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
+			{{- end }}
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
+				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
+					result.Diagnostics.Append(diags...)
+					yield(result)
+					return
+				}
+
+				{{ if .IncludeComments -}}
+				// TIP: -- 7. Set the display name
+				{{- end }}
+				result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
+			})
 {{- end }}
