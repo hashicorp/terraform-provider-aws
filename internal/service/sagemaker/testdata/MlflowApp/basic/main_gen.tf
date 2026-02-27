@@ -38,8 +38,8 @@ data "aws_iam_policy_document" "test_perms" {
     ]
 
     resources = [
-      "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
-      "arn:aws:s3:::${aws_s3_bucket.test.bucket}/*"
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.bucket}/*"
     ]
   }
 
