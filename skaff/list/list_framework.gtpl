@@ -65,7 +65,7 @@ import (
 {{- end }}
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
-// @FrameworkListResource("{{ .ProviderResourceName }}")
+// {{ template "Annotation" . }}
 func new{{ .ListResource }}ResourceAsListResource() list.ListResourceWithConfigure {
 	return &{{ template "ListResourceStructName" . }}{}
 }
@@ -223,6 +223,10 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 	}
 }
 
-{{ define "ListResourceStructName" -}}
+{{- define "Annotation" -}}
+@FrameworkListResource("{{ .ProviderResourceName }}")
+{{- end }}
+
+{{- define "ListResourceStructName" -}}
 {{ .ListResourceLowerCamel }}ListResource
 {{- end }}
