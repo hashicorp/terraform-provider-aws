@@ -1,0 +1,11 @@
+```release-note:new-resource
+resource/aws_workmail_organization: Add support for workmail organization
+```
+
+```release-note:new-resource-identity
+resource/aws_workmail_organization: Add resource identity
+```
+
+```release-note:new-list-resource
+resource/aws_workmail_organization: Add list support
+```
