@@ -53,6 +53,17 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+{{ if .IncludeComments }}
+// TIP: ==== FILE STRUCTURE ====
+// All list resources should follow this basic outline. Improve this list resource's
+// maintainability by sticking to it.
+//
+// 1. Package declaration
+// 2. Imports
+// 3. Main data source struct with schema method
+// 4. Read method
+// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
+{{- end }}
 
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("{{ .ProviderResourceName }}")
