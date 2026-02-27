@@ -80,7 +80,7 @@ type {{ template "ListResourceStructName" . }} struct {
 // This is only needed if the resource type requires any attributes for listing, such as a parent ID.
 // Otherwise, it can be removed.
 {{- end }}
-// func (r *{{ template "ListResourceStructName" . }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// func (l *{{ template "ListResourceStructName" . }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 // 	response.Schema = listschema.Schema{
 // 		Attributes: map[string]listschema.Attribute{
 // 			"parent_id": listschema.StringAttribute{
@@ -91,7 +91,7 @@ type {{ template "ListResourceStructName" . }} struct {
 // 	}
 // }
 
-func (r *{{ template "ListResourceStructName" . }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
 	// TIP: ==== LIST RESOURCE LIST ====
 	// Generally, the List function should do the following things. Make
@@ -108,7 +108,7 @@ func (r *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}Client(ctx)
+	conn := l.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
@@ -149,7 +149,7 @@ func (r *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 	        // TIP: -- 5. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
-			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
 				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
