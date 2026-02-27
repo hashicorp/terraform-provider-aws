@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -119,7 +120,6 @@ func (r *mlflowAppResource) Create(ctx context.Context, request resource.CreateR
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	input.Tags = getTagsIn(ctx)
 
 	output, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateMlflowAppOutput, error) {
@@ -231,13 +231,15 @@ func (r *mlflowAppResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 
 	conn := r.Meta().SageMakerClient(ctx)
-
 	input := sagemaker.DeleteMlflowAppInput{
 		Arn: data.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteMlflowApp(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
+		return
+	}
+	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Can't delete Mlflow App in the state (DELETED)") {
 		return
 	}
 	if err != nil {
