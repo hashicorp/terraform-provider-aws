@@ -145,7 +145,6 @@ func (r *organizationResource) Schema(ctx context.Context, req resource.SchemaRe
 }
 
 func (r *organizationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().WorkMailClient(ctx)
 
 	var plan organizationResourceModel
@@ -203,7 +202,6 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 }
 
 func (r *organizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().WorkMailClient(ctx)
 
 	var state organizationResourceModel

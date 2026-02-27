@@ -32,6 +32,7 @@ The following arguments are optional:
 * `directory_id` - (Optional) ID of an existing directory to associate with the organization. Changing this creates a new resource.
 * `interoperability_enabled` - (Optional) Whether to enable interoperability between WorkMail and Microsoft Exchange. Changing this creates a new resource.
 * `kms_key_arn` - (Optional) ARN of a customer-managed KMS key to encrypt the organization's data. If omitted, AWS managed keys are used. Changing this creates a new resource.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

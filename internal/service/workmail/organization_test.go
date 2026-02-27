@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workmail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +30,7 @@ func TestAccWorkMailOrganization_basic(t *testing.T) {
 	}
 
 	var organization workmail.DescribeOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -52,7 +51,7 @@ func TestAccWorkMailOrganization_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "default_mail_domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "directory_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "directory_type"),
-					resource.TestCheckResourceAttr(resourceName, "state", "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Active"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "workmail", regexache.MustCompile(`organization/.+$`)),
 				),
 			},
@@ -75,7 +74,7 @@ func TestAccWorkMailOrganization_disappears(t *testing.T) {
 	}
 
 	var organization workmail.DescribeOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -111,7 +110,7 @@ func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 	}
 
 	var before, after workmail.DescribeOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -156,7 +155,7 @@ func TestAccWorkMailOrganization_kmsKey(t *testing.T) {
 	}
 
 	var organization workmail.DescribeOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -172,8 +171,8 @@ func TestAccWorkMailOrganization_kmsKey(t *testing.T) {
 				Config: testAccOrganizationConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, t, resourceName, &organization),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", "Active"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Active"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "workmail", regexache.MustCompile(`organization/.+$`)),
 				),
 			},
@@ -183,7 +182,7 @@ func TestAccWorkMailOrganization_kmsKey(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "organization_id"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "organization_id",
-				ImportStateVerifyIgnore:              []string{"delete_directory", "kms_key_arn"},
+				ImportStateVerifyIgnore:              []string{"delete_directory", names.AttrKMSKeyARN},
 			},
 		},
 	})
