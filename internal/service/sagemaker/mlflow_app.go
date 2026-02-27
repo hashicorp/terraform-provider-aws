@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -33,6 +32,8 @@ import (
 
 // @FrameworkResource("aws_sagemaker_mlflow_app", name="Mlflow App")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(hasNoPreExistingResource=true)
 func resourceMlflowApp(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &mlflowAppResource{}
 
@@ -45,6 +46,7 @@ func resourceMlflowApp(_ context.Context) (resource.ResourceWithConfigure, error
 
 type mlflowAppResource struct {
 	framework.ResourceWithModel[mlflowAppResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -246,10 +248,6 @@ func (r *mlflowAppResource) Delete(ctx context.Context, request resource.DeleteR
 	if err := waitMlflowAppDeleted(ctx, conn, data.ARN.ValueString(), deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Mlflow App (%s) delete", data.ARN.ValueString()), err.Error())
 	}
-}
-
-func (r *mlflowAppResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
 }
 
 type mlflowAppResourceModel struct {

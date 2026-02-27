@@ -53,6 +53,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = <resource-name>.example
+  identity = {
+    "arn" = "arn:aws:sagemaker:us-east-1:123456789012:mlflow-app/app-ABCD1234"
+  }
+}
+
+resource "aws_sagemaker_mlflow_app" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `arn` (String) ARN of the MLflow App.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI MLflow Apps using the `arn`. For example:
 
 ```terraform
