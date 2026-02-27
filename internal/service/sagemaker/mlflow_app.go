@@ -36,7 +36,7 @@ import (
 // @ArnIdentity
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
-func resourceMlflowApp(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newMlflowAppResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &mlflowAppResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)

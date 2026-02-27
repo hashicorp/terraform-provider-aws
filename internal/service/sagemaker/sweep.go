@@ -36,6 +36,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_flow_definition", sweepFlowDefinitions)
 	awsv2.Register("aws_sagemaker_human_task_ui", sweepHumanTaskUIs)
 	awsv2.Register("aws_sagemaker_image", sweepImages)
+	awsv2.Register("aws_sagemaker_mlflow_app", sweepMlflowApps)
 	awsv2.Register("aws_sagemaker_mlflow_tracking_server", sweepMlflowTrackingServers)
 	awsv2.Register("aws_sagemaker_model_package_group", sweepModelPackageGroups)
 	awsv2.Register("aws_sagemaker_model", sweepModels)
@@ -620,6 +621,28 @@ func sweepPipelines(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 			d.SetId(aws.ToString(v.PipelineName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepMlflowApps(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SageMakerClient(ctx)
+	var input sagemaker.ListMlflowAppsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := sagemaker.NewListMlflowAppsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Summaries {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMlflowAppResource, client,
+				framework.NewAttribute("arn", aws.ToString(v.Arn))))
 		}
 	}
 

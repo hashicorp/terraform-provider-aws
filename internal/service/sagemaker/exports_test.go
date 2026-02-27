@@ -21,7 +21,7 @@ var (
 	ResourceImage                                  = resourceImage
 	ResourceLabelingJob                            = newLabelingJobResource
 	ResourceImageVersion                           = resourceImageVersion
-	ResourceMlflowApp                              = resourceMlflowApp
+	ResourceMlflowApp                              = newMlflowAppResource
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
 	ResourceModelCard                              = newModelCardResource

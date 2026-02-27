@@ -36,7 +36,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  resourceMlflowApp,
+			Factory:  newMlflowAppResource,
 			TypeName: "aws_sagemaker_mlflow_app",
 			Name:     "Mlflow App",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
