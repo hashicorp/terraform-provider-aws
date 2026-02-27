@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,7 +17,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_parameter.test"
 	resourceName := "aws_ssm_parameter.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -59,7 +58,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_parameter.test"
-	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
+	name := acctest.RandomWithPrefix(t, "/tf-acc-test/tf-acc-test")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -108,7 +107,7 @@ func TestAccSSMParameterDataSource_secureString(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_parameter.test"
 	resourceName := "aws_ssm_parameter.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
