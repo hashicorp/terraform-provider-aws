@@ -68,14 +68,14 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("{{ .ProviderResourceName }}")
 func new{{ .ListResource }}ResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResource{{ .ListResource }}{}
+	l := {{ template "ListResourceStructName" . }}{}
 	l.SetResourceSchema(resource{{ .ListResource }}())
 	return &l
 }
 
-var _ list.ListResource = &listResource{{ .ListResource }}{}
+var _ list.ListResource = &{{ template "ListResourceStructName" . }}{}
 
-type listResource{{ .ListResource }} struct {
+type {{ template "ListResourceStructName" . }} struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
@@ -84,7 +84,7 @@ type listResource{{ .ListResource }} struct {
 // This is only needed if the resource type requires any attributes for listing, such as a parent ID.
 // Otherwise, it can be removed.
 {{- end }}
-// func (l *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// func (l *{{ template "ListResourceStructName" . }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 // 	response.Schema = listschema.Schema{
 // 		Attributes: map[string]listschema.Attribute{
 // 			"parent_id": listschema.StringAttribute{
@@ -95,7 +95,7 @@ type listResource{{ .ListResource }} struct {
 // 	}
 // }
 
-func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
 	// TIP: ==== LIST RESOURCE LIST ====
 	// Generally, the List function should do the following things. Make
@@ -248,3 +248,7 @@ func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AW
 
 	return nil
 }
+
+{{ define "ListResourceStructName" -}}
+listResource{{ .ListResource }}
+{{- end }}
