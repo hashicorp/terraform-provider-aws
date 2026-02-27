@@ -51,6 +51,7 @@ type TemplateData struct {
 	ServiceLower              string
 	HumanListResourceName     string
 	ProviderResourceName      string
+	ARNNamespace              string
 }
 
 func Create(listName, snakeName string, comments, framework, force bool) error {
@@ -96,6 +97,7 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 		ServiceLower:              strings.ToLower(service.ProviderNameUpper()),
 		HumanListResourceName:     convert.ToHumanResName(listName),
 		ProviderResourceName:      convert.ToProviderResourceName(servicePackage, snakeName),
+		ARNNamespace:              service.ARNNamespace(),
 	}
 
 	tmpl := listTmplFramework

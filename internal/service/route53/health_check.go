@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -130,7 +130,7 @@ func resourceHealthCheck() *schema.Resource {
 				// reference_name. This limits the length of the resource argument to 27.
 				//
 				// Example generated suffix: -terraform-20190122200019880700000001
-				ValidateFunc: validation.StringLenBetween(0, (64 - id.UniqueIDSuffixLength - 11)),
+				ValidateFunc: validation.StringLenBetween(0, (64 - sdkid.UniqueIDSuffixLength - 11)),
 			},
 			"regions": {
 				Type:     schema.TypeSet,
@@ -278,7 +278,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Regions = flex.ExpandStringyValueSet[awstypes.HealthCheckRegion](v.(*schema.Set))
 	}
 
-	callerRef := id.UniqueId()
+	callerRef := sdkid.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
 	}

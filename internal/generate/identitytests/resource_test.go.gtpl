@@ -163,7 +163,9 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
+				{{ if not .Optional -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if .HasRegionAttribute -}}
@@ -205,7 +207,9 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ end -}}
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
+				{{ if not .Optional -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if .HasRegionAttribute -}}

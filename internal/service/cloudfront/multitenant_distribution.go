@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -702,7 +702,7 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
 
 	// Set required computed fields that AutoFlex can't handle
-	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
+	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(sdkid.UniqueId())
 
 	// Set ConnectionMode to "tenant-only" to create a multi-tenant distribution instead of standard distribution
 	// This is the key field that distinguishes multi-tenant from standard distributions

@@ -1195,7 +1195,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions(t *testing.T) {
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1238,6 +1238,8 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions(t *testing.T) {
 }
 
 func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions_versionValidation(t *testing.T) {
+	t.Parallel()
+
 	ctx := acctest.Context(t)
 
 	testCases := map[string]struct {
@@ -1270,12 +1272,11 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_jwtOptions_versionValidatio
 		},
 	}
 
-	for name, tc := range testCases {
+	for name, tc := range testCases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			rName := testAccRandomDomainName()
 
-			resource.Test(t, resource.TestCase{
+			acctest.ParallelTest(ctx, t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

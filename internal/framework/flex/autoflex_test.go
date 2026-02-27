@@ -113,7 +113,7 @@ func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases, checks ru
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
@@ -166,7 +166,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, checks r
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}
@@ -234,7 +234,7 @@ func runTopLevelTestCases[Tsource, Ttarget any](t *testing.T, testCases toplevel
 				}
 				normalizedLines := normalizeLogs(lines)
 
-				goldenFileName := autoGenerateGoldenPath(t, t.Name(), testName)
+				goldenFileName := autoGenerateGoldenPath(t, t.Name())
 				goldenPath := filepath.Join("testdata", goldenFileName)
 				compareWithGolden(t, goldenPath, normalizedLines)
 			}

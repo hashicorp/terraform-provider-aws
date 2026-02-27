@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -211,7 +211,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta an
 	analyzerName := d.Get("analyzer_name").(string)
 	input := accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(id.UniqueId()),
+		ClientToken:  aws.String(sdkid.UniqueId()),
 		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
@@ -284,7 +284,7 @@ func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta an
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
 	input := accessanalyzer.DeleteAnalyzerInput{
 		AnalyzerName: aws.String(d.Id()),
-		ClientToken:  aws.String(id.UniqueId()),
+		ClientToken:  aws.String(sdkid.UniqueId()),
 	}
 	_, err := conn.DeleteAnalyzer(ctx, &input)
 

@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -109,7 +109,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateQuerySuggestionsBlockListInput{
-		ClientToken:  aws.String(id.UniqueId()),
+		ClientToken:  aws.String(sdkid.UniqueId()),
 		IndexId:      aws.String(d.Get("index_id").(string)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),

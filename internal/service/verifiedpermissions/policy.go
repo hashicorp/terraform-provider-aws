@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	interflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -228,7 +228,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	in := &verifiedpermissions.CreatePolicyInput{}
 
-	in.ClientToken = aws.String(id.UniqueId())
+	in.ClientToken = aws.String(sdkid.UniqueId())
 	in.PolicyStoreId = plan.PolicyStoreID.ValueStringPointer()
 
 	def, diags := plan.Definition.ToPtr(ctx)

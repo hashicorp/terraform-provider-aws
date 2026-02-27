@@ -261,8 +261,8 @@ func statusAttachment(conn *networkmanager.Client, coreNetworkID, attachmentID s
 
 func waitAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, coreNetworkID, attachmentID string, timeout time.Duration) (*awstypes.Attachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStateUpdating),
-		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
+		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingTagAcceptance),
 		Timeout: timeout,
 		Refresh: statusAttachment(conn, coreNetworkID, attachmentID),
 	}

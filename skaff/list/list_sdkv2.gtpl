@@ -45,8 +45,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -119,27 +120,16 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(arn)
+			// TIP: -- 5. Populate additional attributes needed for Resource Identity
+			rd.Set(names.AttrName, name)
 
-			tflog.Info(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}")
-	        {{- if .IncludeComments }}
-			// TIP: -- 5. Populate the resource
-			// In many cases, the value in item will have sufficient information to populate the resource data.
-			// If this is the case, factor out the resource flattening from resource{{ .ListResource }}Read.
-			// See, for example, the implementation of `vpc_subnet_list`.
-			//
-			// If resource{{ .ListResource }}Read makes additional API calls to populate the resource data
-			// they should only be made if request.IncludeResource is true.
-	        {{- end }}
-			diags := resource{{ .ListResource }}Read(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
-					"diags": sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-				continue
+			if request.IncludeResource {
+				if err := resource{{ .ListResource }}Flatten(ctx, l.Meta(), &item, rd); err != nil {
+					tflog.Error(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
@@ -194,4 +184,24 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 			}
 		}
 	}
+}
+
+{{ if .IncludeComments -}}
+// TIP: ==== RESOURCE FLATTENING FUNCTION ====
+// This function should be placed in the resource type's source file ("{{ .ListResourceSnake }}.go").
+// It is intended to perform the flattening of the results of the API call or calls used to populate a resource's values.
+// It should replace most of the body of the resource type's Read function (`resource{{ .ListResource }}Read`) and take the API results
+// as parameters.
+// The replaced section of the Read function should be
+// 	if err := resource{{ .ListResource }}Flatten(ctx, meta.(*conns.AWSClient), lb, d); err != nil {
+// 		return sdkdiag.AppendFromErr(diags, err)
+// 	}
+{{- end }}
+func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AWSClient, lb *awstypes.{{ .ListResource }}, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "{{ .ARNNamespace }}", "{{ .ListResourceLower }}/"+d.Id()))
+	if err := d.Set("some_collection", flattenSomeCollection(someCollection)); err != nil {
+		return fmt.Errorf("setting some_collection: %w", err)
+	}
+
+	return nil
 }

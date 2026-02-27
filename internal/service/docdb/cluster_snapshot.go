@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_docdb_cluster_snapshot", name="Cluster Snapshot")
-func ResourceClusterSnapshot() *schema.Resource {
+func resourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
 		ReadWithoutTimeout:   resourceClusterSnapshotRead,

@@ -9,8 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -43,10 +48,12 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "ip_discovery", string(awstypes.IpDiscoveryIpv4)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_cluster_name", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
@@ -1117,6 +1124,68 @@ func TestAccMemoryDBCluster_valkeyEngine(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_networkTypeAndIPDiscovery(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_networkTypeAndIPDiscovery(rName, string(awstypes.NetworkTypeDualStack), string(awstypes.IpDiscoveryIpv6)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("network_type"),
+						knownvalue.StringExact(string(awstypes.NetworkTypeDualStack))),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("ip_discovery"),
+						knownvalue.StringExact(string(awstypes.NetworkTypeIpv6))),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_networkTypeAndIPDiscovery(rName, string(awstypes.NetworkTypeDualStack), string(awstypes.IpDiscoveryIpv4)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("network_type"),
+						knownvalue.StringExact(string(awstypes.NetworkTypeDualStack))),
+					statecheck.ExpectKnownValue(
+						resourceName,
+						tfjsonpath.New("ip_discovery"),
+						knownvalue.StringExact(string(awstypes.NetworkTypeIpv4))),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
@@ -1179,6 +1248,17 @@ func testAccCheckSnapshotExistsByName(ctx context.Context, t *testing.T, snapsho
 func testAccClusterConfig_baseNetwork(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 2),
+		`
+resource "aws_memorydb_subnet_group" "test" {
+  subnet_ids = aws_subnet.test[*].id
+}
+`,
+	)
+}
+
+func testAccClusterConfig_baseNetworkIPv6(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		`
 resource "aws_memorydb_subnet_group" "test" {
   subnet_ids = aws_subnet.test[*].id
@@ -1720,5 +1800,32 @@ resource "aws_memorydb_cluster" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value),
+	)
+}
+
+func testAccClusterConfig_networkTypeAndIPDiscovery(rName, networkType, ipDiscovery string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseNetworkIPv6(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_memorydb_cluster" "test" {
+  acl_name                   = aws_memorydb_acl.test.id
+  auto_minor_version_upgrade = false
+  name                       = %[1]q
+  node_type                  = "db.t4g.small"
+  num_shards                 = 2
+  security_group_ids         = [aws_security_group.test.id]
+  snapshot_retention_limit   = 7
+  subnet_group_name          = aws_memorydb_subnet_group.test.id
+
+  network_type = %[2]q
+  ip_discovery = %[3]q
+}
+`, rName, networkType, ipDiscovery),
 	)
 }

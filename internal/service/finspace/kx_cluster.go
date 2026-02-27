@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
 	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -449,7 +449,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta a
 		ClusterType:   types.KxClusterType(d.Get(names.AttrType).(string)),
 		ReleaseLabel:  aws.String(d.Get("release_label").(string)),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
-		ClientToken:   aws.String(id.UniqueId()),
+		ClientToken:   aws.String(sdkid.UniqueId()),
 		Tags:          getTagsIn(ctx),
 	}
 

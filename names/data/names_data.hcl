@@ -3368,7 +3368,7 @@ service "elbv2" {
 
   sdk {
     id            = "Elastic Load Balancing v2"
-    arn_namespace = "elbv2"
+    arn_namespace = "elasticloadbalancing"
   }
 
   names {
@@ -3398,7 +3398,7 @@ service "elb" {
 
   sdk {
     id            = "Elastic Load Balancing"
-    arn_namespace = "elb"
+    arn_namespace = "elasticloadbalancing"
   }
 
   names {
