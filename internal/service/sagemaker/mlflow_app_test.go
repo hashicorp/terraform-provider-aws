@@ -300,7 +300,7 @@ resource "aws_sagemaker_mlflow_app" "test" {
   artifact_store_uri = "s3://${aws_s3_bucket.test.bucket}/"
   role_arn           = aws_iam_role.test.arn
 
-  depends_on = [ aws_iam_role_policy_attachment.test ]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
