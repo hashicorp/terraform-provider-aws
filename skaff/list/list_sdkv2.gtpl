@@ -66,13 +66,7 @@ import (
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 {{- end }}
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
-// {{ template "Annotation" . }}
-func new{{ .ListResource }}ResourceAsListResource() inttypes.ListResourceForSDK {
-	l := {{ template "ListResourceStructName" . }}{}
-	l.SetResourceSchema(resource{{ .ListResource }}())
-	return &l
-}
+{{ template "Factory" . }}
 
 var _ list.ListResource = &{{ template "ListResourceStructName" . }}{}
 
@@ -252,6 +246,16 @@ func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AW
 
 	return nil
 }
+
+{{- define "Factory" -}}
+// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
+// {{ template "Annotation" . }}
+func new{{ .ListResource }}ResourceAsListResource() inttypes.ListResourceForSDK {
+	l := {{ template "ListResourceStructName" . }}{}
+	l.SetResourceSchema(resource{{ .ListResource }}())
+	return &l
+}
+{{- end }}
 
 {{- define "Annotation" -}}
 @SDKListResource("{{ .ProviderResourceName }}")
