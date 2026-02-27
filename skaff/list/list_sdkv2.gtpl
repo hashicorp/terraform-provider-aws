@@ -138,17 +138,7 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 				return
 			}
 
-	 		{{- if .IncludeComments }}
-			// TIP: -- 5. Set identifying attributes for logging
-			// Set one or more logging fields with attributes that will identify the resource.
-			// Typically, these will be the attributes used in the Resource Identity
-			{{- end }}
-			arn := aws.ToString(item.{{ .ListResource }}Arn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-			
-			{{ template "ReadBody" . }}
+			{{- template "ReadBody" . }}
 
 			if !yield(result) {
 				return
@@ -256,6 +246,16 @@ listResource{{ .ListResource }}
 {{- end }}
 
 {{- define "ReadBody" -}}
+	 		{{- if .IncludeComments }}
+			// TIP: -- 5. Set identifying attributes for logging
+			// Set one or more logging fields with attributes that will identify the resource.
+			// Typically, these will be the attributes used in the Resource Identity
+			{{- end }}
+			arn := aws.ToString(item.{{ .ListResource }}Arn)
+			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+
+			result := request.NewListResult(ctx)
+			
 			rd := l.ResourceData()
 			rd.SetId(arn)
 			// TIP: -- 6. Populate additional attributes needed for Resource Identity
