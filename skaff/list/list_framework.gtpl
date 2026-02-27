@@ -65,12 +65,12 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @FrameworkListResource("{{ .ProviderResourceName }}")
 func new{{ .ListResource }}ResourceAsListResource() list.ListResourceWithConfigure {
-	return &{{ .ListResourceLowerCamel }}ListResource{}
+	return &{{ template "ListResourceStructName" . }}{}
 }
 
-var _ list.ListResource = &{{ .ListResourceLowerCamel }}ListResource{}
+var _ list.ListResource = &{{ template "ListResourceStructName" . }}{}
 
-type {{ .ListResourceLowerCamel }}ListResource struct {
+type {{ template "ListResourceStructName" . }} struct {
 	{{ .ListResourceLowerCamel }}Resource
 	framework.WithList
 }
@@ -80,7 +80,7 @@ type {{ .ListResourceLowerCamel }}ListResource struct {
 // This is only needed if the resource type requires any attributes for listing, such as a parent ID.
 // Otherwise, it can be removed.
 {{- end }}
-// func (r *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// func (r *{{ template "ListResourceStructName" . }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 // 	response.Schema = listschema.Schema{
 // 		Attributes: map[string]listschema.Attribute{
 // 			"parent_id": listschema.StringAttribute{
@@ -91,7 +91,7 @@ type {{ .ListResourceLowerCamel }}ListResource struct {
 // 	}
 // }
 
-func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (r *{{ template "ListResourceStructName" . }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
 	// TIP: ==== LIST RESOURCE LIST ====
 	// Generally, the List function should do the following things. Make
@@ -214,3 +214,7 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		}
 	}
 }
+
+{{ define "ListResourceStructName" -}}
+{{ .ListResourceLowerCamel }}ListResource
+{{- end }}
