@@ -70,9 +70,7 @@ import (
 
 var _ list.ListResource = &{{ template "ListResourceStructName" . }}{}
 
-type {{ template "ListResourceStructName" . }} struct {
-	framework.ListResourceWithSDKv2Resource
-}
+{{ template "ListResourceStruct" . }}
 
 {{- if .IncludeComments }}
 // TIP: ==== LIST RESOURCE SCHEMA ===
@@ -263,6 +261,12 @@ new{{ .ListResource }}ResourceAsListResource
 
 {{- define "Annotation" -}}
 @SDKListResource("{{ .ProviderResourceName }}")
+{{- end }}
+
+{{- define "ListResourceStruct" -}}
+type {{ template "ListResourceStructName" . }} struct {
+	framework.ListResourceWithSDKv2Resource
+}
 {{- end }}
 
 {{- define "ListResourceStructName" -}}

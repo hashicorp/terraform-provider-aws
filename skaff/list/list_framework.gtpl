@@ -68,10 +68,7 @@ import (
 
 var _ list.ListResource = &{{ template "ListResourceStructName" . }}{}
 
-type {{ template "ListResourceStructName" . }} struct {
-	{{ .ListResourceLowerCamel }}Resource
-	framework.WithList
-}
+{{ template "ListResourceStruct" . }}
 
 {{- if .IncludeComments }}
 // TIP: ==== LIST RESOURCE SCHEMA ===
@@ -233,6 +230,13 @@ new{{ .ListResource }}ResourceAsListResource
 
 {{- define "Annotation" -}}
 @FrameworkListResource("{{ .ProviderResourceName }}")
+{{- end }}
+
+{{- define "ListResourceStruct" -}}
+type {{ template "ListResourceStructName" . }} struct {
+	{{ .ListResourceLowerCamel }}Resource
+	framework.WithList
+}
 {{- end }}
 
 {{- define "ListResourceStructName" -}}
