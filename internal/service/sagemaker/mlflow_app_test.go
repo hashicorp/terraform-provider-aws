@@ -19,14 +19,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSageMakerMlflowApp_basic(t *testing.T) {
+// The default quota is 3 Mlflow Apps per account.
+func TestAccSageMakerMlflowApp_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccSageMakerMlflowApp_basic,
+		acctest.CtDisappears: testAccSageMakerMlflowApp_disappears,
+		"update":             testAccSageMakerMlflowApp_update,
+		"tags":               testAccSageMakerMlflowApp_tags,
+		"Identity":           testAccSageMakerMlflowApp_identitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccSageMakerMlflowApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 	roleResourceName := "aws_iam_role.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -55,12 +70,12 @@ func TestAccSageMakerMlflowApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerMlflowApp_disappears(t *testing.T) {
+func testAccSageMakerMlflowApp_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,7 +101,7 @@ func TestAccSageMakerMlflowApp_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerMlflowApp_update(t *testing.T) {
+func testAccSageMakerMlflowApp_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -94,7 +109,7 @@ func TestAccSageMakerMlflowApp_update(t *testing.T) {
 	artifactStoreURIUpdated := fmt.Sprintf("s3://%s/updated/", rName)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -138,13 +153,13 @@ func TestAccSageMakerMlflowApp_update(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerMlflowApp_tags(t *testing.T) {
+func testAccSageMakerMlflowApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

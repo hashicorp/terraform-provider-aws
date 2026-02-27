@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(serialize=true)
 func resourceMlflowApp(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &mlflowAppResource{}
 
