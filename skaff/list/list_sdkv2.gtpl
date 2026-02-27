@@ -171,6 +171,9 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 				}
 			}
 
+			{{ if .IncludeComments -}}
+			// TIP: -- 7. Set the display name
+			{{- end }}
 			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)

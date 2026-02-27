@@ -169,9 +169,7 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 				{{ if .IncludeComments -}}
 				// TIP: -- 7. Set the display name
 				{{- end }}
-				name := aws.ToString(item.{{ .ListResource }}Id)
-				data.Name = fwflex.StringValueToFramework(ctx, name)
-				result.DisplayName = name
+				result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
 			})
 
 			if !yield(result) {
