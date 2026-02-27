@@ -1980,6 +1980,41 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 	})
 }
 
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups_unknown(t *testing.T) {
+	ctx := acctest.Context(t)
+	var lb1, lb2 awstypes.LoadBalancer
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create NLB without security groups.
+				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+				),
+			},
+			{
+				// Add a security group whose ID is unknown at plan time.
+				// The NLB must be recreated because NLBs don't support
+				// adding security groups after creation.
+				Config: testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &lb2),
+					testAccCheckLoadBalancerRecreated(&lb2, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb awstypes.LoadBalancer
@@ -3781,6 +3816,56 @@ resource "aws_lb" "test" {
   enforce_security_group_inbound_rules_on_private_link_traffic = %[3]q
 }
 `, rName, n, enforcePrivateLink))
+}
+
+// testAccLoadBalancerConfig_nlbSecurityGroupsUnknown returns a config where
+// the security group is created in the same config as the NLB, so its ID is
+// unknown at plan time.  Pass withSG=false for no security group, or
+// withSG=true to create and attach one.
+func testAccLoadBalancerConfig_nlbSecurityGroupsUnknown(rName string, withSG bool) string {
+	if !withSG {
+		return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+}
+`, rName))
+	}
+
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+  security_groups    = [aws_security_group.test.id]
+}
+`, rName))
 }
 
 func testAccLoadBalancerConfig_nlbSubnetCount(rName string, subnetCount int) string {
