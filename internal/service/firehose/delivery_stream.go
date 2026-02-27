@@ -1546,6 +1546,17 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		return conn.CreateDeliveryStream(ctx, input)
 	})
 
+	// In partitions where format conversion is not supported, remove the
+	// DataFormatConversionConfiguration setting
+	if errs.IsAErrorMessageContains[*types.InvalidArgumentException](err, "Firehose record format conversion is not available in the region") {
+		if input.ExtendedS3DestinationConfiguration != nil {
+			input.ExtendedS3DestinationConfiguration.DataFormatConversionConfiguration = nil
+		}
+		_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
+			return conn.CreateDeliveryStream(ctx, input)
+		})
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
@@ -1741,6 +1752,17 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 			return conn.UpdateDestination(ctx, input)
 		})
+
+		// In partitions where format conversion is not supported, remove the
+		// DataFormatConversionConfiguration setting
+		if errs.IsAErrorMessageContains[*types.InvalidArgumentException](err, "Firehose record format conversion is not available in the region") {
+			if input.ExtendedS3DestinationUpdate != nil {
+				input.ExtendedS3DestinationUpdate.DataFormatConversionConfiguration = nil
+			}
+			_, err = retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
+				return conn.UpdateDestination(ctx, input)
+			})
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
