@@ -139,7 +139,7 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 		}
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
 			if err != nil {
-				result = fwdiag.NewListResultErrorDiagnostic(err)
+				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
