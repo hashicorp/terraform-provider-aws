@@ -739,7 +739,7 @@ func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn strin
 func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusCreated, awstypes.MlflowAppStatusDeleting),
-		Target:  enum.Slice(awstypes.MlflowAppStatusDeleted),
+		Target:  []string{},
 		Refresh: statusMlflowApp(conn, arn),
 		Timeout: timeout,
 	}

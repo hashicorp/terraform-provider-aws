@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +20,7 @@ import (
 
 func TestAccSageMakerMlflowApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app sagemaker.DescribeMlflowAppOutput
+
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 	roleResourceName := "aws_iam_role.test"
@@ -36,7 +34,7 @@ func TestAccSageMakerMlflowApp_basic(t *testing.T) {
 			{
 				Config: testAccMlflowAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/", rName)),
@@ -55,9 +53,8 @@ func TestAccSageMakerMlflowApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerMlflowApp_update(t *testing.T) {
+func TestAccSageMakerMlflowApp_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app sagemaker.DescribeMlflowAppOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 
@@ -68,19 +65,72 @@ func TestAccSageMakerMlflowApp_update(t *testing.T) {
 		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMlflowAppConfig_update(rName),
+				Config: testAccMlflowAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowApp, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSageMakerMlflowApp_update(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	artifactStoreURI := fmt.Sprintf("s3://%s/", rName)
+	artifactStoreURIUpdated := fmt.Sprintf("s3://%s/updated/", rName)
+	resourceName := "aws_sagemaker_mlflow_app.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMlflowAppConfig_artifactStoreURI(rName, artifactStoreURI),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", fmt.Sprintf("s3://%s/updated/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", artifactStoreURI),
 				),
 			},
 			{
-				Config: testAccMlflowAppConfig_basic(rName),
+				Config: testAccMlflowAppConfig_artifactStoreURI(rName, artifactStoreURIUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", artifactStoreURIUpdated),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccMlflowAppConfig_artifactStoreURI(rName, artifactStoreURI),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store_uri", artifactStoreURI),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -88,7 +138,7 @@ func TestAccSageMakerMlflowApp_update(t *testing.T) {
 
 func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app sagemaker.DescribeMlflowAppOutput
+
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_mlflow_app.test"
 
@@ -101,7 +151,7 @@ func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 			{
 				Config: testAccMlflowAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -114,7 +164,7 @@ func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 			{
 				Config: testAccMlflowAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -123,42 +173,10 @@ func TestAccSageMakerMlflowApp_tags(t *testing.T) {
 			{
 				Config: testAccMlflowAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
+					testAccCheckMlflowAppExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-			},
-		},
-	})
-}
-
-func TestAccSageMakerMlflowApp_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var app sagemaker.DescribeMlflowAppOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_mlflow_app.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMlflowAppDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMlflowAppConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMlflowAppExists(ctx, t, resourceName, &app),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowApp, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
 			},
 		},
 	})
@@ -191,7 +209,7 @@ func testAccCheckMlflowAppDestroy(ctx context.Context, t *testing.T) resource.Te
 	}
 }
 
-func testAccCheckMlflowAppExists(ctx context.Context, t *testing.T, n string, app *sagemaker.DescribeMlflowAppOutput) resource.TestCheckFunc {
+func testAccCheckMlflowAppExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -199,14 +217,9 @@ func testAccCheckMlflowAppExists(ctx context.Context, t *testing.T, n string, ap
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
-		resp, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-		if err != nil {
-			return err
-		}
+		_, err := tfsagemaker.FindMlflowAppByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-		*app = *resp
-
-		return nil
+		return err
 	}
 }
 
@@ -290,14 +303,14 @@ resource "aws_sagemaker_mlflow_app" "test" {
 `, rName))
 }
 
-func testAccMlflowAppConfig_update(rName string) string {
+func testAccMlflowAppConfig_artifactStoreURI(rName, artifactStoreURI string) string {
 	return acctest.ConfigCompose(testAccMlflowAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_mlflow_app" "test" {
   name               = %[1]q
-  artifact_store_uri = "s3://${aws_s3_bucket.test.bucket}/updated/"
+  artifact_store_uri = %[2]q
   role_arn           = aws_iam_role.test.arn
 }
-`, rName))
+`, rName, artifactStoreURI))
 }
 
 func testAccMlflowAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
