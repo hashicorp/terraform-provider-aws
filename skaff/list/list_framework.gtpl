@@ -48,9 +48,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	{{ template "GoImports" }}
 )
 {{ if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
@@ -241,4 +241,8 @@ type {{ template "ListResourceStructName" . }} struct {
 
 {{- define "ListResourceStructName" -}}
 {{ .ListResourceLowerCamel }}ListResource
+{{- end }}
+
+{{- define "GoImports" -}}
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 {{- end }}
