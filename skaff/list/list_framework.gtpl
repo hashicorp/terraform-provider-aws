@@ -144,7 +144,7 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 			}
 
 			result := request.NewListResult(ctx)
-			var data {{ .ResourceLowerCamel }}ResourceModel
+			var data {{ .ListResourceLowerCamel }}ResourceModel
 	        {{ if .IncludeComments -}}
 	        // TIP: -- 5. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
@@ -186,7 +186,7 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 {{- end }}
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
-	{{ if .InclueComments }}
+	{{ if .IncludeComments }}
 	// TIP: -- 1. Include required attributes
 	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
 	{{ end }}

@@ -200,7 +200,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 {{- end }}
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
-	{{ if .InclueComments }}
+	{{ if .IncludeComments }}
 	// TIP: -- 1. Include required attributes
 	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
 	{{ end }}
