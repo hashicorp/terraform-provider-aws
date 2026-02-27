@@ -57,7 +57,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 
 ```terraform
 import {
-  to = <resource-name>.example
+  to = aws_sagemaker_mlflow_app.example
   identity = {
     "arn" = "arn:aws:sagemaker:us-east-1:123456789012:mlflow-app/app-ABCD1234"
   }
