@@ -207,9 +207,10 @@ func parseWebACLARNForTest(arnStr string) (id, name, scope string, err error) {
 	}
 
 	scope = parts[0]
-	if scope == "regional" {
+	switch scope {
+	case "regional":
 		scope = "REGIONAL"
-	} else if scope == "global" {
+	case "global":
 		scope = "CLOUDFRONT"
 	}
 	name = parts[2]

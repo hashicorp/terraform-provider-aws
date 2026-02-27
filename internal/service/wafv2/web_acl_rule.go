@@ -606,7 +606,7 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *resourceWebACLRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Import format: web_acl_arn/rule_name
-	parts := splitImportID(req.ID, 2)
+	parts := splitImportID(req.ID)
 	if parts == nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
@@ -620,7 +620,7 @@ func (r *resourceWebACLRule) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func splitImportID(id string, count int) []string {
+func splitImportID(id string) []string {
 	// Find the last occurrence of "/" to split ARN from rule name
 	lastSlash := -1
 	for i := len(id) - 1; i >= 0; i-- {
