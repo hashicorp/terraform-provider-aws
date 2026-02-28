@@ -218,7 +218,7 @@ type {{ template "ListResourceStructName" . }} struct {
 {{- end }}
 
 {{- define "ListResourceStructName" -}}
-listResource{{ .ListResource }}
+{{ .ListResourceLowerCamel }}ListResource
 {{- end }}
 
 {{- define "GoImports" -}}
