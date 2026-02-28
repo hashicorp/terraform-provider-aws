@@ -39,6 +39,7 @@ var websiteTmpl string
 
 type TemplateData struct {
 	ListResource              string
+	ListResourceAWS           string
 	ListResourceLower         string
 	ListResourceLowerCamel    string
 	ListResourceSnake         string
@@ -85,6 +86,7 @@ func Create(listName, snakeName string, comments, framework, force bool) error {
 
 	templateData := TemplateData{
 		ListResource:              listName,
+		ListResourceAWS:           convert.ToAWSCapitalization(listName),
 		ListResourceLower:         strings.ToLower(listName),
 		ListResourceLowerCamel:    convert.ToLowercasePrefix(listName),
 		ListResourceSnake:         snakeName,
