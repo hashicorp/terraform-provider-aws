@@ -299,7 +299,8 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.Description = fwflex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
+	flattenedReferencedGroupID := flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
+	data.ReferencedSecurityGroupID = normalizeReferencedSecurityGroupID(flattenedReferencedGroupID, data.ReferencedSecurityGroupID, r.Meta().AccountID(ctx))
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -431,6 +432,46 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 	return types.StringValue(strings.Join([]string{aws.ToString(apiObject.UserId), aws.ToString(apiObject.GroupId)}, "/"))
 }
 
+// normalizeReferencedSecurityGroupID normalizes accountId/groupId format to prevent false diffs.
+// If state has accountId/groupId format, preserve it. During import, format same-account
+// references as accountId/groupId.
+func normalizeReferencedSecurityGroupID(apiValue, stateValue types.String, currentAccountID string) types.String {
+	if apiValue.IsNull() {
+		return apiValue
+	}
+
+	apiStr := apiValue.ValueString()
+
+	if stateValue.IsNull() {
+		// During import: format same-account references as accountId/groupId
+		if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
+			return apiValue
+		}
+		if strings.HasPrefix(apiStr, "sg-") {
+			return types.StringValue(strings.Join([]string{currentAccountID, apiStr}, "/"))
+		}
+		return apiValue
+	}
+
+	stateStr := stateValue.ValueString()
+
+	// Preserve state format if it has accountId/groupId
+	if parts := strings.Split(stateStr, "/"); len(parts) == 2 {
+		if apiStr == parts[1] {
+			return stateValue
+		}
+	}
+
+	// Normalize to groupId if API has accountId/groupId where accountId matches
+	if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
+		if parts[0] == currentAccountID && stateStr == parts[1] {
+			return types.StringValue(parts[1])
+		}
+	}
+
+	return apiValue
+}
+
 type securityGroupRuleResourceModel struct {
 	framework.WithRegionModel
 	ARN                       types.String `tfsdk:"arn"`
@@ -506,14 +547,23 @@ func (model *securityGroupRuleResourceModel) expandIPPermission(ctx context.Cont
 
 func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *awstypes.SecurityGroupRuleRequest {
 	apiObject := &awstypes.SecurityGroupRuleRequest{
-		CidrIpv4:          fwflex.StringFromFramework(ctx, model.CIDRIPv4),
-		CidrIpv6:          fwflex.StringFromFramework(ctx, model.CIDRIPv6),
-		Description:       fwflex.StringFromFramework(ctx, model.Description),
-		FromPort:          fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
-		IpProtocol:        fwflex.StringFromFramework(ctx, model.IPProtocol),
-		PrefixListId:      fwflex.StringFromFramework(ctx, model.PrefixListID),
-		ReferencedGroupId: fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID),
-		ToPort:            fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
+		CidrIpv4:     fwflex.StringFromFramework(ctx, model.CIDRIPv4),
+		CidrIpv6:     fwflex.StringFromFramework(ctx, model.CIDRIPv6),
+		Description:  fwflex.StringFromFramework(ctx, model.Description),
+		FromPort:     fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
+		IpProtocol:   fwflex.StringFromFramework(ctx, model.IPProtocol),
+		PrefixListId: fwflex.StringFromFramework(ctx, model.PrefixListID),
+		ToPort:       fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
+	}
+
+	if !model.ReferencedSecurityGroupID.IsNull() {
+		referencedGroupID := model.ReferencedSecurityGroupID.ValueString()
+		// [UserID/]GroupID.
+		if parts := strings.Split(referencedGroupID, "/"); len(parts) == 2 {
+			apiObject.ReferencedGroupId = aws.String(parts[1])
+		} else {
+			apiObject.ReferencedGroupId = fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID)
+		}
 	}
 
 	return apiObject
