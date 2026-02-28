@@ -233,9 +233,8 @@ type {{ template "ListResourceStructName" . }} struct {
 			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 			{{- end }}
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
-					result.Diagnostics.Append(diags...)
-					yield(result)
+				result.Diagnostics.Append(r.flatten(ctx, bucket, &data)...)
+				if result.Diagnostics.HasError() {
 					return
 				}
 
