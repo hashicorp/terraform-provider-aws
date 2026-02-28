@@ -191,6 +191,8 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 	}
 }
 
+{{ template "ResourceFlattenFunction" . }}
+
 {{- define "Factory" -}}
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // {{ template "Annotation" . }}
@@ -253,4 +255,23 @@ type {{ template "ListResourceStructName" . }} struct {
 			{{- end }}
 			arn := aws.ToString(item.{{ .ListResource }}Arn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
+{{- end }}
+
+{{- define "ResourceFlattenFunction" -}}
+{{- if .IncludeComments -}}
+// TIP: ==== RESOURCE FLATTENING FUNCTION ====
+// This function should be placed in the resource type's source file ("{{ .ListResourceSnake }}.go"). It may already be present.
+// It is intended to perform the flattening of the results of the API call or calls used to populate a resource's values.
+// It should replace the flattening portion of the resource type's Read function (`{{ .ListResourceLowerCamel }}Resource.Read`) and take the API results
+// as parameters.
+// The replaced section of the Read function should be
+//	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
+//	if response.Diagnostics.HasError() {
+//		return
+//	}
+{{- end }}
+// func (r *{{ .ListResourceLowerCamel }}Resource) flatten(ctx context.Context, {{ .ListResourceLowerCamel }} *awstypes.{{ .ListResourceAWS }}, data *{{ .ListResourceLowerCamel }}ResourceModel) (diags diag.Diagnostics) {
+// 	diags.Append(fwflex.Flatten(ctx, {{ .ListResourceLowerCamel }}, data)...)
+// 	return diags
+// }
 {{- end }}
