@@ -58,10 +58,10 @@ func (r *telemetryPipelineResource) Schema(ctx context.Context, request resource
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_timestamp": schema.StringAttribute{
+			"created_timestamp": schema.Int64Attribute{
 				Computed: true,
 			},
-			"last_update_timestamp": schema.StringAttribute{
+			"last_update_timestamp": schema.Int64Attribute{
 				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -136,15 +136,20 @@ func (r *telemetryPipelineResource) Create(ctx context.Context, request resource
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	waitOutput, err := waitTelemetryPipelineReady(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+		return
+	}
+
+	// Flatten the full Get output (from the waiter) into state, since Create only returns ARN.
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, waitOutput.Pipeline, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if _, err := waitTelemetryPipelineReady(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-		return
-	}
+	// Manual field mappings for fields fwflex can't auto-map.
+	flattenPipelineManualFields(ctx, waitOutput.Pipeline, &data)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -171,10 +176,13 @@ func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Pipeline, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Manual field mappings for fields fwflex can't auto-map.
+	flattenPipelineManualFields(ctx, out.Pipeline, &data)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -213,10 +221,36 @@ func (r *telemetryPipelineResource) Update(ctx context.Context, request resource
 		}
 
 		name := fwflex.StringValueFromFramework(ctx, new.Name)
-		if _, err := waitTelemetryPipelineReady(ctx, conn, name, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		waitOutput, err := waitTelemetryPipelineReady(ctx, conn, name, r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
 		}
+
+		// Flatten the waiter output to populate computed fields.
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, waitOutput.Pipeline, &new))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		// Manual field mappings for fields fwflex can't auto-map.
+		flattenPipelineManualFields(ctx, waitOutput.Pipeline, &new)
+	} else {
+		// Tags-only changes skip the block above, but the plan data still has
+		// Unknown computed fields. Re-read the resource to populate them.
+		name := fwflex.StringValueFromFramework(ctx, new.Name)
+		out, err := findTelemetryPipelineByName(ctx, conn, name)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+			return
+		}
+
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Pipeline, &new))
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		flattenPipelineManualFields(ctx, out.Pipeline, &new)
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
@@ -251,13 +285,14 @@ func (r *telemetryPipelineResource) ImportState(ctx context.Context, request res
 }
 
 type telemetryPipelineResourceModel struct {
+	framework.WithRegionModel
 	ARN                 types.String                                                         `tfsdk:"arn"`
 	Configuration       fwtypes.ListNestedObjectValueOf[telemetryPipelineConfigurationModel] `tfsdk:"configuration"`
-	CreatedTimestamp    types.String                                                         `tfsdk:"created_timestamp"`
-	LastUpdateTimestamp types.String                                                         `tfsdk:"last_update_timestamp"`
+	CreatedTimestamp    types.Int64                                                          `tfsdk:"created_timestamp"`
+	LastUpdateTimestamp types.Int64                                                          `tfsdk:"last_update_timestamp"`
 	Name                types.String                                                         `tfsdk:"name"`
 	Status              types.String                                                         `tfsdk:"status"`
-	StatusReason        types.String                                                         `tfsdk:"status_reason"`
+	StatusReason        types.String                                                         `tfsdk:"status_reason" autoflex:"-"`
 	Tags                tftags.Map                                                           `tfsdk:"tags"`
 	TagsAll             tftags.Map                                                           `tfsdk:"tags_all"`
 	Timeouts            timeouts.Value                                                       `tfsdk:"timeouts"`
@@ -327,4 +362,15 @@ func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Cl
 	}
 
 	return nil, smarterr.NewError(err)
+}
+
+// flattenPipelineManualFields sets fields that fwflex cannot auto-map.
+// StatusReason is a struct in the SDK but a flat string in the TF model.
+// Timestamps and Status are now natively compatible and handled by fwflex.
+func flattenPipelineManualFields(ctx context.Context, pipeline *awstypes.TelemetryPipeline, data *telemetryPipelineResourceModel) {
+	if pipeline.StatusReason != nil {
+		data.StatusReason = fwflex.StringToFramework(ctx, pipeline.StatusReason.Description)
+	} else {
+		data.StatusReason = types.StringNull()
+	}
 }

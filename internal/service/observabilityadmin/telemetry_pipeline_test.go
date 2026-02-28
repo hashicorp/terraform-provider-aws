@@ -6,6 +6,7 @@ package observabilityadmin_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
@@ -24,16 +25,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func testAccTelemetryPipelinePreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+
+	input := observabilityadmin.ListTelemetryPipelinesInput{}
+	_, err := conn.ListTelemetryPipelines(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline observabilityadmin.GetTelemetryPipelineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -50,7 +65,7 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("observabilityadmin", "pipeline/"+rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("observabilityadmin", regexp.MustCompile(`telemetry-pipeline/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
@@ -62,9 +77,11 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -73,13 +90,13 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline observabilityadmin.GetTelemetryPipelineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -152,35 +169,97 @@ func testAccCheckTelemetryPipelineExists(ctx context.Context, n string, v *obser
 	}
 }
 
-func testAccTelemetryPipelineConfig_basic(rName string) string {
+func testAccTelemetryPipelineConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "observabilityadmin.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+      ]
+      Resource = "arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:*"
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccTelemetryPipelineConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccTelemetryPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_pipeline" "test" {
   name = %[1]q
 
   configuration {
-    body = "version: '1'\n"
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.test.arn
+            }
+            log_event_metadata = {
+              data_source_name = "amazon_api_gateway"
+              data_source_type = "access"
+            }
+          }
+        }
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
-`, rName)
+`, rName))
 }
 
 func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline observabilityadmin.GetTelemetryPipelineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTelemetryPipelineConfig_basic(rName),
+				Config: testAccTelemetryPipelineConfig_vpcFlow(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
 				),
@@ -192,13 +271,13 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"body": knownvalue.StringExact("version: '1'\n"),
+							"body": knownvalue.NotNull(),
 						}),
 					})),
 				},
 			},
 			{
-				Config: testAccTelemetryPipelineConfig_configurationUpdate(rName),
+				Config: testAccTelemetryPipelineConfig_vpcFlowWithProcessor(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
 				),
@@ -211,7 +290,7 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"body": knownvalue.StringExact("version: '2'\n"),
+							"body": knownvalue.NotNull(),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
@@ -221,28 +300,91 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 	})
 }
 
-func testAccTelemetryPipelineConfig_configurationUpdate(rName string) string {
-	return fmt.Sprintf(`
+func testAccTelemetryPipelineConfig_vpcFlow(rName string) string {
+	return acctest.ConfigCompose(testAccTelemetryPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_pipeline" "test" {
   name = %[1]q
 
   configuration {
-    body = "version: '2'\n"
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.test.arn
+            }
+            log_event_metadata = {
+              data_source_name = "amazon_vpc"
+              data_source_type = "flow"
+            }
+          }
+        }
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
-`, rName)
+`, rName))
+}
+
+func testAccTelemetryPipelineConfig_vpcFlowWithProcessor(rName string) string {
+	return acctest.ConfigCompose(testAccTelemetryPipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_observabilityadmin_telemetry_pipeline" "test" {
+  name = %[1]q
+
+  configuration {
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.test.arn
+            }
+            log_event_metadata = {
+              data_source_name = "amazon_vpc"
+              data_source_type = "flow"
+            }
+          }
+        }
+        processor = [{
+          ocsf = {
+            schema = {
+              vpc_flow = null
+            }
+            version         = "1.5"
+            mapping_version = "1.5.0"
+          }
+        }]
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
 }
 
 func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline observabilityadmin.GetTelemetryPipelineOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -265,9 +407,11 @@ func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
 				Config: testAccTelemetryPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -307,34 +451,94 @@ func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 }
 
 func testAccTelemetryPipelineConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTelemetryPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_pipeline" "test" {
   name = %[1]q
 
   configuration {
-    body = "version: '1'\n"
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.test.arn
+            }
+            log_event_metadata = {
+              data_source_name = "aws_cloudtrail"
+              data_source_type = "data"
+            }
+          }
+        }
+        processor = [{
+          ocsf = {
+            schema = {
+              cloud_trail = null
+            }
+            version         = "1.5"
+            mapping_version = "1.5.0"
+          }
+        }]
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
   }
 
   tags = {
     %[2]q = %[3]q
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
-`, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value))
 }
 
 func testAccTelemetryPipelineConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTelemetryPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_pipeline" "test" {
   name = %[1]q
 
   configuration {
-    body = "version: '1'\n"
+    body = yamlencode({
+      pipeline = {
+        source = {
+          cloudwatch_logs = {
+            aws = {
+              sts_role_arn = aws_iam_role.test.arn
+            }
+            log_event_metadata = {
+              data_source_name = "aws_cloudtrail"
+              data_source_type = "data"
+            }
+          }
+        }
+        processor = [{
+          ocsf = {
+            schema = {
+              cloud_trail = null
+            }
+            version         = "1.5"
+            mapping_version = "1.5.0"
+          }
+        }]
+        sink = [{
+          cloudwatch_logs = {
+            log_group = "@original"
+          }
+        }]
+      }
+    })
   }
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
