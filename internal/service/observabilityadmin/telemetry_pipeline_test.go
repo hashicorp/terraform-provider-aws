@@ -6,9 +6,9 @@ package observabilityadmin_test
 import (
 	"context"
 	"fmt"
-	"github.com/YakDriver/regexache"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
