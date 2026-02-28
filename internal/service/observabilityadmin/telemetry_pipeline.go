@@ -148,8 +148,12 @@ func (r *telemetryPipelineResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	// Manual field mappings for fields fwflex can't auto-map.
-	flattenPipelineManualFields(ctx, waitOutput.Pipeline, &data)
+	// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
+	if waitOutput.Pipeline.StatusReason != nil {
+		data.StatusReason = fwflex.StringToFramework(ctx, waitOutput.Pipeline.StatusReason.Description)
+	} else {
+		data.StatusReason = types.StringNull()
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
@@ -181,8 +185,12 @@ func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	// Manual field mappings for fields fwflex can't auto-map.
-	flattenPipelineManualFields(ctx, out.Pipeline, &data)
+	// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
+	if out.Pipeline.StatusReason != nil {
+		data.StatusReason = fwflex.StringToFramework(ctx, out.Pipeline.StatusReason.Description)
+	} else {
+		data.StatusReason = types.StringNull()
+	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -233,8 +241,12 @@ func (r *telemetryPipelineResource) Update(ctx context.Context, request resource
 			return
 		}
 
-		// Manual field mappings for fields fwflex can't auto-map.
-		flattenPipelineManualFields(ctx, waitOutput.Pipeline, &new)
+		// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
+		if waitOutput.Pipeline.StatusReason != nil {
+			new.StatusReason = fwflex.StringToFramework(ctx, waitOutput.Pipeline.StatusReason.Description)
+		} else {
+			new.StatusReason = types.StringNull()
+		}
 	} else {
 		// Tags-only changes skip the block above, but the plan data still has
 		// Unknown computed fields. Re-read the resource to populate them.
@@ -250,7 +262,12 @@ func (r *telemetryPipelineResource) Update(ctx context.Context, request resource
 			return
 		}
 
-		flattenPipelineManualFields(ctx, out.Pipeline, &new)
+		// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
+		if out.Pipeline.StatusReason != nil {
+			new.StatusReason = fwflex.StringToFramework(ctx, out.Pipeline.StatusReason.Description)
+		} else {
+			new.StatusReason = types.StringNull()
+		}
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
@@ -362,15 +379,4 @@ func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Cl
 	}
 
 	return nil, smarterr.NewError(err)
-}
-
-// flattenPipelineManualFields sets fields that fwflex cannot auto-map.
-// StatusReason is a struct in the SDK but a flat string in the TF model.
-// Timestamps and Status are now natively compatible and handled by fwflex.
-func flattenPipelineManualFields(ctx context.Context, pipeline *awstypes.TelemetryPipeline, data *telemetryPipelineResourceModel) {
-	if pipeline.StatusReason != nil {
-		data.StatusReason = fwflex.StringToFramework(ctx, pipeline.StatusReason.Description)
-	} else {
-		data.StatusReason = types.StringNull()
-	}
 }

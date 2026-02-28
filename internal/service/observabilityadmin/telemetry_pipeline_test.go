@@ -6,7 +6,7 @@ package observabilityadmin_test
 import (
 	"context"
 	"fmt"
-	"regexp"
+	"github.com/YakDriver/regexache"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
@@ -65,7 +65,7 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("observabilityadmin", regexp.MustCompile(`telemetry-pipeline/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("observabilityadmin", regexache.MustCompile(`telemetry-pipeline/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
