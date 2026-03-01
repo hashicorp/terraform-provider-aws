@@ -72,7 +72,7 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)))
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -139,11 +139,11 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDestinationARN, gdo.DestinationProperties.DestinationArn)
 
 	tags := keyValueTags(ctx, gdo.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 	return diags
