@@ -63,22 +63,27 @@ const (
 )
 
 const (
-	InstanceEngineAuroraMySQL         = "aurora-mysql"
-	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
-	InstanceEngineCustomPrefix        = "custom-"
-	InstanceEngineDB2Advanced         = "db2-ae"
-	InstanceEngineDB2Standard         = "db2-se"
-	InstanceEngineMariaDB             = "mariadb"
-	InstanceEngineMySQL               = "mysql"
-	InstanceEngineOracleEnterprise    = "oracle-ee"
-	InstanceEngineOracleEnterpriseCDB = "oracle-ee-cdb"
-	InstanceEngineOracleStandard2     = "oracle-se2"
-	InstanceEngineOracleStandard2CDB  = "oracle-se2-cdb"
-	InstanceEnginePostgres            = "postgres"
-	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
-	InstanceEngineSQLServerExpress    = "sqlserver-ex"
-	InstanceEngineSQLServerStandard   = "sqlserver-se"
-	InstanceEngineSQLServerWeb        = "sqlserver-web"
+	instanceEngineAuroraMySQL         = "aurora-mysql"
+	instanceEngineAuroraPostgreSQL    = "aurora-postgresql"
+	instanceEngineDB2Advanced         = "db2-ae"
+	instanceEngineDB2Standard         = "db2-se"
+	instanceEngineMariaDB             = "mariadb"
+	instanceEngineMySQL               = "mysql"
+	instanceEngineOracleEnterprise    = "oracle-ee"
+	instanceEngineOracleEnterpriseCDB = "oracle-ee-cdb"
+	instanceEngineOracleStandard2     = "oracle-se2"
+	instanceEngineOracleStandard2CDB  = "oracle-se2-cdb"
+	instanceEnginePostgres            = "postgres"
+	instanceEngineSQLServerEnterprise = "sqlserver-ee"
+	instanceEngineSQLServerExpress    = "sqlserver-ex"
+	instanceEngineSQLServerStandard   = "sqlserver-se"
+	instanceEngineSQLServerWeb        = "sqlserver-web"
+
+	// Not valid for RDS instances.
+	instanceEngineDocDB   = "docdb"
+	instanceEngineNeptune = "neptune"
+
+	instanceEngineCustomPrefix = "custom-"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -143,28 +148,31 @@ const (
 )
 
 const (
-	ClusterEngineAuroraMySQL      = "aurora-mysql"
-	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
-	ClusterEngineMySQL            = "mysql"
-	ClusterEnginePostgres         = "postgres"
-	ClusterEngineCustomPrefix     = "custom-"
+	clusterEngineAuroraMySQL      = "aurora-mysql"
+	clusterEngineAuroraPostgreSQL = "aurora-postgresql"
+	clusterEngineMySQL            = "mysql"
+	clusterEnginePostgres         = "postgres"
+
+	// Not valid for RDS clusters.
+	clusterEngineDocDB   = "docdb"
+	clusterEngineNeptune = "neptune"
 )
 
 func clusterEngine_Values() []string {
 	return []string{
-		ClusterEngineAuroraMySQL,
-		ClusterEngineAuroraPostgreSQL,
-		ClusterEngineMySQL,
-		ClusterEnginePostgres,
+		clusterEngineAuroraMySQL,
+		clusterEngineAuroraPostgreSQL,
+		clusterEngineMySQL,
+		clusterEnginePostgres,
 	}
 }
 
 func clusterInstanceEngine_Values() []string {
 	return []string{
-		ClusterEngineAuroraMySQL,
-		ClusterEngineAuroraPostgreSQL,
-		ClusterEngineMySQL,
-		ClusterEnginePostgres,
+		instanceEngineAuroraMySQL,
+		instanceEngineAuroraPostgreSQL,
+		instanceEngineMySQL,
+		instanceEnginePostgres,
 	}
 }
 
@@ -172,6 +180,10 @@ const (
 	globalClusterEngineAurora           = "aurora"
 	globalClusterEngineAuroraMySQL      = "aurora-mysql"
 	globalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+
+	// Not valid for RDS global clusters.
+	globalClusterEngineDocDB   = "docdb"
+	globalClusterEngineNeptune = "neptune"
 )
 
 func globalClusterEngine_Values() []string {

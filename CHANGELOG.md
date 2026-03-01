@@ -1,5 +1,23 @@
 ## 6.35.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_ecs_service` ([#46678](https://github.com/hashicorp/terraform-provider-aws/issues/46678))
+* **New List Resource:** `aws_lb` ([#46660](https://github.com/hashicorp/terraform-provider-aws/issues/46660))
+* **New List Resource:** `aws_lb_target_group` ([#46662](https://github.com/hashicorp/terraform-provider-aws/issues/46662))
+
+ENHANCEMENTS:
+
+* data-source/aws_lambda_layer_version: Add `layer_version_arn` argument to support cross-account Lambda layer access ([#46673](https://github.com/hashicorp/terraform-provider-aws/issues/46673))
+* resource/aws_emrserverless_application: Add `job_level_cost_allocation_configuration` block ([#46107](https://github.com/hashicorp/terraform-provider-aws/issues/46107))
+
+BUG FIXES:
+
+* resource/aws_ce_cost_category: Change `split_charge_rule` `targets` from `TypeSet` to `TypeList` to retain order ([#42856](https://github.com/hashicorp/terraform-provider-aws/issues/42856))
+* resource/aws_dms_endpoint: Fix `InvalidParameterCombinationException` errors when `oracle_settings` is configured ([#46689](https://github.com/hashicorp/terraform-provider-aws/issues/46689))
+* resource/aws_elasticache_replication_group: Remove hard-coded upper limit of 5 for `replicas_per_node_group` and `node_group_configuration.replica_count` to support quota increases ([#46670](https://github.com/hashicorp/terraform-provider-aws/issues/46670))
+* resource/aws_networkmanager_attachment_routing_policy_label: Fix attachment state waiter to handle all Cloud WAN attachment lifecycle states ([#46672](https://github.com/hashicorp/terraform-provider-aws/issues/46672))
+
 ## 6.34.0 (February 25, 2026)
 
 FEATURES:

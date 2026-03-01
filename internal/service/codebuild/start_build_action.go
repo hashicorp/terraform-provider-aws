@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -103,18 +104,14 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 
 	conn := a.Meta().CodeBuildClient(ctx)
 
-	timeout := 30 * time.Minute
-	if !model.Timeout.IsNull() {
-		timeout = time.Duration(model.Timeout.ValueInt64()) * time.Second
-	}
+	timeout := fwactions.TimeoutOr(model.Timeout, 30*time.Minute)
 
 	tflog.Info(ctx, "Starting CodeBuild project build", map[string]any{
 		"project_name": model.ProjectName.ValueString(),
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Starting CodeBuild project build...",
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting CodeBuild project build...")
 
 	var input codebuild.StartBuildInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, model, &input)...)
@@ -131,9 +128,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 	buildID := aws.ToString(output.Build.Id)
 	model.BuildID = types.StringValue(buildID)
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Build started, waiting for completion...",
-	})
+	cb(ctx, "Build started, waiting for completion...")
 
 	// Poll for build completion using actionwait with backoff strategy
 	// Use backoff since builds can take a long time and status changes less frequently
@@ -164,7 +159,7 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 			actionwait.Status(awstypes.StatusTypeTimedOut),
 		},
 		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
-			resp.SendProgress(action.InvokeProgressEvent{Message: "Build currently in state: " + string(fr.Status)})
+			cb(ctx, "Build currently in state: %s", fr.Status)
 		},
 	})
 	if err != nil {
@@ -183,5 +178,5 @@ func (a *startBuildAction) Invoke(ctx context.Context, req action.InvokeRequest,
 		return
 	}
 
-	resp.SendProgress(action.InvokeProgressEvent{Message: "Build completed successfully"})
+	cb(ctx, "Build completed successfully")
 }
