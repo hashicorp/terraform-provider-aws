@@ -6,6 +6,7 @@ package wafv2
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -32,6 +34,12 @@ import (
 )
 
 // @FrameworkResource("aws_wafv2_web_acl_rule", name="Web ACL Rule")
+// @IdentityAttribute("web_acl_arn")
+// @IdentityAttribute("name")
+// @ImportIDHandler("webACLRuleImportID")
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(importStateIdAttributes="web_acl_arn;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(importStateIdAttribute="web_acl_arn")
 func newResourceWebACLRule(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceWebACLRule{}, nil
 }
@@ -42,13 +50,12 @@ const (
 
 type resourceWebACLRule struct {
 	framework.ResourceWithModel[webACLRuleModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -126,6 +133,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleVisibilityConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -387,8 +395,6 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.ID = types.StringValue(fmt.Sprintf("%s/%s", plan.WebACLARN.ValueString(), plan.Name.ValueString()))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -604,42 +610,26 @@ func (r *resourceWebACLRule) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceWebACLRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Import format: web_acl_arn/rule_name
-	parts := splitImportID(req.ID)
-	if parts == nil {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			fmt.Sprintf("Expected format: web_acl_arn/rule_name. Got: %s", req.ID),
-		)
-		return
+type webACLRuleImportID struct{}
+
+func (webACLRuleImportID) Parse(id string) (string, map[string]any, error) {
+	webACLARN, ruleName, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id %q should be in the format <web-acl-arn>%s<rule-name>", id, intflex.ResourceIdSeparator)
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[1])...)
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+	result := map[string]any{
+		"web_acl_arn":  webACLARN,
+		names.AttrName: ruleName,
+	}
 
-func splitImportID(id string) []string {
-	// Find the last occurrence of "/" to split ARN from rule name
-	lastSlash := -1
-	for i := len(id) - 1; i >= 0; i-- {
-		if id[i] == '/' {
-			lastSlash = i
-			break
-		}
-	}
-	if lastSlash == -1 || lastSlash == 0 || lastSlash == len(id)-1 {
-		return nil
-	}
-	return []string{id[:lastSlash], id[lastSlash+1:]}
+	return id, result, nil
 }
 
 // Models
 
 type webACLRuleModel struct {
 	framework.WithRegionModel
-	ID               types.String                                                     `tfsdk:"id"`
 	Name             types.String                                                     `tfsdk:"name"`
 	Priority         types.Int32                                                      `tfsdk:"priority"`
 	WebACLARN        types.String                                                     `tfsdk:"web_acl_arn"`
