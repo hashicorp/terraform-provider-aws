@@ -86,7 +86,7 @@ func TestAccELBV2ListenerRule_basic(t *testing.T) {
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -213,7 +213,7 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 				Config: testAccListenerRuleConfig_forwardWeighted(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -234,7 +234,7 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 				Config: testAccListenerRuleConfig_changeForwardWeightedStickiness(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -255,7 +255,7 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 				Config: testAccListenerRuleConfig_changeForwardWeightedToBasic(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -841,7 +841,7 @@ func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 				Config: testAccListenerRuleConfig_backwardsCompatibility(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -887,7 +887,7 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 				Config: testAccListenerRuleConfig_redirect(lbName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -911,7 +911,7 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 				Config: testAccListenerRuleConfig_redirect(lbName, "param1=value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -935,7 +935,7 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 				Config: testAccListenerRuleConfig_redirect(lbName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -977,7 +977,7 @@ func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 				Config: testAccListenerRuleConfig_fixedResponse(lbName, "Fixed response content"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1208,7 +1208,7 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 				Config: testAccListenerRuleConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -1253,7 +1253,7 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 				Config: testAccListenerRuleConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -1297,7 +1297,7 @@ func TestAccELBV2ListenerRule_jwtValidation(t *testing.T) {
 				Config: testAccListenerRuleConfig_jwtValidation(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, rName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", listenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -1528,7 +1528,7 @@ func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 				Config: testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "redirect"),
@@ -1615,7 +1615,7 @@ func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionHostHeader(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1656,7 +1656,7 @@ func TestAccELBV2ListenerRule_conditionHostHeaderRegex(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionHostHeaderRegex(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1697,7 +1697,7 @@ func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionHTTPHeader(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1751,7 +1751,7 @@ func TestAccELBV2ListenerRule_conditionHTTPHeaderRegex(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionHTTPHeaderRegex(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1809,7 +1809,7 @@ func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionHTTPRequestMethod(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1849,7 +1849,7 @@ func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionPathPattern(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1889,7 +1889,7 @@ func TestAccELBV2ListenerRule_conditionPathPatternRegex(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionPathPatternRegex(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1930,7 +1930,7 @@ func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionQueryString(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -1994,7 +1994,7 @@ func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionSourceIP(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -2038,7 +2038,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionMixed(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
@@ -2057,7 +2057,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionMixedUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
@@ -2076,7 +2076,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionMixedUpdated2(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
@@ -2113,7 +2113,7 @@ func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionMultiple(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
@@ -2197,7 +2197,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionMultiple(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
@@ -2237,7 +2237,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 				Config: testAccListenerRuleConfig_conditionMultipleUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					matchApplicationListenerRuleARN(ctx, resourceName, names.AttrARN, lbName),
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
@@ -2450,6 +2450,18 @@ func testAccCheckListenerRuleDestroy(ctx context.Context, t *testing.T) resource
 
 		return nil
 	}
+}
+
+func matchApplicationListenerRuleARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(applicationListenerRuleARNPattern(lbName)+`$`))
+}
+
+func applicationListenerRuleARNPattern(lbName string) string {
+	return listenerRuleARNPattern(applicationPattern(lbName))
+}
+
+func listenerRuleARNPattern(s string) string {
+	return `listener-rule/` + listenerPattern(s) + `/[a-z0-9]{16}`
 }
 
 func testAccListenerRuleConfig_base(rName string) string {
