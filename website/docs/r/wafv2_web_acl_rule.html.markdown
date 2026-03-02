@@ -114,6 +114,108 @@ resource "aws_wafv2_web_acl_rule" "block_ips" {
 }
 ```
 
+### Rate-Based Rule
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "rate_limit" {
+  name        = "rate-limit"
+  priority    = 2
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    rate_based_statement {
+      limit              = 2000
+      aggregate_key_type = "IP"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "rate-limit"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
+### Managed Rule Group with Override Action
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "aws_managed_rules" {
+  name        = "aws-managed-rules"
+  priority    = 3
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  override_action {
+    none {}
+  }
+
+  statement {
+    managed_rule_group_statement {
+      name        = "AWSManagedRulesCommonRuleSet"
+      vendor_name = "AWS"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "aws-managed-rules"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
+### Custom Request Handling
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "captcha_with_headers" {
+  name        = "captcha-with-headers"
+  priority    = 4
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    captcha {
+      custom_request_handling {
+        insert_header {
+          name  = "x-captcha-rule"
+          value = "triggered"
+        }
+      }
+    }
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "captcha-with-headers"
+    sampled_requests_enabled   = true
+  }
+}
+```
+  }
+
+  statement {
+    ip_set_reference_statement {
+      arn = aws_wafv2_ip_set.blocked_ips.arn
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "block-bad-ips"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
 With this configuration, when you remove both the `aws_wafv2_web_acl_rule` and `aws_wafv2_ip_set` resources, Terraform will:
 
 1. Delete the rule first (removing the reference from the Web ACL)
@@ -128,27 +230,56 @@ The following arguments are required:
 * `name` - (Required) Name of the rule. Must be unique within the Web ACL.
 * `priority` - (Required) Rule priority. Rules with lower priority are evaluated first.
 * `web_acl_arn` - (Required) ARN of the Web ACL to add the rule to.
-* `action` - (Required) Action to take when the rule matches. See [Action](#action) below.
 * `statement` - (Required) Rule statement. See [Statement](#statement) below.
 * `visibility_config` - (Required) CloudWatch metrics configuration. See [Visibility Config](#visibility-config) below.
 
 The following arguments are optional:
 
+* `action` - (Optional) Action to take when the rule matches. See [Action](#action) below. Conflicts with `override_action`.
+* `override_action` - (Optional) Override action for managed rule groups. See [Override Action](#override-action) below. Conflicts with `action`.
+* `captcha_config` - (Optional) CAPTCHA configuration that overrides the web ACL level setting. See [Captcha Config](#captcha-config) below.
+* `challenge_config` - (Optional) Challenge configuration that overrides the web ACL level setting. See [Challenge Config](#challenge-config) below.
+* `rule_label` - (Optional) Labels to apply to matching web requests. See [Rule Label](#rule-label) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### Action
 
 One of the following action blocks must be specified:
 
-* `allow` - (Optional) Allow the request.
+* `allow` - (Optional) Allow the request. See [Allow](#allow) below.
 * `block` - (Optional) Block the request. See [Block](#block) below.
-* `count` - (Optional) Count the request without blocking.
-* `captcha` - (Optional) Present a CAPTCHA challenge.
-* `challenge` - (Optional) Present a silent challenge.
+* `count` - (Optional) Count the request without blocking. See [Count](#count) below.
+* `captcha` - (Optional) Present a CAPTCHA challenge. See [Captcha](#captcha) below.
+* `challenge` - (Optional) Present a silent challenge. See [Challenge](#challenge) below.
+
+#### Allow
+
+* `custom_request_handling` - (Optional) Custom request handling configuration. See [Custom Request Handling](#custom-request-handling) below.
 
 #### Block
 
 * `custom_response` - (Optional) Custom response configuration. See [Custom Response](#custom-response) below.
+
+#### Count
+
+* `custom_request_handling` - (Optional) Custom request handling configuration. See [Custom Request Handling](#custom-request-handling) below.
+
+#### Captcha
+
+* `custom_request_handling` - (Optional) Custom request handling configuration. See [Custom Request Handling](#custom-request-handling) below.
+
+#### Challenge
+
+* `custom_request_handling` - (Optional) Custom request handling configuration. See [Custom Request Handling](#custom-request-handling) below.
+
+#### Custom Request Handling
+
+* `insert_header` - (Optional) Custom headers to insert into the request. See [Insert Header](#insert-header) below.
+
+#### Insert Header
+
+* `name` - (Required) Header name.
+* `value` - (Required) Header value.
 
 #### Custom Response
 
@@ -167,6 +298,11 @@ Exactly one of the following statement blocks must be specified:
 
 * `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) below.
 * `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) below.
+* `rule_group_reference_statement` - (Optional) Reference to a rule group. See [Rule Group Reference Statement](#rule-group-reference-statement) below.
+* `managed_rule_group_statement` - (Optional) Reference to a managed rule group. See [Managed Rule Group Statement](#managed-rule-group-statement) below.
+* `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
+* `rate_based_statement` - (Optional) Rate-based rule to track request rates. See [Rate Based Statement](#rate-based-statement) below.
+* `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) below.
 
 #### IP Set Reference Statement
 
@@ -188,6 +324,53 @@ Exactly one of the following statement blocks must be specified:
 
 * `fallback_behavior` - (Required) Action to take when the IP address in the header is invalid. Valid values: `MATCH`, `NO_MATCH`.
 * `header_name` - (Required) Name of the header containing the forwarded IP address.
+
+#### Rule Group Reference Statement
+
+* `arn` - (Required) ARN of the rule group to reference.
+
+#### Managed Rule Group Statement
+
+* `name` - (Required) Name of the managed rule group.
+* `vendor_name` - (Required) Name of the managed rule group vendor (e.g., "AWS").
+* `version` - (Optional) Version of the managed rule group.
+
+#### Regex Pattern Set Reference Statement
+
+* `arn` - (Required) ARN of the regex pattern set to reference.
+
+#### Rate Based Statement
+
+* `limit` - (Required) Rate limit threshold (requests per 5-minute period).
+* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Defaults to `IP`. Valid values: `IP`, `FORWARDED_IP`, `CUSTOM_KEYS`, `CONSTANT`.
+
+#### Byte Match Statement
+
+* `search_string` - (Required) String value to search for within the request (1-200 characters).
+* `positional_constraint` - (Required) Area within the portion of a web request that you want AWS WAF to search for the search string. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
+
+### Override Action
+
+One of the following override action blocks must be specified when using managed rule groups:
+
+* `count` - (Optional) Override the rule action with count.
+* `none` - (Optional) Don't override the rule action.
+
+### Rule Label
+
+* `name` - (Required) Label string (1-1024 characters, alphanumeric, underscore, hyphen, and colon characters only).
+
+### Captcha Config
+
+* `immunity_time_property` - (Optional) Immunity time configuration. See [Immunity Time Property](#immunity-time-property) below.
+
+### Challenge Config
+
+* `immunity_time_property` - (Optional) Immunity time configuration. See [Immunity Time Property](#immunity-time-property) below.
+
+#### Immunity Time Property
+
+* `immunity_time` - (Optional) Immunity time in seconds (60-259200).
 
 ### Visibility Config
 
