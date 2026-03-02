@@ -722,7 +722,10 @@ func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn strin
 func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.MlflowAppStatusUpdating),
-		Target:  enum.Slice(awstypes.MlflowAppStatusUpdated),
+		Target: enum.Slice(
+			awstypes.MlflowAppStatusCreated, // Created is a valid status following tag-only updates
+			awstypes.MlflowAppStatusUpdated,
+		),
 		Refresh: statusMlflowApp(conn, arn),
 		Timeout: timeout,
 	}
