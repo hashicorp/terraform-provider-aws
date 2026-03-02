@@ -30,6 +30,8 @@ resource "aws_lb_listener_rule" "test" {
   tags = var.resource_tags
 }
 
+# testAccListenerRuleConfig_baseWithHTTPListener
+
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
@@ -40,6 +42,8 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
+
+# testAccListenerRuleConfig_base
 
 resource "aws_security_group" "test" {
   name   = var.rName
