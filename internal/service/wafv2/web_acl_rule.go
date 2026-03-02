@@ -1082,7 +1082,19 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 		return &awstypes.Statement{LabelMatchStatement: &awstypes.LabelMatchStatement{}}, diags
 
 	case !m.AsnMatchStatement.IsNull():
-		return &awstypes.Statement{AsnMatchStatement: &awstypes.AsnMatchStatement{}}, diags
+		asnData, d := m.AsnMatchStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var asnStmt awstypes.AsnMatchStatement
+		diags.Append(flex.Expand(ctx, asnData, &asnStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{AsnMatchStatement: &asnStmt}, diags
 	}
 	return nil, diags
 }
@@ -1191,8 +1203,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.LabelMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleLabelMatchStatementModel{&labelModel}, nil)
 
 	case stmt.AsnMatchStatement != nil:
-		asnModel := webACLRuleAsnMatchStatementModel{}
-		m.AsnMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleAsnMatchStatementModel{&asnModel}, nil)
+		var asnModel webACLRuleAsnMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.AsnMatchStatement, &asnModel)...)
+		if !diags.HasError() {
+			m.AsnMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleAsnMatchStatementModel{&asnModel}, nil)
+		}
 	}
 	return diags
 }
@@ -1279,6 +1294,8 @@ type webACLRuleLabelMatchStatementModel struct {
 }
 
 type webACLRuleAsnMatchStatementModel struct {
+	AsnList           fwtypes.ListValueOf[types.Int64]                                  `tfsdk:"asn_list"`
+	ForwardedIPConfig fwtypes.ListNestedObjectValueOf[webACLRuleForwardedIPConfigModel] `tfsdk:"forwarded_ip_config"`
 }
 
 type webACLRuleLabelModel struct {

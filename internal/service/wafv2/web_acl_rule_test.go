@@ -181,6 +181,32 @@ func TestAccWAFV2WebACLRule_managedRuleGroup(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_asnMatchStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_asnMatchStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.asn_match_statement.0.asn_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.asn_match_statement.0.asn_list.0", "12345"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.asn_match_statement.0.asn_list.1", "67890"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.asn_match_statement.0.forwarded_ip_config.0.fallback_behavior", "NO_MATCH"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.asn_match_statement.0.forwarded_ip_config.0.header_name", "X-Forwarded-For"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_regexPatternSetReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -770,6 +796,55 @@ resource "aws_wafv2_web_acl_rule" "test" {
     managed_rule_group_statement {
       name        = "AWSManagedRulesCommonRuleSet"
       vendor_name = "AWS"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+func testAccWebACLRuleConfig_asnMatchStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+  priority    = 1
+
+  action {
+    allow {}
+  }
+
+  statement {
+    asn_match_statement {
+      asn_list = [12345, 67890]
+      
+      forwarded_ip_config {
+        fallback_behavior = "NO_MATCH"
+        header_name       = "X-Forwarded-For"
+      }
     }
   }
 
