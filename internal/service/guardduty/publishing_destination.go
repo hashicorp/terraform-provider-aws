@@ -159,19 +159,17 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChanges(names.AttrDestinationARN, names.AttrKMSKeyARN, "destination_type") {
-		input := guardduty.UpdatePublishingDestinationInput{
-			DestinationId: aws.String(destinationId),
-			DetectorId:    aws.String(detectorId),
-			DestinationProperties: &awstypes.DestinationProperties{
-				DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
-				KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
-			},
-		}
+	input := guardduty.UpdatePublishingDestinationInput{
+		DestinationId: aws.String(destinationId),
+		DetectorId:    aws.String(detectorId),
+		DestinationProperties: &awstypes.DestinationProperties{
+			DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
+			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
+		},
+	}
 
-		if _, err = conn.UpdatePublishingDestination(ctx, &input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
-		}
+	if _, err = conn.UpdatePublishingDestination(ctx, &input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
