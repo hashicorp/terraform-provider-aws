@@ -44,6 +44,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_wafv2_web_acl_rule",
 			Name:     "Web ACL Rule",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("web_acl_arn", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      webACLRuleImportID{},
+			},
 		},
 		{
 			Factory:  newResourceWebACLRuleGroupAssociation,
