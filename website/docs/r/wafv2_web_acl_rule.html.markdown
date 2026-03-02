@@ -51,6 +51,12 @@ resource "aws_wafv2_web_acl_rule" "block_countries" {
       country_codes = ["CN", "RU"]
     }
   }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "block-countries"
+    sampled_requests_enabled   = false
+  }
 }
 ```
 
@@ -124,11 +130,11 @@ The following arguments are required:
 * `web_acl_arn` - (Required) ARN of the Web ACL to add the rule to.
 * `action` - (Required) Action to take when the rule matches. See [Action](#action) below.
 * `statement` - (Required) Rule statement. See [Statement](#statement) below.
+* `visibility_config` - (Required) CloudWatch metrics configuration. See [Visibility Config](#visibility-config) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `visibility_config` - (Optional) CloudWatch metrics configuration. If not specified, defaults to enabled with the rule name as the metric name. See [Visibility Config](#visibility-config) below.
 
 ### Action
 
@@ -191,23 +197,48 @@ Exactly one of the following statement blocks must be specified:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Composite ID in the format `web_acl_arn/rule_name`.
+This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACL Rules using the Web ACL ARN and rule name separated by `/`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_wafv2_web_acl_rule.example
-  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example/abc123def456/my-rule"
+  identity = {
+    web_acl_arn = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example/abc123def456"
+    name        = "my-rule"
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import WAFv2 Web ACL Rules using the Web ACL ARN and rule name separated by `/`. For example:
+### Identity Schema
+
+#### Required
+
+* `name` (String) Rule name, unique within the Web ACL.
+* `web_acl_arn` (String) ARN of the Web ACL.
+
+#### Optional
+
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACL Rules using the `web_acl_arn` and `name` separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_wafv2_web_acl_rule.example
+  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example/abc123def456,my-rule"
+}
+```
+
+Using `terraform import`, import WAFv2 Web ACL Rules using the `web_acl_arn` and `name` separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_wafv2_web_acl_rule.example arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example/abc123def456/my-rule
+% terraform import aws_wafv2_web_acl_rule.example arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example/abc123def456,my-rule
 ```
