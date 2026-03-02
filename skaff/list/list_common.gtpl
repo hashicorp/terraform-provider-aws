@@ -164,10 +164,10 @@ func (l *{{ template "ListResourceStructName" . }}) List(ctx context.Context, re
 {{- end }}
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
-	{{ if .IncludeComments }}
+	{{- if .IncludeComments }}
 	// TIP: -- 1. Include required attributes
 	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
-	{{ end }}
+	{{- end }}
 	ParentID types.String `tfsdk:"parent_id"`
 }
 {{ if .IncludeComments }}
