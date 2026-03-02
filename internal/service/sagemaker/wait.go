@@ -701,3 +701,53 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 
 	return nil, err
 }
+
+func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MlflowAppStatusCreating),
+		Target:  enum.Slice(awstypes.MlflowAppStatusCreated),
+		Refresh: statusMlflowApp(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeMlflowAppOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MlflowAppStatusUpdating),
+		Target: enum.Slice(
+			awstypes.MlflowAppStatusCreated, // Created is a valid status following tag-only updates
+			awstypes.MlflowAppStatusUpdated,
+		),
+		Refresh: statusMlflowApp(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.MlflowAppStatusCreated, awstypes.MlflowAppStatusDeleting),
+		Target:  []string{},
+		Refresh: statusMlflowApp(conn, arn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
