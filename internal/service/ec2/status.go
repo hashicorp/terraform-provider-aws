@@ -848,7 +848,7 @@ func statusVPCEndpointRouteTableAssociation(conn *ec2.Client, vpcEndpointID, rou
 			return nil, "", err
 		}
 
-		return "", vpcEndpointRouteTableAssociationStatusReady, nil
+		return true, vpcEndpointRouteTableAssociationStatusReady, nil
 	}
 }
 
