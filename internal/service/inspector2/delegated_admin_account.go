@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -65,7 +65,7 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 	accountID := d.Get(names.AttrAccountID).(string)
 	input := &inspector2.EnableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(accountID),
-		ClientToken:             aws.String(id.UniqueId()),
+		ClientToken:             aws.String(sdkid.UniqueId()),
 	}
 
 	_, err := conn.EnableDelegatedAdminAccount(ctx, input)

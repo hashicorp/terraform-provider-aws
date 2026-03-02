@@ -131,6 +131,28 @@ func resourceWorkGroup() *schema.Resource {
 								},
 							},
 						},
+						"query_results_s3_access_grants_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authentication_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.AuthenticationType](),
+									},
+									"create_user_level_prefix": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"enable_s3_access_grants": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
 						"managed_query_results_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -712,6 +734,10 @@ func expandWorkGroupConfiguration(l []any) *types.WorkGroupConfiguration {
 		configuration.IdentityCenterConfiguration = expandWorkGroupIdentityCenterConfiguration(v.([]any))
 	}
 
+	if v, ok := m["query_results_s3_access_grants_configuration"]; ok {
+		configuration.QueryResultsS3AccessGrantsConfiguration = expandWorkGroupQueryResultsS3AccessGrantsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["managed_query_results_configuration"]; ok {
 		configuration.ManagedQueryResultsConfiguration = expandWorkGroupManagedQueryResultsConfiguration(v.([]any))
 	}
@@ -817,6 +843,10 @@ func expandWorkGroupConfigurationUpdates(l []any) *types.WorkGroupConfigurationU
 		configurationUpdates.ExecutionRole = aws.String(v)
 	}
 
+	if v, ok := m["query_results_s3_access_grants_configuration"]; ok {
+		configurationUpdates.QueryResultsS3AccessGrantsConfiguration = expandWorkGroupQueryResultsS3AccessGrantsConfiguration(v.([]any))
+	}
+
 	if v, ok := m["managed_query_results_configuration"]; ok {
 		configurationUpdates.ManagedQueryResultsConfigurationUpdates = expandWorkGroupManagedQueryResultsConfigurationUpdates(v.([]any))
 	}
@@ -915,6 +945,30 @@ func expandWorkGroupIdentityCenterConfiguration(l []any) *types.IdentityCenterCo
 	}
 
 	return identityCenterConfiguration
+}
+
+func expandWorkGroupQueryResultsS3AccessGrantsConfiguration(l []any) *types.QueryResultsS3AccessGrantsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	queryResultsS3AccessGrantsConfiguration := &types.QueryResultsS3AccessGrantsConfiguration{}
+
+	if v, ok := m["authentication_type"].(string); ok && v != "" {
+		queryResultsS3AccessGrantsConfiguration.AuthenticationType = types.AuthenticationType(v)
+	}
+
+	if v, ok := m["create_user_level_prefix"].(bool); ok {
+		queryResultsS3AccessGrantsConfiguration.CreateUserLevelPrefix = aws.Bool(v)
+	}
+
+	if v, ok := m["enable_s3_access_grants"].(bool); ok {
+		queryResultsS3AccessGrantsConfiguration.EnableS3AccessGrants = aws.Bool(v)
+	}
+
+	return queryResultsS3AccessGrantsConfiguration
 }
 
 func expandWorkGroupResultConfiguration(l []any) *types.ResultConfiguration {
@@ -1184,18 +1238,19 @@ func flattenWorkGroupConfiguration(configuration *types.WorkGroupConfiguration) 
 	}
 
 	m := map[string]any{
-		"bytes_scanned_cutoff_per_query":            aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
-		"customer_content_encryption_configuration": flattenWorkGroupCustomerContentEncryptionConfiguration(configuration.CustomerContentEncryptionConfiguration),
-		"enable_minimum_encryption_configuration":   aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
-		"enforce_workgroup_configuration":           aws.ToBool(configuration.EnforceWorkGroupConfiguration),
-		names.AttrEngineVersion:                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
-		"execution_role":                            aws.ToString(configuration.ExecutionRole),
-		"identity_center_configuration":             flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
-		"managed_query_results_configuration":       flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
-		"monitoring_configuration":                  flattenWorkGroupMonitoringConfiguration(configuration.MonitoringConfiguration),
-		"publish_cloudwatch_metrics_enabled":        aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
-		"result_configuration":                      flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
-		"requester_pays_enabled":                    aws.ToBool(configuration.RequesterPaysEnabled),
+		"bytes_scanned_cutoff_per_query":               aws.ToInt64(configuration.BytesScannedCutoffPerQuery),
+		"customer_content_encryption_configuration":    flattenWorkGroupCustomerContentEncryptionConfiguration(configuration.CustomerContentEncryptionConfiguration),
+		"enable_minimum_encryption_configuration":      aws.ToBool(configuration.EnableMinimumEncryptionConfiguration),
+		"enforce_workgroup_configuration":              aws.ToBool(configuration.EnforceWorkGroupConfiguration),
+		names.AttrEngineVersion:                        flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                               aws.ToString(configuration.ExecutionRole),
+		"identity_center_configuration":                flattenWorkGroupIdentityCenterConfiguration(configuration.IdentityCenterConfiguration),
+		"query_results_s3_access_grants_configuration": flattenWorkGroupQueryResultsS3AccessGrantsConfiguration(configuration.QueryResultsS3AccessGrantsConfiguration),
+		"managed_query_results_configuration":          flattenWorkGroupManagedQueryResultsConfiguration(configuration.ManagedQueryResultsConfiguration),
+		"monitoring_configuration":                     flattenWorkGroupMonitoringConfiguration(configuration.MonitoringConfiguration),
+		"publish_cloudwatch_metrics_enabled":           aws.ToBool(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":                         flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
+		"requester_pays_enabled":                       aws.ToBool(configuration.RequesterPaysEnabled),
 	}
 
 	return []any{m}
@@ -1234,6 +1289,20 @@ func flattenWorkGroupIdentityCenterConfiguration(identityCenterConfiguration *ty
 	m := map[string]any{
 		"enable_identity_center":       aws.ToBool(identityCenterConfiguration.EnableIdentityCenter),
 		"identity_center_instance_arn": aws.ToString(identityCenterConfiguration.IdentityCenterInstanceArn),
+	}
+
+	return []any{m}
+}
+
+func flattenWorkGroupQueryResultsS3AccessGrantsConfiguration(queryResultsS3AccessGrantsConfiguration *types.QueryResultsS3AccessGrantsConfiguration) []any {
+	if queryResultsS3AccessGrantsConfiguration == nil {
+		return []any{}
+	}
+
+	m := map[string]any{
+		"authentication_type":      string(queryResultsS3AccessGrantsConfiguration.AuthenticationType),
+		"create_user_level_prefix": aws.ToBool(queryResultsS3AccessGrantsConfiguration.CreateUserLevelPrefix),
+		"enable_s3_access_grants":  aws.ToBool(queryResultsS3AccessGrantsConfiguration.EnableS3AccessGrants),
 	}
 
 	return []any{m}

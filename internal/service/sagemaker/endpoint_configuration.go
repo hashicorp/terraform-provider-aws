@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -889,7 +889,7 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 		if v, ok := data["variant_name"].(string); ok && v != "" {
 			l.VariantName = aws.String(v)
 		} else {
-			l.VariantName = aws.String(id.UniqueId())
+			l.VariantName = aws.String(sdkid.UniqueId())
 		}
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {

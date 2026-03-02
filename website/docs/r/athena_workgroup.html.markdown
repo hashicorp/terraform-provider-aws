@@ -55,6 +55,7 @@ This resource supports the following arguments:
 * `identity_center_configuration` - (Optional) Configuration block to set up an IAM Identity Center enabled workgroup. See [Identity Center Configuration](#identity-center-configuration) below.
 * `monitoring_configuration` - (Optional) Configuration block for managed log persistence, delivering logs to Amazon S3 buckets, Amazon CloudWatch log groups etc. Only applicable to Apache Spark engine. See [Monitoring Configuration](#monitoring-configuration) below.
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
+* `query_results_s3_access_grants_configuration` - (Optional) Configuration block for S3 access grants. See [Query Results S3 Access Grants Configuration](#query-results-s3-access-grants-configuration) below.
 * `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
 * `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 * `managed_query_results_configuration` - (Optional) Configuration block for storing results in Athena owned storage. See [Managed Query Results Configuration](#managed-query-results-configuration) below.
@@ -71,6 +72,14 @@ This resource supports the following arguments:
 
 * `enable_identity_center` - (Optional) Specifies whether the workgroup is IAM Identity Center supported.
 * `identity_center_instance_arn` - (Optional) The IAM Identity Center instance ARN that the workgroup associates to.
+
+#### Query Results S3 Access Grants Configuration
+
+~> **NOTE:** When using `query_results_s3_access_grants_configuration`, you must also configure `identity_center_configuration` with `enable_identity_center = true`.
+
+* `authentication_type` - (Required) The authentication type used for Amazon S3 access grants. Currently, only `DIRECTORY_IDENTITY` is supported.
+* `create_user_level_prefix` - (Optional) When enabled, appends the user ID as an Amazon S3 path prefix to the query result output location. Defaults to `false`.
+* `enable_s3_access_grants` - (Required) Specifies whether Amazon S3 access grants are enabled for query results.
 
 #### Monitoring Configuration
 

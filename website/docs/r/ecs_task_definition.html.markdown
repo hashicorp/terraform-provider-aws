@@ -332,7 +332,7 @@ import {
   to = aws_ecs_task_definition.example
   identity = {
     family   = "mytaskfamily"
-    revision = "123"
+    revision = 123
   }
 }
 

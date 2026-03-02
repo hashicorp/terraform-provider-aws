@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -112,7 +112,7 @@ func (r *provisionedModelThroughputResource) Create(ctx context.Context, request
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(id.UniqueId())
+	input.ClientRequestToken = aws.String(sdkid.UniqueId())
 	input.ModelId = fwflex.StringFromFramework(ctx, data.ModelARN) // Different field name on Create.
 	input.Tags = getTagsIn(ctx)
 

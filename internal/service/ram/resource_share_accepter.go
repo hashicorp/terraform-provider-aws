@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -117,7 +117,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	}
 
 	input := ram.AcceptResourceShareInvitationInput{
-		ClientToken:                aws.String(id.UniqueId()),
+		ClientToken:                aws.String(sdkid.UniqueId()),
 		ResourceShareInvitationArn: aws.String(invitationARN),
 	}
 
@@ -211,7 +211,7 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 	}
 
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(id.UniqueId()),
+		ClientToken:      aws.String(sdkid.UniqueId()),
 		Principals:       []string{receiverAccountID},
 		ResourceShareArn: aws.String(d.Id()),
 	}

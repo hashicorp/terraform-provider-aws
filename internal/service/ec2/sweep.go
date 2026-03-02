@@ -235,7 +235,6 @@ func RegisterSweepers() {
 		"aws_db_subnet_group",
 		"aws_directory_service_directory",
 		"aws_dms_replication_subnet_group",
-		"aws_docdb_subnet_group",
 		"aws_ec2_client_vpn_endpoint",
 		"aws_ec2_instance_connect_endpoint",
 		"aws_ec2_transit_gateway_vpc_attachment",
