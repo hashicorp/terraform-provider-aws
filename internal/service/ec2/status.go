@@ -670,22 +670,6 @@ func statusVPCIPv6CIDRBlockAssociation(conn *ec2.Client, id string) retry.StateR
 	}
 }
 
-func statusVPCAttributeValue(conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
-		attributeValue, err := findVPCAttributeByTwoPartKey(ctx, conn, id, attribute)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return attributeValue, strconv.FormatBool(attributeValue), nil
-	}
-}
-
 func statusNetworkInterface(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findNetworkInterfaceByID(ctx, conn, id)

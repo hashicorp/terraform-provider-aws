@@ -3085,24 +3085,6 @@ func waitVolumeUpdated(ctx context.Context, conn *ec2.Client, id string, timeout
 	return nil, err
 }
 
-func waitVPCAttributeUpdated(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName, expectedValue bool) (*awstypes.Vpc, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    statusVPCAttributeValue(conn, vpcID, attribute),
-		Timeout:    ec2PropagationTimeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Vpc); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitVPCCIDRBlockAssociationCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcCidrBlockState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VpcCidrBlockStateCodeAssociating, awstypes.VpcCidrBlockStateCodeDisassociated, awstypes.VpcCidrBlockStateCodeFailing),
