@@ -100,10 +100,15 @@ func (r *routingRuleResource) Schema(ctx context.Context, req resource.SchemaReq
 				CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleConditionModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
-					listvalidator.SizeAtMost(3),
-					listvalidator.SizeAtLeast(0),
+					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.AtMostOneOfChildren(
+							path.MatchRelative().AtName("match_base_paths"),
+							path.MatchRelative().AtName("match_headers"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"match_base_paths": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleMatchBasePathsModel](ctx),
