@@ -742,6 +742,17 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	// Handle override action separately since AutoFlex might not handle it correctly
+	if foundRule.OverrideAction != nil {
+		var overrideActionModel webACLRuleOverrideActionModel
+		resp.Diagnostics.Append(overrideActionModel.Flatten(ctx, foundRule.OverrideAction)...)
+		if !resp.Diagnostics.HasError() {
+			state.OverrideAction, resp.Diagnostics = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleOverrideActionModel{&overrideActionModel}, nil)
+		}
+	} else {
+		state.OverrideAction = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOverrideActionModel](ctx)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
