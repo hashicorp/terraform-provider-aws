@@ -3,29 +3,29 @@
 
 package slices
 
-type FinderOptions struct {
+type finderOptions struct {
 	returnFirstMatch bool
 }
 
-func NewFinderOptions(optFns []FinderOptionsFunc) *FinderOptions {
-	opts := &FinderOptions{}
+func NewFinderOptions(optFns []FinderOptionsFunc) *finderOptions {
+	opts := &finderOptions{}
 	for _, fn := range optFns {
 		fn(opts)
 	}
 	return opts
 }
 
-func (o *FinderOptions) ReturnFirstMatch() bool {
+func (o *finderOptions) ReturnFirstMatch() bool {
 	return o.returnFirstMatch
 }
 
-type FinderOptionsFunc func(*FinderOptions)
+type FinderOptionsFunc func(*finderOptions)
 
 // WithReturnFirstMatch is a finder option to enable paginated operations to short
 // circuit after the first filter match
 //
 // This option should only be used when only a single match will ever be returned
 // from the specified filter.
-var WithReturnFirstMatch = func(o *FinderOptions) {
+var WithReturnFirstMatch = func(o *finderOptions) {
 	o.returnFirstMatch = true
 }
