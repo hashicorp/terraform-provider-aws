@@ -7,7 +7,6 @@ package appconfig
 
 import (
 	"context"
-	"fmt"
 	"iter"
 
 	"github.com/YakDriver/regexache"
@@ -26,6 +25,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,15 +79,15 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	var err error
 	var input appconfig.ListApplicationsInput
 	if !data.ID.IsNull() {
-		out, err = findApplicationWithFilter(ctx, conn, &input, func(v *awstypes.Application) bool {
+		out, err = findApplicationWithFilter(ctx, conn, &input, func(v awstypes.Application) bool {
 			return aws.ToString(v.Id) == data.ID.ValueString()
-		}, tfslices.WithReturnFirstMatch)
+		})
 	}
 
 	if !data.Name.IsNull() {
-		out, err = findApplicationWithFilter(ctx, conn, &input, func(v *awstypes.Application) bool {
+		out, err = findApplicationWithFilter(ctx, conn, &input, func(v awstypes.Application) bool {
 			return aws.ToString(v.Name) == data.Name.ValueString()
-		}, tfslices.WithReturnFirstMatch)
+		})
 	}
 
 	if err != nil {
@@ -122,38 +122,33 @@ type dataSourceApplicationModel struct {
 	Name        types.String `tfsdk:"name"`
 }
 
-func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, filter tfslices.Predicate[*awstypes.Application], optFns ...tfslices.FinderOptionsFunc) (*awstypes.Application, error) {
-	opts := tfslices.NewFinderOptions(optFns)
-	var output []awstypes.Application
-	for value, err := range listApplications(ctx, conn, input, filter) {
-		if err != nil {
-			return nil, err
-		}
+func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, filter tfslices.Predicate[awstypes.Application]) (*awstypes.Application, error) {
+	output, err := findApplications(ctx, conn, input, tfslices.WithFilter(filter), tfslices.WithReturnFirstMatch[awstypes.Application]())
 
-		output = append(output, value)
-		if opts.ReturnFirstMatch() {
-			break
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func listApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, filter tfslices.Predicate[*awstypes.Application]) iter.Seq2[awstypes.Application, error] {
+func findApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Application]) ([]awstypes.Application, error) { // nosemgrep:ci.logs-in-func-name
+	return tfslices.CollectWithError(listApplications(ctx, conn, input), optFns...)
+}
+
+func listApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...func(*appconfig.Options)) iter.Seq2[awstypes.Application, error] {
 	return func(yield func(awstypes.Application, error) bool) {
 		pages := appconfig.NewListApplicationsPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(awstypes.Application{}, fmt.Errorf("listing AppConfig Applications: %w", err))
+				yield(inttypes.Zero[awstypes.Application](), err)
 				return
 			}
 
 			for _, v := range page.Items {
-				if filter(&v) {
-					if !yield(v, nil) {
-						return
-					}
+				if !yield(v, nil) {
+					return
 				}
 			}
 		}

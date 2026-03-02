@@ -7,6 +7,7 @@ package logs
 
 import (
 	"context"
+	"iter"
 	"log"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -179,13 +181,13 @@ func findDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, nam
 		DestinationNamePrefix: aws.String(name),
 	}
 
-	return findDestination(ctx, conn, &input, func(v *awstypes.Destination) bool {
+	return findDestination(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.Destination) bool {
 		return aws.ToString(v.DestinationName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.Destination]())
 }
 
-func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination]) (*awstypes.Destination, error) {
-	output, err := findDestinations(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) (*awstypes.Destination, error) {
+	output, err := findDestinations(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -194,27 +196,25 @@ func findDestination(ctx context.Context, conn *cloudwatchlogs.Client, input *cl
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, filter tfslices.Predicate[*awstypes.Destination], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.Destination, error) {
-	var output []awstypes.Destination
-	opts := tfslices.NewFinderOptions(optFns)
+func findDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Destination]) ([]awstypes.Destination, error) {
+	return tfslices.CollectWithError(listDestinations(ctx, conn, input), optFns...)
+}
 
-	pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+func listDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeDestinationsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.Destination, error] {
+	return func(yield func(awstypes.Destination, error) bool) {
+		pages := cloudwatchlogs.NewDescribeDestinationsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.Destination](), err)
+				return
+			}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Destinations {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
+			for _, v := range page.Destinations {
+				if !yield(v, nil) {
+					return
 				}
 			}
 		}
 	}
-
-	return output, nil
 }

@@ -8,6 +8,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -227,13 +229,13 @@ func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Clie
 		LogGroupName:     aws.String(logGroupName),
 	}
 
-	return findMetricFilter(ctx, conn, &input, func(v *awstypes.MetricFilter) bool {
+	return findMetricFilter(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.MetricFilter) bool {
 		return aws.ToString(v.FilterName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.MetricFilter]())
 }
 
-func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter]) (*awstypes.MetricFilter, error) {
-	output, err := findMetricFilters(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) (*awstypes.MetricFilter, error) {
+	output, err := findMetricFilters(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -242,35 +244,39 @@ func findMetricFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, filter tfslices.Predicate[*awstypes.MetricFilter], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.MetricFilter, error) {
-	var output []awstypes.MetricFilter
-	opts := tfslices.NewFinderOptions(optFns)
+func findMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.MetricFilter]) ([]awstypes.MetricFilter, error) {
+	output, err := tfslices.CollectWithError(listMetricFilters(ctx, conn, input), optFns...)
 
-	pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
 
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func listMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeMetricFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.MetricFilter, error] {
+	return func(yield func(awstypes.MetricFilter, error) bool) {
+		pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.MetricFilter](), err)
+				return
 			}
-		}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.MetricFilters {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
+			for _, v := range page.MetricFilters {
+				if !yield(v, nil) {
+					return
 				}
 			}
 		}
 	}
-
-	return output, nil
 }
 
 func expandMetricTransformation(tfMap map[string]any) *awstypes.MetricTransformation {

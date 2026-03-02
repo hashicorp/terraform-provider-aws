@@ -287,26 +287,23 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 		LogGroupNamePrefix: aws.String(name),
 	}
 
-	return findLogGroup(ctx, conn, &input, func(v *awstypes.LogGroup) bool {
+	return findLogGroup(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.LogGroup) bool {
 		return aws.ToString(v.LogGroupName) == name
-	}, tfslices.WithReturnFirstMatch)
+	}), tfslices.WithReturnFirstMatch[awstypes.LogGroup]())
 }
 
-func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) (*awstypes.LogGroup, error) {
-	opts := tfslices.NewFinderOptions(optFns)
-	var output []awstypes.LogGroup
-	for value, err := range listLogGroups(ctx, conn, input, filter) {
-		if err != nil {
-			return nil, err
-		}
+func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) (*awstypes.LogGroup, error) {
+	output, err := findLogGroups(ctx, conn, input, optFns...)
 
-		output = append(output, value)
-		if opts.ReturnFirstMatch() {
-			break
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.LogGroup]) ([]awstypes.LogGroup, error) {
+	return tfslices.CollectWithError(listLogGroups(ctx, conn, input), optFns...)
 }
 
 func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {

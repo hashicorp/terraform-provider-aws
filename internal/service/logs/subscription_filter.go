@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 	"time"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -242,13 +244,13 @@ func findSubscriptionFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlog
 		LogGroupName:     aws.String(logGroupName),
 	}
 
-	return findSubscriptionFilter(ctx, conn, &input, func(v *awstypes.SubscriptionFilter) bool {
+	return findSubscriptionFilter(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.SubscriptionFilter) bool {
 		return aws.ToString(v.FilterName) == name
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.SubscriptionFilter]())
 }
 
-func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter]) (*awstypes.SubscriptionFilter, error) {
-	output, err := findSubscriptionFilters(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) (*awstypes.SubscriptionFilter, error) {
+	output, err := findSubscriptionFilters(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -257,33 +259,37 @@ func findSubscriptionFilter(ctx context.Context, conn *cloudwatchlogs.Client, in
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, filter tfslices.Predicate[*awstypes.SubscriptionFilter], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.SubscriptionFilter, error) {
-	var output []awstypes.SubscriptionFilter
-	opts := tfslices.NewFinderOptions(optFns)
+func findSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...tfslices.FinderOptionsFunc[awstypes.SubscriptionFilter]) ([]awstypes.SubscriptionFilter, error) {
+	output, err := tfslices.CollectWithError(listSubscriptionFilters(ctx, conn, input), optFns...)
 
-	pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
 
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeSubscriptionFiltersInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.SubscriptionFilter, error] { // nosemgrep:ci.logs-in-func-name
+	return func(yield func(awstypes.SubscriptionFilter, error) bool) {
+		pages := cloudwatchlogs.NewDescribeSubscriptionFiltersPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[awstypes.SubscriptionFilter](), err)
+				return
 			}
-		}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.SubscriptionFilters {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
+			for _, v := range page.SubscriptionFilters {
+				if !yield(v, nil) {
+					return
 				}
 			}
 		}
 	}
-
-	return output, nil
 }

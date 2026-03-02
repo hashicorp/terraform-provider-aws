@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iter"
 	"log"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -383,13 +385,13 @@ func findSubscriptionInTopic(ctx context.Context, conn *sns.Client, topicARN, su
 		TopicArn: aws.String(topicARN),
 	}
 
-	return findSubscriptionByTopic(ctx, conn, &input, func(v *types.Subscription) bool {
+	return findSubscriptionByTopic(ctx, conn, &input, tfslices.WithFilter(func(v types.Subscription) bool {
 		return aws.ToString(v.SubscriptionArn) == subscriptionARN
-	})
+	}), tfslices.WithReturnFirstMatch[types.Subscription]())
 }
 
-func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription]) (*types.Subscription, error) {
-	output, err := findSubscriptionsByTopic(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...tfslices.FinderOptionsFunc[types.Subscription]) (*types.Subscription, error) {
+	output, err := findSubscriptionsByTopic(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -398,35 +400,39 @@ func findSubscriptionByTopic(ctx context.Context, conn *sns.Client, input *sns.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, filter tfslices.Predicate[*types.Subscription], optFns ...tfslices.FinderOptionsFunc) ([]types.Subscription, error) {
-	var output []types.Subscription
-	opts := tfslices.NewFinderOptions(optFns)
+func findSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...tfslices.FinderOptionsFunc[types.Subscription]) ([]types.Subscription, error) {
+	output, err := tfslices.CollectWithError(listSubscriptionsByTopic(ctx, conn, input), optFns...)
 
-	pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
 
-		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput, optFns ...func(*sns.Options)) iter.Seq2[types.Subscription, error] {
+	return func(yield func(types.Subscription, error) bool) {
+		pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx, optFns...)
+			if err != nil {
+				yield(inttypes.Zero[types.Subscription](), err)
+				return
 			}
-		}
 
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Subscriptions {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
+			for _, v := range page.Subscriptions {
+				if !yield(v, nil) {
+					return
 				}
 			}
 		}
 	}
-
-	return output, nil
 }
 
 // waitForConfirmation indicates whether the subscription should wait for confirmation

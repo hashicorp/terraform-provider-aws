@@ -8,6 +8,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"iter"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -175,13 +177,13 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 		input.QueryDefinitionNamePrefix = aws.String(name)
 	}
 
-	return findQueryDefinition(ctx, conn, &input, func(v *awstypes.QueryDefinition) bool {
+	return findQueryDefinition(ctx, conn, &input, tfslices.WithFilter(func(v awstypes.QueryDefinition) bool {
 		return aws.ToString(v.QueryDefinitionId) == queryDefinitionID
-	})
+	}), tfslices.WithReturnFirstMatch[awstypes.QueryDefinition]())
 }
 
-func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) (*awstypes.QueryDefinition, error) {
-	output, err := findQueryDefinitions(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.QueryDefinition]) (*awstypes.QueryDefinition, error) {
+	output, err := findQueryDefinitions(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -190,30 +192,29 @@ func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.QueryDefinition, error) {
-	var output []awstypes.QueryDefinition
-	opts := tfslices.NewFinderOptions(optFns)
+func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.QueryDefinition]) ([]awstypes.QueryDefinition, error) {
+	return tfslices.CollectWithError(listQueryDefinitions(ctx, conn, input), optFns...)
+}
 
-	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+func listQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, optFns ...func(*cloudwatchlogs.Options)) iter.Seq2[awstypes.QueryDefinition, error] {
+	return func(yield func(awstypes.QueryDefinition, error) bool) {
+		err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 
-		for _, v := range page.QueryDefinitions {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
+			for _, v := range page.QueryDefinitions {
+				if !yield(v, nil) {
 					return false
 				}
 			}
+
+			return !lastPage
+		}, optFns...)
+
+		if err != nil {
+			yield(inttypes.Zero[awstypes.QueryDefinition](), err)
+			return
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
-
-	return output, nil
 }
