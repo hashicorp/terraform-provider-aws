@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +25,16 @@ func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &v),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`sizeconstraintset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
@@ -67,16 +66,16 @@ func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 				),
@@ -84,7 +83,7 @@ func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccSizeConstraintSetConfig_changeName(sizeConstraintSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, sizeConstraintSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 				),
@@ -104,16 +103,16 @@ func TestAccWAFSizeConstraintSet_disappears(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &v),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceSizeConstraintSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -128,16 +127,16 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
@@ -155,7 +154,7 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 			{
 				Config: testAccSizeConstraintSetConfig_changes(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
@@ -185,16 +184,16 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_nos(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &contraints),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &contraints),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "0"),
 				),
@@ -208,14 +207,14 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awstypes.SizeConstraintSet) resource.TestCheckFunc {
+func testAccCheckSizeConstraintSetExists(ctx context.Context, t *testing.T, n string, v *awstypes.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 		output, err := tfwaf.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
 
@@ -229,14 +228,14 @@ func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awsty
 	}
 }
 
-func testAccCheckSizeConstraintSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSizeConstraintSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_waf_size_contraint_set" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFClient(ctx)
 
 			_, err := tfwaf.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
 

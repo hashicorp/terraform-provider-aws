@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,20 +22,20 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalysubscription/.+`)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
@@ -60,20 +58,20 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfce.ResourceAnomalySubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -86,20 +84,20 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalySubscriptionConfig_frequency(rName, "DAILY", address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 				),
 			},
@@ -111,7 +109,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_frequency(rName, "WEEKLY", address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "WEEKLY"),
 				),
 			},
@@ -123,21 +121,21 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test", names.AttrARN),
 				),
 			},
@@ -149,7 +147,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_monitorARNList(rName, rName2, address),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.0", "aws_ce_anomaly_monitor.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "monitor_arn_list.1", "aws_ce_anomaly_monitor.test2", names.AttrARN),
 				),
@@ -162,21 +160,21 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalySubscriptionConfig_basic(rName, address1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address1),
 				),
@@ -189,7 +187,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_basic(rName, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.address", address2),
 				),
@@ -202,7 +200,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_subscriber2(rName, address1, address2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttrSet(resourceName, "subscriber.0.type"),
 					resource.TestCheckResourceAttrSet(resourceName, "subscriber.0.address"),
 					resource.TestCheckResourceAttrSet(resourceName, "subscriber.1.type"),
@@ -217,7 +215,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_subscriberSNS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "SNS"),
 					resource.TestCheckResourceAttrPair(resourceName, "subscriber.0.address", "aws_sns_topic.test", names.AttrARN),
 				),
@@ -230,20 +228,20 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 	address := acctest.RandomEmailAddress(domain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -256,7 +254,7 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_tags2(rName, address, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -265,7 +263,7 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 			{
 				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
+					testAccCheckAnomalySubscriptionExists(ctx, t, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -274,14 +272,14 @@ func TestAccCEAnomalySubscription_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, v *awstypes.AnomalySubscription) resource.TestCheckFunc {
+func testAccCheckAnomalySubscriptionExists(ctx context.Context, t *testing.T, n string, v *awstypes.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CEClient(ctx)
 
 		output, err := tfce.FindAnomalySubscriptionByARN(ctx, conn, rs.Primary.ID)
 
@@ -295,9 +293,9 @@ func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, v *aws
 	}
 }
 
-func testAccCheckAnomalySubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAnomalySubscriptionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CEClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_subscription" {

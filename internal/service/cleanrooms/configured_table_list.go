@@ -63,16 +63,16 @@ func (l *listResourceConfiguredTable) List(ctx context.Context, request list.Lis
 			rd.SetId(id)
 
 			tflog.Info(ctx, "Reading Clean Rooms Configured Table")
-			diags := resourceConfiguredTableRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
+			output, err := findConfiguredTableByID(ctx, conn, id)
+			if err != nil {
+				tflog.Error(ctx, "Reading Clean Rooms Configured Table", map[string]any{
+					names.AttrID: id,
+					"err":        err.Error(),
+				})
 				continue
 			}
+
+			resourceConfiguredTableFlatten(ctx, rd, output)
 
 			result.DisplayName = aws.ToString(item.Name)
 

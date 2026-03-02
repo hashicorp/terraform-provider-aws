@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeFrameworkOutput")
 // @Testing(generator="randomFrameworkName()")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,
@@ -275,9 +273,8 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 	output, err := conn.DescribeFramework(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -292,8 +289,8 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 	return output, nil
 }
 
-func statusFramework(ctx context.Context, conn *backup.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFramework(conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFrameworkByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -317,10 +314,10 @@ const (
 )
 
 func waitFrameworkCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
-		Refresh: statusFramework(ctx, conn, name),
+		Refresh: statusFramework(conn, name),
 		Timeout: timeout,
 	}
 
@@ -334,10 +331,10 @@ func waitFrameworkCreated(ctx context.Context, conn *backup.Client, name string,
 }
 
 func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusUpdateInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
-		Refresh: statusFramework(ctx, conn, name),
+		Refresh: statusFramework(conn, name),
 		Timeout: timeout,
 	}
 
@@ -351,10 +348,10 @@ func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, name string,
 }
 
 func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{frameworkStatusDeletionInProgress},
 		Target:  []string{},
-		Refresh: statusFramework(ctx, conn, name),
+		Refresh: statusFramework(conn, name),
 		Timeout: timeout,
 	}
 

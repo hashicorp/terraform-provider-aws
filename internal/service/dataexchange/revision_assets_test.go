@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
@@ -33,22 +31,22 @@ func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportFromS3(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -78,22 +76,22 @@ func TestAccDataExchangeRevisionAssets_finalized(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_finalized(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -114,7 +112,7 @@ func TestAccDataExchangeRevisionAssets_finalized(t *testing.T) {
 			{
 				Config: testAccRevisionAssetsConfig_finalized(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -140,22 +138,22 @@ func TestAccDataExchangeRevisionAssets_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3Snapshot_importFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdataexchange.ResourceRevisionAssets, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -169,22 +167,22 @@ func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportMultipleFromS3(t *testin
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3SNapsht_importMultipleFromS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset"), knownvalue.SetExact([]knownvalue.Check{
@@ -205,22 +203,22 @@ func TestAccDataExchangeRevisionAssets_S3Snapshot_Upload(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3Snapshot_upload(rName, "test-fixtures/data.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -246,22 +244,22 @@ func TestAccDataExchangeRevisionAssets_S3Snapshot_UploadMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3Snapshot_uploadMultiple(rName, "test-fixtures/data.json", "test-fixtures/data2.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -288,22 +286,22 @@ func TestAccDataExchangeRevisionAssets_S3Snapshot_ImportAndUpload(t *testing.T) 
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3Snapshot_importAndUpload(rName, "test-fixtures/data.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -329,22 +327,22 @@ func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_basic(t *testing
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -374,22 +372,22 @@ func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_keys(t *testing.
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_keys(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -414,22 +412,22 @@ func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_multiple(t *test
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -455,22 +453,22 @@ func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_cmk_basic(t *tes
 	ctx := acctest.Context(t)
 
 	var revision dataexchange.GetRevisionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision_assets.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx),
+		CheckDestroy:             testAccCheckRevisionAssetsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionAssetsConfig_s3DataAccessFromS3Bucket_cmk(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRevisionAssetsExists(ctx, resourceName, &revision),
+					testAccCheckRevisionAssetsExists(ctx, t, resourceName, &revision),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{id}"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
@@ -496,9 +494,9 @@ func TestAccDataExchangeRevisionAssets_S3DataAccessFromS3Bucket_cmk_basic(t *tes
 	})
 }
 
-func testAccCheckRevisionAssetsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRevisionAssetsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dataexchange_revision_assets" {
@@ -520,7 +518,7 @@ func testAccCheckRevisionAssetsDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckRevisionAssetsExists(ctx context.Context, name string, revision *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
+func testAccCheckRevisionAssetsExists(ctx context.Context, t *testing.T, name string, revision *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -531,7 +529,7 @@ func testAccCheckRevisionAssetsExists(ctx context.Context, name string, revision
 			return create.Error(names.DataExchange, create.ErrActionCheckingExistence, tfdataexchange.ResNameRevisionAssets, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataExchangeClient(ctx)
 
 		resp, err := tfdataexchange.FindRevisionByID(ctx, conn, rs.Primary.Attributes["data_set_id"], rs.Primary.ID)
 		if err != nil {

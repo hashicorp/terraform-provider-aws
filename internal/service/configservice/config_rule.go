@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigRule")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,
@@ -356,9 +354,8 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchConfigRuleException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -372,8 +369,8 @@ func findConfigRules(ctx context.Context, conn *configservice.Client, input *con
 	return output, nil
 }
 
-func statusConfigRule(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConfigRule(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConfigRuleByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -392,7 +389,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.ConfigRuleStateActive,
 			types.ConfigRuleStateDeleting,
@@ -400,7 +397,7 @@ func waitConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name
 			types.ConfigRuleStateEvaluating,
 		),
 		Target:  []string{},
-		Refresh: statusConfigRule(ctx, conn, name),
+		Refresh: statusConfigRule(conn, name),
 		Timeout: timeout,
 	}
 

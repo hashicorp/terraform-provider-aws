@@ -47,7 +47,6 @@ var (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types;awstypes;awstypes.MediaInsightsPipelineConfiguration")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 

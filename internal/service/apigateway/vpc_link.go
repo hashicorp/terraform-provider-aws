@@ -30,8 +30,6 @@ import (
 
 // @SDKResource("aws_api_gateway_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,

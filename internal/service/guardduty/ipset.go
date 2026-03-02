@@ -17,12 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +31,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
@@ -96,10 +95,10 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.IpSetStatusActivating, awstypes.IpSetStatusDeactivating),
 		Target:     enum.Slice(awstypes.IpSetStatusActive, awstypes.IpSetStatusInactive),
-		Refresh:    ipsetRefreshStatusFunc(ctx, conn, *resp.IpSetId, detectorID),
+		Refresh:    ipsetRefreshStatusFunc(conn, *resp.IpSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -209,7 +208,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.IpSetStatusActive,
 			awstypes.IpSetStatusActivating,
@@ -218,7 +217,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 			awstypes.IpSetStatusDeletePending,
 		),
 		Target:     enum.Slice(awstypes.IpSetStatusDeleted),
-		Refresh:    ipsetRefreshStatusFunc(ctx, conn, ipSetId, detectorId),
+		Refresh:    ipsetRefreshStatusFunc(conn, ipSetId, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -231,8 +230,8 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, ipSetID, detectorID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func ipsetRefreshStatusFunc(conn *guardduty.Client, ipSetID, detectorID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &guardduty.GetIPSetInput{
 			DetectorId: aws.String(detectorID),
 			IpSetId:    aws.String(ipSetID),

@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccRDSEventSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -58,19 +56,19 @@ func TestAccRDSEventSubscription_basic(t *testing.T) {
 func TestAccRDSEventSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var eventSubscription types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &eventSubscription),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,19 +80,19 @@ func TestAccRDSEventSubscription_disappears(t *testing.T) {
 func TestAccRDSEventSubscription_Name_generated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
@@ -111,19 +109,19 @@ func TestAccRDSEventSubscription_Name_generated(t *testing.T) {
 func TestAccRDSEventSubscription_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -140,19 +138,19 @@ func TestAccRDSEventSubscription_namePrefix(t *testing.T) {
 func TestAccRDSEventSubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var eventSubscription types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -165,7 +163,7 @@ func TestAccRDSEventSubscription_tags(t *testing.T) {
 			{
 				Config: testAccEventSubscriptionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -174,7 +172,7 @@ func TestAccRDSEventSubscription_tags(t *testing.T) {
 			{
 				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -186,20 +184,20 @@ func TestAccRDSEventSubscription_tags(t *testing.T) {
 func TestAccRDSEventSubscription_categories(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_categories(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -225,7 +223,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 			{
 				Config: testAccEventSubscriptionConfig_categoriesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -242,7 +240,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 			{
 				Config: testAccEventSubscriptionConfig_categoriesAndSourceTypeUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
@@ -264,22 +262,22 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 func TestAccRDSEventSubscription_sourceIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EventSubscription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_event_subscription.test"
 	paramGroup1ResourceName := "aws_db_parameter_group.test1"
 	paramGroup2ResourceName := "aws_db_parameter_group.test2"
 	paramGroup3ResourceName := "aws_db_parameter_group.test3"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_sourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "source_ids.*", paramGroup1ResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "source_ids.*", paramGroup2ResourceName, names.AttrID),
@@ -293,7 +291,7 @@ func TestAccRDSEventSubscription_sourceIDs(t *testing.T) {
 			{
 				Config: testAccEventSubscriptionConfig_sourceIDsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
+					testAccCheckEventSubscriptionExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "source_ids.*", paramGroup3ResourceName, names.AttrID),
 				),
@@ -302,14 +300,14 @@ func TestAccRDSEventSubscription_sourceIDs(t *testing.T) {
 	})
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *types.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, t *testing.T, n string, v *types.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindEventSubscriptionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -322,9 +320,9 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *types
 	}
 }
 
-func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_event_subscription" {

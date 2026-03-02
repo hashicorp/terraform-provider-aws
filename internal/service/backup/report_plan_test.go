@@ -11,11 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,22 +23,22 @@ import (
 func TestAccBackupReportPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
-	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	rName2 := randomReportPlanName()
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_report_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig_basic(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("report-plan:"+rName2+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -63,7 +61,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 			{
 				Config: testAccReportPlanConfig_basic(rName, rName2, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("report-plan:"+rName2+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -85,21 +83,21 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
-	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	rName2 := randomReportPlanName()
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("report-plan:"+rName2+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -122,7 +120,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 			{
 				Config: testAccReportPlanConfig_deliveryChannel(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("report-plan:"+rName2+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -145,21 +143,21 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
-	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	rName2 := randomReportPlanName()
 	description := "example description"
 	resourceName := "aws_backup_report_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig_basic(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("report-plan:"+rName2+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -184,7 +182,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 			{
 				Config: testAccReportPlanConfig_reportSettings(rName, rName2, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("report-plan:"+rName2+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
@@ -210,20 +208,20 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 func TestAccBackupReportPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var reportPlan awstypes.ReportPlan
-	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
 	rName2 := randomReportPlanName()
 	resourceName := "aws_backup_report_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckReportPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanConfig_basic(rName, rName2, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
+					testAccCheckReportPlanExists(ctx, t, resourceName, &reportPlan),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceReportPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -233,7 +231,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 }
 
 func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 	input := backup.ListReportPlansInput{}
 	_, err := conn.ListReportPlans(ctx, &input)
@@ -247,9 +245,9 @@ func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckReportPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReportPlanDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_report_plan" {
@@ -273,14 +271,14 @@ func testAccCheckReportPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckReportPlanExists(ctx context.Context, n string, v *awstypes.ReportPlan) resource.TestCheckFunc {
+func testAccCheckReportPlanExists(ctx context.Context, t *testing.T, n string, v *awstypes.ReportPlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindReportPlanByName(ctx, conn, rs.Primary.ID)
 

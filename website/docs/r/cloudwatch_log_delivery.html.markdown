@@ -36,7 +36,7 @@ This resource supports the following arguments:
 * `record_fields` - (Optional) The list of record fields to be delivered to the destination, in order.
 * `s3_delivery_configuration` - (Optional) Parameters that are valid only when the delivery's delivery destination is an S3 bucket.
     * `enable_hive_compatible_path` - (Optional) This parameter causes the S3 objects that contain delivered logs to use a prefix structure that allows for integration with Apache Hive.
-    * `suffix_path` - (Optional) This string allows re-configuring the S3 object prefix to contain either static or variable sections. The valid variables to use in the suffix path will vary by each log source.
+    * `suffix_path` - (Optional) This string allows re-configuring the S3 object prefix to contain either static or variable sections. The valid variables to use in the suffix path will vary by each log source. **Note:** AWS automatically prepends account and service-specific prefixes (e.g., `AWSLogs/{account-id}/CloudFront/` for CloudFront sources) to the configured value. Specify only your custom suffix path without these AWS-managed prefixes.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

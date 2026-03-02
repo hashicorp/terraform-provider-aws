@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -199,9 +198,8 @@ func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	output, err := conn.GetPartitionIndexes(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -221,17 +219,16 @@ func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	}
 
 	if result == nil {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	return result, nil
 }
 
-func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPartitionIndex(conn *glue.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPartitionIndexByName(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -247,10 +244,10 @@ func statusPartitionIndex(ctx context.Context, conn *glue.Client, id string) sdk
 }
 
 func waitPartitionIndexCreated(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.PartitionIndexDescriptor, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PartitionIndexStatusCreating),
 		Target:  enum.Slice(awstypes.PartitionIndexStatusActive),
-		Refresh: statusPartitionIndex(ctx, conn, id),
+		Refresh: statusPartitionIndex(conn, id),
 		Timeout: timeout,
 	}
 
@@ -264,10 +261,10 @@ func waitPartitionIndexCreated(ctx context.Context, conn *glue.Client, id string
 }
 
 func waitPartitionIndexDeleted(ctx context.Context, conn *glue.Client, id string, timeout time.Duration) (*awstypes.PartitionIndexDescriptor, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PartitionIndexStatusDeleting),
 		Target:  []string{},
-		Refresh: statusPartitionIndex(ctx, conn, id),
+		Refresh: statusPartitionIndex(conn, id),
 		Timeout: timeout,
 	}
 

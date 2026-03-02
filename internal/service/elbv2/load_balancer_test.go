@@ -2457,6 +2457,33 @@ func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancer_albMoreThan20Attributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albMoreThan20Attributes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckLoadBalancerNotRecreated(i, j *awstypes.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(i.LoadBalancerArn) != aws.ToString(j.LoadBalancerArn) {
@@ -3872,4 +3899,42 @@ resource "aws_lb" "test" {
   }
 }
 `, rName, unit))
+}
+
+func testAccLoadBalancerConfig_albMoreThan20Attributes(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  desync_mitigation_mode                      = "monitor"
+  drop_invalid_header_fields                  = true
+  enable_http2                                = true
+  enable_tls_version_and_cipher_suite_headers = true
+  enable_waf_fail_open                        = true
+  enable_xff_client_port                      = true
+  internal                                    = true
+  ip_address_type                             = "ipv4"
+  load_balancer_type                          = "application"
+  name                                        = %[1]q
+  preserve_host_header                        = true
+  subnets                                     = aws_subnet.test[*].id
+  xff_header_processing_mode                  = "append"
+
+  access_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = true
+    prefix  = "%[1]s/access-logs"
+  }
+
+  connection_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = true
+    prefix  = "%[1]s/connection-logs"
+  }
+
+  health_check_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = true
+    prefix  = "%[1]s/health-check-logs"
+  }
+}
+`, rName))
 }

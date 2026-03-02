@@ -10,11 +10,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfauditmanager "github.com/hashicorp/terraform-provider-aws/internal/service/auditmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ import (
 func TestAccAuditManagerFrameworkShare_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var frameworkShare types.AssessmentFrameworkShareRequest
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework_share.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkShareDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkShareConfig_basic(rName, acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
+					testAccCheckFrameworkShareExists(ctx, t, resourceName, &frameworkShare),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
@@ -57,22 +55,22 @@ func TestAccAuditManagerFrameworkShare_basic(t *testing.T) {
 func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var frameworkShare types.AssessmentFrameworkShareRequest
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework_share.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkShareDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkShareConfig_basic(rName, acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
+					testAccCheckFrameworkShareExists(ctx, t, resourceName, &frameworkShare),
 					// Sleep briefly to prevent intermittent validation errors when revoking
 					// a new framework share request
 					acctest.CheckSleep(t, 10*time.Second),
@@ -87,22 +85,22 @@ func TestAccAuditManagerFrameworkShare_disappears(t *testing.T) {
 func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 	var frameworkShare types.AssessmentFrameworkShareRequest
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_auditmanager_framework_share.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFrameworkShareDestroy(ctx),
+		CheckDestroy:             testAccCheckFrameworkShareDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFrameworkShareConfig_optional(rName, acctest.AlternateRegion(), "text"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
+					testAccCheckFrameworkShareExists(ctx, t, resourceName, &frameworkShare),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
@@ -118,7 +116,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 			{
 				Config: testAccFrameworkShareConfig_basic(rName, acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
+					testAccCheckFrameworkShareExists(ctx, t, resourceName, &frameworkShare),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
@@ -127,7 +125,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 			{
 				Config: testAccFrameworkShareConfig_optional(rName, acctest.AlternateRegion(), "text-updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFrameworkShareExists(ctx, resourceName, &frameworkShare),
+					testAccCheckFrameworkShareExists(ctx, t, resourceName, &frameworkShare),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_account", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
@@ -138,9 +136,9 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 	})
 }
 
-func testAccCheckFrameworkShareDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFrameworkShareDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_framework_share" {
@@ -164,14 +162,14 @@ func testAccCheckFrameworkShareDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckFrameworkShareExists(ctx context.Context, n string, v *types.AssessmentFrameworkShareRequest) resource.TestCheckFunc {
+func testAccCheckFrameworkShareExists(ctx context.Context, t *testing.T, n string, v *types.AssessmentFrameworkShareRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AuditManagerClient(ctx)
 
 		output, err := tfauditmanager.FindFrameworkShareByID(ctx, conn, rs.Primary.ID)
 

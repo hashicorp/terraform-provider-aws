@@ -18,7 +18,7 @@ func TestAccLexModelsIntentDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
@@ -51,7 +51,7 @@ func TestAccLexModelsIntentDataSource_withVersion(t *testing.T) {
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)

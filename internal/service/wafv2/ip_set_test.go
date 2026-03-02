@@ -10,12 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +26,16 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -52,7 +51,7 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_update(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
@@ -76,18 +75,18 @@ func TestAccWAFV2IPSet_nameGenerated(t *testing.T) {
 	var v awstypes.IPSet
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -105,16 +104,16 @@ func TestAccWAFV2IPSet_namePrefix(t *testing.T) {
 	var v awstypes.IPSet
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -135,16 +134,16 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &r),
+					testAccCheckIPSetExists(ctx, t, resourceName, &r),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -159,16 +158,16 @@ func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_v6(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
@@ -196,16 +195,16 @@ func TestAccWAFV2IPSet_minimal(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_minimal(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -231,16 +230,16 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 	ipSetNewName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &before),
+					testAccCheckIPSetExists(ctx, t, resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
@@ -252,7 +251,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_basic(ipSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &after),
+					testAccCheckIPSetExists(ctx, t, resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetNewName),
@@ -271,16 +270,16 @@ func TestAccWAFV2IPSet_addresses(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_addresses(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
 				),
 			},
@@ -294,16 +293,16 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_oneTag(ipSetName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
@@ -318,7 +317,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_twoTags(ipSetName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
@@ -328,7 +327,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 			{
 				Config: testAccIPSetConfig_oneTag(ipSetName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
@@ -344,16 +343,16 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 	ipSetName := fmt.Sprintf("ip-set-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPSetConfig_large(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPSetExists(ctx, resourceName, &v),
+					testAccCheckIPSetExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
@@ -372,14 +371,14 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 	})
 }
 
-func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafv2_ip_set" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 			_, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
@@ -398,7 +397,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) resource.TestCheckFunc {
+func testAccCheckIPSetExists(ctx context.Context, t *testing.T, n string, v *awstypes.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -409,7 +408,7 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) r
 			return fmt.Errorf("No WAFv2 IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
 
 		output, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 

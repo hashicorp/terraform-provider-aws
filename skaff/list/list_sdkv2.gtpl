@@ -45,6 +45,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -83,7 +85,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}Client(ctx)
+	conn := l.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
@@ -97,7 +99,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Get information about a resource from AWS
 	{{- end }}
-	tflog.Info(ctx, "Listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input {{ .SDKPackage }}.List{{ .ListResource }}sInput
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
@@ -108,30 +110,31 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 			}
 
 			arn := aws.ToString(item.{{ .ListResource }}Arn)
+	        {{- if .IncludeComments }}
+			// TIP: -- 4. Set identifying attributes for logging
+			// Set one or more logging fields with attributes that will identify the resource.
+			// Typically, these will be the attributes used in the Resource Identity
+	        {{- end }}
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(arn)
-	        {{ if .IncludeComments -}}
-	        // TIP: -- 4. Set the ID, arguments, and attributes
-	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
-	        {{- end }}
-			tflog.Info(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
-			diags := resource{{ .ListResource }}Read(ctx, rd, awsClient)
-			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			// TIP: -- 5. Populate additional attributes needed for Resource Identity
+			rd.Set(names.AttrName, name)
+
+			if request.IncludeResource {
+				if err := resource{{ .ListResource }}Flatten(ctx, l.Meta(), &item, rd); err != nil {
+					tflog.Error(ctx, "Reading {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = aws.ToString(item.{{ .ListResource }}Name)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -170,7 +173,7 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources: %w", err))
+				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }} resources: %w", err))
 				return
 			}
 
@@ -183,3 +186,22 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 	}
 }
 
+{{ if .IncludeComments -}}
+// TIP: ==== RESOURCE FLATTENING FUNCTION ====
+// This function should be placed in the resource type's source file ("{{ .ListResourceSnake }}.go").
+// It is intended to perform the flattening of the results of the API call or calls used to populate a resource's values.
+// It should replace most of the body of the resource type's Read function (`resource{{ .ListResource }}Read`) and take the API results
+// as parameters.
+// The replaced section of the Read function should be
+// 	if err := resource{{ .ListResource }}Flatten(ctx, meta.(*conns.AWSClient), lb, d); err != nil {
+// 		return sdkdiag.AppendFromErr(diags, err)
+// 	}
+{{- end }}
+func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AWSClient, lb *awstypes.{{ .ListResource }}, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "{{ .ARNNamespace }}", "{{ .ListResourceLower }}/"+d.Id()))
+	if err := d.Set("some_collection", flattenSomeCollection(someCollection)); err != nil {
+		return fmt.Errorf("setting some_collection: %w", err)
+	}
+
+	return nil
+}

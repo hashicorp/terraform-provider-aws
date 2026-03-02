@@ -10,11 +10,9 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,12 +22,12 @@ func testAccIngestion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ingestion awstypes.Ingestion
 	resourceName := "aws_appfabric_ingestion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
 	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
 	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -37,12 +35,12 @@ func testAccIngestion_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
+		CheckDestroy:             testAccCheckIngestionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIngestionConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need TFC Org for testing
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", "auditLog"),
@@ -62,12 +60,12 @@ func testAccIngestion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ingestion awstypes.Ingestion
 	resourceName := "aws_appfabric_ingestion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
 	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
 	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -75,12 +73,12 @@ func testAccIngestion_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
+		CheckDestroy:             testAccCheckIngestionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIngestionConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceIngestion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,12 +91,12 @@ func testAccIngestion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ingestion awstypes.Ingestion
 	resourceName := "aws_appfabric_ingestion.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
 	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
 	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
@@ -106,12 +104,12 @@ func testAccIngestion_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
+		CheckDestroy:             testAccCheckIngestionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIngestionConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -124,7 +122,7 @@ func testAccIngestion_tags(t *testing.T) {
 			{
 				Config: testAccIngestionConfig_tags2(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -133,7 +131,7 @@ func testAccIngestion_tags(t *testing.T) {
 			{
 				Config: testAccIngestionConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					testAccCheckIngestionExists(ctx, t, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -142,9 +140,9 @@ func testAccIngestion_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIngestionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIngestionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appfabric_ingestion" {
@@ -168,14 +166,14 @@ func testAccCheckIngestionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIngestionExists(ctx context.Context, n string, v *awstypes.Ingestion) resource.TestCheckFunc {
+func testAccCheckIngestionExists(ctx context.Context, t *testing.T, n string, v *awstypes.Ingestion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AppFabricClient(ctx)
 
 		output, err := tfappfabric.FindIngestionByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_bundle_arn"], rs.Primary.Attributes[names.AttrARN])
 

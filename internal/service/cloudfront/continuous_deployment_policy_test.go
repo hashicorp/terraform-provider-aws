@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,27 +31,27 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_init(defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
-					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckDistributionExists(ctx, t, stagingDistributionResourceName, &stagingDistribution),
+					testAccCheckDistributionExists(ctx, t, productionDistributionResourceName, &productionDistribution),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 				),
 			},
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "continuous-deployment-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", "1"),
@@ -88,21 +86,21 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_init(defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
-					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckDistributionExists(ctx, t, stagingDistributionResourceName, &stagingDistribution),
+					testAccCheckDistributionExists(ctx, t, productionDistributionResourceName, &productionDistribution),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,27 +118,27 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_init(defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
-					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckDistributionExists(ctx, t, stagingDistributionResourceName, &stagingDistribution),
+					testAccCheckDistributionExists(ctx, t, productionDistributionResourceName, &productionDistribution),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 				),
 			},
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(false, "0.01", 300, 600, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
@@ -160,7 +158,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.02", 600, 1200, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
@@ -175,7 +173,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(false, "aws-cf-cd-test", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleHeader",
@@ -193,7 +191,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(true, "aws-cf-cd-test2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleHeader",
@@ -216,30 +214,30 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
-	domain1 := fmt.Sprintf("%s.example.com", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-	domain2 := fmt.Sprintf("%s.example.com", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	domain1 := fmt.Sprintf("%s.example.com", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
+	domain2 := fmt.Sprintf("%s.example.com", acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_init(domain1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
-					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckDistributionExists(ctx, t, stagingDistributionResourceName, &stagingDistribution),
+					testAccCheckDistributionExists(ctx, t, productionDistributionResourceName, &productionDistribution),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 				),
 			},
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
@@ -260,7 +258,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
@@ -282,9 +280,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	})
 }
 
-func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_continuous_deployment_policy" {
@@ -308,14 +306,14 @@ func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, n string, v *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
+func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, t *testing.T, n string, v *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
 

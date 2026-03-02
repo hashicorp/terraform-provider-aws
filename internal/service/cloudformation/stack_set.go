@@ -19,8 +19,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -224,7 +223,7 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloudformation.CreateStackSetInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		StackSetName:       aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
@@ -357,7 +356,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.UpdateStackSetInput{
-		OperationId:  aws.String(id.UniqueId()),
+		OperationId:  aws.String(sdkid.UniqueId()),
 		StackSetName: aws.String(d.Id()),
 		Tags:         []awstypes.Tag{},
 		TemplateBody: aws.String(d.Get("template_body").(string)),
@@ -486,16 +485,14 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	output, err := conn.DescribeStackSet(ctx, input)
 
 	if errs.IsA[*awstypes.StackSetNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	if callAs == string(awstypes.CallAsDelegatedAdmin) && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -510,8 +507,8 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	return output.StackSet, nil
 }
 
-func statusStackSet(ctx context.Context, conn *cloudformation.Client, name, callAs string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStackSet(conn *cloudformation.Client, name, callAs string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStackSetByName(ctx, conn, name, callAs)
 
 		if retry.NotFound(err) {
@@ -527,11 +524,11 @@ func statusStackSet(ctx context.Context, conn *cloudformation.Client, name, call
 }
 
 func waitStackSetCreated(ctx context.Context, conn *cloudformation.Client, name, callAs string, timeout time.Duration) (*awstypes.StackSet, error) {
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.StackSetStatusActive),
 		Timeout: timeout,
-		Refresh: statusStackSet(ctx, conn, name, callAs),
+		Refresh: statusStackSet(conn, name, callAs),
 		Delay:   15 * time.Second,
 	}
 
@@ -556,9 +553,8 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 	output, err := conn.DescribeStackSetOperation(ctx, input)
 
 	if errs.IsA[*awstypes.OperationNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -602,8 +598,8 @@ func findStackSetOperationResultsByThreePartKey(ctx context.Context, conn *cloud
 	return findStackSetOperationResults(ctx, conn, input)
 }
 
-func statusStackSetOperation(ctx context.Context, conn *cloudformation.Client, stackSetName, operationID, callAs string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStackSetOperation(conn *cloudformation.Client, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStackSetOperationByThreePartKey(ctx, conn, stackSetName, operationID, callAs)
 
 		if retry.NotFound(err) {
@@ -622,10 +618,10 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	const (
 		stackSetOperationDelay = 10 * time.Second
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StackSetOperationStatusRunning, awstypes.StackSetOperationStatusQueued),
 		Target:  enum.Slice(awstypes.StackSetOperationStatusSucceeded),
-		Refresh: statusStackSetOperation(ctx, conn, stackSetName, operationID, callAs),
+		Refresh: statusStackSetOperation(conn, stackSetName, operationID, callAs),
 		Timeout: timeout,
 		Delay:   stackSetOperationDelay,
 	}

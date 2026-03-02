@@ -19,7 +19,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -379,9 +378,8 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 	}
 
 	if state := output.State; state == awstypes.AccountStateClosed {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -392,9 +390,8 @@ func findAccount(ctx context.Context, conn *organizations.Client, input *organiz
 	output, err := conn.DescribeAccount(ctx, input)
 
 	if errs.IsA[*awstypes.AccountNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -464,9 +461,8 @@ func findCreateAccountStatus(ctx context.Context, conn *organizations.Client, in
 	output, err := conn.DescribeCreateAccountStatus(ctx, input)
 
 	if errs.IsA[*awstypes.CreateAccountStatusNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -481,8 +477,8 @@ func findCreateAccountStatus(ctx context.Context, conn *organizations.Client, in
 	return output.CreateAccountStatus, nil
 }
 
-func statusCreateAccountState(ctx context.Context, conn *organizations.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCreateAccountState(conn *organizations.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -498,10 +494,10 @@ func statusCreateAccountState(ctx context.Context, conn *organizations.Client, i
 }
 
 func waitAccountCreated(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.CreateAccountStatus, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.CreateAccountStateInProgress),
 		Target:       enum.Slice(awstypes.CreateAccountStateSucceeded),
-		Refresh:      statusCreateAccountState(ctx, conn, id),
+		Refresh:      statusCreateAccountState(conn, id),
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
 	}
@@ -519,8 +515,8 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 	return nil, err
 }
 
-func statusAccountState(ctx context.Context, conn *organizations.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccountState(conn *organizations.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -536,10 +532,10 @@ func statusAccountState(ctx context.Context, conn *organizations.Client, id stri
 }
 
 func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.Account, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.AccountStatePendingClosure, awstypes.AccountStateActive),
 		Target:       []string{},
-		Refresh:      statusAccountState(ctx, conn, id),
+		Refresh:      statusAccountState(conn, id),
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
 	}

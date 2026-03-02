@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccEventsArchive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
-	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
@@ -56,24 +54,24 @@ func TestAccEventsArchive_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
 	resourceName := "aws_cloudwatch_event_archive.test"
-	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 				),
 			},
 			{
 				Config: testAccArchiveConfig_updateAttributes(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -86,19 +84,19 @@ func TestAccEventsArchive_update(t *testing.T) {
 func TestAccEventsArchive_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeArchiveOutput
-	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -110,19 +108,19 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 func TestAccEventsArchive_kmsKeyIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
-	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_key.test_1.id}"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_1", names.AttrID),
 				),
@@ -135,7 +133,7 @@ func TestAccEventsArchive_kmsKeyIdentifier(t *testing.T) {
 			{
 				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_key.test_2.arn}"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test_2", names.AttrARN),
 				),
@@ -143,7 +141,7 @@ func TestAccEventsArchive_kmsKeyIdentifier(t *testing.T) {
 			{
 				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_alias.test_1.name}"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrName),
 				),
@@ -151,7 +149,7 @@ func TestAccEventsArchive_kmsKeyIdentifier(t *testing.T) {
 			{
 				Config: testAccArchiveConfig_kmsKeyIdentifier(archiveName, "${aws_kms_alias.test_1.arn}"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_alias.test_1", names.AttrARN),
 				),
@@ -163,19 +161,19 @@ func TestAccEventsArchive_kmsKeyIdentifier(t *testing.T) {
 func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 eventbridge.DescribeArchiveOutput
-	archiveName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	archiveName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_archive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveDestroy(ctx),
+		CheckDestroy:             testAccCheckArchiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveConfig_retentionOnCreation(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveExists(ctx, resourceName, &v1),
+					testAccCheckArchiveExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
@@ -192,9 +190,9 @@ func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
 	})
 }
 
-func testAccCheckArchiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckArchiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_archive" {
@@ -218,14 +216,14 @@ func testAccCheckArchiveDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckArchiveExists(ctx context.Context, n string, v *eventbridge.DescribeArchiveOutput) resource.TestCheckFunc {
+func testAccCheckArchiveExists(ctx context.Context, t *testing.T, n string, v *eventbridge.DescribeArchiveOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		output, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
 

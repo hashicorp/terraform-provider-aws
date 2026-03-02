@@ -50,21 +50,30 @@ func (l *keyListResource) List(ctx context.Context, request list.ListRequest, st
 	tflog.Info(ctx, "Listing KMS keys")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input kms.ListKeysInput
-		for key, err := range listKeys(ctx, conn, &input) {
+		for item, err := range listKeys(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			id := aws.ToString(key.KeyId)
+			id := aws.ToString(item.KeyId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
 
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(id)
 
-			diags := resourceKeyRead(ctx, rd, awsClient)
+			key, err := findKeyInfo(ctx, conn, id, false)
+			if err != nil {
+				tflog.Error(ctx, "Reading KMS key", map[string]any{
+					names.AttrID: id,
+					"err":        err.Error(),
+				})
+				continue
+			}
+
+			diags := resourceKeyFlatten(ctx, rd, key)
 			if diags.HasError() || rd.Id() == "" {
 				// Resource can't be read or is logically deleted.
 				// Log and continue.

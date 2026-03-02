@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appintegrations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +27,6 @@ import (
 // @SDKResource("aws_appintegrations_event_integration", name="Event Integration")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appintegrations;appintegrations.GetEventIntegrationOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventIntegrationCreate,
@@ -88,7 +87,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateEventIntegrationInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(sdkid.UniqueId()),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]any)),
 		Name:           aws.String(name),

@@ -46,7 +46,7 @@ func TestExpandArgs_nilAndPointers(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 func TestExpandArgs_shapeCompatibility(t *testing.T) {
@@ -77,7 +77,7 @@ func TestExpandArgs_shapeCompatibility(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 func TestFlattenArgs_nilAndPointers(t *testing.T) {

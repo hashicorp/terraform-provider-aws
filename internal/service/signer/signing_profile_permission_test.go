@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/signer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -99,7 +99,7 @@ func TestAccSignerSigningProfilePermission_statementIDGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "statement_id"),
-					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", sdkid.UniqueIdPrefix),
 				),
 			},
 			{

@@ -79,9 +79,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 ```
 
-### Basic Example containing Global Secondary Indexs using Multi-attribute keys pattern
+### Basic Example containing Global Secondary Indexes using Multi-attribute keys pattern
 
 The following dynamodb table description models the table and GSIs shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
+
+~> **Note:** Multi-attribute keys for GSIs use the `key_schema` block instead of `hash_key`/`range_key`. The `hash_key` and `range_key` arguments are deprecated in favor of `key_schema`.
 
 ```terraform
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
@@ -118,12 +120,12 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
   attribute {
     name = "playerId"
-    type = N
+    type = "N"
   }
 
   attribute {
     name = "matchDate"
-    type = S
+    type = "S"
   }
 
   ttl {
@@ -131,19 +133,49 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     enabled        = true
   }
 
+  # GSI with multiple HASH keys and multiple RANGE keys using key_schema
   global_secondary_index {
-    name            = "TournamentRegionIndex"
-    hash_keys       = ["tournamentId", "region"]
-    range_keys      = ["round", "bracket", "matchId"]
+    name = "TournamentRegionIndex"
+    key_schema {
+      attribute_name = "tournamentId"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "region"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "round"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "bracket"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "matchId"
+      key_type       = "RANGE"
+    }
     write_capacity  = 10
     read_capacity   = 10
     projection_type = "ALL"
   }
 
+  # GSI with single HASH key and multiple RANGE keys using key_schema
   global_secondary_index {
-    name            = "PlayerMatchHistoryIndex"
-    hash_key        = "playerId"
-    range_keys      = ["matchDate", "round"]
+    name = "PlayerMatchHistoryIndex"
+    key_schema {
+      attribute_name = "playerId"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "matchDate"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "round"
+      key_type       = "RANGE"
+    }
     write_capacity  = 10
     read_capacity   = 10
     projection_type = "ALL"
@@ -379,19 +411,21 @@ The following arguments are optional:
 
 ### `global_secondary_index`
 
-* `hash_key` and `hash_keys` are `mutually exclusive`, but one is `required`. Refer to [AWS SDK Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
-    * `hash_key` - (Optional) Name of the hash key in the index; must be defined as an attribute in the resource.
-    * `hash_keys` - (Optional) List of the hash keys in the index; each must be defined as an attribute in the resource; max of 4.
+* `hash_key` - (Optional, **Deprecated**) Name of the hash key in the index; must be defined as an attribute in the resource. Mutually exclusive with `key_schema`. Use `key_schema` instead.
+* `key_schema` - (Optional) Configuration block(s) for the key schema. Mutually exclusive with `hash_key` and `range_key`. Required if `hash_key` is not specified. Supports multi-attribute keys for the [Multi-Attribute Keys design pattern](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html). See below.
 * `name` - (Required) Name of the index.
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
-* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
-* `range_key` and `range_keys` are `mutually exclusive`, but are both `optional`. Refer to [AWS SDK Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
-    * `range_key` - (Optional) Name of the range key; must be defined.
-    * `range_keys` - (Optional) List of the range keys in the index; each must be defined as an attribute in the resource; max of 4.
+* `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects into the index only the table and index hash_key and sort_key attributes, `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that `KEYS_ONLY` project.
+* `range_key` - (Optional, **Deprecated**) Name of the range key; must be defined as an attribute in the resource. Mutually exclusive with `key_schema`. Use `key_schema` instead.
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.
+
+#### `key_schema`
+
+* `attribute_name` - (Required) Name of the attribute; must be defined as an attribute in the resource.
+* `key_type` - (Required) The type of key. Valid values are `HASH` (partition key) or `RANGE` (sort key). You can specify up to 4 attributes with `key_type = "HASH"` and up to 4 attributes with `key_type = "RANGE"`.
 
 ### `global_table_witness`
 

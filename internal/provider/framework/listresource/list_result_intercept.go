@@ -39,10 +39,11 @@ const (
 )
 
 type InterceptorParams struct {
-	C      *conns.AWSClient
-	Data   any
-	Result *list.ListResult
-	When   when
+	C               *conns.AWSClient
+	IncludeResource bool
+	Data            any
+	Result          *list.ListResult
+	When            when
 }
 
 type ListResultInterceptor[T InterceptorParams | InterceptorParamsSDK] interface {
@@ -63,6 +64,10 @@ func TagsInterceptor(tags unique.Handle[inttypes.ServicePackageResourceTags]) ta
 // Copied from tagsResourceInterceptor.read()
 func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if !params.IncludeResource {
+		return diags
+	}
 
 	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
@@ -332,9 +337,10 @@ func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnos
 }
 
 type InterceptorParamsSDK struct {
-	C            *conns.AWSClient
-	ResourceData *schema.ResourceData
-	When         when
+	C               *conns.AWSClient
+	IncludeResource bool
+	ResourceData    *schema.ResourceData
+	When            when
 }
 
 type tagsInterceptorSDK struct {
@@ -349,6 +355,11 @@ func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags])
 
 func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSDK) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	if !params.IncludeResource {
+		return diags
+	}
+
 	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
 		return diags

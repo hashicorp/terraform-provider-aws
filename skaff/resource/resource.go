@@ -44,6 +44,7 @@ type TemplateData struct {
 	AWSServiceName       string
 	HumanResourceName    string
 	ProviderResourceName string
+	ARNNamespace         string
 }
 
 func Create(resName, snakeName string, comments, force, tags bool) error {
@@ -91,6 +92,7 @@ func Create(resName, snakeName string, comments, force, tags bool) error {
 		AWSServiceName:       service.FullHumanFriendly(),
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
+		ARNNamespace:         service.ARNNamespace(),
 	}
 
 	f := fmt.Sprintf("%s.go", snakeName)

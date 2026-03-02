@@ -19,8 +19,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -222,7 +221,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(1, 255-sdkid.UniqueIDSuffixLength),
 			},
 			"placement_tenancy": {
 				Type:     schema.TypeString,
@@ -822,9 +821,7 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.LaunchConfigurationName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -867,7 +864,7 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID stri
 	}
 
 	if rootDeviceName == "" {
-		return "", &sdkretry.NotFoundError{
+		return "", &retry.NotFoundError{
 			Message: fmt.Sprintf("finding root device name for EC2 AMI (%s)", imageID),
 		}
 	}

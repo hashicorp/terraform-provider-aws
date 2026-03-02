@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,11 +17,11 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_multi_region_access_point.test"
 	dataSourceName := "data.aws_s3control_multi_region_access_point.test"
-	bucket1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucket2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucket1Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucket2Name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)

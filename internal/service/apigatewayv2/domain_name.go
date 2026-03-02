@@ -34,8 +34,6 @@ import (
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true)
 // @Testing(tlsKeyDomain=rName)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,

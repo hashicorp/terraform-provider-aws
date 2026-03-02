@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,16 +22,16 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "snapshot/"+rName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.description", "aws_memorydb_cluster.test", names.AttrDescription),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine", "aws_memorydb_cluster.test", names.AttrEngine),
@@ -69,16 +68,16 @@ func TestAccMemoryDBSnapshot_disappears(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,16 +91,16 @@ func TestAccMemoryDBSnapshot_nameGenerated(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
@@ -115,16 +114,16 @@ func TestAccMemoryDBSnapshot_namePrefix(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tftest-"),
 				),
@@ -138,16 +137,16 @@ func TestAccMemoryDBSnapshot_create_withKMS(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -165,16 +164,16 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_snapshot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -187,7 +186,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
@@ -204,7 +203,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags1(rName, "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
@@ -219,7 +218,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(ctx, resourceName),
+					testAccCheckSnapshotExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -233,9 +232,9 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSnapshotDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_snapshot" {
@@ -259,7 +258,7 @@ func testAccCheckSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSnapshotExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckSnapshotExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -270,7 +269,7 @@ func testAccCheckSnapshotExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No MemoryDB Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindSnapshotByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

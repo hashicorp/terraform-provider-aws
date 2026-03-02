@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +18,19 @@ import (
 
 func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_cache_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachePolicyExists(ctx, resourceName),
+					testAccCheckCachePolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "cache-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
@@ -65,19 +63,19 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 
 func TestAccCloudFrontCachePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_cache_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachePolicyExists(ctx, resourceName),
+					testAccCheckCachePolicyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceCachePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,19 +86,19 @@ func TestAccCloudFrontCachePolicy_disappears(t *testing.T) {
 
 func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_cache_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachePolicyExists(ctx, resourceName),
+					testAccCheckCachePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -138,7 +136,7 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 			{
 				Config: testAccCachePolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachePolicyExists(ctx, resourceName),
+					testAccCheckCachePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "51"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -170,19 +168,19 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 
 func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_cache_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCachePolicyConfig_zeroTTLs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCachePolicyExists(ctx, resourceName),
+					testAccCheckCachePolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -212,9 +210,9 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 	})
 }
 
-func testAccCheckCachePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCachePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_cache_policy" {
@@ -238,14 +236,14 @@ func testAccCheckCachePolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckCachePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCachePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		_, err := tfcloudfront.FindCachePolicyByID(ctx, conn, rs.Primary.ID)
 

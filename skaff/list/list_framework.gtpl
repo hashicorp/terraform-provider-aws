@@ -40,13 +40,13 @@ import (
 	"fmt"
 	"iter"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 {{ if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
@@ -114,30 +114,25 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 				return
 			}
 
-			var data resource{{ .ListResource }}Model
+			var data {{ .ResourceLowerCamel }}ResourceModel
 	        {{ if .IncludeComments -}}
 	        // TIP: -- 4. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
-			r.SetResult(ctx, r.Meta(), &data, &result, func() {
-				if diags := fwflex.Flatten(ctx, item, &data, flex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
+			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
+				if diags := fwflex.Flatten(ctx, item, &data, fwflex.WithFieldNamePrefix("{{ .ListResource }}")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
 					return
 				}
 
-            	{{ if .IncludeComments -}}
-            	// TIP: -- 5. Set the display name
-            	{{- end }}
+				{{ if .IncludeComments -}}
+				// TIP: -- 5. Set the display name
+				{{- end }}
 				name := aws.ToString(item.{{ .ListResource }}Id)
 				data.Name = fwflex.StringValueToFramework(ctx, name)
 				result.DisplayName = name
 			})
-
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
 
 			if !yield(result) {
 				return
@@ -172,7 +167,7 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources: %w", err))
+				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }} resources: %w", err))
 				return
 			}
 

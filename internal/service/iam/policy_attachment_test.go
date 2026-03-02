@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,35 +19,35 @@ import (
 
 func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	userName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	userName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	groupName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	attachmentName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	userName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	groupName3 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	attachmentName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig_attach(userName1, roleName1, roleName2, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckPolicyAttachmentCounts(ctx, resourceName, 0, 2, 1),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
+					testAccCheckPolicyAttachmentCounts(ctx, t, resourceName, 0, 2, 1),
 				),
 			},
 			{
 				Config: testAccPolicyAttachmentConfig_attachUpdate(userName1, userName2, roleName1, groupName1, groupName2, groupName3, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckPolicyAttachmentCounts(ctx, resourceName, 3, 1, 2),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
+					testAccCheckPolicyAttachmentCounts(ctx, t, resourceName, 3, 1, 2),
 				),
 			},
 		},
@@ -57,23 +56,23 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 
 func TestAccIAMPolicyAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	userName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	attachmentName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	policyName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	attachmentName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig_attach(userName1, roleName1, roleName2, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,30 +84,30 @@ func TestAccIAMPolicyAttachment_disappears(t *testing.T) {
 func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 	ctx := acctest.Context(t)
 	userNamePrefix := fmt.Sprintf("%s-%s-", acctest.ResourcePrefix, sdkacctest.RandString(3))
-	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	attachmentName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	attachmentName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig_paginatedAttach(userNamePrefix, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckPolicyAttachmentCounts(ctx, resourceName, 0, 0, 101),
+					testAccCheckPolicyAttachmentExists(ctx, t, resourceName),
+					testAccCheckPolicyAttachmentCounts(ctx, t, resourceName, 0, 0, 101),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy_attachment" {
@@ -132,14 +131,14 @@ func testAccCheckPolicyAttachmentDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		_, _, _, err := tfiam.FindEntitiesForPolicyByARN(ctx, conn, rs.Primary.Attributes["policy_arn"])
 
@@ -147,14 +146,14 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 	}
 }
 
-func testAccCheckPolicyAttachmentCounts(ctx context.Context, n string, wantGroups, wantRoles, wantUsers int) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentCounts(ctx context.Context, t *testing.T, n string, wantGroups, wantRoles, wantUsers int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
 
 		groups, roles, users, err := tfiam.FindEntitiesForPolicyByARN(ctx, conn, rs.Primary.Attributes["policy_arn"])
 

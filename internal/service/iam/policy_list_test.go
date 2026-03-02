@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -20,14 +19,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMPolicy_List_Basic(t *testing.T) {
+func TestAccIAMPolicy_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_iam_policy.test[0]"
 	resourceName2 := "aws_iam_policy.test[1]"
 	resourceName3 := "aws_iam_policy.test[2]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	arn1 := tfstatecheck.StateValue()
 	arn2 := tfstatecheck.StateValue()
@@ -39,7 +38,7 @@ func TestAccIAMPolicy_List_Basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		CheckDestroy: testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -86,7 +85,7 @@ func TestAccIAMPolicy_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicy_List_PathPrefix(t *testing.T) {
+func TestAccIAMPolicy_List_pathPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_iam_policy.expected[0]"
@@ -94,9 +93,9 @@ func TestAccIAMPolicy_List_PathPrefix(t *testing.T) {
 	resourceNameNotExpected1 := "aws_iam_policy.not_expected[0]"
 	resourceNameNotExpected2 := "aws_iam_policy.not_expected[1]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rPathName := "/" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + "/"
-	rOtherPathName := "/" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + "/"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rPathName := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
+	rOtherPathName := "/" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix) + "/"
 
 	expected1 := tfstatecheck.StateValue()
 	expected2 := tfstatecheck.StateValue()
@@ -109,7 +108,7 @@ func TestAccIAMPolicy_List_PathPrefix(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		CheckDestroy: testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

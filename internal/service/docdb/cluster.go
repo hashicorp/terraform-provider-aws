@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -382,16 +381,13 @@ func resourceCluster() *schema.Resource {
 			},
 		},
 		CustomizeDiff: customdiff.All(
-			// if serverless_v2_scaling_configuration is newly set or deleted, ForceNew is required
-			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration",
-				func(_ context.Context, old, new, meta any) bool {
-					o := old != nil && len(old.([]any)) > 0
-					n := new != nil && len(new.([]any)) > 0
-					if (o && n) || (!o && !n) {
-						return false
-					}
-					return true
-				}),
+			// ForceNew only when removing serverless_v2_scaling_configuration; adding or modifying is supported in-place.
+			// AWS does not support removing this configuration via ModifyDBCluster, so recreation is required.
+			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration", func(_ context.Context, old, new, meta any) bool {
+				o := old != nil && len(old.([]any)) > 0
+				n := new != nil && len(new.([]any)) > 0
+				return o && !n
+			}),
 		),
 	}
 }
@@ -1104,9 +1100,7 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -1138,9 +1132,8 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1158,8 +1151,8 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -1175,7 +1168,7 @@ func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) sdkretr
 }
 
 func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusCreating,
 			clusterStatusBackingUp,
@@ -1202,7 +1195,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *docdb.Client, id string, 
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusDeleting,

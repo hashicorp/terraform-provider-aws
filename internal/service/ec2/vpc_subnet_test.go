@@ -726,6 +726,39 @@ func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	})
 }
 
+func TestAccVPCSubnet_IPAM_ipv4AllocationExplicitCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet awstypes.Subnet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_subnet.test"
+	cidr := "10.0.0.0/27"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_ipv4IPAMAllocationExplicitCIDR(rName, cidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttrPair(resourceName, "ipv4_ipam_pool_id", "aws_vpc_ipam_pool.vpc", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, cidr),
+					testAccCheckSubnetCIDRPrefix(&subnet, "27"),
+					testAccCheckIPAMPoolAllocationExistsForSubnet(ctx, "aws_vpc_ipam_pool.vpc", &subnet),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ipv4_ipam_pool_id"},
+			},
+		},
+	})
+}
+
 func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet awstypes.Subnet
@@ -1521,6 +1554,28 @@ resource "aws_subnet" "test" {
   depends_on = [aws_vpc_ipam_pool_cidr.vpc]
 }
 `, netmaskLength))
+}
+
+func testAccVPCSubnetConfig_ipv4IPAMAllocationExplicitCIDR(rName string, cidr string) string {
+	return acctest.ConfigCompose(testAccVPCSubnetConfig_ipamIPv4(rName), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc_ipam_pool_cidr" "vpc" {
+  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr         = aws_vpc.test.cidr_block
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  ipv4_ipam_pool_id = aws_vpc_ipam_pool.vpc.id
+  cidr_block        = %[1]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.vpc]
+}
+`, cidr))
 }
 
 func testAccVPCSubnetConfig_ipv6IPAMAllocation(rName string, netmaskLength int) string {

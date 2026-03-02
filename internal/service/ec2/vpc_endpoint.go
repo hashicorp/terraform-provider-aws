@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -255,7 +256,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
@@ -631,7 +632,7 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 }
 
 func isAmazonS3VPCEndpoint(serviceName string) bool {
-	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9]{1,2})\\.s3", serviceName)
+	ok, _ := regexp.MatchString(`^com\.amazonaws\.`+inttypes.CanonicalRegionPatternNoAnchors+`\.s3$`, serviceName)
 	return ok
 }
 

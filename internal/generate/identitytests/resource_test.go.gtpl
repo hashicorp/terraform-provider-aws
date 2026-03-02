@@ -163,7 +163,9 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
+				{{ if not .Optional -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if .HasRegionAttribute -}}
@@ -205,7 +207,9 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			{{ end -}}
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
+				{{ if not .Optional -}}
 				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
+				{{ end -}}
 			{{ end -}}
 		{{ end -}}
 		{{ if .HasRegionAttribute -}}
@@ -238,20 +242,20 @@ import (
 )
 
 {{ if .Serialize }}
-func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
+func {{ template "testname" . }}_identitySerial(t *testing.T) {
 	t.Helper()
 	{{ if .SerializeParallelTests -}}
 	t.Parallel()
 	{{- end }}
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: {{ template "testname" . }}_Identity_Basic,
+		acctest.CtBasic: {{ template "testname" . }}_Identity_basic,
 		{{ if .PreIdentityVersion -}}
-			"ExistingResource":          {{ template "testname" . }}_Identity_ExistingResource,
-			"ExistingResourceNoRefresh": {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange,
+			"ExistingResource":          {{ template "testname" . }}_Identity_ExistingResource_basic,
+			"ExistingResourceNoRefresh": {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange,
 		{{ end -}}
 		{{ if .GenerateRegionOverrideTest -}}
-			"RegionOverride": {{ template "testname" . }}_Identity_RegionOverride,
+			"RegionOverride": {{ template "testname" . }}_Identity_regionOverride,
 		{{ end -}}
 	}
 
@@ -259,7 +263,7 @@ func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
 }
 {{ end }}
 
-func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
+func {{ template "testname" . }}_Identity_basic(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -402,7 +406,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 }
 
 {{ if .GenerateRegionOverrideTest }}
-func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
+func {{ template "testname" . }}_Identity_regionOverride(t *testing.T) {
 	{{- template "InitRegionOverride" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -799,7 +803,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		})
 	}
 {{ else if .HasV6_0NullValuesError }}
-	func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
+	func {{ template "testname" . }}_Identity_ExistingResource_basic(t *testing.T) {
 		{{- template "Init" . }}
 
 		{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -939,7 +943,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		})
 	}
 
-	func {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+	func {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 		{{- template "Init" . }}
 
 		{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -994,7 +998,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 {{ else if .PreIdentityVersion }}
 	{{ if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
-		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
+		func {{ template "testname" . }}_Identity_ExistingResource_basic(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1088,7 +1092,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		}
 
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
-		func {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+		func {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1154,7 +1158,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			})
 		}
 	{{ else }}
-		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
+		func {{ template "testname" . }}_Identity_ExistingResource_basic(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1310,7 +1314,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			})
 		}
 
-		func {{ template "testname" . }}_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+		func {{ template "testname" . }}_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 			{{- template "Init" . }}
 
 			{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1369,7 +1373,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 
 {{ if gt (len .IdentityVersions) 1 }}
 // Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
-func {{ template "testname" . }}_Identity_Upgrade(t *testing.T) {
+func {{ template "testname" . }}_Identity_upgrade(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -1463,7 +1467,7 @@ func {{ template "testname" . }}_Identity_Upgrade(t *testing.T) {
 }
 
 // Resource Identity version {{ .LatestIdentityVersion }} was added in version {{ index .IdentityVersions .LatestIdentityVersion }}
-func {{ template "testname" . }}_Identity_Upgrade_NoRefresh(t *testing.T) {
+func {{ template "testname" . }}_Identity_Upgrade_noRefresh(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{

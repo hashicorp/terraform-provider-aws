@@ -21,8 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -46,7 +45,6 @@ const (
 // Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &rotationResource{}
 
@@ -239,7 +237,7 @@ func (r *rotationResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	input := &ssmcontacts.CreateRotationInput{
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(sdkid.UniqueId()),
 		ContactIds:       fwflex.ExpandFrameworkStringValueList(ctx, plan.ContactIds),
 		Name:             fwflex.StringFromFramework(ctx, plan.Name),
 		Recurrence: &awstypes.RecurrenceSettings{
@@ -577,9 +575,8 @@ func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) 
 	out, err := conn.GetRotation(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

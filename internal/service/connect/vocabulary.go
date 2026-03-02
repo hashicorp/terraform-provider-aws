@@ -18,8 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,7 +33,6 @@ import (
 
 // @SDKResource("aws_connect_vocabulary", name="Vocabulary")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,
@@ -114,7 +112,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	vocabularyName := d.Get(names.AttrName).(string)
 	input := &connect.CreateVocabularyInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(sdkid.UniqueId()),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get(names.AttrContent).(string)),
 		LanguageCode:   awstypes.VocabularyLanguageCode(d.Get(names.AttrLanguageCode).(string)),
@@ -243,9 +241,8 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 	output, err := conn.DescribeVocabulary(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -260,8 +257,8 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 	return output.Vocabulary, nil
 }
 
-func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVocabulary(conn *connect.Client, instanceID, vocabularyID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
 
 		if retry.NotFound(err) {
@@ -277,10 +274,10 @@ func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, voc
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string, timeout time.Duration) (*awstypes.Vocabulary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VocabularyStateCreationInProgress),
 		Target:  enum.Slice(awstypes.VocabularyStateActive, awstypes.VocabularyStateCreationFailed),
-		Refresh: statusVocabulary(ctx, conn, instanceID, vocabularyID),
+		Refresh: statusVocabulary(conn, instanceID, vocabularyID),
 		Timeout: timeout,
 	}
 
@@ -298,10 +295,10 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string, timeout time.Duration) (*awstypes.Vocabulary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VocabularyStateDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusVocabulary(ctx, conn, instanceID, vocabularyID),
+		Refresh: statusVocabulary(conn, instanceID, vocabularyID),
 		Timeout: timeout,
 	}
 

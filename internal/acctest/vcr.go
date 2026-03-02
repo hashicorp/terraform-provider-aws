@@ -1,6 +1,25 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// This file contains data structures and helper functions for recording
+// and replaying acceptance test interactions via go-vcr.
+//
+// The central data structures are two maps - one for storing VCR-enabled
+// provider meta, and another for storing "randomness" sources used to
+// generate resource names deterministically. The key for both maps is
+// a test name, representing a single acceptance test. Reads and writes
+// to both structures are always wrapped in a lock to a global mutex.
+// Where possible the lock is acquired and released immediately after
+// referencing the data (rather than deferring the Unlock) to reduce
+// the amount of time parallelized tests spend waiting to access a
+// shared data structure.
+//
+// Additionally this file contains wrapped variants of core testing
+// features from terraform-plugin-testing such as Test/ParallelTest
+// structures and randomized ID generation helpers. In all cases
+// these should be preferred over the bare plugin testing variants
+// to ensure VCR recording and replaying function as expected.
+
 package acctest
 
 import (
@@ -35,11 +54,6 @@ import (
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
-type randomnessSource struct {
-	seed   int64
-	source rand.Source
-}
-
 type metaMap map[string]*conns.AWSClient
 
 func (m metaMap) Lock() {
@@ -54,7 +68,14 @@ func (m metaMap) key() string {
 	return "vcr-metas"
 }
 
-type randomnessSourceMap map[string]*randomnessSource
+type (
+	randomnessSource struct {
+		seed   int64
+		source rand.Source
+	}
+
+	randomnessSourceMap map[string]*randomnessSource
+)
 
 func (m randomnessSourceMap) Lock() {
 	conns.GlobalMutexKV.Lock(m.key())
@@ -79,7 +100,7 @@ func ProviderMeta(_ context.Context, t *testing.T) *conns.AWSClient {
 
 	providerMetas.Lock()
 	meta, ok := providerMetas[t.Name()]
-	defer providerMetas.Unlock()
+	providerMetas.Unlock()
 
 	if !ok {
 		meta = Provider.Meta().(*conns.AWSClient)
@@ -140,85 +161,18 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		httpClient := cleanhttp.DefaultPooledClient()
 		transport := httpClient.Transport.(*http.Transport)
 		transport.MaxIdleConnsPerHost = 10
-		if tlsConfig := transport.TLSClientConfig; tlsConfig == nil {
-			tlsConfig = &tls.Config{
+		if transport.TLSClientConfig == nil {
+			transport.TLSClientConfig = &tls.Config{
 				MinVersion: tls.VersionTLS13,
 			}
-			transport.TLSClientConfig = tlsConfig
-		}
-
-		// After capture hook to remove sensitive HTTP headers.
-		sensitiveHeaderHook := func(i *cassette.Interaction) error {
-			delete(i.Request.Headers, "Authorization")
-			delete(i.Request.Headers, "X-Amz-Security-Token")
-			return nil
-		}
-
-		// Define how VCR will match requests to stored interactions.
-		matchFunc := func(r *http.Request, i cassette.Request) bool {
-			if r.Method != i.Method {
-				return false
-			}
-
-			if r.URL.String() != i.URL {
-				return false
-			}
-
-			if r.Body == nil {
-				return true
-			}
-
-			var b bytes.Buffer
-			if _, err := b.ReadFrom(r.Body); err != nil {
-				tflog.Debug(ctx, "Failed to read request body from cassette", map[string]any{
-					"error": err,
-				})
-				return false
-			}
-
-			r.Body = io.NopCloser(&b)
-			body := b.String()
-			// If body matches identically, we are done.
-			if body == i.Body {
-				return true
-			}
-
-			// https://awslabs.github.io/smithy/1.0/spec/aws/index.html#aws-protocols.
-			switch contentType := r.Header.Get("Content-Type"); contentType {
-			case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
-				// JSON might be the same, but reordered. Try parsing and comparing.
-				return tfjson.EqualStrings(body, i.Body)
-
-			case "application/xml":
-				// XML might be the same, but reordered. Try parsing and comparing.
-				var requestXml, cassetteXml any
-
-				if err := xml.Unmarshal([]byte(body), &requestXml); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]any{
-						"error": err,
-					})
-					return false
-				}
-
-				if err := xml.Unmarshal([]byte(i.Body), &cassetteXml); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]any{
-						"error": err,
-					})
-					return false
-				}
-
-				return reflect.DeepEqual(requestXml, cassetteXml)
-			}
-
-			return false
 		}
 
 		cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
 
 		// Create a VCR recorder around a default HTTP client.
 		r, err := recorder.New(cassetteName,
-			recorder.WithHook(sensitiveHeaderHook, recorder.AfterCaptureHook),
-			recorder.WithMatcher(matchFunc),
+			recorder.WithHook(vcrSensitiveHeaderHook, recorder.AfterCaptureHook),
+			recorder.WithMatcher(vcrMatcherFunc(ctx)),
 			recorder.WithMode(vcrMode),
 			recorder.WithRealTransport(httpClient.Transport),
 			recorder.WithSkipRequestLatency(true),
@@ -260,10 +214,78 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 	}
 }
 
+// vcrSensitiveHeaderHook is an after capture hook to remove sensitive HTTP headers.
+func vcrSensitiveHeaderHook(i *cassette.Interaction) error {
+	delete(i.Request.Headers, "Authorization")
+	delete(i.Request.Headers, "X-Amz-Security-Token")
+	return nil
+}
+
+// vcrMatcherFunc defines how VCR will match requests to stored interactions.
+func vcrMatcherFunc(ctx context.Context) recorder.MatcherFunc {
+	return func(r *http.Request, i cassette.Request) bool {
+		if r.Method != i.Method {
+			return false
+		}
+
+		if r.URL.String() != i.URL {
+			return false
+		}
+
+		if r.Body == nil {
+			return true
+		}
+
+		var b bytes.Buffer
+		if _, err := b.ReadFrom(r.Body); err != nil {
+			tflog.Debug(ctx, "Failed to read request body from cassette", map[string]any{
+				"error": err,
+			})
+			return false
+		}
+
+		r.Body = io.NopCloser(&b)
+		body := b.String()
+		// If body matches identically, we are done.
+		if body == i.Body {
+			return true
+		}
+
+		// https://awslabs.github.io/smithy/1.0/spec/aws/index.html#aws-protocols.
+		switch contentType := r.Header.Get("Content-Type"); contentType {
+		case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
+			// JSON might be the same, but reordered. Try parsing and comparing.
+			return tfjson.EqualStrings(body, i.Body)
+
+		case "application/xml":
+			// XML might be the same, but reordered. Try parsing and comparing.
+			var requestXML, cassetteXML any
+
+			if err := xml.Unmarshal([]byte(body), &requestXML); err != nil {
+				tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]any{
+					"error": err,
+				})
+				return false
+			}
+
+			if err := xml.Unmarshal([]byte(i.Body), &cassetteXML); err != nil {
+				tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]any{
+					"error": err,
+				})
+				return false
+			}
+
+			return reflect.DeepEqual(requestXML, cassetteXML)
+		}
+
+		return false
+	}
+}
+
 // vcrRandomnessSource returns a rand.Source for VCR testing
 //
-// In RECORD_ONLY mode, generates a new seed and saves it to a file, using the
-// seed for the source.
+// In RECORD_ONLY mode, generates a new seed to use as a source. This seed is
+// saved to a file when the recorder is closed.
 // In REPLAY_ONLY mode, reads a seed from a file and creates a source from it.
 func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 	t.Helper()
@@ -312,65 +334,22 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 	return s, nil
 }
 
-func vcrFileName(name string) string {
-	return strings.ReplaceAll(name, "/", "_")
-}
-
-func vcrSeedFile(path, name string) string {
-	return filepath.Join(path, fmt.Sprintf("%s.seed", vcrFileName(name)))
-}
-
-func readSeedFromFile(fileName string) (int64, error) {
-	// Max number of digits for int64 is 19.
-	data := make([]byte, 19)
-	f, err := os.Open(fileName)
-
-	if err != nil {
-		return 0, err
-	}
-
-	defer f.Close()
-
-	_, err = f.Read(data)
-
-	if err != nil {
-		return 0, err
-	}
-
-	// Remove NULL characters from seed.
-	return strconv.ParseInt(string(bytes.Trim(data, "\x00")), 10, 64)
-}
-
-func writeSeedToFile(seed int64, fileName string) error {
-	f, err := os.Create(fileName)
-
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	_, err = f.WriteString(strconv.FormatInt(seed, 10))
-
-	return err
-}
-
 // closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed
 func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	t.Helper()
+	testName := t.Name()
 
 	// Don't close the recorder if we're running because of a panic.
 	if p := recover(); p != nil {
 		panic(p)
 	}
 
-	testName := t.Name()
 	providerMetas.Lock()
 	meta, ok := providerMetas[testName]
-	defer providerMetas.Unlock()
+	providerMetas.Unlock()
 
 	if ok {
-		if !t.Failed() && !t.Skipped() {
+		if !t.Failed() {
 			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
@@ -379,7 +358,9 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 			}
 		}
 
+		providerMetas.Lock()
 		delete(providerMetas, testName)
+		providerMetas.Unlock()
 	} else {
 		t.Log("provider meta not found for test", testName)
 	}
@@ -387,17 +368,19 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	// Save the randomness seed.
 	randomnessSources.Lock()
 	s, ok := randomnessSources[testName]
-	defer randomnessSources.Unlock()
+	randomnessSources.Unlock()
 
 	if ok {
-		if !t.Failed() && !t.Skipped() {
+		if !t.Failed() {
 			t.Log("persisting randomness seed")
 			if err := writeSeedToFile(s.seed, vcrSeedFile(vcr.Path(), t.Name())); err != nil {
 				t.Error(err)
 			}
 		}
 
+		randomnessSources.Lock()
 		delete(randomnessSources, testName)
+		randomnessSources.Unlock()
 	} else {
 		t.Log("randomness source not found for test", testName)
 	}
@@ -435,7 +418,7 @@ func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	resource.Test(t, c)
 }
 
-// RandInt is a VCR-friendly replacement for acctest.RandInt
+// RandInt is a VCR-friendly replacement for sdkacctest.RandInt
 func RandInt(t *testing.T) int {
 	t.Helper()
 
@@ -444,7 +427,6 @@ func RandInt(t *testing.T) int {
 	}
 
 	s, err := vcrRandomnessSource(t)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -452,14 +434,14 @@ func RandInt(t *testing.T) int {
 	return rand.New(s.source).Int()
 }
 
-// RandomWithPrefix is a VCR-friendly replacement for acctest.RandomWithPrefix
+// RandomWithPrefix is a VCR-friendly replacement for sdkacctest.RandomWithPrefix
 func RandomWithPrefix(t *testing.T, prefix string) string {
 	t.Helper()
 
 	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
 }
 
-// RandIntRange is a VCR-friendly replacement for acctest.RandIntRange
+// RandIntRange is a VCR-friendly replacement for sdkacctest.RandIntRange
 func RandIntRange(t *testing.T, minInt int, maxInt int) int {
 	t.Helper()
 
@@ -468,10 +450,57 @@ func RandIntRange(t *testing.T, minInt int, maxInt int) int {
 	}
 
 	s, err := vcrRandomnessSource(t)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	return rand.New(s.source).Intn(maxInt-minInt) + minInt
+}
+
+// RandString is a VCR-friendly replacement for sdkacctest.RandString
+func RandString(t *testing.T, strlen int) string {
+	t.Helper()
+
+	return RandStringFromCharSet(t, strlen, sdkacctest.CharSetAlphaNum)
+}
+
+// RandStringFromCharSet is a VCR-friendly replacement for sdkacctest.RandStringFromCharSet
+func RandStringFromCharSet(t *testing.T, strlen int, charSet string) string {
+	t.Helper()
+
+	result := make([]byte, strlen)
+	for i := range strlen {
+		result[i] = charSet[RandIntRange(t, 0, len(charSet))]
+	}
+	return string(result)
+}
+
+func vcrFileName(name string) string {
+	return strings.ReplaceAll(name, "/", "_")
+}
+
+func vcrSeedFile(path, name string) string {
+	return filepath.Join(path, fmt.Sprintf("%s.seed", vcrFileName(name)))
+}
+
+func readSeedFromFile(fileName string) (int64, error) {
+	// Max number of digits for int64 is 19.
+	data := make([]byte, 19)
+	f, err := os.Open(fileName)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	_, err = f.Read(data)
+	if err != nil {
+		return 0, err
+	}
+
+	// Remove NULL characters from seed.
+	return strconv.ParseInt(string(bytes.Trim(data, "\x00")), 10, 64)
+}
+
+func writeSeedToFile(seed int64, fileName string) error {
+	return os.WriteFile(fileName, []byte(strconv.FormatInt(seed, 10)), 0644) //nolint:mnd
 }

@@ -66,11 +66,11 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  {{ template "testname" . }}_tags,
-		"NullMap":                        {{ template "testname" . }}_tags_NullMap,
-		"EmptyMap":                       {{ template "testname" . }}_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        {{ template "testname" . }}_Tags_nullMap,
+		"EmptyMap":                       {{ template "testname" . }}_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     {{ template "testname" . }}_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  {{ template "testname" . }}_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
@@ -108,7 +108,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
+func {{ template "testname" . }}_Tags_nullMap(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -135,7 +135,7 @@ func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
+func {{ template "testname" . }}_Tags_emptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -162,7 +162,7 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func {{ template "testname" . }}_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -199,7 +199,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{
@@ -242,7 +242,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 	})
 }
 
-func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func {{ template "testname" . }}_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	{{ template "Test" . }}(ctx, t, resource.TestCase{

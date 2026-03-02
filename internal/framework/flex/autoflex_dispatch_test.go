@@ -273,7 +273,7 @@ func TestExpandLogging_collections(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandInterfaceContract(t *testing.T) {
@@ -287,7 +287,7 @@ func TestExpandInterfaceContract(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandExpander(t *testing.T) {
@@ -548,7 +548,7 @@ func TestExpandExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func testFlexAWSInterfaceInterfacePtr(v awsInterfaceInterface) *awsInterfaceInterface { // nosemgrep:ci.aws-in-func-name
@@ -700,7 +700,7 @@ func TestExpandInterface(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandInterfaceTypedExpander(t *testing.T) {
@@ -848,7 +848,7 @@ func TestExpandInterfaceTypedExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandTypedExpander(t *testing.T) {
@@ -1095,7 +1095,7 @@ func TestExpandTypedExpander(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenLogging_collections(t *testing.T) {
@@ -1153,7 +1153,7 @@ func TestFlattenLogging_collections(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestFlattenInterfaceContract(t *testing.T) {
@@ -1187,7 +1187,7 @@ func TestFlattenInterfaceContract(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenInterface(t *testing.T) {
@@ -1372,7 +1372,7 @@ func TestFlattenInterface(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenFlattener(t *testing.T) {
@@ -1633,5 +1633,5 @@ func TestFlattenFlattener(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, GoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }

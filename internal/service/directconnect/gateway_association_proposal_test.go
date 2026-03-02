@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,22 +22,22 @@ import (
 func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proposal awstypes.DirectConnectGatewayAssociationProposal
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
@@ -60,22 +58,22 @@ func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T
 func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proposal awstypes.DirectConnectGatewayAssociationProposal
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway_association_proposal.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationProposalConfig_basicTransit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
@@ -98,20 +96,20 @@ func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testi
 func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proposal awstypes.DirectConnectGatewayAssociationProposal
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -123,21 +121,21 @@ func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 func TestAccDirectConnectGatewayAssociationProposal_endOfLifeVPN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proposal awstypes.DirectConnectGatewayAssociationProposal
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationProposalConfig_endOfLifeVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal),
+					testAccCheckGatewayAssociationProposalAccepted(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
@@ -160,21 +158,21 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeVPN(t *testing.T) {
 func TestAccDirectConnectGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proposal awstypes.DirectConnectGatewayAssociationProposal
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationProposalConfig_endOfLifeTgw(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal),
+					testAccCheckGatewayAssociationProposalAccepted(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
@@ -197,20 +195,20 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var proposal1, proposal2 awstypes.DirectConnectGatewayAssociationProposal
-	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dx_gateway_association_proposal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx),
+		CheckDestroy:             testAccCheckGatewayAssociationProposalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationProposalConfig_allowedPrefixes1(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal1),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal1),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 				),
 			},
@@ -223,7 +221,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 			{
 				Config: testAccGatewayAssociationProposalConfig_allowedPrefixes2(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal2),
+					testAccCheckGatewayAssociationProposalExists(ctx, t, resourceName, &proposal2),
 					testAccCheckGatewayAssociationProposalRecreated(&proposal1, &proposal2),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 				),
@@ -232,9 +230,9 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 	})
 }
 
-func testAccCheckGatewayAssociationProposalDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationProposalDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_gateway_association_proposal" {
@@ -258,14 +256,14 @@ func testAccCheckGatewayAssociationProposalDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckGatewayAssociationProposalExists(ctx context.Context, n string, v *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationProposalExists(ctx context.Context, t *testing.T, n string, v *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		output, err := tfdirectconnect.FindGatewayAssociationProposalByID(ctx, conn, rs.Primary.ID)
 
@@ -289,14 +287,14 @@ func testAccCheckGatewayAssociationProposalRecreated(old, new *awstypes.DirectCo
 	}
 }
 
-func testAccCheckGatewayAssociationProposalAccepted(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationProposalAccepted(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DirectConnectClient(ctx)
 
 		output, err := tfdirectconnect.FindGatewayAssociationProposalByID(ctx, conn, rs.Primary.ID)
 

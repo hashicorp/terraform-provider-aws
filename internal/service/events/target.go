@@ -19,8 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,7 +44,6 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge/types;types.Target")
 // @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
@@ -511,7 +509,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
 	} else {
-		targetID = id.UniqueId()
+		targetID = sdkid.UniqueId()
 		d.Set("target_id", targetID)
 	}
 	var eventBusName string
@@ -554,87 +552,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, target.Arn)
-	d.Set("event_bus_name", eventBusName)
-	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
-	d.Set("input", target.Input)
-	d.Set("input_path", target.InputPath)
-	d.Set(names.AttrRoleARN, target.RoleArn)
-	d.Set("target_id", target.Id)
-
-	if target.RunCommandParameters != nil {
-		if err := d.Set("run_command_targets", flattenTargetRunParameters(target.RunCommandParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting run_command_targets: %s", err)
-		}
-	}
-
-	if target.HttpParameters != nil {
-		if err := d.Set("http_target", []any{flattenTargetHTTPParameters(target.HttpParameters)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting http_target: %s", err)
-		}
-	} else {
-		d.Set("http_target", nil)
-	}
-
-	if target.RedshiftDataParameters != nil {
-		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(target.RedshiftDataParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting redshift_target: %s", err)
-		}
-	}
-
-	if target.EcsParameters != nil {
-		if err := d.Set("ecs_target", flattenTargetECSParameters(ctx, target.EcsParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ecs_target: %s", err)
-		}
-	}
-
-	if target.BatchParameters != nil {
-		if err := d.Set("batch_target", flattenTargetBatchParameters(target.BatchParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting batch_target: %s", err)
-		}
-	}
-
-	if target.KinesisParameters != nil {
-		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(target.KinesisParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting kinesis_target: %s", err)
-		}
-	}
-
-	if target.SageMakerPipelineParameters != nil {
-		if err := d.Set("sagemaker_pipeline_target", flattenTargetSageMakerPipelineParameters(target.SageMakerPipelineParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting sagemaker_pipeline_parameters: %s", err)
-		}
-	}
-
-	if target.SqsParameters != nil {
-		if err := d.Set("sqs_target", flattenTargetSQSParameters(target.SqsParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting sqs_target: %s", err)
-		}
-	}
-
-	if target.InputTransformer != nil {
-		if err := d.Set("input_transformer", flattenInputTransformer(target.InputTransformer)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting input_transformer: %s", err)
-		}
-	}
-
-	if target.RetryPolicy != nil {
-		if err := d.Set("retry_policy", flattenTargetRetryPolicy(target.RetryPolicy)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting retry_policy: %s", err)
-		}
-	}
-
-	if target.DeadLetterConfig != nil {
-		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(target.DeadLetterConfig)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
-		}
-	}
-
-	if target.AppSyncParameters != nil {
-		if err := d.Set("appsync_target", flattenAppSyncParameters(target.AppSyncParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting appsync_target: %s", err)
-		}
-	}
+	resourceTargetFlatten(ctx, eventBusName, d, target)
 
 	return diags
 }
@@ -737,9 +655,8 @@ func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeValidationException) || errs.IsA[*types.ResourceNotFoundException](err) || (err != nil && regexache.MustCompile(" not found$").MatchString(err.Error())) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1535,17 +1452,77 @@ func (targetImportID) Create(d *schema.ResourceData) string {
 	return targetCreateResourceID(eventBusName, rule, targetID)
 }
 
-func (targetImportID) Parse(id string) (string, map[string]string, error) {
+func (targetImportID) Parse(id string) (string, map[string]any, error) {
 	eventBusName, rule, targetID, err := targetParseImportID(id)
 	if err != nil {
 		return id, nil, err
 	}
 
-	results := map[string]string{
+	results := map[string]any{
 		"event_bus_name": eventBusName,
 		names.AttrRule:   rule,
 		"target_id":      targetID,
 	}
 
 	return targetCreateResourceID(eventBusName, rule, targetID), results, nil
+}
+
+func resourceTargetFlatten(ctx context.Context, eventBusName string, d *schema.ResourceData, target *types.Target) {
+	d.Set(names.AttrARN, target.Arn)
+	d.Set("event_bus_name", eventBusName)
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
+	d.Set("input", target.Input)
+	d.Set("input_path", target.InputPath)
+	d.Set(names.AttrRoleARN, target.RoleArn)
+	d.Set("target_id", target.Id)
+
+	if target.RunCommandParameters != nil {
+		d.Set("run_command_targets", flattenTargetRunParameters(target.RunCommandParameters))
+	}
+
+	if target.HttpParameters != nil {
+		d.Set("http_target", []any{flattenTargetHTTPParameters(target.HttpParameters)})
+	} else {
+		d.Set("http_target", nil)
+	}
+
+	if target.RedshiftDataParameters != nil {
+		d.Set("redshift_target", flattenTargetRedshiftParameters(target.RedshiftDataParameters))
+	}
+
+	if target.EcsParameters != nil {
+		d.Set("ecs_target", flattenTargetECSParameters(ctx, target.EcsParameters))
+	}
+
+	if target.BatchParameters != nil {
+		d.Set("batch_target", flattenTargetBatchParameters(target.BatchParameters))
+	}
+
+	if target.KinesisParameters != nil {
+		d.Set("kinesis_target", flattenTargetKinesisParameters(target.KinesisParameters))
+	}
+
+	if target.SageMakerPipelineParameters != nil {
+		d.Set("sagemaker_pipeline_target", flattenTargetSageMakerPipelineParameters(target.SageMakerPipelineParameters))
+	}
+
+	if target.SqsParameters != nil {
+		d.Set("sqs_target", flattenTargetSQSParameters(target.SqsParameters))
+	}
+
+	if target.InputTransformer != nil {
+		d.Set("input_transformer", flattenInputTransformer(target.InputTransformer))
+	}
+
+	if target.RetryPolicy != nil {
+		d.Set("retry_policy", flattenTargetRetryPolicy(target.RetryPolicy))
+	}
+
+	if target.DeadLetterConfig != nil {
+		d.Set("dead_letter_config", flattenTargetDeadLetterConfig(target.DeadLetterConfig))
+	}
+
+	if target.AppSyncParameters != nil {
+		d.Set("appsync_target", flattenAppSyncParameters(target.AppSyncParameters))
+	}
 }

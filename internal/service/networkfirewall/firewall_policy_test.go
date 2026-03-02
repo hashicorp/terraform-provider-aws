@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,19 +22,19 @@ import (
 func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
@@ -67,19 +65,19 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:pass"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
@@ -95,14 +93,14 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 			{
 				Config: testAccFirewallPolicyConfig_encryptionConfigurationDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:pass"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
@@ -113,7 +111,7 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 			{
 				Config: testAccFirewallPolicyConfig_encryptionConfiguration(rName, "aws:forward_to_sfe"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
@@ -128,19 +126,19 @@ func TestAccNetworkFirewallFirewallPolicy_encryptionConfiguration(t *testing.T) 
 func TestAccNetworkFirewallFirewallPolicy_policyVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_policyVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.0.rule_variables.#", "1"),
@@ -165,7 +163,7 @@ func TestAccNetworkFirewallFirewallPolicy_policyVariables(t *testing.T) {
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", "1"),
@@ -181,19 +179,19 @@ func TestAccNetworkFirewallFirewallPolicy_policyVariables(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_statefulDefaultActions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulDefaultActions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.0", "aws:drop_established"),
@@ -211,19 +209,19 @@ func TestAccNetworkFirewallFirewallPolicy_statefulDefaultActions(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_statefulEngineOption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulEngineOptions(rName, "STRICT_ORDER", "DROP"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
@@ -243,19 +241,19 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOption(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy1, firewallPolicy2, firewallPolicy3 networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulEngineOptions(rName, "DEFAULT_ACTION_ORDER", "CONTINUE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
@@ -266,7 +264,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy1, &firewallPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 				),
@@ -274,7 +272,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.
 			{
 				Config: testAccFirewallPolicyConfig_statefulEngineOptions(rName, "STRICT_ORDER", "REJECT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy3),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy3),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy2, &firewallPolicy3),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
@@ -295,19 +293,19 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulEngineOption(t *testing.
 func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsSingle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_ruleOrderOnly(rName, "DEFAULT_ACTION_ORDER"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
@@ -318,7 +316,7 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsSingle(t *testing
 			{
 				Config: testAccFirewallPolicyConfig_streamExceptionPolicyOnly(rName, "REJECT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
@@ -338,19 +336,19 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsSingle(t *testing
 func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsFlowTimeouts(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulEngineOptionsDefaultFlowTimeouts(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "1"),
@@ -360,7 +358,7 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsFlowTimeouts(t *t
 			{
 				Config: testAccFirewallPolicyConfig_statefulEngineOptionsFlowTimeouts(rName, "60"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "1"),
@@ -375,7 +373,7 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsFlowTimeouts(t *t
 			{
 				Config: testAccFirewallPolicyConfig_statefulEngineOptionsNoFlowTimeouts(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.0.flow_timeouts.#", "0"),
@@ -388,20 +386,20 @@ func TestAccNetworkFirewallFirewallPolicy_statefulEngineOptionsFlowTimeouts(t *t
 func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_default_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_engine_options.#", "0"),
@@ -423,19 +421,19 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.
 func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceManaged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceManaged(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 				),
 			},
 			{
@@ -451,26 +449,26 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceManaged(t *t
 func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 				),
 			},
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
@@ -479,7 +477,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t *te
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 				),
 			},
 			{
@@ -494,21 +492,21 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t *te
 func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName1 := "aws_networkfirewall_rule_group.test.0"
 	ruleGroupResourceName2 := "aws_networkfirewall_rule_group.test.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_multipleStatefulRuleGroupReferences(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
@@ -518,7 +516,7 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t 
 			{
 				Config: testAccFirewallPolicyConfig_singleStatefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
@@ -537,20 +535,20 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t 
 func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupPriorityReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", "1"),
@@ -569,20 +567,20 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupPriorityReference(t *
 func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	overrideAction := string(awstypes.OverrideActionDropToAlert)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, overrideAction),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.override.0.action", overrideAction),
 				),
 			},
@@ -599,20 +597,20 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReferen
 func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupPriorityReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy1, firewallPolicy2 networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.priority", "1"),
@@ -622,7 +620,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupPriorityReferen
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupPriorityReference(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyNotRecreated(&firewallPolicy1, &firewallPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
@@ -642,20 +640,20 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatefulRuleGroupPriorityReferen
 func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statelessRuleGroupReference(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
@@ -667,7 +665,7 @@ func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing
 			{
 				Config: testAccFirewallPolicyConfig_statelessRuleGroupReference(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
@@ -687,26 +685,26 @@ func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing
 func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 				),
 			},
 			{
 				Config: testAccFirewallPolicyConfig_statelessRuleGroupReference(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
@@ -717,7 +715,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *t
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "0"),
 				),
@@ -734,21 +732,21 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *t
 func TestAccNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName1 := "aws_networkfirewall_rule_group.test.0"
 	ruleGroupResourceName2 := "aws_networkfirewall_rule_group.test.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_multipleStatelessRuleGroupReferences(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, names.AttrARN),
@@ -764,7 +762,7 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t
 			{
 				Config: testAccFirewallPolicyConfig_singleStatelessRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
@@ -785,19 +783,19 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReferences(t
 func TestAccNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
@@ -820,25 +818,25 @@ func TestAccNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy1, firewallPolicy2, firewallPolicy3, firewallPolicy4 networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy1),
 				),
 			},
 			{
 				Config: testAccFirewallPolicyConfig_statelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy1, &firewallPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
@@ -853,7 +851,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing
 			{
 				Config: testAccFirewallPolicyConfig_updateStatelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy3),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy3),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy2, &firewallPolicy3),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
@@ -868,7 +866,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy4),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy4),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy3, &firewallPolicy4),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "0"),
 				),
@@ -885,19 +883,19 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *testing
 func TestAccNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy1, firewallPolicy2 networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_multipleStatelessCustomActions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy1),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
@@ -917,7 +915,7 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *test
 			{
 				Config: testAccFirewallPolicyConfig_statelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy2),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy2),
 					testAccCheckFirewallPolicyRecreated(&firewallPolicy1, &firewallPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
@@ -941,20 +939,20 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *test
 func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceAndStatelessCustomAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
@@ -969,7 +967,7 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReference(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
@@ -988,21 +986,21 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	arn1 := acctest.SkipIfEnvVarNotSet(t, "AWS_NETWORKFIREWALL_TLS_INSPECTION_CONFIGURATION_ARN_1")
 	arn2 := acctest.SkipIfEnvVarNotSet(t, "AWS_NETWORKFIREWALL_TLS_INSPECTION_CONFIGURATION_ARN_2")
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationARN(rName, arn1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", arn1),
 				),
@@ -1010,7 +1008,7 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testi
 			{
 				Config: testAccFirewallPolicyConfig_tlsInspectionConfigurationARN(rName, arn2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.tls_inspection_configuration_arn", arn2),
 				),
@@ -1027,19 +1025,19 @@ func TestAccNetworkFirewallFirewallPolicy_tlsInspectionConfigurationARN(t *testi
 func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -1052,7 +1050,7 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 			{
 				Config: testAccFirewallPolicyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -1061,7 +1059,7 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 			{
 				Config: testAccFirewallPolicyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -1073,19 +1071,19 @@ func TestAccNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewallPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -1097,19 +1095,19 @@ func TestAccNetworkFirewallFirewallPolicy_disappears(t *testing.T) {
 func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_actionOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_activeThreatDefense_actionOrder_default(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", ""),
@@ -1124,7 +1122,7 @@ func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_actionOrder(t *tes
 			{
 				Config: testAccFirewallPolicyConfig_activeThreatDefense_actionOrder(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", acctest.CtFalse),
@@ -1139,7 +1137,7 @@ func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_actionOrder(t *tes
 			{
 				Config: testAccFirewallPolicyConfig_activeThreatDefense_actionOrder(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", acctest.CtTrue),
@@ -1158,19 +1156,19 @@ func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_actionOrder(t *tes
 func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_strictOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_activeThreatDefense_strictOrder(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", acctest.CtFalse),
@@ -1185,7 +1183,7 @@ func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_strictOrder(t *tes
 			{
 				Config: testAccFirewallPolicyConfig_activeThreatDefense_strictOrder(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
+					testAccCheckFirewallPolicyExists(ctx, t, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.deep_threat_inspection", acctest.CtTrue),
@@ -1201,14 +1199,14 @@ func TestAccNetworkFirewallFirewallPolicy_activeThreatDefense_strictOrder(t *tes
 	})
 }
 
-func testAccCheckFirewallPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckFirewallPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_firewall_policy" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -1227,14 +1225,14 @@ func testAccCheckFirewallPolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckFirewallPolicyExists(ctx context.Context, n string, v *networkfirewall.DescribeFirewallPolicyOutput) resource.TestCheckFunc {
+func testAccCheckFirewallPolicyExists(ctx context.Context, t *testing.T, n string, v *networkfirewall.DescribeFirewallPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
 
 		output, err := tfnetworkfirewall.FindFirewallPolicyByARN(ctx, conn, rs.Primary.ID)
 

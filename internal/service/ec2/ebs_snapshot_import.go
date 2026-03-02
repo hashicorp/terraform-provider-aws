@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -197,7 +197,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.ImportSnapshotInput{
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeImportSnapshotTask),
 	}
 

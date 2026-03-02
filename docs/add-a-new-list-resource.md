@@ -23,7 +23,7 @@ Always use the [`skaff`](skaff.md) provider scaffolding tool to generate new lis
 SDKv2 target resource will have the tag `@SDKResource()` in the resource file. For these resources use the following, replacing `<resource name>` with the name of the resource being added, eg `JobDefinition`.
 
 ```console
-skaff list -c -n <resource name>
+skaff list --name <resource name>
 ```
 
 ### Framework resources
@@ -31,7 +31,7 @@ skaff list -c -n <resource name>
 Framework target resource will have the tag `@FrameworkResource()` in the resource file. For these resources use the following, replacing `<resource-name>` with the name of the resource being added, eg `JobDefinition`.
 
 ```console
-skaff list -c -p -n <resource-name>
+skaff list --framework --name <resource-name>
 ```
 
 `Skaff` will generate the following files:

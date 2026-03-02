@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,31 +20,31 @@ import (
 func TestAccELBAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.LoadBalancerDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbResourceName := "aws_elb.test"
 	resourceName1 := "aws_elb_attachment.test1"
 	resourceName2 := "aws_elb_attachment.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachmentConfig_1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentExists(ctx, resourceName1),
-					testAccCheckLoadBalancerExists(ctx, lbResourceName, &conf),
+					testAccCheckAttachmentExists(ctx, t, resourceName1),
+					testAccCheckLoadBalancerExists(ctx, t, lbResourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			{
 				Config: testAccAttachmentConfig_2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentExists(ctx, resourceName1),
-					testAccCheckAttachmentExists(ctx, resourceName2),
-					testAccCheckLoadBalancerExists(ctx, lbResourceName, &conf),
+					testAccCheckAttachmentExists(ctx, t, resourceName1),
+					testAccCheckAttachmentExists(ctx, t, resourceName2),
+					testAccCheckLoadBalancerExists(ctx, t, lbResourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
@@ -56,19 +54,19 @@ func TestAccELBAttachment_basic(t *testing.T) {
 
 func TestAccELBAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elb_attachment.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachmentConfig_1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentExists(ctx, resourceName),
+					testAccCheckAttachmentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,9 +75,9 @@ func TestAccELBAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elb_attachment" {
@@ -103,14 +101,14 @@ func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAttachmentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ELBClient(ctx)
 
 		err := tfelb.FindLoadBalancerAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["elb"], rs.Primary.Attributes["instance"])
 

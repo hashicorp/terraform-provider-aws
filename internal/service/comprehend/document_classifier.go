@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,7 +52,6 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
@@ -478,7 +477,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]any)),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get(names.AttrVPCConfig).([]any)),
-		ClientRequestToken:     aws.String(id.UniqueId()),
+		ClientRequestToken:     aws.String(sdkid.UniqueId()),
 		Tags:                   getTagsIn(ctx),
 	}
 

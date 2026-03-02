@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -263,10 +262,10 @@ func (r *agentRuntimeEndpointResource) ImportState(ctx context.Context, request 
 }
 
 func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeEndpointStatusCreating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeEndpointStatusReady),
-		Refresh:                   statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeID, endpointName),
+		Refresh:                   statusAgentRuntimeEndpoint(conn, agentRuntimeID, endpointName),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -281,10 +280,10 @@ func waitAgentRuntimeEndpointCreated(ctx context.Context, conn *bedrockagentcore
 }
 
 func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.AgentRuntimeEndpointStatusUpdating),
 		Target:                    enum.Slice(awstypes.AgentRuntimeEndpointStatusReady),
-		Refresh:                   statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeID, endpointName),
+		Refresh:                   statusAgentRuntimeEndpoint(conn, agentRuntimeID, endpointName),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -299,10 +298,10 @@ func waitAgentRuntimeEndpointUpdated(ctx context.Context, conn *bedrockagentcore
 }
 
 func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string, timeout time.Duration) (*bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentRuntimeEndpointStatusDeleting, awstypes.AgentRuntimeEndpointStatusReady),
 		Target:  []string{},
-		Refresh: statusAgentRuntimeEndpoint(ctx, conn, agentRuntimeID, endpointName),
+		Refresh: statusAgentRuntimeEndpoint(conn, agentRuntimeID, endpointName),
 		Timeout: timeout,
 	}
 
@@ -315,8 +314,8 @@ func waitAgentRuntimeEndpointDeleted(ctx context.Context, conn *bedrockagentcore
 	return nil, smarterr.NewError(err)
 }
 
-func statusAgentRuntimeEndpoint(ctx context.Context, conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAgentRuntimeEndpoint(conn *bedrockagentcorecontrol.Client, agentRuntimeID, endpointName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findAgentRuntimeEndpointByTwoPartKey(ctx, conn, agentRuntimeID, endpointName)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -343,9 +342,8 @@ func findAgentRuntimeEndpoint(ctx context.Context, conn *bedrockagentcorecontrol
 	out, err := conn.GetAgentRuntimeEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "was not found") {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
 		})
 	}
 

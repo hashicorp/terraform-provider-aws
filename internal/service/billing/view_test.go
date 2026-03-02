@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/billing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -98,6 +99,11 @@ func TestAccBillingView_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description updated"),
 					acctest.CheckResourceAttrContains(resourceName, names.AttrARN, "billingview/custom-"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -129,6 +135,14 @@ func TestAccBillingView_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbilling.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -227,6 +241,11 @@ func TestAccBillingView_dataFilterExpressionTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.0", "engineering"),
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.1", "finance"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -274,6 +293,26 @@ func TestAccBillingView_dataFilterExpressionDimensions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.key", "LINKED_ACCOUNT"),
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{"999999999912", "111222333444"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view2),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.key", "LINKED_ACCOUNT"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:                         resourceName,

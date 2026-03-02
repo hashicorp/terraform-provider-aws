@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"
@@ -46,7 +46,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -115,7 +115,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_Basic(t *testing.
 	})
 }
 
-func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_RegionOverride(t *testing.T) {
+func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssoadmin_managed_policy_attachments_exclusive.test"

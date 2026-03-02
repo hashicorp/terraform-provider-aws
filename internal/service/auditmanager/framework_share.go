@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -225,9 +224,7 @@ func findFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id s
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{
-		LastRequest: input,
-	}
+	return nil, &retry.NotFoundError{}
 }
 
 type frameworkShareResourceModel struct {

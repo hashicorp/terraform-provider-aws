@@ -55,6 +55,35 @@ resource "aws_subnet" "test" {
 {{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}
 {{- end }}
 
+{{ define "acctest.ConfigAvailableAZsNoOptIn" -}}
+# acctest.ConfigAvailableAZsNoOptIn
+
+data "aws_availability_zones" "available" {
+{{- template "region" }}
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+{{- end }}
+
+{{ define "acctest.ConfigAvailableAZsNoOptInExclude" -}}
+# acctest.ConfigAvailableAZsNoOptInExclude
+
+data "aws_availability_zones" "available" {
+{{- template "region" }}
+  exclude_zone_ids = local.exclude_zone_ids
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+{{- end }}
+
 {{ define "acctest.ConfigAvailableAZsNoOptInDefaultExclude" -}}
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 

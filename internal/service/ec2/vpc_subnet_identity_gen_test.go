@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCSubnet_Identity_Basic(t *testing.T) {
+func TestAccVPCSubnet_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Subnet
@@ -98,7 +98,7 @@ func TestAccVPCSubnet_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCSubnet_Identity_RegionOverride(t *testing.T) {
+func TestAccVPCSubnet_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_subnet.test"
@@ -181,7 +181,7 @@ func TestAccVPCSubnet_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.8.0
-func TestAccVPCSubnet_Identity_ExistingResource(t *testing.T) {
+func TestAccVPCSubnet_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Subnet
@@ -234,7 +234,7 @@ func TestAccVPCSubnet_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.8.0
-func TestAccVPCSubnet_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccVPCSubnet_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.Subnet

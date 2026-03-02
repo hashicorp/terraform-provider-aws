@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,16 +35,16 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
+					testAccCheckInstanceAccessControlAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
@@ -63,16 +62,16 @@ func testAccInstanceAccessControlAttributes_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
+					testAccCheckInstanceAccessControlAttributesExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourceInstanceAccessControlAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,16 +84,16 @@ func testAccInstanceAccessControlAttributes_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAccessControlAttributesConfig_multiple(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
+					testAccCheckInstanceAccessControlAttributesExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
@@ -112,16 +111,16 @@ func testAccInstanceAccessControlAttributes_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ssoadmin_instance_access_control_attributes.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx),
+		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
+					testAccCheckInstanceAccessControlAttributesExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -132,16 +131,16 @@ func testAccInstanceAccessControlAttributes_update(t *testing.T) {
 			{
 				Config: testAccInstanceAccessControlAttributesConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
+					testAccCheckInstanceAccessControlAttributesExists(ctx, t, resourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckInstanceAccessControlAttributesDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceAccessControlAttributesDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_instance_access_control_attributes" {
@@ -165,7 +164,7 @@ func testAccCheckInstanceAccessControlAttributesDestroy(ctx context.Context) res
 	}
 }
 
-func testAccCheckInstanceAccessControlAttributesExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInstanceAccessControlAttributesExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -176,7 +175,7 @@ func testAccCheckInstanceAccessControlAttributesExists(ctx context.Context, reso
 			return fmt.Errorf("No SSO Instance Access Control Attributes ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err := tfssoadmin.FindInstanceAttributeControlAttributesByARN(ctx, conn, rs.Primary.ID)
 

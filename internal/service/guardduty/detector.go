@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -32,7 +31,6 @@ import (
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,
@@ -502,9 +500,8 @@ func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*
 	output, err := conn.GetDetector(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

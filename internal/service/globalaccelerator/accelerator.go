@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +34,6 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -147,7 +145,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get(names.AttrName).(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
-		IdempotencyToken: aws.String(id.UniqueId()),
+		IdempotencyToken: aws.String(sdkid.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -343,9 +341,8 @@ func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, a
 	output, err := conn.DescribeAccelerator(ctx, input)
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -368,9 +365,8 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 	output, err := conn.DescribeAcceleratorAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -385,8 +381,8 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 	return output.AcceleratorAttributes, nil
 }
 
-func statusAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccelerator(conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		accelerator, err := findAcceleratorByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -402,10 +398,10 @@ func statusAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn 
 }
 
 func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.Client, arn string, timeout time.Duration) (*awstypes.Accelerator, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AcceleratorStatusInProgress),
 		Target:  enum.Slice(awstypes.AcceleratorStatusDeployed),
-		Refresh: statusAccelerator(ctx, conn, arn),
+		Refresh: statusAccelerator(conn, arn),
 		Timeout: timeout,
 	}
 

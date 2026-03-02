@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdevopsguru "github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +23,7 @@ func testAccEventSourcesConfig_basic(t *testing.T) {
 	var cfg devopsguru.DescribeEventSourcesConfigOutput
 	resourceName := "aws_devopsguru_event_sources_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -32,12 +31,12 @@ func testAccEventSourcesConfig_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourcesConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourcesConfigExists(ctx, resourceName, &cfg),
+					testAccCheckEventSourcesConfigExists(ctx, t, resourceName, &cfg),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "event_sources.0.amazon_code_guru_profiler.*", map[string]string{
 						names.AttrStatus: "ENABLED",
 					}),
@@ -57,7 +56,7 @@ func testAccEventSourcesConfig_disappears(t *testing.T) {
 	var eventsourcesconfig devopsguru.DescribeEventSourcesConfigOutput
 	resourceName := "aws_devopsguru_event_sources_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
@@ -65,12 +64,12 @@ func testAccEventSourcesConfig_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx),
+		CheckDestroy:             testAccCheckEventSourcesConfigDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSourcesConfigConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourcesConfigExists(ctx, resourceName, &eventsourcesconfig),
+					testAccCheckEventSourcesConfigExists(ctx, t, resourceName, &eventsourcesconfig),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdevopsguru.ResourceEventSourcesConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,9 +78,9 @@ func testAccEventSourcesConfig_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEventSourcesConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEventSourcesConfigDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devopsguru_event_sources_config" {
@@ -106,7 +105,7 @@ func testAccCheckEventSourcesConfigDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckEventSourcesConfigExists(ctx context.Context, name string, cfg *devopsguru.DescribeEventSourcesConfigOutput) resource.TestCheckFunc {
+func testAccCheckEventSourcesConfigExists(ctx context.Context, t *testing.T, name string, cfg *devopsguru.DescribeEventSourcesConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -117,7 +116,7 @@ func testAccCheckEventSourcesConfigExists(ctx context.Context, name string, cfg 
 			return create.Error(names.DevOpsGuru, create.ErrActionCheckingExistence, tfdevopsguru.ResNameEventSourcesConfig, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DevOpsGuruClient(ctx)
 
 		out, err := tfdevopsguru.FindEventSourcesConfig(ctx, conn)
 		if err != nil {

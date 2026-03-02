@@ -152,6 +152,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newRuleResourceAsListResource,
+			TypeName: "aws_cloudwatch_event_rule",
+			Name:     "Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
 			Factory:  newTargetResourceAsListResource,
 			TypeName: "aws_cloudwatch_event_target",
 			Name:     "Target",

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -36,7 +37,8 @@ import (
 
 var (
 	// e.g. example--usw2-az2--x-s3
-	directoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--x-s3$`)
+	directoryBucketNameRegex              = regexache.MustCompile(`^(?:[0-9a-z.-]+)` + directoryBucketNameSuffixRegexPattern + `$`)
+	directoryBucketNameSuffixRegexPattern = `--(?:[0-9a-z]+(?:-[0-9a-z]+)+)--x-s3`
 )
 
 func isDirectoryBucket(bucket string) bool {
@@ -45,8 +47,9 @@ func isDirectoryBucket(bucket string) bool {
 
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 // @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
+// @IdentityAttribute("bucket", identityDuplicateAttributes="id")
 // @Testing(importIgnore="force_destroy")
-// @Testing(existsTakesT=false, destroyTakesT=false)
+// @Testing(preIdentityVersion="v6.31.0")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -55,7 +58,7 @@ func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure
 
 type directoryBucketResource struct {
 	framework.ResourceWithModel[directoryBucketResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *directoryBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -192,10 +195,8 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
-	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
-	// Disable S3 Expression session authentication for HeadBucket.
-	output, err := findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
+	output, err := findDirectoryBucket(ctx, conn, bucket)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -210,17 +211,25 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	// Set attributes for import.
-	data.ARN = fwflex.StringToFramework(ctx, output.BucketArn)
-	data.Bucket = fwflex.StringValueToFramework(ctx, bucket)
-	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(output.BucketLocationType))
-	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
-		Name: fwflex.StringToFramework(ctx, output.BucketLocationName),
-		Type: fwtypes.StringEnumValue(output.BucketLocationType),
-	})
-	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
+	flattenDirectoryBucketResource(ctx, output, &data, &response.Diagnostics)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func flattenDirectoryBucketResource(ctx context.Context, bucket *s3.HeadBucketOutput, data *directoryBucketResourceModel, diags *diag.Diagnostics) {
+	diags.Append(fwflex.Flatten(ctx, bucket, data, fwflex.WithFieldNamePrefix("Bucket"))...)
+	if diags.HasError() {
+		return
+	}
+	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(bucket.BucketLocationType))
+	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
+		Name: fwflex.StringToFramework(ctx, bucket.BucketLocationName),
+		Type: fwtypes.StringEnumValue(bucket.BucketLocationType),
+	})
+	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
 }
 
 func (r *directoryBucketResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -232,7 +241,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
+	bucket := fwflex.StringValueFromFramework(ctx, data.Bucket)
 	input := s3.DeleteBucketInput{
 		Bucket: aws.String(bucket),
 	}
@@ -249,9 +258,7 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 				return
 			}
 
-			_, err = conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
-				Bucket: aws.String(bucket),
-			})
+			_, err = conn.DeleteBucket(ctx, &input)
 		}
 	}
 
@@ -323,4 +330,10 @@ func (d directoryBucketDataRedundancyPlanModifier) PlanModifyString(ctx context.
 
 	// Set the default value for data_redundancy based on the location type.
 	response.PlanValue = fwflex.StringValueToFramework(ctx, defaultDirectoryBucketDataRedundancy(locationInfo.Type.ValueEnum()))
+}
+
+func findDirectoryBucket(ctx context.Context, conn *s3.Client, bucket string) (*s3.HeadBucketOutput, error) {
+	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
+	// Disable S3 Express session authentication for HeadBucket.
+	return findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
 }

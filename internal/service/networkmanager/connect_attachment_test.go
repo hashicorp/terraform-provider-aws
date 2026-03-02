@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -61,18 +59,18 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic_NoDependsOn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -98,18 +96,18 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -122,18 +120,18 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_protocolNoEncap(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -159,18 +157,18 @@ func TestAccNetworkManagerConnectAttachment_routingPolicyLabel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "testlabel"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "testlabel"),
 				),
 			},
@@ -188,25 +186,25 @@ func TestAccNetworkManagerConnectAttachment_routingPolicyLabelUpdate(t *testing.
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "labelv1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v1),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv1"),
 				),
 			},
 			{
 				Config: testAccConnectAttachmentConfig_routingPolicyLabel(rName, "labelv2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(ctx, resourceName, &v2),
+					testAccCheckConnectAttachmentExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", "labelv2"),
 					testAccCheckConnectAttachmentRecreated(&v1, &v2),
 				),
@@ -224,14 +222,14 @@ func testAccCheckConnectAttachmentRecreated(before, after *awstypes.ConnectAttac
 	}
 }
 
-func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
+func testAccCheckConnectAttachmentExists(ctx context.Context, t *testing.T, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -245,9 +243,9 @@ func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awsty
 	}
 }
 
-func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConnectAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_attachment" {

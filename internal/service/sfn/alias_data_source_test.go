@@ -21,7 +21,7 @@ func TestAccSFNAliasDataSource_basic(t *testing.T) {
 	stateMachineName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 	aliasName := fmt.Sprintf("tf_acc_state_machine_alias_basic_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

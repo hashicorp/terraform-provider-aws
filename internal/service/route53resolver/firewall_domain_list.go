@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -70,7 +69,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallDomainListInput{
-		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
+		CreatorRequestId: aws.String(sdkid.PrefixedUniqueId("tf-r53-resolver-firewall-domain-list-")),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -215,9 +214,8 @@ func findFirewallDomainListByID(ctx context.Context, conn *route53resolver.Clien
 	output, err := conn.GetFirewallDomainList(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -232,8 +230,8 @@ func findFirewallDomainListByID(ctx context.Context, conn *route53resolver.Clien
 	return output.FirewallDomainList, nil
 }
 
-func statusFirewallDomainList(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFirewallDomainList(conn *route53resolver.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallDomainListByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -254,10 +252,10 @@ const (
 )
 
 func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallDomainList, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallDomainListStatusUpdating, awstypes.FirewallDomainListStatusImporting),
 		Target:  enum.Slice(awstypes.FirewallDomainListStatusComplete, awstypes.FirewallDomainListStatusCompleteImportFailed),
-		Refresh: statusFirewallDomainList(ctx, conn, id),
+		Refresh: statusFirewallDomainList(conn, id),
 		Timeout: firewallDomainListUpdatedTimeout,
 	}
 
@@ -275,10 +273,10 @@ func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Cl
 }
 
 func waitFirewallDomainListDeleted(ctx context.Context, conn *route53resolver.Client, id string) (*awstypes.FirewallDomainList, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallDomainListStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFirewallDomainList(ctx, conn, id),
+		Refresh: statusFirewallDomainList(conn, id),
 		Timeout: firewallDomainListDeletedTimeout,
 	}
 

@@ -19,7 +19,7 @@ func testAccBotAliasDataSource_basic(t *testing.T) {
 	resourceName := "aws_lex_bot_alias.test"
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)

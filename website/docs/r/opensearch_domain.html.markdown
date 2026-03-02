@@ -349,7 +349,15 @@ The following arguments are optional:
 * `anonymous_auth_enabled` - (Optional) Whether Anonymous auth is enabled. Enables fine-grained access control on an existing domain. Ignored unless `advanced_security_options` are enabled. _Can only be enabled on an existing domain._
 * `enabled` - (Required, Forces new resource when changing from `true` to `false`) Whether advanced security is enabled.
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. Default is `false`.
+* `jwt_options` - (Optional) Configuration block for JWT authentication. Requires OpenSearch 2.11 or later. Detailed below.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
+
+#### jwt_options
+
+* `enabled` - (Optional) Whether JWT authentication is enabled.
+* `public_key` - (Optional) PEM-encoded public key used to verify JWT signatures.
+* `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
+* `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 
 #### master_user_options
 

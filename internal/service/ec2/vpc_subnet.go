@@ -116,7 +116,7 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+				ConflictsWith: []string{"customer_owned_ipv4_pool"},
 			},
 			"ipv4_netmask_length": {
 				Type:          schema.TypeInt,
@@ -137,10 +137,9 @@ func resourceSubnet() *schema.Resource {
 				Computed: true,
 			},
 			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"ipv6_cidr_block"},
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
@@ -152,7 +151,7 @@ func resourceSubnet() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+				ValidateFunc:  validation.IntInSlice(subnetCIDRValidIPv6Netmasks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
@@ -287,10 +286,13 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var computedIPv6CidrBlock bool
 	_, cidrExists := d.GetOk("ipv6_cidr_block")
 
-	if v, ok := d.GetOk("ipv6_native"); ok && v.(bool) && !cidrExists {
-		computedIPv6CidrBlock = true
-	} else {
-		computedIPv6CidrBlock = false
+	if !cidrExists {
+		if _, ok := d.GetOk("ipv6_native"); ok {
+			computedIPv6CidrBlock = true
+		}
+		if _, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+			computedIPv6CidrBlock = true
+		}
 	}
 
 	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, computedIPv6CidrBlock); err != nil {

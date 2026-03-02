@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2Instance_List_Basic(t *testing.T) {
+func TestAccEC2Instance_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_instance.test[0]"
@@ -82,7 +82,7 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
+func TestAccEC2Instance_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_instance.test[0]"
@@ -150,7 +150,7 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_Filtered(t *testing.T) {
+func TestAccEC2Instance_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_instance.expected[0]"
@@ -207,7 +207,7 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
+func TestAccEC2Instance_List_excludeAutoScaled(t *testing.T) {
 	t.Skip("Skipping because zero-result queries cause a failure now")
 
 	ctx := acctest.Context(t)

@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -28,7 +28,6 @@ import (
 // @SDKResource("aws_datapipeline_pipeline", name="Pipeline")
 // @Tags(identifierAttribute="id", resourceType="Pipeline")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datapipeline/types;awstypes;awstypes.PipelineDescription")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
@@ -62,7 +61,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
-	uniqueID := id.UniqueId()
+	uniqueID := sdkid.UniqueId()
 	input := datapipeline.CreatePipelineInput{
 		Name:     aws.String(d.Get(names.AttrName).(string)),
 		UniqueId: aws.String(uniqueID),

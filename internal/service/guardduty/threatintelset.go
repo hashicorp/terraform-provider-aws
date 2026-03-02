@@ -17,12 +17,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +31,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceThreatIntelSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThreatIntelSetCreate,
@@ -97,10 +96,10 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Threat Intel Set (%s): %s", name, err)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ThreatIntelSetStatusActivating, awstypes.ThreatIntelSetStatusDeactivating),
 		Target:     enum.Slice(awstypes.ThreatIntelSetStatusActive, awstypes.ThreatIntelSetStatusInactive),
-		Refresh:    threatintelsetRefreshStatusFunc(ctx, conn, *resp.ThreatIntelSetId, detectorID),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, *resp.ThreatIntelSetId, detectorID),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -208,7 +207,7 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ThreatIntelSetStatusActive,
 			awstypes.ThreatIntelSetStatusActivating,
@@ -217,7 +216,7 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 			awstypes.ThreatIntelSetStatusDeletePending,
 		),
 		Target:     enum.Slice(awstypes.ThreatIntelSetStatusDeleted),
-		Refresh:    threatintelsetRefreshStatusFunc(ctx, conn, threatIntelSetID, detectorId),
+		Refresh:    threatintelsetRefreshStatusFunc(conn, threatIntelSetID, detectorId),
 		Timeout:    5 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
@@ -230,8 +229,8 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func threatintelsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, threatIntelSetID, detectorID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func threatintelsetRefreshStatusFunc(conn *guardduty.Client, threatIntelSetID, detectorID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &guardduty.GetThreatIntelSetInput{
 			DetectorId:       aws.String(detectorID),
 			ThreatIntelSetId: aws.String(threatIntelSetID),

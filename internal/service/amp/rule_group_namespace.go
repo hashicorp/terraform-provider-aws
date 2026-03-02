@@ -33,8 +33,6 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.RuleGroupsNamespaceDescription")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,

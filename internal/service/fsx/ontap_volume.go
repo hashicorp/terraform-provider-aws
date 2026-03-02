@@ -17,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -542,7 +541,7 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(sdkid.UniqueId()),
 			OntapConfiguration: ontapConfig,
 			VolumeId:           aws.String(d.Id()),
 		}
@@ -651,9 +650,8 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.VolumeNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -671,8 +669,8 @@ func findVolumes(ctx context.Context, conn *fsx.Client, input *fsx.DescribeVolum
 	return output, nil
 }
 
-func statusVolume(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVolume(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVolumeByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -688,10 +686,10 @@ func statusVolume(ctx context.Context, conn *fsx.Client, id string) sdkretry.Sta
 }
 
 func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VolumeLifecycleCreating, awstypes.VolumeLifecyclePending),
 		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
-		Refresh: statusVolume(ctx, conn, id),
+		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -710,10 +708,10 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.Client, id string, timeout
 }
 
 func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VolumeLifecyclePending),
 		Target:  enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable),
-		Refresh: statusVolume(ctx, conn, id),
+		Refresh: statusVolume(conn, id),
 		Timeout: timeout,
 		Delay:   150 * time.Second,
 	}
@@ -750,10 +748,10 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.Client, id string, startTi
 }
 
 func waitVolumeDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.Volume, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.VolumeLifecycleCreated, awstypes.VolumeLifecycleMisconfigured, awstypes.VolumeLifecycleAvailable, awstypes.VolumeLifecycleDeleting),
 		Target:       []string{},
-		Refresh:      statusVolume(ctx, conn, id),
+		Refresh:      statusVolume(conn, id),
 		Timeout:      timeout,
 		Delay:        30 * time.Second,
 		PollInterval: 10 * time.Second,
@@ -789,8 +787,8 @@ func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID
 	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVolumeAdministrativeAction(conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
 
 		if retry.NotFound(err) {
@@ -806,10 +804,10 @@ func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.Client, vol
 }
 
 func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, volID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
 		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
-		Refresh: statusVolumeAdministrativeAction(ctx, conn, volID, actionType),
+		Refresh: statusVolumeAdministrativeAction(conn, volID, actionType),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}

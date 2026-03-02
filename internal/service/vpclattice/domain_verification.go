@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -35,7 +34,6 @@ import (
 // @FrameworkResource("aws_vpclattice_domain_verification", name="Domain Verification")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetDomainVerificationOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDomainVerificationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &domainVerificationResource{}, nil
 }
@@ -209,9 +207,8 @@ func findDomainVerificationByID(ctx context.Context, conn *vpclattice.Client, id
 	output, err := conn.GetDomainVerification(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

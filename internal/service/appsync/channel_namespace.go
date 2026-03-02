@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -42,7 +41,6 @@ import (
 // @Testing(importStateIdAttribute="name")
 // @Testing(importStateIdFunc=testAccChannelNamespaceImportStateID)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.ChannelNamespace")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newChannelNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelNamespaceResource{}
 
@@ -332,7 +330,7 @@ func findChannelNamespace(ctx context.Context, conn *appsync.Client, input *apps
 	output, err := conn.GetChannelNamespace(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
 		})
 	}

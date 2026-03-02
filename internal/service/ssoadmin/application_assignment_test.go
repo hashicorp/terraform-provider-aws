@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
@@ -23,12 +21,12 @@ import (
 
 func TestAccSSOAdminApplicationAssignment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_assignment.test"
 	applicationResourceName := "aws_ssoadmin_application.test"
 	userResourceName := "aws_identitystore_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
@@ -36,12 +34,12 @@ func TestAccSSOAdminApplicationAssignment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAssignmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAssignmentExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "USER"),
@@ -58,12 +56,12 @@ func TestAccSSOAdminApplicationAssignment_basic(t *testing.T) {
 
 func TestAccSSOAdminApplicationAssignment_group(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_assignment.test"
 	applicationResourceName := "aws_ssoadmin_application.test"
 	groupResourceName := "aws_identitystore_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
@@ -71,12 +69,12 @@ func TestAccSSOAdminApplicationAssignment_group(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAssignmentConfig_group(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAssignmentExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_id", groupResourceName, "group_id"),
 					resource.TestCheckResourceAttr(resourceName, "principal_type", "GROUP"),
@@ -93,10 +91,10 @@ func TestAccSSOAdminApplicationAssignment_group(t *testing.T) {
 
 func TestAccSSOAdminApplicationAssignment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_assignment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
@@ -104,12 +102,12 @@ func TestAccSSOAdminApplicationAssignment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAssignmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAssignmentExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplicationAssignment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,11 +118,11 @@ func TestAccSSOAdminApplicationAssignment_disappears(t *testing.T) {
 
 func TestAccSSOAdminApplicationAssignment_disappears_Application(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssoadmin_application_assignment.test"
 	applicationResourceName := "aws_ssoadmin_application.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
@@ -132,12 +130,12 @@ func TestAccSSOAdminApplicationAssignment_disappears_Application(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx),
+		CheckDestroy:             testAccCheckApplicationAssignmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAssignmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAssignmentExists(ctx, resourceName),
+					testAccCheckApplicationAssignmentExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -146,9 +144,9 @@ func TestAccSSOAdminApplicationAssignment_disappears_Application(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationAssignmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckApplicationAssignmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_application_assignment" {
@@ -170,7 +168,7 @@ func testAccCheckApplicationAssignmentDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckApplicationAssignmentExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckApplicationAssignmentExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -181,7 +179,7 @@ func testAccCheckApplicationAssignmentExists(ctx context.Context, name string) r
 			return create.Error(names.SSOAdmin, create.ErrActionCheckingExistence, tfssoadmin.ResNameApplicationAssignment, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSOAdminClient(ctx)
 
 		_, err := tfssoadmin.FindApplicationAssignmentByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

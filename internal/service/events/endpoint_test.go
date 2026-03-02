@@ -10,11 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,19 +22,19 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -68,19 +66,19 @@ func TestAccEventsEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,19 +91,19 @@ func TestAccEventsEndpoint_roleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -137,19 +135,19 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_endpoint.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_description(rName, "description 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -176,7 +174,7 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_description(rName, "description 2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -204,18 +202,18 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 	var v eventbridge.DescribeEndpointOutput
 	var providers []*schema.Provider
 	resourceName := "aws_cloudwatch_event_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -237,7 +235,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 			{
 				Config: testAccEndpointConfig_updateRoutingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(ctx, resourceName, &v),
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
@@ -260,9 +258,9 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_endpoint" {
@@ -286,14 +284,14 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEndpointExists(ctx context.Context, n string, v *eventbridge.DescribeEndpointOutput) resource.TestCheckFunc {
+func testAccCheckEndpointExists(ctx context.Context, t *testing.T, n string, v *eventbridge.DescribeEndpointOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		output, err := tfevents.FindEndpointByName(ctx, conn, rs.Primary.ID)
 

@@ -70,19 +70,19 @@ func testAccDataLake_basic(t *testing.T) {
 	})
 }
 
-func testAccDataLake_IdentitySerial(t *testing.T) {
+func testAccDataLake_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		"Basic":            testAccDataLake_Identity_Basic,
-		"ExistingResource": testAccDataLake_Identity_ExistingResource,
-		"RegionOverride":   testAccDataLake_Identity_RegionOverride,
+		"Basic":            testAccDataLake_Identity_basic,
+		"ExistingResource": testAccDataLake_Identity_ExistingResource_basic,
+		"RegionOverride":   testAccDataLake_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccDataLake_Identity_Basic(t *testing.T) {
+func testAccDataLake_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
 	resourceName := "aws_securitylake_data_lake.test"
@@ -127,7 +127,7 @@ func testAccDataLake_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccDataLake_Identity_RegionOverride(t *testing.T) {
+func testAccDataLake_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_data_lake.test"
@@ -436,7 +436,7 @@ func testAccDataLake_replication(t *testing.T) {
 	})
 }
 
-func testAccDataLake_Identity_ExistingResource(t *testing.T) {
+func testAccDataLake_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_data_lake.test"
 

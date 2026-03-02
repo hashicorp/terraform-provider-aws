@@ -20,7 +20,7 @@ func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

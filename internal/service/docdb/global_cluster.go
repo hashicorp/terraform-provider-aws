@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -326,17 +325,14 @@ func findGlobalClusterByID(ctx context.Context, conn *docdb.Client, id string) (
 	}
 
 	if status := aws.ToString(output.Status); status == globalClusterStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalClusterIdentifier) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -370,9 +366,8 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 		if err != nil {
@@ -389,8 +384,8 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *docdb.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(_ context.Context) (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -406,7 +401,7 @@ func statusGlobalCluster(ctx context.Context, conn *docdb.Client, id string) sdk
 }
 
 func waitGlobalClusterCreated(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -423,7 +418,7 @@ func waitGlobalClusterCreated(ctx context.Context, conn *docdb.Client, id string
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -441,7 +436,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *docdb.Client, id string
 }
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.GlobalCluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
 		Refresh:        statusGlobalCluster(ctx, conn, id),

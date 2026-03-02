@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,12 +29,12 @@ func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "db_cluster_snapshot_arn", "rds", regexache.MustCompile(`cluster-snapshot:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
@@ -68,12 +67,12 @@ func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
+					testAccCheckClusterSnapshotExists(ctx, t, resourceName, &dbClusterSnapshot),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceClusterSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,9 +81,9 @@ func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster_snapshot" {
@@ -108,14 +107,14 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstypes.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, t *testing.T, n string, v *awstypes.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 

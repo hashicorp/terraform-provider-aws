@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -273,9 +272,7 @@ func findDBParameterGroupByName(ctx context.Context, conn *neptune.Client, name 
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBParameterGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -299,9 +296,8 @@ func findDBParameterGroups(ctx context.Context, conn *neptune.Client, input *nep
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -324,9 +320,8 @@ func findDBParameters(ctx context.Context, conn *neptune.Client, input *neptune.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

@@ -152,7 +152,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Member (%s): %s", d.Id(), err)
 	}
 
-	if gmo.Members == nil || (len(gmo.Members) < 1) {
+	if len(gmo.Members) == 0 {
 		log.Printf("[WARN] GuardDuty Member %q not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

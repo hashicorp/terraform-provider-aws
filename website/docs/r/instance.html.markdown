@@ -248,6 +248,7 @@ This resource supports the following arguments:
 * `private_ip` - (Optional) Private IP address to associate with the instance in a VPC.
 * `root_block_device` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
 * `secondary_private_ips` - (Optional) List of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e., referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
+* `secondary_network_interface` - (Optional) One or more secondary network interfaces to attach to the instance at launch time. See [Secondary Network Interface](#secondary-network-interface) below for more details.
 * `security_groups` - (Optional, EC2-Classic and default VPC only) List of security group names to associate with.
 
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
@@ -291,14 +292,15 @@ This `capacity_reservation_target` block supports the following:
 
 ### CPU Options
 
--> **NOTE:** Changing any of `amd_sev_snp`, `core_count`, `threads_per_core` will cause the resource to be destroyed and re-created.
+-> **NOTE:** Changing `amd_sev_snp` will cause the resource to be destroyed and re-created. Changes to `core_count`, `nested_virtualization`, and `threads_per_core` can be made in-place but require the instance to be stopped and restarted.
 
-CPU options apply to the instance at launch time.
+CPU options can be modified after launch for `core_count`, `nested_virtualization`, and `threads_per_core` (requires instance stop/start). Other CPU options apply only at launch time.
 
 The `cpu_options` block supports the following:
 
 * `amd_sev_snp` - (Optional) Indicates whether to enable the instance for AMD SEV-SNP. AMD SEV-SNP is supported with M6a, R6a, and C6a instance types only. Valid values are `enabled` and `disabled`.
 * `core_count` - (Optional) Sets the number of CPU cores for an instance. This option is only supported on creation of instance type that support CPU Options [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
+* `nested_virtualization` - (Optional) Indicates whether to enable the instance for nested virtualization. Nested virtualization is supported on 8th generation Intel-based instance types (C8i, M8i, R8i, and their flex variants) only. When nested virtualization is enabled, Virtual Secure Mode (VSM) is automatically disabled for the instance. Valid values are `enabled` and `disabled`.
 * `threads_per_core` - (Optional - has no effect unless `core_count` is also set)  If set to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
 
 For more information, see the documentation on [Optimizing CPU options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html).
@@ -414,6 +416,20 @@ Each `primary_network_interface` block supports the following:
 
 * `delete_on_termination` - (Read-Only) Whether the network interface will be deleted when the instance terminates.
 * `network_interface_id` - (Required) ID of the network interface to attach.
+
+### Secondary Network Interface
+
+Represents secondary network interfaces attached to the EC2 Instance at launch time. These interfaces are created on secondary networks (e.g., RDMA networks) and are separate from the primary network interface.
+
+Each `secondary_network_interface` block supports the following:
+
+* `secondary_subnet_id` - (Required) ID of the secondary subnet in which to create the network interface. Forces replacement.
+* `network_card_index` - (Required) Network card index for the interface. Each network card can have one secondary interface. Forces replacement.
+* `device_index` - (Optional) Device index for the network interface attachment. Defaults to `0`. Forces replacement.
+* `interface_type` - (Optional) Type of network interface. Currently only `secondary` is supported. Defaults to `secondary`. Forces replacement.
+* `delete_on_termination` - (Optional) Whether the network interface should be destroyed when the instance is terminated. Defaults to `true`. Forces replacement.
+* `private_ip_address_count` - (Optional) Number of private IP addresses to assign to the network interface. Defaults to `1`. Forces replacement.
+* `private_ip_addresses` - (Optional) List of private IP addresses to assign to the network interface. If not specified, AWS will automatically assign IP addresses based on `private_ip_address_count`. Forces replacement.
 
 ### Private DNS Name Options
 

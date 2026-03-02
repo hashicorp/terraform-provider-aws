@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,7 +87,7 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).DocDBClient(ctx)
 
 	input := &docdb.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("docdb"),

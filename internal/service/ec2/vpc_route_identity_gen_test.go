@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCRoute_Identity_Basic(t *testing.T) {
+func TestAccVPCRoute_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Route
@@ -81,9 +81,6 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -99,9 +96,6 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
@@ -110,7 +104,7 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
+func TestAccVPCRoute_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_route.test"
@@ -171,9 +165,6 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -191,9 +182,6 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
@@ -203,7 +191,7 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
+func TestAccVPCRoute_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Route
@@ -260,7 +248,7 @@ func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccVPCRoute_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccVPCRoute_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Route

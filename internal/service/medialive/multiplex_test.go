@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
@@ -28,10 +26,10 @@ func testAccMultiplex_basic(t *testing.T) {
 	}
 
 	var multiplex medialive.DescribeMultiplexOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -39,12 +37,12 @@ func testAccMultiplex_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, t, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
@@ -70,10 +68,10 @@ func testAccMultiplex_start(t *testing.T) {
 	}
 
 	var multiplex medialive.DescribeMultiplexOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -81,12 +79,12 @@ func testAccMultiplex_start(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, t, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 				),
@@ -94,7 +92,7 @@ func testAccMultiplex_start(t *testing.T) {
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, t, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 				),
@@ -110,10 +108,10 @@ func testAccMultiplex_update(t *testing.T) {
 	}
 
 	var multiplex medialive.DescribeMultiplexOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -121,12 +119,12 @@ func testAccMultiplex_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, t, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
@@ -138,7 +136,7 @@ func testAccMultiplex_update(t *testing.T) {
 			{
 				Config: testAccMultiplexConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, t, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000001"),
@@ -158,10 +156,10 @@ func testAccMultiplex_disappears(t *testing.T) {
 	}
 
 	var multiplex medialive.DescribeMultiplexOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
@@ -169,12 +167,12 @@ func testAccMultiplex_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, t, resourceName, &multiplex),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceMultiplex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -183,9 +181,9 @@ func testAccMultiplex_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMultiplexDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMultiplexDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_multiplex" {
@@ -207,7 +205,7 @@ func testAccCheckMultiplexDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMultiplexExists(ctx context.Context, name string, multiplex *medialive.DescribeMultiplexOutput) resource.TestCheckFunc {
+func testAccCheckMultiplexExists(ctx context.Context, t *testing.T, name string, multiplex *medialive.DescribeMultiplexOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -218,7 +216,7 @@ func testAccCheckMultiplexExists(ctx context.Context, name string, multiplex *me
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplex, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindMultiplexByID(ctx, conn, rs.Primary.ID)
 
@@ -233,7 +231,7 @@ func testAccCheckMultiplexExists(ctx context.Context, name string, multiplex *me
 }
 
 func testAccMultiplexesPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).MediaLiveClient(ctx)
 
 	input := &medialive.ListMultiplexesInput{}
 	_, err := conn.ListMultiplexes(ctx, input)

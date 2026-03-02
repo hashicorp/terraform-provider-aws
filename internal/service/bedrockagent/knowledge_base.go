@@ -32,8 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -1238,7 +1237,7 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	var output *bedrockagent.CreateKnowledgeBaseOutput
@@ -1413,10 +1412,10 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 }
 
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusCreating),
 		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
-		Refresh: statusKnowledgeBase(ctx, conn, id),
+		Refresh: statusKnowledgeBase(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1432,10 +1431,10 @@ func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusUpdating),
 		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
-		Refresh: statusKnowledgeBase(ctx, conn, id),
+		Refresh: statusKnowledgeBase(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1451,10 +1450,10 @@ func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id
 }
 
 func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KnowledgeBaseStatusActive, awstypes.KnowledgeBaseStatusDeleting),
 		Target:  []string{},
-		Refresh: statusKnowledgeBase(ctx, conn, id),
+		Refresh: statusKnowledgeBase(conn, id),
 		Timeout: timeout,
 	}
 
@@ -1469,8 +1468,8 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 	return nil, err
 }
 
-func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKnowledgeBase(conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findKnowledgeBaseByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -1497,9 +1496,8 @@ func findKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, input *be
 	output, err := conn.GetKnowledgeBase(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

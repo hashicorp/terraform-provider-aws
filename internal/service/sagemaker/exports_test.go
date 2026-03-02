@@ -73,6 +73,7 @@ var (
 
 	DecodeAppID                                    = decodeAppID
 	DecodeDeviceId                                 = decodeDeviceId
+	ImageVersionFromARN                            = imageVersionFromARN
 	PrebuiltECRImageCreatePath                     = prebuiltECRImageCreatePath
 	PrebuiltECRImageIDByRegion_factorMachines      = prebuiltECRImageIDByRegion_factorMachines
 	PrebuiltECRImageIDByRegion_XGBoost             = prebuiltECRImageIDByRegion_XGBoost

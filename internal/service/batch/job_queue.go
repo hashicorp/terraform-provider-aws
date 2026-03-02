@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -44,7 +43,6 @@ import (
 // @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
 
@@ -383,7 +381,7 @@ func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awst
 	}
 
 	if status := output.Status; status == awstypes.JQStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message: string(status),
 		}
 	}
@@ -395,8 +393,8 @@ func findJobQueue(ctx context.Context, conn *batch.Client, input *batch.Describe
 	return tfresource.AssertSingleValueResultIterErr(listJobQueues(ctx, conn, input))
 }
 
-func statusJobQueue(ctx context.Context, conn *batch.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusJobQueue(conn *batch.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -412,10 +410,10 @@ func statusJobQueue(ctx context.Context, conn *batch.Client, id string) sdkretry
 }
 
 func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusCreating, awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
-		Refresh:    statusJobQueue(ctx, conn, id),
+		Refresh:    statusJobQueue(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -433,10 +431,10 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
-		Refresh:    statusJobQueue(ctx, conn, id),
+		Refresh:    statusJobQueue(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -454,10 +452,10 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusJobQueue(ctx, conn, id),
+		Refresh:    statusJobQueue(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

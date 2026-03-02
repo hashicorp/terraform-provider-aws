@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,16 +20,16 @@ func testAccAccessGrantsInstanceResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_grants_instance_resource_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(`"s3:ListAccessGrants","s3:ListAccessGrantsLocations","s3:GetDataAccess"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
@@ -49,16 +48,16 @@ func testAccAccessGrantsInstanceResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_grants_instance_resource_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsInstanceResourcePolicyConfig_basic(`"s3:ListAccessGrants","s3:ListAccessGrantsLocations","s3:GetDataAccess"`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrantsInstanceResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -67,9 +66,9 @@ func testAccAccessGrantsInstanceResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_access_grants_instance_resource_policy" {
@@ -93,14 +92,14 @@ func testAccCheckAccessGrantsInstanceResourcePolicyDestroy(ctx context.Context) 
 	}
 }
 
-func testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccessGrantsInstanceResourcePolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		_, err := tfs3control.FindAccessGrantsInstanceResourcePolicy(ctx, conn, rs.Primary.ID)
 

@@ -17,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -75,7 +74,7 @@ func resourceParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validateResourceNamePrefix(parameterGroupNameMaxLength - id.UniqueIDSuffixLength),
+				ValidateFunc:  validateResourceNamePrefix(parameterGroupNameMaxLength - sdkid.UniqueIDSuffixLength),
 			},
 			names.AttrParameter: {
 				Type:     schema.TypeSet,
@@ -261,9 +260,8 @@ func findParameterGroups(ctx context.Context, conn *memorydb.Client, input *memo
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -293,9 +291,8 @@ func findParameters(ctx context.Context, conn *memorydb.Client, input *memorydb.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
