@@ -171,7 +171,7 @@ func TestAccRAMResourceShare_resourceShareConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, t, resourceName, &resourceShare1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_share_configuration.0.retain_sharing_on_account_leave_organization", "true"),
+					resource.TestCheckResourceAttr(resourceName, "resource_share_configuration.0.retain_sharing_on_account_leave_organization", acctest.CtTrue),
 				),
 			},
 			{
@@ -184,7 +184,7 @@ func TestAccRAMResourceShare_resourceShareConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, t, resourceName, &resourceShare2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_share_configuration.0.retain_sharing_on_account_leave_organization", "false"),
+					resource.TestCheckResourceAttr(resourceName, "resource_share_configuration.0.retain_sharing_on_account_leave_organization", acctest.CtFalse),
 					testAccCheckResourceShareRecreated(&resourceShare1, &resourceShare2),
 				),
 			},
