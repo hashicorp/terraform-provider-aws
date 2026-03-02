@@ -51,6 +51,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	{{ template "GoImports" }}
+	// listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 )
 {{ if .IncludeComments }}
 // TIP: ==== FILE STRUCTURE ====
