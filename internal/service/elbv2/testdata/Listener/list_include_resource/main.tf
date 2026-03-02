@@ -1,23 +1,9 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-resource "aws_lb_listener_rule" "test" {
-  listener_arn = aws_lb_listener.test.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.test.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/static/*"]
-    }
-  }
-}
-
 resource "aws_lb_listener" "test" {
+  count = var.resource_count
+
   load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
@@ -26,25 +12,8 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
-}
 
-resource "aws_security_group" "test" {
-  name   = var.rName
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  tags = var.resource_tags
 }
 
 resource "aws_lb" "test" {
@@ -72,6 +41,26 @@ resource "aws_lb_target_group" "test" {
     healthy_threshold   = 3
     unhealthy_threshold = 3
     matcher             = "200-299"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = var.rName
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -112,13 +101,15 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.3.0"
-    }
-  }
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }
 
-provider "aws" {}
+variable "resource_tags" {
+  description = "Tags to set on resource"
+  type        = map(string)
+  nullable    = false
+}

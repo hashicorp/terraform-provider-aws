@@ -50,6 +50,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -67,6 +68,22 @@ var _ list.ListResource = &listResource{{ .ListResource }}{}
 type listResource{{ .ListResource }} struct {
 	framework.ListResourceWithSDKv2Resource
 }
+
+{{- if .IncludeComments }}
+// TIP: ==== LIST RESOURCE SCHEMA ===
+// This is only needed if the resource type requires any attributes for listing, such as a parent ID.
+// Otherwise, it can be removed.
+{{- end }}
+// func (l *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// 	response.Schema = listschema.Schema{
+// 		Attributes: map[string]listschema.Attribute{
+// 			"parent_id": listschema.StringAttribute{
+// 				Required:    true,
+// 				Description: "ID of the Parent to list {{ .ListResource }}s from.",
+// 			},
+// 		},
+// 	}
+// }
 
 func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
@@ -96,12 +113,23 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 			return
 		}
 	}
+
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Get information about a resource from AWS
+	// TIP: -- 3. Retrieve required attributes
+	// If the resource type requires any attributes for listing, such as a parent ID, retrieve them here.
 	{{- end }}
-	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}")
+	parentID := query.ParentID.ValueString()
+
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+		logging.ResourceAttributeKey("parent_id"): parentID,
+	})
+	{{ if .IncludeComments }}
+	// TIP: -- 4. Get information about a resource from AWS
+	{{- end }}
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input {{ .SDKPackage }}.List{{ .ListResource }}sInput
+		input := {{ .SDKPackage }}.List{{ .ListResource }}sInput{
+			ParentId: parentID,
+		}
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
@@ -162,6 +190,11 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 {{- end }}
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
+	{{ if .InclueComments }}
+	// TIP: -- 1. Include required attributes
+	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
+	{{ end }}
+	ParentID types.String `tfsdk:"parent_id"`
 }
 {{ if .IncludeComments }}
 // TIP: ==== LISTING FUNCTION ====
@@ -193,11 +226,11 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 // It should replace most of the body of the resource type's Read function (`resource{{ .ListResource }}Read`) and take the API results
 // as parameters.
 // The replaced section of the Read function should be
-// 	if err := resource{{ .ListResource }}Flatten(ctx, meta.(*conns.AWSClient), lb, d); err != nil {
+// 	if err := resource{{ .ListResource }}Flatten(ctx, meta.(*conns.AWSClient), {{ .ListResourceLowerCamel }}, d); err != nil {
 // 		return sdkdiag.AppendFromErr(diags, err)
 // 	}
 {{- end }}
-func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AWSClient, lb *awstypes.{{ .ListResource }}, d *schema.ResourceData) error {
+func resource{{ .ListResource }}Flatten(ctx context.Context, awsClient *conns.AWSClient, {{ .ListResourceLowerCamel }} *awstypes.{{ .ListResource }}, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, awsClient.RegionalARN(ctx, "{{ .ARNNamespace }}", "{{ .ListResourceLower }}/"+d.Id()))
 	if err := d.Set("some_collection", flattenSomeCollection(someCollection)); err != nil {
 		return fmt.Errorf("setting some_collection: %w", err)
