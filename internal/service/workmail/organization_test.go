@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	tfworkmail "github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWorkMailOrganization_basic(t *testing.T) {
