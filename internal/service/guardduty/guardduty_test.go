@@ -124,7 +124,7 @@ func testAccMemberAccountFromEnv(t *testing.T) string {
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
-	_, err := tfguardduty.FindDetector(ctx, conn)
+	_, err := tfguardduty.FindDetectorID(ctx, conn)
 
 	if retry.NotFound(err) {
 		t.Skipf("reading this AWS account's single GuardDuty Detector: %s", err)
@@ -139,7 +139,7 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
 	conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
 
-	_, err := tfguardduty.FindDetector(ctx, conn)
+	_, err := tfguardduty.FindDetectorID(ctx, conn)
 
 	if retry.NotFound(err) {
 		return
