@@ -34,7 +34,7 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),   //
 				"label_match_statement":                 labelMatchStatementBlock(ctx),       //
 				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx), //
-				"rate_based_statement":                  rateBasedStatementBlock(ctx),
+				"rate_based_statement":                  rateBasedStatementBlock(ctx),        //
 				"regex_match_statement":                 regexMatchStatementBlock(ctx),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
 				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
@@ -296,10 +296,24 @@ func sizeConstraintStatementBlock(ctx context.Context) schema.ListNestedBlock {
 
 func regexMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexMatchStatementModel](ctx),
-		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "Regex match statement.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexMatchStatementModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"regex_string": schema.StringAttribute{
+					Required:    true,
+					Description: "Regular expression string (1-512 characters).",
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 512),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"field_to_match":      fieldToMatchBlock(ctx),
+				"text_transformation": textTransformationBlock(ctx),
+			},
+		},
+		Description: "Rule statement used to search web request components for a match against a single regular expression.",
 	}
 }
 

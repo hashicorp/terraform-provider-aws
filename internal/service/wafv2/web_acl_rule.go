@@ -1107,7 +1107,19 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 		return &awstypes.Statement{SizeConstraintStatement: &awstypes.SizeConstraintStatement{}}, diags
 
 	case !m.RegexMatchStatement.IsNull():
-		return &awstypes.Statement{RegexMatchStatement: &awstypes.RegexMatchStatement{}}, diags
+		rmsData, d := m.RegexMatchStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var rms awstypes.RegexMatchStatement
+		diags.Append(flex.Expand(ctx, rmsData, &rms)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{RegexMatchStatement: &rms}, diags
 
 	case !m.LabelMatchStatement.IsNull():
 		labelData, d := m.LabelMatchStatement.ToPtr(ctx)
@@ -1238,8 +1250,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.SizeConstraintStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleSizeConstraintStatementModel{&sizeModel}, nil)
 
 	case stmt.RegexMatchStatement != nil:
-		regexModel := webACLRuleRegexMatchStatementModel{}
-		m.RegexMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRegexMatchStatementModel{&regexModel}, nil)
+		var rmsModel webACLRuleRegexMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.RegexMatchStatement, &rmsModel)...)
+		if !diags.HasError() {
+			m.RegexMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRegexMatchStatementModel{&rmsModel}, nil)
+		}
 
 	case stmt.LabelMatchStatement != nil:
 		var labelModel webACLRuleLabelMatchStatementModel
@@ -1389,6 +1404,9 @@ type webACLRuleSizeConstraintStatementModel struct {
 }
 
 type webACLRuleRegexMatchStatementModel struct {
+	RegexString         types.String                                                  `tfsdk:"regex_string"`
+	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
 }
 
 type webACLRuleLabelMatchStatementModel struct {
