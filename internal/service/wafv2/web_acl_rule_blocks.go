@@ -28,15 +28,15 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),         //
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),        //
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),         //
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),   //
-				"label_match_statement":                 labelMatchStatementBlock(ctx),       //
-				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx), //
-				"rate_based_statement":                  rateBasedStatementBlock(ctx),        //
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),       //
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+				"asn_match_statement":                   asnMatchStatementBlock(ctx),                 //
+				"byte_match_statement":                  byteMatchStatementBlock(ctx),                //
+				"geo_match_statement":                   geoMatchStatementBlock(ctx),                 //
+				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),           //
+				"label_match_statement":                 labelMatchStatementBlock(ctx),               //
+				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),         //
+				"rate_based_statement":                  rateBasedStatementBlock(ctx),                //
+				"regex_match_statement":                 regexMatchStatementBlock(ctx),               //
+				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx), //
 				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
 				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
@@ -138,11 +138,38 @@ func ruleGroupReferenceStatementBlock(ctx context.Context) schema.ListNestedBloc
 			Attributes: map[string]schema.Attribute{
 				names.AttrARN: schema.StringAttribute{
 					Required:    true,
-					Description: "ARN of the rule group to reference.",
+					Description: "ARN of the RuleGroup (20-2048 characters).",
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(20, 2048),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"excluded_rule":        excludedRuleBlock(ctx),
+				"rule_action_override": ruleActionOverrideBlock(ctx),
+			},
+		},
+		Description: "Rule statement used to run the rules that are defined in a RuleGroup.",
+	}
+}
+
+func excludedRuleBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleExcludedRuleModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(100)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Required:    true,
+					Description: "Name of the rule to exclude (1-128 characters).",
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]{1,128}$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					},
 				},
 			},
 		},
-		Description: "Rule group reference statement.",
+		Description: "Rules in the referenced rule group whose actions are set to Count. Deprecated: use rule_action_override instead.",
 	}
 }
 
@@ -383,9 +410,47 @@ func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 
 func ruleActionOverrideBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleRuleActionOverrideModel](ctx),
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "Rule action overrides.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRuleActionOverrideModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(100)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Required:    true,
+					Description: "Name of the rule to override (1-128 characters).",
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[\w\-]+$`), "must contain only word characters and hyphens"),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"action_to_use": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleActionModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"allow": schema.ListNestedBlock{
+								CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
+								Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{},
+							},
+							"block": schema.ListNestedBlock{
+								CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleBlockActionModel](ctx),
+								Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{},
+							},
+							"count": schema.ListNestedBlock{
+								CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleEmptyModel](ctx),
+								Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+								NestedObject: schema.NestedBlockObject{},
+							},
+						},
+					},
+					Description: "Override action to use in place of the configured action of the rule in the rule group.",
+				},
+			},
+		},
+		Description: "Action settings to use in place of rule actions configured inside the rule group.",
 	}
 }
 

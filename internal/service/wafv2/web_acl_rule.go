@@ -351,12 +351,28 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Flatten the created rule to get computed values
-	resp.Diagnostics.Append(flex.Flatten(ctx, createdRule, &plan)...)
+	var state webACLRuleModel
+	resp.Diagnostics.Append(flex.Flatten(ctx, createdRule, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Preserve fields from plan that aren't in the Rule
+	state.WebACLARN = plan.WebACLARN
+	state.WithRegionModel = plan.WithRegionModel
+
+	// Handle override action separately since AutoFlex doesn't call custom Flattener
+	if createdRule.OverrideAction != nil {
+		var overrideActionModel webACLRuleOverrideActionModel
+		resp.Diagnostics.Append(overrideActionModel.Flatten(ctx, createdRule.OverrideAction)...)
+		if !resp.Diagnostics.HasError() {
+			state.OverrideAction, resp.Diagnostics = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleOverrideActionModel{&overrideActionModel}, nil)
+		}
+	} else {
+		state.OverrideAction = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOverrideActionModel](ctx)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -1034,9 +1050,13 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 			return nil, diags
 		}
 
-		return &awstypes.Statement{RuleGroupReferenceStatement: &awstypes.RuleGroupReferenceStatement{
-			ARN: rgData.ARN.ValueStringPointer(),
-		}}, diags
+		var rg awstypes.RuleGroupReferenceStatement
+		diags.Append(flex.Expand(ctx, rgData, &rg)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{RuleGroupReferenceStatement: &rg}, diags
 
 	case !m.ManagedRuleGroupStatement.IsNull():
 		mrgData, d := m.ManagedRuleGroupStatement.ToPtr(ctx)
@@ -1205,10 +1225,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.GeoMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleGeoMatchStatementModel{&geoModel}, nil)
 
 	case stmt.RuleGroupReferenceStatement != nil:
-		rgModel := webACLRuleRuleGroupReferenceStatementModel{
-			ARN: types.StringPointerValue(stmt.RuleGroupReferenceStatement.ARN),
+		var rgModel webACLRuleRuleGroupReferenceStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.RuleGroupReferenceStatement, &rgModel)...)
+		if !diags.HasError() {
+			m.RuleGroupReferenceStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRuleGroupReferenceStatementModel{&rgModel}, nil)
 		}
-		m.RuleGroupReferenceStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRuleGroupReferenceStatementModel{&rgModel}, nil)
 
 	case stmt.ManagedRuleGroupStatement != nil:
 		mrgModel := webACLRuleManagedRuleGroupStatementModel{
@@ -1300,7 +1321,13 @@ type webACLRuleForwardedIPConfigModel struct {
 }
 
 type webACLRuleRuleGroupReferenceStatementModel struct {
-	ARN types.String `tfsdk:"arn"`
+	ARN                 types.String                                                       `tfsdk:"arn"`
+	ExcludedRules       fwtypes.ListNestedObjectValueOf[webACLRuleExcludedRuleModel]       `tfsdk:"excluded_rule"`
+	RuleActionOverrides fwtypes.ListNestedObjectValueOf[webACLRuleRuleActionOverrideModel] `tfsdk:"rule_action_override"`
+}
+
+type webACLRuleExcludedRuleModel struct {
+	Name types.String `tfsdk:"name"`
 }
 
 type webACLRuleManagedRuleGroupStatementModel struct {
@@ -1316,6 +1343,8 @@ type webACLRuleManagedRuleGroupConfigModel struct {
 }
 
 type webACLRuleRuleActionOverrideModel struct {
+	Name        types.String                                           `tfsdk:"name"`
+	ActionToUse fwtypes.ListNestedObjectValueOf[webACLRuleActionModel] `tfsdk:"action_to_use"`
 }
 
 type webACLRuleScopeDownStatementModel struct {
