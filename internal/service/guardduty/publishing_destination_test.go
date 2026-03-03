@@ -129,6 +129,47 @@ func testAccPublishingDestination_tags(t *testing.T) {
 	})
 }
 
+func testAccCheckPublishingDestinationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
+
+		_, err := tfguardduty.FindPublishingDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["destination_id"])
+
+		return err
+	}
+}
+
+func testAccCheckPublishingDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_guardduty_publishing_destination" {
+				continue
+			}
+
+			_, err := tfguardduty.FindPublishingDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["destination_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("GuardDuty Publishing Destination %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
 func testAccPublishingDestinationConfig_base(bucketName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -283,45 +324,4 @@ resource "aws_guardduty_publishing_destination" "test" {
   ]
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccCheckPublishingDestinationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
-
-		_, err := tfguardduty.FindPublishingDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["destination_id"])
-
-		return err
-	}
-}
-
-func testAccCheckPublishingDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_guardduty_publishing_destination" {
-				continue
-			}
-
-			_, err := tfguardduty.FindPublishingDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["destination_id"])
-
-			if retry.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("GuardDuty Publishing Destination %s still exists", rs.Primary.ID)
-		}
-
-		return nil
-	}
 }
