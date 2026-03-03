@@ -1063,9 +1063,13 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 			return nil, diags
 		}
 
-		return &awstypes.Statement{RegexPatternSetReferenceStatement: &awstypes.RegexPatternSetReferenceStatement{
-			ARN: rpsData.ARN.ValueStringPointer(),
-		}}, diags
+		var rps awstypes.RegexPatternSetReferenceStatement
+		diags.Append(flex.Expand(ctx, rpsData, &rps)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{RegexPatternSetReferenceStatement: &rps}, diags
 
 	case !m.RateBasedStatement.IsNull():
 		rbsData, d := m.RateBasedStatement.ToPtr(ctx)
@@ -1218,10 +1222,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.ManagedRuleGroupStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleManagedRuleGroupStatementModel{&mrgModel}, nil)
 
 	case stmt.RegexPatternSetReferenceStatement != nil:
-		rpsModel := webACLRuleRegexPatternSetReferenceStatementModel{
-			ARN: types.StringPointerValue(stmt.RegexPatternSetReferenceStatement.ARN),
+		var rpsModel webACLRuleRegexPatternSetReferenceStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.RegexPatternSetReferenceStatement, &rpsModel)...)
+		if !diags.HasError() {
+			m.RegexPatternSetReferenceStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRegexPatternSetReferenceStatementModel{&rpsModel}, nil)
 		}
-		m.RegexPatternSetReferenceStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRegexPatternSetReferenceStatementModel{&rpsModel}, nil)
 
 	case stmt.RateBasedStatement != nil:
 		var rbsModel webACLRuleRateBasedStatementModel
