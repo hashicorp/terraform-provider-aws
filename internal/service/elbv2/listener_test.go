@@ -2419,7 +2419,11 @@ func networkListenerARNPattern(lbName string) string {
 }
 
 func listenerARNPattern(s string) string {
-	return `listener/` + s + `/[a-z0-9]{16}`
+	return `listener/` + listenerPattern(s)
+}
+
+func listenerPattern(s string) string {
+	return s + `/[a-z0-9]{16}`
 }
 
 func testAccListenerConfig_base(rName string) string {

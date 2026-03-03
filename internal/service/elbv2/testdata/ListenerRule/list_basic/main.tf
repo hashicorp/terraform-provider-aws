@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_lb_listener_rule" "test" {
+  count = var.resource_count
+
   listener_arn = aws_lb_listener.test.arn
-  priority     = 100
+  priority     = 100 + count.index
 
   action {
     type             = "forward"
@@ -12,7 +14,7 @@ resource "aws_lb_listener_rule" "test" {
 
   condition {
     path_pattern {
-      values = ["/static/*"]
+      values = ["/static-${count.index}/*"]
     }
   }
 }
@@ -116,13 +118,9 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.3.0"
-    }
-  }
-}
 
-provider "aws" {}
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}

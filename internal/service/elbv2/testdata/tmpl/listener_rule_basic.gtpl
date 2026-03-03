@@ -17,6 +17,8 @@ resource "aws_lb_listener_rule" "test" {
 {{- template "tags" . }}
 }
 
+# testAccListenerRuleConfig_baseWithHTTPListener
+
 resource "aws_lb_listener" "test" {
 {{- template "region" }}
   load_balancer_arn = aws_lb.test.arn
@@ -28,6 +30,8 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
+
+# testAccListenerRuleConfig_base
 
 resource "aws_security_group" "test" {
 {{- template "region" }}

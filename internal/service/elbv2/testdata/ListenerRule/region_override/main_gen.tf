@@ -19,6 +19,8 @@ resource "aws_lb_listener_rule" "test" {
   }
 }
 
+# testAccListenerRuleConfig_baseWithHTTPListener
+
 resource "aws_lb_listener" "test" {
   region = var.region
 
@@ -31,6 +33,8 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
+
+# testAccListenerRuleConfig_base
 
 resource "aws_security_group" "test" {
   region = var.region

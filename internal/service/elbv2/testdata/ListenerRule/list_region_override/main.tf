@@ -2,8 +2,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_lb_listener_rule" "test" {
+  count  = var.resource_count
+  region = var.region
+
   listener_arn = aws_lb_listener.test.arn
-  priority     = 100
+  priority     = 100 + count.index
 
   action {
     type             = "forward"
@@ -12,7 +15,7 @@ resource "aws_lb_listener_rule" "test" {
 
   condition {
     path_pattern {
-      values = ["/static/*"]
+      values = ["/static-${count.index}/*"]
     }
   }
 }
@@ -20,6 +23,8 @@ resource "aws_lb_listener_rule" "test" {
 # testAccListenerRuleConfig_baseWithHTTPListener
 
 resource "aws_lb_listener" "test" {
+  region = var.region
+
   load_balancer_arn = aws_lb.test.arn
   protocol          = "HTTP"
   port              = "80"
@@ -33,6 +38,8 @@ resource "aws_lb_listener" "test" {
 # testAccListenerRuleConfig_base
 
 resource "aws_security_group" "test" {
+  region = var.region
+
   name   = var.rName
   vpc_id = aws_vpc.test.id
 
@@ -52,6 +59,8 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_lb" "test" {
+  region = var.region
+
   name            = var.rName
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -62,6 +71,8 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
+  region = var.region
+
   name     = var.rName
   port     = 8080
   protocol = "HTTP"
@@ -82,12 +93,16 @@ resource "aws_lb_target_group" "test" {
 # acctest.ConfigVPCWithSubnets(rName, 2)
 
 resource "aws_vpc" "test" {
+  region = var.region
+
   cidr_block = "10.0.0.0/16"
 }
 
 # acctest.ConfigSubnets(rName, 2)
 
 resource "aws_subnet" "test" {
+  region = var.region
+
   count = 2
 
   vpc_id            = aws_vpc.test.id
@@ -98,6 +113,8 @@ resource "aws_subnet" "test" {
 # acctest.ConfigAvailableAZsNoOptInDefaultExclude
 
 data "aws_availability_zones" "available" {
+  region = var.region
+
   exclude_zone_ids = local.default_exclude_zone_ids
   state            = "available"
 
@@ -116,13 +133,15 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.3.0"
-    }
-  }
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
 }
 
-provider "aws" {}
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
+}

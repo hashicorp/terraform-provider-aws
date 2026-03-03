@@ -15,6 +15,10 @@ Lists ELB (Elastic Load Balancing) Listener resources.
 ```terraform
 list "aws_lb_listener" "example" {
   provider = aws
+
+  config {
+    load_balancer_arn = aws_lb.example.arn
+  }
 }
 ```
 

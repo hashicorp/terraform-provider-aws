@@ -341,6 +341,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			Identity: inttypes.RegionalARNIdentity(),
 		},
 		{
+			Factory:  newListenerRuleResourceAsListResource,
+			TypeName: "aws_lb_listener_rule",
+			Name:     "Listener Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+		{
 			Factory:  newTargetGroupResourceAsListResource,
 			TypeName: "aws_lb_target_group",
 			Name:     "Target Group",
