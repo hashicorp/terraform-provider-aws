@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -34,6 +36,18 @@ type topicSubscriptionListResource struct {
 
 type topicSubscriptionListResourceModel struct {
 	framework.WithRegionModel
+	TopicARN types.String `tfsdk:"topic_arn"`
+}
+
+func (l *topicSubscriptionListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"topic_arn": listschema.StringAttribute{
+				Required:    true,
+				Description: `The ARN of the SNS topic whose subscriptions to list.`,
+			},
+		},
+	}
 }
 
 func (l *topicSubscriptionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -48,12 +62,14 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 		}
 	}
 
-	var input sns.ListSubscriptionsInput
+	input := sns.ListSubscriptionsByTopicInput{
+		TopicArn: query.TopicARN.ValueStringPointer(),
+	}
 
 	tflog.Info(ctx, "Listing SNS Topic Subscriptions")
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		for subscription, err := range listSubscriptions(ctx, conn, &input) {
+		for subscription, err := range listSubscriptionsByTopic(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
@@ -61,9 +77,6 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 			}
 
 			arn := aws.ToString(subscription.SubscriptionArn)
-			if arn == "PendingConfirmation" {
-				continue
-			}
 
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
@@ -71,17 +84,18 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 			rd := l.ResourceData()
 			rd.SetId(arn)
 
-			tflog.Info(ctx, "Reading SNS Topic Subscription")
-			diags := resourceTopicSubscriptionRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				tflog.Error(ctx, "Error reading SNS Topic Subscription", map[string]any{
-					"arn":   arn,
-					"error": diags,
+			attributes, err := findSubscriptionAttributesByARN(ctx, conn, arn)
+			if err != nil {
+				tflog.Error(ctx, "Reading SNS Topic Subscription", map[string]any{
+					"err": err.Error(),
 				})
 				continue
 			}
 
-			if rd.Id() == "" {
+			if err := subscriptionAttributeMap.APIAttributesToResourceData(attributes, rd); err != nil {
+				tflog.Error(ctx, "Reading SNS Topic Subscription", map[string]any{
+					"err": err.Error(),
+				})
 				continue
 			}
 
@@ -100,9 +114,9 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 	}
 }
 
-func listSubscriptions(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsInput) iter.Seq2[awstypes.Subscription, error] {
+func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.ListSubscriptionsByTopicInput) iter.Seq2[awstypes.Subscription, error] {
 	return func(yield func(awstypes.Subscription, error) bool) {
-		pages := sns.NewListSubscriptionsPaginator(conn, input)
+		pages := sns.NewListSubscriptionsByTopicPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
