@@ -5,3 +5,7 @@ resource/aws_guardduty_publishing_destination: Add tagging support
 ```release-note:enhancement
 resource/aws_guardduty_publishing_destination: Add `arn` and `destination_id` attributes
 ```
+
+```release-note:enhancement
+resource/aws_guardduty_ipset: Add `ip_set_id` attribute
+```

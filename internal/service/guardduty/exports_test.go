@@ -14,6 +14,7 @@ var (
 	FindDetectorID                          = findDetectorID
 	FindDetectorFeatureByTwoPartKey         = findDetectorFeatureByTwoPartKey
 	FindFilterByTwoPartKey                  = findFilterByTwoPartKey
+	FindIPSetByTwoPartKey                   = findIPSetByTwoPartKey
 	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
 	FindPublishingDestinationByTwoPartKey   = findPublishingDestinationByTwoPartKey

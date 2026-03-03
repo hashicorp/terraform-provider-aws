@@ -9,14 +9,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/guardduty"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,53 +74,34 @@ func testAccCheckIPSetDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			ipSetId, detectorId, err := tfguardduty.DecodeIPSetID(rs.Primary.ID)
+			_, err := tfguardduty.FindIPSetByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["ip_set_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
-			input := &guardduty.GetIPSetInput{
-				IpSetId:    aws.String(ipSetId),
-				DetectorId: aws.String(detectorId),
-			}
 
-			resp, err := conn.GetIPSet(ctx, input)
-			if err != nil {
-				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-					return nil
-				}
-				return err
-			}
-
-			if resp.Status == awstypes.IpSetStatusDeletePending || resp.Status == awstypes.IpSetStatusDeleted {
-				return nil
-			}
-
-			return fmt.Errorf("Expected GuardDuty Ipset to be destroyed, %s found", rs.Primary.ID)
+			return fmt.Errorf("GuardDuty IPSet %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIPSetExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckIPSetExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		ipSetId, detectorId, err := tfguardduty.DecodeIPSetID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &guardduty.GetIPSetInput{
-			DetectorId: aws.String(detectorId),
-			IpSetId:    aws.String(ipSetId),
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
-		_, err = conn.GetIPSet(ctx, input)
+
+		_, err := tfguardduty.FindIPSetByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["ip_set_id"])
+
 		return err
 	}
 }
