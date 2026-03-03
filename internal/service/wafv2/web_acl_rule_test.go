@@ -207,6 +207,39 @@ func TestAccWAFV2WebACLRule_asnMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_rateBasedStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_rateBasedStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.limit", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_labelMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -572,7 +605,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 
   statement {
     rate_based_statement {
-      limit              = 2000
+      limit              = 1000
       aggregate_key_type = "IP"
     }
   }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -27,11 +28,11 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),       //
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),      //
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),       //
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx), //
-				"label_match_statement":                 labelMatchStatementBlock(ctx),
+				"asn_match_statement":                   asnMatchStatementBlock(ctx),         //
+				"byte_match_statement":                  byteMatchStatementBlock(ctx),        //
+				"geo_match_statement":                   geoMatchStatementBlock(ctx),         //
+				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),   //
+				"label_match_statement":                 labelMatchStatementBlock(ctx),       //
 				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx), //
 				"rate_based_statement":                  rateBasedStatementBlock(ctx),
 				"regex_match_statement":                 regexMatchStatementBlock(ctx),
@@ -207,13 +208,29 @@ func rateBasedStatementBlock(ctx context.Context) schema.ListNestedBlock {
 			Attributes: map[string]schema.Attribute{
 				"limit": schema.Int64Attribute{
 					Required:    true,
-					Description: "Rate limit threshold.",
+					Description: "Rate limit threshold (10-2000000000).",
+					Validators: []validator.Int64{
+						int64validator.Between(10, 2000000000),
+					},
 				},
 				"aggregate_key_type": schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.RateBasedStatementAggregateKeyType](),
+					Required:    true,
+					Description: "Setting that indicates how to aggregate the request counts. Valid values: IP, FORWARDED_IP, CUSTOM_KEYS, CONSTANT.",
+				},
+				"evaluation_window_sec": schema.Int64Attribute{
 					Optional:    true,
 					Computed:    true,
-					Description: "Setting that indicates how to aggregate the request counts.",
+					Description: "Time window for AWS WAF to use to check the rate (60, 120, 300, 600). Default: 300.",
+					Validators: []validator.Int64{
+						int64validator.OneOf(60, 120, 300, 600),
+					},
 				},
+			},
+			Blocks: map[string]schema.Block{
+				"custom_keys":          rateBasedStatementCustomKeysBlock(ctx),
+				"forwarded_ip_config":  forwardedIPConfigBlock(ctx),
+				"scope_down_statement": scopeDownStatementBlock(ctx),
 			},
 		},
 		Description: "Rate-based statement.",
@@ -520,5 +537,98 @@ func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 		},
+	}
+}
+func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(5)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"cookie": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyCookieModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrName: schema.StringAttribute{
+								Required:    true,
+								Description: "Name of the cookie.",
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"text_transformation": textTransformationBlock(ctx),
+						},
+					},
+				},
+				"forwarded_ip": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				names.AttrHeader: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyHeaderModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrName: schema.StringAttribute{
+								Required:    true,
+								Description: "Name of the header.",
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"text_transformation": textTransformationBlock(ctx),
+						},
+					},
+				},
+				"http_method": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"ip": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"label_namespace": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrNamespace: schema.StringAttribute{
+								Required:    true,
+								Description: "Label namespace to use as an aggregate key.",
+							},
+						},
+					},
+				},
+				"query_argument": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyQueryArgumentModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrName: schema.StringAttribute{
+								Required:    true,
+								Description: "Name of the query argument.",
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"text_transformation": textTransformationBlock(ctx),
+						},
+					},
+				},
+				"query_string": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"uri_path": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+			},
+		},
+		Description: "Aggregate keys for rate-based statement.",
 	}
 }

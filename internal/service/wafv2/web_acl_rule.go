@@ -323,6 +323,39 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	// Read back the WebACL to get computed values
+	webACL, err = findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Find the created rule
+	var createdRule *awstypes.Rule
+	for i := range webACL.WebACL.Rules {
+		if aws.ToString(webACL.WebACL.Rules[i].Name) == plan.Name.ValueString() {
+			createdRule = &webACL.WebACL.Rules[i]
+			break
+		}
+	}
+
+	if createdRule == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRule, plan.Name.String(), nil),
+			"Created rule not found in Web ACL after update",
+		)
+		return
+	}
+
+	// Flatten the created rule to get computed values
+	resp.Diagnostics.Append(flex.Flatten(ctx, createdRule, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -1041,16 +1074,13 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 			return nil, diags
 		}
 
-		rbs := &awstypes.RateBasedStatement{
-			Limit: rbsData.Limit.ValueInt64Pointer(),
-		}
-		if !rbsData.AggregateKeyType.IsNull() {
-			rbs.AggregateKeyType = awstypes.RateBasedStatementAggregateKeyType(rbsData.AggregateKeyType.ValueString())
-		} else {
-			rbs.AggregateKeyType = awstypes.RateBasedStatementAggregateKeyTypeIp
+		var rbs awstypes.RateBasedStatement
+		diags.Append(flex.Expand(ctx, rbsData, &rbs)...)
+		if diags.HasError() {
+			return nil, diags
 		}
 
-		return &awstypes.Statement{RateBasedStatement: rbs}, diags
+		return &awstypes.Statement{RateBasedStatement: &rbs}, diags
 
 	case !m.ByteMatchStatement.IsNull():
 		bmsData, d := m.ByteMatchStatement.ToPtr(ctx)
@@ -1182,11 +1212,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.RegexPatternSetReferenceStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRegexPatternSetReferenceStatementModel{&rpsModel}, nil)
 
 	case stmt.RateBasedStatement != nil:
-		rbsModel := webACLRuleRateBasedStatementModel{
-			Limit:            types.Int64PointerValue(stmt.RateBasedStatement.Limit),
-			AggregateKeyType: types.StringValue(string(stmt.RateBasedStatement.AggregateKeyType)),
+		var rbsModel webACLRuleRateBasedStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.RateBasedStatement, &rbsModel)...)
+		if !diags.HasError() {
+			m.RateBasedStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRateBasedStatementModel{&rbsModel}, nil)
 		}
-		m.RateBasedStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRateBasedStatementModel{&rbsModel}, nil)
 
 	case stmt.ByteMatchStatement != nil:
 		var bmsModel webACLRuleByteMatchStatementModel
@@ -1284,9 +1314,62 @@ type webACLRuleRegexPatternSetReferenceStatementModel struct {
 	ARN types.String `tfsdk:"arn"`
 }
 
+type webACLRuleRateBasedStatementCustomKeyModel struct {
+	Cookie         fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyCookieModel]         `tfsdk:"cookie"`
+	ForwardedIP    fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"forwarded_ip"`
+	Header         fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyHeaderModel]         `tfsdk:"header"`
+	HTTPMethod     fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"http_method"`
+	IP             fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"ip"`
+	LabelNamespace fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel] `tfsdk:"label_namespace"`
+	QueryArgument  fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyQueryArgumentModel]  `tfsdk:"query_argument"`
+	QueryString    fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"query_string"`
+	UriPath        fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"uri_path"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyCookieModel struct {
+	Name                types.String                                                  `tfsdk:"name"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyHeaderModel struct {
+	Name                types.String                                                  `tfsdk:"name"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel struct {
+	Namespace types.String `tfsdk:"namespace"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyQueryArgumentModel struct {
+	Name                types.String                                                  `tfsdk:"name"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+}
+
 type webACLRuleRateBasedStatementModel struct {
-	Limit            types.Int64  `tfsdk:"limit"`
-	AggregateKeyType types.String `tfsdk:"aggregate_key_type"`
+	Limit               types.Int64                                                                 `tfsdk:"limit"`
+	AggregateKeyType    fwtypes.StringEnum[awstypes.RateBasedStatementAggregateKeyType]             `tfsdk:"aggregate_key_type"`
+	CustomKeys          fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyModel] `tfsdk:"custom_keys"`
+	EvaluationWindowSec types.Int64                                                                 `tfsdk:"evaluation_window_sec"`
+	ForwardedIPConfig   fwtypes.ListNestedObjectValueOf[webACLRuleForwardedIPConfigModel]           `tfsdk:"forwarded_ip_config"`
+	ScopeDownStatement  fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementModel]          `tfsdk:"scope_down_statement"`
+}
+
+func (m webACLRuleRateBasedStatementModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	rbs := awstypes.RateBasedStatement{
+		AggregateKeyType: m.AggregateKeyType.ValueEnum(),
+	}
+
+	diags.Append(flex.Expand(ctx, m.Limit, &rbs.Limit)...)
+	diags.Append(flex.Expand(ctx, m.CustomKeys, &rbs.CustomKeys)...)
+	diags.Append(flex.Expand(ctx, m.ForwardedIPConfig, &rbs.ForwardedIPConfig)...)
+	diags.Append(flex.Expand(ctx, m.ScopeDownStatement, &rbs.ScopeDownStatement)...)
+
+	// EvaluationWindowSec: only set if explicitly provided (not null)
+	if !m.EvaluationWindowSec.IsNull() {
+		rbs.EvaluationWindowSec = m.EvaluationWindowSec.ValueInt64()
+	}
+
+	return &rbs, diags
 }
 
 type webACLRuleByteMatchStatementModel struct {
