@@ -27,7 +27,7 @@ import (
 )
 
 func testAccTelemetryPipelinePreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
 	input := observabilityadmin.ListTelemetryPipelinesInput{}
 	_, err := conn.ListTelemetryPipelines(ctx, &input)
@@ -43,22 +43,22 @@ func testAccTelemetryPipelinePreCheck(ctx context.Context, t *testing.T) {
 func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTelemetryPipelineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -90,22 +90,22 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTelemetryPipelineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceTelemetryPipeline, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -125,22 +125,22 @@ func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTelemetryPipelineConfig_vpcFlow(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -158,7 +158,7 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 			{
 				Config: testAccTelemetryPipelineConfig_vpcFlowWithProcessor(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -181,22 +181,22 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryPipelinePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
+		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTelemetryPipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -219,7 +219,7 @@ func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 			{
 				Config: testAccTelemetryPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -236,7 +236,7 @@ func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 			{
 				Config: testAccTelemetryPipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+					testAccCheckTelemetryPipelineExists(ctx, t, resourceName, &pipeline),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -253,9 +253,9 @@ func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckTelemetryPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTelemetryPipelineDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_observabilityadmin_telemetry_pipeline" {
@@ -279,14 +279,14 @@ func testAccCheckTelemetryPipelineDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckTelemetryPipelineExists(ctx context.Context, n string, v *awstypes.TelemetryPipeline) resource.TestCheckFunc {
+func testAccCheckTelemetryPipelineExists(ctx context.Context, t *testing.T, n string, v *awstypes.TelemetryPipeline) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
 		output, err := tfobservabilityadmin.FindTelemetryPipelineByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
