@@ -1112,7 +1112,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDBWithMasterUserPasswor
 	rName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
