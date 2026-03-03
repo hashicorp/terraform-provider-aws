@@ -16,7 +16,6 @@ rules:
       exclude:
         - "/internal/provider/sdkv2"
         - "/internal/service/arcregionswitch"
-        - "/internal/service/cleanrooms"
         - "/internal/service/docdb"
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
@@ -38,7 +37,6 @@ rules:
       exclude:
         - "/internal/provider/sdkv2"
         - "/internal/service/arcregionswitch"
-        - "/internal/service/cleanrooms"
         - "/internal/service/docdb"
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
@@ -60,7 +58,6 @@ rules:
       exclude:
         - "/internal/provider/sdkv2"
         - "/internal/service/arcregionswitch"
-        - "/internal/service/cleanrooms"
         - "/internal/service/docdb"
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
