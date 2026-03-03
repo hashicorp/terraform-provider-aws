@@ -234,7 +234,14 @@ func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 				"positional_constraint": schema.StringAttribute{
 					Required:    true,
 					Description: "Area within the portion of a web request that you want AWS WAF to search for SearchString.",
+					Validators: []validator.String{
+						stringvalidator.OneOf("EXACTLY", "STARTS_WITH", "ENDS_WITH", "CONTAINS", "CONTAINS_WORD"),
+					},
 				},
+			},
+			Blocks: map[string]schema.Block{
+				"field_to_match":      fieldToMatchBlock(ctx),
+				"text_transformation": textTransformationBlock(ctx),
 			},
 		},
 		Description: "Byte match statement.",
@@ -409,6 +416,89 @@ func forwardedIPConfigBlock(ctx context.Context) schema.ListNestedBlock {
 				},
 				"header_name": schema.StringAttribute{
 					Required: true,
+				},
+			},
+		},
+	}
+}
+func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleFieldToMatchModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+			listvalidator.SizeAtLeast(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"all_query_arguments": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"body": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"method": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"query_string": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+				"single_header": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleHeaderModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"name": schema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"single_query_argument": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSingleQueryArgumentModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"name": schema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"uri_path": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
+			},
+		},
+	}
+}
+
+func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleTextTransformModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+			listvalidator.SizeAtMost(10),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"priority": schema.Int32Attribute{
+					Required: true,
+				},
+				"type": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.OneOf("NONE", "COMPRESS_WHITE_SPACE", "HTML_ENTITY_DECODE", "LOWERCASE", "CMD_LINE", "URL_DECODE", "BASE64_DECODE", "HEX_DECODE", "MD5", "REPLACE_COMMENTS", "ESCAPE_SEQ_DECODE", "SQL_HEX_DECODE", "CSS_DECODE", "JS_DECODE", "NORMALIZE_PATH", "NORMALIZE_PATH_WIN", "REMOVE_NULLS", "REPLACE_NULLS", "BASE64_DECODE_EXT", "URL_DECODE_UNI", "UTF8_TO_UNICODE"),
+					},
 				},
 			},
 		},

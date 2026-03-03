@@ -1059,12 +1059,13 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 			return nil, diags
 		}
 
-		bms := &awstypes.ByteMatchStatement{
-			SearchString:         []byte(bmsData.SearchString.ValueString()),
-			PositionalConstraint: awstypes.PositionalConstraint(bmsData.PositionalConstraint.ValueString()),
+		var bms awstypes.ByteMatchStatement
+		diags.Append(flex.Expand(ctx, bmsData, &bms)...)
+		if diags.HasError() {
+			return nil, diags
 		}
 
-		return &awstypes.Statement{ByteMatchStatement: bms}, diags
+		return &awstypes.Statement{ByteMatchStatement: &bms}, diags
 
 	case !m.SqliMatchStatement.IsNull():
 		return &awstypes.Statement{SqliMatchStatement: &awstypes.SqliMatchStatement{}}, diags
@@ -1176,11 +1177,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.RateBasedStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRateBasedStatementModel{&rbsModel}, nil)
 
 	case stmt.ByteMatchStatement != nil:
-		bmsModel := webACLRuleByteMatchStatementModel{
-			SearchString:         types.StringValue(string(stmt.ByteMatchStatement.SearchString)),
-			PositionalConstraint: types.StringValue(string(stmt.ByteMatchStatement.PositionalConstraint)),
+		var bmsModel webACLRuleByteMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.ByteMatchStatement, &bmsModel)...)
+		if !diags.HasError() {
+			m.ByteMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleByteMatchStatementModel{&bmsModel}, nil)
 		}
-		m.ByteMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleByteMatchStatementModel{&bmsModel}, nil)
 
 	case stmt.SqliMatchStatement != nil:
 		sqliModel := webACLRuleSqliMatchStatementModel{}
@@ -1274,8 +1275,10 @@ type webACLRuleRateBasedStatementModel struct {
 }
 
 type webACLRuleByteMatchStatementModel struct {
-	SearchString         types.String `tfsdk:"search_string"`
-	PositionalConstraint types.String `tfsdk:"positional_constraint"`
+	SearchString         types.String                                                  `tfsdk:"search_string"`
+	PositionalConstraint fwtypes.StringEnum[awstypes.PositionalConstraint]             `tfsdk:"positional_constraint"`
+	FieldToMatch         fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
+	TextTransformations  fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
 }
 
 type webACLRuleSqliMatchStatementModel struct {
@@ -1384,5 +1387,30 @@ func (m *webACLRuleOverrideActionModel) Flatten(ctx context.Context, v any) (dia
 }
 
 type webACLRuleOverrideActionEmptyModel struct{}
+
+type webACLRuleTrulyEmptyModel struct{}
+
+type webACLRuleFieldToMatchModel struct {
+	AllQueryArguments   fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"all_query_arguments"`
+	Body                fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"body"`
+	Method              fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"method"`
+	QueryString         fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"query_string"`
+	SingleHeader        fwtypes.ListNestedObjectValueOf[webACLRuleSingleHeaderModel]        `tfsdk:"single_header"`
+	SingleQueryArgument fwtypes.ListNestedObjectValueOf[webACLRuleSingleQueryArgumentModel] `tfsdk:"single_query_argument"`
+	UriPath             fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"uri_path"`
+}
+
+type webACLRuleSingleHeaderModel struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type webACLRuleSingleQueryArgumentModel struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type webACLRuleTextTransformModel struct {
+	Priority types.Int32                                         `tfsdk:"priority"`
+	Type     fwtypes.StringEnum[awstypes.TextTransformationType] `tfsdk:"type"`
+}
 
 // Expand/Flatten helpers

@@ -207,6 +207,33 @@ func TestAccWAFV2WebACLRule_asnMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_byteMatchStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_byteMatchStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.search_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.positional_constraint", "CONTAINS"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.field_to_match.0.uri_path.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.text_transformation.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.text_transformation.0.type", "LOWERCASE"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_regexPatternSetReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -560,6 +587,15 @@ resource "aws_wafv2_web_acl_rule" "test" {
     byte_match_statement {
       search_string         = "test-string"
       positional_constraint = "CONTAINS"
+      
+      field_to_match {
+        uri_path {}
+      }
+      
+      text_transformation {
+        priority = 0
+        type     = "LOWERCASE"
+      }
     }
   }
 
