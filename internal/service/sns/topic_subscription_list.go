@@ -77,6 +77,10 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 
 			arn := aws.ToString(subscription.SubscriptionArn)
 
+			if arn == "PendingConfirmation" {
+				continue
+			}
+
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
 			result := request.NewListResult(ctx)
