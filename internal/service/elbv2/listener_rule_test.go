@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -2428,12 +2429,13 @@ func testAccCheckListenerRuleExists(ctx context.Context, t *testing.T, n string,
 
 func testAccCheckListenerRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {
 				continue
 			}
+
+			ctx = conns.NewResourceContext(ctx, "", "", "", rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).ELBV2Client(ctx)
 
 			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
