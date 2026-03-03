@@ -35,7 +35,7 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 				"label_match_statement":                 labelMatchStatementBlock(ctx),       //
 				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx), //
 				"rate_based_statement":                  rateBasedStatementBlock(ctx),        //
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),
+				"regex_match_statement":                 regexMatchStatementBlock(ctx),       //
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
 				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
 				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
@@ -192,11 +192,18 @@ func regexPatternSetReferenceStatementBlock(ctx context.Context) schema.ListNest
 			Attributes: map[string]schema.Attribute{
 				names.AttrARN: schema.StringAttribute{
 					Required:    true,
-					Description: "ARN of the regex pattern set to reference.",
+					Description: "ARN of the RegexPatternSet (20-2048 characters).",
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(20, 2048),
+					},
 				},
 			},
+			Blocks: map[string]schema.Block{
+				"field_to_match":      fieldToMatchBlock(ctx),
+				"text_transformation": textTransformationBlock(ctx),
+			},
 		},
-		Description: "Regex pattern set reference statement.",
+		Description: "Rule statement used to search web request components for matches with regular expressions from a RegexPatternSet.",
 	}
 }
 

@@ -1326,7 +1326,9 @@ type webACLRuleScopeDownStatementModel struct {
 }
 
 type webACLRuleRegexPatternSetReferenceStatementModel struct {
-	ARN types.String `tfsdk:"arn"`
+	ARN                 types.String                                                  `tfsdk:"arn"`
+	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
 }
 
 type webACLRuleRateBasedStatementCustomKeyModel struct {
