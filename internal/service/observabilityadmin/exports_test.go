@@ -9,5 +9,5 @@ var (
 	ResourceTelemetryPipeline                 = newTelemetryPipelineResource
 
 	FindCentralizationRuleForOrganizationByID = findCentralizationRuleForOrganizationByID
-	FindTelemetryPipelineByName               = findTelemetryPipelineByName
+	FindTelemetryPipelineByARN                = findTelemetryPipelineByARN
 )

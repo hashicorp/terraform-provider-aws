@@ -42,6 +42,7 @@ import (
 
 // @FrameworkResource("aws_observabilityadmin_centralization_rule_for_organization", name="Centralization Rule For Organization")
 // @Tags(identifierAttribute="rule_arn")
+// @Testing(tagsTest=false)
 func newCentralizationRuleForOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &centralizationRuleForOrganizationResource{}
 

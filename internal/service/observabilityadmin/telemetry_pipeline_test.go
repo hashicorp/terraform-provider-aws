@@ -39,10 +39,14 @@ func testAccTelemetryPipelinePreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+func testAccRandomTelemetryPipelineName(t *testing.T) string {
+	return fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
+}
+
 func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
+	rName := testAccRandomTelemetryPipelineName(t)
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -79,8 +83,8 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -89,7 +93,7 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
+	rName := testAccRandomTelemetryPipelineName(t)
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -124,7 +128,7 @@ func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
+	rName := testAccRandomTelemetryPipelineName(t)
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -180,7 +184,7 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline awstypes.TelemetryPipeline
-	rName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(t, 20, sdkacctest.CharSetAlpha))
+	rName := testAccRandomTelemetryPipelineName(t)
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -212,8 +216,8 @@ func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
 				Config: testAccTelemetryPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -261,7 +265,7 @@ func testAccCheckTelemetryPipelineDestroy(ctx context.Context, t *testing.T) res
 				continue
 			}
 
-			_, err := tfobservabilityadmin.FindTelemetryPipelineByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			_, err := tfobservabilityadmin.FindTelemetryPipelineByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if retry.NotFound(err) {
 				continue
@@ -271,7 +275,7 @@ func testAccCheckTelemetryPipelineDestroy(ctx context.Context, t *testing.T) res
 				return err
 			}
 
-			return fmt.Errorf("Observability Admin Telemetry Pipeline %s still exists", rs.Primary.Attributes[names.AttrName])
+			return fmt.Errorf("Observability Admin Telemetry Pipeline %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
@@ -287,7 +291,7 @@ func testAccCheckTelemetryPipelineExists(ctx context.Context, t *testing.T, n st
 
 		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
-		output, err := tfobservabilityadmin.FindTelemetryPipelineByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+		output, err := tfobservabilityadmin.FindTelemetryPipelineByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		if err != nil {
 			return err

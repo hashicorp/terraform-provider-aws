@@ -163,17 +163,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Pipeline using the `name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
   to = aws_observabilityadmin_telemetry_pipeline.example
-  id = "example-pipeline"
+  identity = {
+    "arn" = "arn:aws:observabilityadmin:us-west-2:1234567890:telemetry-pipeline/id"
+  }
+}
+
+resource "aws_observabilityadmin_telemetry_pipeline" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Observability Admin Telemetry Pipeline using the `name`. For example:
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the telemetry pipeline.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Admin Telemetry Pipelines using the `arn`. For example:
+
+```terraform
+import {
+  to = aws_observabilityadmin_telemetry_pipeline.example
+  id = "arn:aws:observabilityadmin:us-west-2:1234567890:telemetry-pipeline/id"
+}
+```
+
+Using `terraform import`, import CloudWatch Observability Admin Telemetry Pipelines using the `arn`. For example:
 
 ```console
-% terraform import aws_observabilityadmin_telemetry_pipeline.example example-pipeline
+% terraform import aws_observabilityadmin_telemetry_pipeline.example arn:aws:observabilityadmin:us-west-2:1234567890:telemetry-pipeline/id
 ```
