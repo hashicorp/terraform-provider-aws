@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_sns_topic_subscription")
 func newTopicSubscriptionResourceAsListResource() inttypes.ListResourceForSDK {
 	l := topicSubscriptionListResource{}
