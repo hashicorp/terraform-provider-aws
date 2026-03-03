@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Prevent panic when SDK clients are requested from an unconfigured AWS client after provider configuration failure
+```

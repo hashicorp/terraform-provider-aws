@@ -16,6 +16,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -90,8 +91,23 @@ func (c *AWSClient) TagPolicyConfig(context.Context) *tftags.TagPolicyConfig {
 	return c.tagPolicyConfig
 }
 
+func (c *AWSClient) awsConfigOrDefault() *aws.Config { // nosemgrep:ci.aws-in-func-name
+	if c.awsConfig != nil {
+		return c.awsConfig
+	}
+
+	// Use a non-nil fallback to prevent panics when SDK clients are requested
+	// after provider configuration has failed.
+	return &aws.Config{
+		Credentials: aws.AnonymousCredentials{},
+		Retryer: func() aws.Retryer {
+			return retry.NewStandard()
+		},
+	}
+}
+
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
-	return c.awsConfig.Copy()
+	return c.awsConfigOrDefault().Copy()
 }
 
 // AccountID returns the configured AWS account ID.
@@ -126,7 +142,7 @@ func (c *AWSClient) Region(ctx context.Context) string {
 		}
 	}
 
-	return c.awsConfig.Region
+	return c.awsConfigOrDefault().Region
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -354,7 +370,7 @@ func convertIPToDashIP(ip string) string {
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
 func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
 	m := map[string]any{
-		"aws_sdkv2_config": c.awsConfig,
+		"aws_sdkv2_config": c.awsConfigOrDefault(),
 		"endpoint":         c.endpoints[servicePackageName],
 		"partition":        c.Partition(ctx),
 		"region":           c.Region(ctx),
@@ -390,6 +406,10 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 	if isDefault {
 		c.lock.Lock()
 		defer c.lock.Unlock() // Runs at function exit, NOT block.
+
+		if c.clients == nil {
+			c.clients = make(map[string]map[string]any, 0)
+		}
 
 		if v, ok := c.clients[region]; ok {
 			if raw, ok := v[servicePackageName]; ok {
