@@ -1116,7 +1116,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDBWithMasterUserPasswor
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_advancedSecurityOptionsUserDBWithMasterUserPasswordWO(rName, "Testpassword1!", "1"),
@@ -1130,7 +1130,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDBWithMasterUserPasswor
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &domain),
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
 				),
 			},
@@ -1165,7 +1165,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDBWithMasterUserPasswor
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &domain),
+					testAccCheckDomainExists(ctx, t, resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
 				),
 			},
