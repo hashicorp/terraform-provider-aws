@@ -354,8 +354,8 @@ resource "aws_observabilityadmin_telemetry_pipeline" "test" {
               sts_role_arn = aws_iam_role.test.arn
             }
             log_event_metadata = {
-              data_source_name = "amazon_api_gateway"
-              data_source_type = "access"
+              data_source_name = replace(%[1]q, "-", "_")
+              data_source_type = "default"
             }
           }
         }
