@@ -1,0 +1,10 @@
+make: Verifying source code with gofmt...
+==> Checking that code complies with gofmt requirements...
+make: Running acceptance tests on branch: [1m🌿 f-list-resource-sns_topic 🌿[0m...
+TF_ACC=1 go1.25.7 test ./internal/service/sns/... -v -count 1 -parallel 20  -run=TestAccSNSTopic_List_ -timeout 360m -vet=off
+# github.com/hashicorp/terraform-provider-aws/internal/service/sns_test [github.com/hashicorp/terraform-provider-aws/internal/service/sns.test]
+internal/service/sns/topic_list_test.go:98:4: undefined: testAccTopicPreCheck
+internal/service/sns/topic_list_test.go:171:4: undefined: testAccTopicPreCheck
+FAIL	github.com/hashicorp/terraform-provider-aws/internal/service/sns [build failed]
+FAIL
+make: *** [testacc] Error 1

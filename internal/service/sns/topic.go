@@ -314,7 +314,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceTopicFlatten(ctx, attributes, d)...)
+	return append(diags, resourceTopicFlatten(ctx, d, attributes)...)
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -507,7 +507,7 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	return output.Attributes, nil
 }
 
-func resourceTopicFlatten(_ context.Context, attributes map[string]string, d *schema.ResourceData) diag.Diagnostics {
+func resourceTopicFlatten(_ context.Context, d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	err := topicAttributeMap.APIAttributesToResourceData(attributes, d)
 	if err != nil {
