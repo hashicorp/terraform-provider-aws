@@ -118,6 +118,14 @@ func (t *tfFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) 
 		t.Field1 = StringValueToFramework(ctx, val.AWSField)
 		return diags
 
+	case *awsExpander:
+		if val != nil {
+			t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		} else {
+			t.Field1 = types.StringNull()
+		}
+		return diags
+
 	default:
 		return diags
 	}
