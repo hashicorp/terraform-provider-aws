@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfworkmail "github.com/hashicorp/terraform-provider-aws/internal/service/workmail"
 )
 
@@ -136,7 +135,7 @@ func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, t, resourceName, &after),
 					testAccCheckOrganizationNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "delete_directory", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delete_directory", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
