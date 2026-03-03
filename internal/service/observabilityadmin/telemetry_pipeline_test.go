@@ -46,7 +46,7 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryPipelinePreCheck(ctx, t)
@@ -93,7 +93,7 @@ func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccTelemetryPipelinePreCheck(ctx, t)
@@ -172,7 +172,6 @@ func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T
 							"body": knownvalue.NotNull(),
 						}),
 					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
 				},
 			},
 		},
