@@ -3,4 +3,8 @@
 
 list "aws_sns_topic_subscription" "test" {
   provider = aws
+
+  config {
+    topic_arn = aws_sns_topic.test.arn
+  }
 }

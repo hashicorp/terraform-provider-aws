@@ -5,4 +5,8 @@ list "aws_sns_topic_subscription" "test" {
   provider = aws
 
   include_resource = true
+
+  config {
+    topic_arn = aws_sns_topic.test[0].arn
+  }
 }

@@ -2,10 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_sns_topic" "test" {
-  count  = var.resource_count
   region = var.region
 
-  name = "${var.rName}-${count.index}"
+  name = var.rName
 }
 
 resource "aws_sqs_queue" "test" {
@@ -21,7 +20,7 @@ resource "aws_sns_topic_subscription" "test" {
   count  = var.resource_count
   region = var.region
 
-  topic_arn = aws_sns_topic.test[count.index].arn
+  topic_arn = aws_sns_topic.test.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.test[count.index].arn
 }

@@ -5,6 +5,7 @@ list "aws_sns_topic_subscription" "test" {
   provider = aws
 
   config {
-    region = var.region
+    region    = var.region
+    topic_arn = aws_sns_topic.test.arn
   }
 }
