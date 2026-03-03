@@ -14,6 +14,7 @@ var (
 	FindDetectorFeatureByTwoPartKey         = findDetectorFeatureByTwoPartKey
 	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
 	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
+	FindPublishingDestinationByTwoPartKey   = findPublishingDestinationByTwoPartKey
 
 	GetOrganizationAdminAccount = getOrganizationAdminAccount
 )

@@ -141,6 +141,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - Resource ARN.
+* `destination_id` - Destination ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
