@@ -19,7 +19,6 @@ rules:
         - "/internal/service/docdb"
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
-        - "/internal/service/observabilityadmin"
         - "/internal/service/odb"
         - "/internal/service/savingsplans"
 
@@ -40,7 +39,6 @@ rules:
         - "/internal/service/docdb"
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
-        - "/internal/service/observabilityadmin"
         - "/internal/service/odb"
         - "/internal/service/savingsplans"
 
@@ -61,6 +59,5 @@ rules:
         - "/internal/service/docdb"
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
-        - "/internal/service/observabilityadmin"
         - "/internal/service/odb"
         - "/internal/service/savingsplans"
