@@ -1251,12 +1251,19 @@ func waitIPAMUpdated(ctx context.Context, conn *ec2.Client, id string, timeout t
 }
 
 func waitIPAMResourceCIDRManaged(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, addressFamily awstypes.AddressFamily, timeout time.Duration) (*awstypes.IpamResourceCidr, error) {
+	// When IPAM is not enabled, the status func returns a zero value object
+	// which retry treats as NotFound. Enabling IPAM can take up to 20
+	// minutes to complete.
+	//
+	// 30s PollInternal x 40 NotFoundChecks = 1200s (20m)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.IpamManagementStateUnmanaged),
-		Target:  enum.Slice(awstypes.IpamManagementStateManaged),
-		Refresh: statusIPAMResourceCIDR(conn, scopeID, resourceID, addressFamily),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
+		NotFoundChecks: 40,
+		Pending:        enum.Slice(awstypes.IpamManagementStateUnmanaged),
+		Target:         enum.Slice(awstypes.IpamManagementStateManaged),
+		Refresh:        statusIPAMResourceCIDR(conn, scopeID, resourceID, addressFamily),
+		Timeout:        timeout,
+		Delay:          10 * time.Second,
+		PollInterval:   30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
