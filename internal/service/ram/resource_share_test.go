@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -153,6 +154,44 @@ func TestAccRAMResourceShare_name(t *testing.T) {
 	})
 }
 
+func TestAccRAMResourceShare_resourceShareConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceShare1, resourceShare2 awstypes.ResourceShare
+	resourceName := "aws_ram_resource_share.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceShareDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceShareConfig_resourceShareConfiguration(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceShareExists(ctx, t, resourceName, &resourceShare1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_share_configuration.0.retain_sharing_on_account_leave_organization", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceShareConfig_resourceShareConfiguration(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceShareExists(ctx, t, resourceName, &resourceShare2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_share_configuration.0.retain_sharing_on_account_leave_organization", acctest.CtFalse),
+					testAccCheckResourceShareRecreated(&resourceShare1, &resourceShare2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRAMResourceShare_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceShare1, resourceShare2, resourceShare3 awstypes.ResourceShare
@@ -270,6 +309,16 @@ func testAccCheckResourceShareDestroy(ctx context.Context, t *testing.T) resourc
 	}
 }
 
+func testAccCheckResourceShareRecreated(i, j *awstypes.ResourceShare) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.ToString(i.ResourceShareArn), aws.ToString(j.ResourceShareArn); before == after {
+			return fmt.Errorf("RAM Resource Share (%s) not recreated", before)
+		}
+
+		return nil
+	}
+}
+
 func testAccResourceShareConfig_allowExternalPrincipals(rName string, allowExternalPrincipals bool) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
@@ -285,6 +334,19 @@ resource "aws_ram_resource_share" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccResourceShareConfig_resourceShareConfiguration(rName string, retainSharingOnAccountLeaveOrganization bool) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "test" {
+  name = %[1]q
+
+  allow_external_principals = true
+  resource_share_configuration {
+    retain_sharing_on_account_leave_organization = %[2]t
+  }
+}
+`, rName, retainSharingOnAccountLeaveOrganization)
 }
 
 func testAccResourceShareConfig_tags1(rName, tagKey1, tagValue1 string) string {
