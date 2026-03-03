@@ -6,6 +6,8 @@ package wafv2
 import (
 	"context"
 
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,12 +27,12 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+				"asn_match_statement":                   asnMatchStatementBlock(ctx),       //
+				"byte_match_statement":                  byteMatchStatementBlock(ctx),      //
+				"geo_match_statement":                   geoMatchStatementBlock(ctx),       //
+				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx), //
 				"label_match_statement":                 labelMatchStatementBlock(ctx),
-				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
+				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx), //
 				"rate_based_statement":                  rateBasedStatementBlock(ctx),
 				"regex_match_statement":                 regexMatchStatementBlock(ctx),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
@@ -286,10 +288,26 @@ func regexMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 
 func labelMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleLabelMatchStatementModel](ctx),
-		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "Label match statement.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleLabelMatchStatementModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrKey: schema.StringAttribute{
+					Required:    true,
+					Description: "String to match against. Must be 1-1024 characters and match pattern ^[0-9A-Za-z_\\-:]+$.",
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 1024),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
+					},
+				},
+				names.AttrScope: schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.LabelMatchScope](),
+					Required:    true,
+					Description: "Specify whether to match using the label name or just the namespace. Valid values: LABEL, NAMESPACE.",
+				},
+			},
+		},
+		Description: "Label match statement.",
 	}
 }
 
@@ -455,7 +473,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
+							names.AttrName: schema.StringAttribute{
 								Required: true,
 							},
 						},
@@ -466,7 +484,7 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
+							names.AttrName: schema.StringAttribute{
 								Required: true,
 							},
 						},
@@ -491,10 +509,10 @@ func textTransformationBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"priority": schema.Int32Attribute{
+				names.AttrPriority: schema.Int32Attribute{
 					Required: true,
 				},
-				"type": schema.StringAttribute{
+				names.AttrType: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.OneOf("NONE", "COMPRESS_WHITE_SPACE", "HTML_ENTITY_DECODE", "LOWERCASE", "CMD_LINE", "URL_DECODE", "BASE64_DECODE", "HEX_DECODE", "MD5", "REPLACE_COMMENTS", "ESCAPE_SEQ_DECODE", "SQL_HEX_DECODE", "CSS_DECODE", "JS_DECODE", "NORMALIZE_PATH", "NORMALIZE_PATH_WIN", "REMOVE_NULLS", "REPLACE_NULLS", "BASE64_DECODE_EXT", "URL_DECODE_UNI", "UTF8_TO_UNICODE"),

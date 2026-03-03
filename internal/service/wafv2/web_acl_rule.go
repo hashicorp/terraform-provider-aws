@@ -1080,7 +1080,19 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 		return &awstypes.Statement{RegexMatchStatement: &awstypes.RegexMatchStatement{}}, diags
 
 	case !m.LabelMatchStatement.IsNull():
-		return &awstypes.Statement{LabelMatchStatement: &awstypes.LabelMatchStatement{}}, diags
+		labelData, d := m.LabelMatchStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var labelStmt awstypes.LabelMatchStatement
+		diags.Append(flex.Expand(ctx, labelData, &labelStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{LabelMatchStatement: &labelStmt}, diags
 
 	case !m.AsnMatchStatement.IsNull():
 		asnData, d := m.AsnMatchStatement.ToPtr(ctx)
@@ -1200,8 +1212,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.RegexMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleRegexMatchStatementModel{&regexModel}, nil)
 
 	case stmt.LabelMatchStatement != nil:
-		labelModel := webACLRuleLabelMatchStatementModel{}
-		m.LabelMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleLabelMatchStatementModel{&labelModel}, nil)
+		var labelModel webACLRuleLabelMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.LabelMatchStatement, &labelModel)...)
+		if !diags.HasError() {
+			m.LabelMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleLabelMatchStatementModel{&labelModel}, nil)
+		}
 
 	case stmt.AsnMatchStatement != nil:
 		var asnModel webACLRuleAsnMatchStatementModel
@@ -1294,6 +1309,8 @@ type webACLRuleRegexMatchStatementModel struct {
 }
 
 type webACLRuleLabelMatchStatementModel struct {
+	Key   types.String                                 `tfsdk:"key"`
+	Scope fwtypes.StringEnum[awstypes.LabelMatchScope] `tfsdk:"scope"`
 }
 
 type webACLRuleAsnMatchStatementModel struct {
