@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 * data-source/aws_lambda_layer_version: Add `layer_version_arn` argument to support cross-account Lambda layer access ([#46673](https://github.com/hashicorp/terraform-provider-aws/issues/46673))
 * resource/aws_emrserverless_application: Add `job_level_cost_allocation_configuration` block ([#46107](https://github.com/hashicorp/terraform-provider-aws/issues/46107))
+* resource/aws_ram_resource_share: Add `resource_share_configuration` block ([#46715](https://github.com/hashicorp/terraform-provider-aws/issues/46715))
 
 BUG FIXES:
 
