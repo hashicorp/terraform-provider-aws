@@ -54,10 +54,10 @@ func TestAccELBV2LoadBalancer_List_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-1")))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-1")),
 				},
 			},
 
@@ -115,7 +115,7 @@ func TestAccELBV2LoadBalancer_List_includeResource(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-0")),
 				},
 			},
 
@@ -136,7 +136,7 @@ func TestAccELBV2LoadBalancer_List_includeResource(t *testing.T) {
 					querycheck.ExpectResourceDisplayName("aws_lb.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
 					querycheck.ExpectResourceKnownValues("aws_lb.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("access_logs"), knownvalue.ListSizeExact(1)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerARN(rName+"-0")),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("arn_suffix"), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf("^app/%s/[a-z0-9]{16}$", rName+"-0")))),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("client_keep_alive"), knownvalue.Int32Exact(3600)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("connection_logs"), knownvalue.ListSizeExact(1)),
@@ -217,10 +217,10 @@ func TestAccELBV2LoadBalancer_List_regionOverride(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					identity1.GetIdentity(resourceName1),
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-0")))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerAlternateRegionARN(rName+"-0")),
 
 					identity2.GetIdentity(resourceName2),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}", rName+"-1")))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownValueApplicationLoadBalancerAlternateRegionARN(rName+"-1")),
 				},
 			},
 
@@ -242,4 +242,12 @@ func TestAccELBV2LoadBalancer_List_regionOverride(t *testing.T) {
 			},
 		},
 	})
+}
+
+func knownValueApplicationLoadBalancerARN(lbName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNRegexp("elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)))
+}
+
+func knownValueApplicationLoadBalancerAlternateRegionARN(lbName string) knownvalue.Check {
+	return tfknownvalue.RegionalARNAlternateRegionRegexp("elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)))
 }

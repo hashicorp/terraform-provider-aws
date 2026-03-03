@@ -15,9 +15,7 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/apigatewayv2"
         - "/internal/service/arcregionswitch"
-        - "/internal/service/billing"
         - "/internal/service/cleanrooms"
         - "/internal/service/docdb"
         - "/internal/service/ec2"
@@ -39,9 +37,7 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/apigatewayv2"
         - "/internal/service/arcregionswitch"
-        - "/internal/service/billing"
         - "/internal/service/cleanrooms"
         - "/internal/service/docdb"
         - "/internal/service/ec2"
@@ -63,9 +59,7 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/apigatewayv2"
         - "/internal/service/arcregionswitch"
-        - "/internal/service/billing"
         - "/internal/service/cleanrooms"
         - "/internal/service/docdb"
         - "/internal/service/ec2"

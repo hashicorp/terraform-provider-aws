@@ -73,6 +73,22 @@ type {{ .ListResourceLowerCamel }}ListResource struct {
 	framework.WithList
 }
 
+{{- if .IncludeComments }}
+// TIP: ==== LIST RESOURCE SCHEMA ===
+// This is only needed if the resource type requires any attributes for listing, such as a parent ID.
+// Otherwise, it can be removed.
+{{- end }}
+// func (r *listResource{{ .ListResource }}) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+// 	response.Schema = listschema.Schema{
+// 		Attributes: map[string]listschema.Attribute{
+// 			"parent_id": listschema.StringAttribute{
+// 				Required:    true,
+// 				Description: "ID of the Parent to list {{ .ListResource }}s from.",
+// 			},
+// 		},
+// 	}
+// }
+
 func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	{{- if .IncludeComments }}
 	// TIP: ==== LIST RESOURCE LIST ====
@@ -101,12 +117,23 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 			return
 		}
 	}
+
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Get information about a resource from AWS
+	// TIP: -- 3. Retrieve required attributes
+	// If the resource type requires any attributes for listing, such as a parent ID, retrieve them here.
+	{{- end }}
+	parentID := query.ParentID.ValueString()
+
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyServiceShort }} {{ .HumanListResourceName }}", map[string]any{
+		logging.ResourceAttributeKey("parent_id"): parentID,
+	})
+	{{ if .IncludeComments }}
+	// TIP: -- 4. Get information about a resource from AWS
 	{{- end }}
 	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult(ctx)
-		var input {{ .SDKPackage }}.List{{ .ListResource }}sInput
+		input := {{ .SDKPackage }}.List{{ .ListResource }}sInput{
+			ParentId: parentID,
+		}
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
@@ -114,9 +141,10 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 				return
 			}
 
+			result := request.NewListResult(ctx)
 			var data {{ .ResourceLowerCamel }}ResourceModel
 	        {{ if .IncludeComments -}}
-	        // TIP: -- 4. Set the ID, arguments, and attributes
+	        // TIP: -- 5. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
 			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
@@ -127,7 +155,7 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 				}
 
 				{{ if .IncludeComments -}}
-				// TIP: -- 5. Set the display name
+				// TIP: -- 6. Set the display name
 				{{- end }}
 				name := aws.ToString(item.{{ .ListResource }}Id)
 				data.Name = fwflex.StringValueToFramework(ctx, name)
@@ -156,6 +184,11 @@ func (r *{{ .ListResourceLowerCamel }}ListResource) List(ctx context.Context, re
 {{- end }}
 type list{{ .ListResource }}Model struct {
 	framework.WithRegionModel
+	{{ if .InclueComments }}
+	// TIP: -- 1. Include required attributes
+	// If the resource type requires any attributes for listing, such as a parent ID, include them here.
+	{{ end }}
+	ParentID types.String `tfsdk:"parent_id"`
 }
 {{ if .IncludeComments }}
 // TIP: ==== LISTING FUNCTION ====
