@@ -1,6 +1,15 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_sns_topic_subscription" "test" {
+  count  = var.resource_count
+  region = var.region
+
+  topic_arn = aws_sns_topic.test.arn
+  protocol  = "sqs"
+  endpoint  = aws_sqs_queue.test[count.index].arn
+}
+
 resource "aws_sns_topic" "test" {
   region = var.region
 
@@ -14,15 +23,6 @@ resource "aws_sqs_queue" "test" {
   name = "${var.rName}-${count.index}"
 
   sqs_managed_sse_enabled = true
-}
-
-resource "aws_sns_topic_subscription" "test" {
-  count  = var.resource_count
-  region = var.region
-
-  topic_arn = aws_sns_topic.test.arn
-  protocol  = "sqs"
-  endpoint  = aws_sqs_queue.test[count.index].arn
 }
 
 variable "rName" {
