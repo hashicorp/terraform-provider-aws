@@ -361,17 +361,6 @@ func (r *resourceWebACLRule) Create(ctx context.Context, req resource.CreateRequ
 	state.WebACLARN = plan.WebACLARN
 	state.WithRegionModel = plan.WithRegionModel
 
-	// Handle override action separately since AutoFlex doesn't call custom Flattener
-	if createdRule.OverrideAction != nil {
-		var overrideActionModel webACLRuleOverrideActionModel
-		resp.Diagnostics.Append(overrideActionModel.Flatten(ctx, createdRule.OverrideAction)...)
-		if !resp.Diagnostics.HasError() {
-			state.OverrideAction, resp.Diagnostics = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleOverrideActionModel{&overrideActionModel}, nil)
-		}
-	} else {
-		state.OverrideAction = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOverrideActionModel](ctx)
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -424,17 +413,6 @@ func (r *resourceWebACLRule) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(flex.Flatten(ctx, foundRule, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	// Handle override action separately since AutoFlex might not handle it correctly
-	if foundRule.OverrideAction != nil {
-		var overrideActionModel webACLRuleOverrideActionModel
-		resp.Diagnostics.Append(overrideActionModel.Flatten(ctx, foundRule.OverrideAction)...)
-		if !resp.Diagnostics.HasError() {
-			state.OverrideAction, resp.Diagnostics = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleOverrideActionModel{&overrideActionModel}, nil)
-		}
-	} else {
-		state.OverrideAction = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOverrideActionModel](ctx)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
