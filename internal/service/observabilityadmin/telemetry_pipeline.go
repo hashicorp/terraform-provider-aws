@@ -296,7 +296,7 @@ func statusTelemetryPipeline(conn *observabilityadmin.Client, name string) retry
 	}
 }
 
-func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Client, name string, timeout time.Duration) (*awstypes.TelemetryPipeline, error) {
+func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Client, name string, timeout time.Duration) (*awstypes.TelemetryPipeline, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TelemetryPipelineStatusCreating, awstypes.TelemetryPipelineStatusUpdating),
 		Target:                    enum.Slice(awstypes.TelemetryPipelineStatusActive),
