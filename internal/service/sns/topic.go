@@ -314,25 +314,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	arn, err := arn.Parse(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	name := arn.Resource
-	d.Set(names.AttrName, name)
-	if d.Get("fifo_topic").(bool) {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
-	} else {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
-	}
-
-	return diags
+	return append(diags, resourceTopicFlatten(ctx, attributes, d)...)
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -523,4 +505,27 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	}
 
 	return output.Attributes, nil
+}
+
+func resourceTopicFlatten(_ context.Context, attributes map[string]string, d *schema.ResourceData) diag.Diagnostics {
+	var diags diag.Diagnostics
+	err := topicAttributeMap.APIAttributesToResourceData(attributes, d)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	arn, err := arn.Parse(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	name := arn.Resource
+	d.Set(names.AttrName, name)
+	if d.Get("fifo_topic").(bool) {
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
+	} else {
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
+	}
+
+	return diags
 }
