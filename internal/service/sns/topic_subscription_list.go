@@ -41,7 +41,7 @@ type topicSubscriptionListResourceModel struct {
 func (l *topicSubscriptionListResource) ListResourceConfigSchema(_ context.Context, _ list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
-			"topic_arn": listschema.StringAttribute{
+			names.AttrTopicARN: listschema.StringAttribute{
 				Required:    true,
 				Description: `The ARN of the SNS topic whose subscriptions to list.`,
 			},
