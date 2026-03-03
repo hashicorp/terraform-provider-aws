@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -100,11 +101,8 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 	destinationID := aws.ToString(output.DestinationId)
 	d.SetId(publishingDestinationCreateResourceID(detectorID, destinationID))
 
-	_, err = waitPublishingDestinationCreated(ctx, conn, destinationID, detectorID)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty PublishingDestination status to be \"%s\": %s",
-			string(awstypes.PublishingStatusPublishing), err)
+	if _, err := waitPublishingDestinationCreated(ctx, conn, detectorID, destinationID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Publishing Destination (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
@@ -244,6 +242,41 @@ func findPublishingDestination(ctx context.Context, conn *guardduty.Client, inpu
 	}
 
 	return output, nil
+}
+
+func statusPublishingDestination(conn *guardduty.Client, detectorID, destinationID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findPublishingDestinationByTwoPartKey(ctx, conn, detectorID, destinationID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.Client, detectorID, destinationID string) (*guardduty.DescribePublishingDestinationOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.PublishingStatusPendingVerification),
+		Target:  enum.Slice(awstypes.PublishingStatusPublishing),
+		Refresh: statusPublishingDestination(conn, detectorID, destinationID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*guardduty.DescribePublishingDestinationOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func publishingDestinationARN(ctx context.Context, c *conns.AWSClient, detectorID, destinationID string) string {

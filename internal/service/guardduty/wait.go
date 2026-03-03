@@ -20,9 +20,6 @@ const (
 	// Maximum amount of time to wait for an AdminAccount to return NotFound
 	adminAccountNotFoundTimeout = 5 * time.Minute
 
-	// Maximum amount of time to wait for a PublishingDestination to return Publishing
-	publishingDestinationCreatedTimeout = 5 * time.Minute
-
 	// Maximum amount of time to wait for membership to propagate
 	// When removing Organization Admin Accounts, there is eventual
 	// consistency even after the account is no longer listed.
@@ -62,24 +59,6 @@ func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, admin
 
 	if output, ok := outputRaw.(*awstypes.AdminAccount); ok {
 		return output, err
-	}
-
-	return nil, err
-}
-
-// waitPublishingDestinationCreated waits for GuardDuty to return Publishing
-func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.PublishingStatusPendingVerification),
-		Target:  enum.Slice(awstypes.PublishingStatusPublishing),
-		Refresh: statusPublishingDestination(conn, destinationID, detectorID),
-		Timeout: publishingDestinationCreatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*guardduty.CreatePublishingDestinationOutput); ok {
-		return v, err
 	}
 
 	return nil, err
