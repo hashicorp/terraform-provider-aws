@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 // @SDKListResource("aws_lb_listener_rule")
@@ -63,7 +62,6 @@ func (l *listenerRuleListResource) List(ctx context.Context, request list.ListRe
 	listenerARN := query.ListenerARN.ValueString()
 
 	logParams := map[string]any{
-		string(semconv.CloudRegionKey):        l.Meta().Region(ctx),
 		"tf_list.request.include_resource":    request.IncludeResource,
 		"tf_list.request.limit":               request.Limit,
 		"tf_list.request.config.listener_arn": listenerARN,
