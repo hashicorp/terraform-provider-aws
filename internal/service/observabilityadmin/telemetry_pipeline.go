@@ -5,11 +5,10 @@ package observabilityadmin
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -58,12 +56,6 @@ func (r *telemetryPipelineResource) Schema(ctx context.Context, request resource
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_timestamp": schema.Int64Attribute{
-				Computed: true,
-			},
-			"last_update_timestamp": schema.Int64Attribute{
-				Computed: true,
-			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -73,12 +65,6 @@ func (r *telemetryPipelineResource) Schema(ctx context.Context, request resource
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrStatusReason: schema.StringAttribute{
-				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -136,23 +122,9 @@ func (r *telemetryPipelineResource) Create(ctx context.Context, request resource
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
 
-	waitOutput, err := waitTelemetryPipelineReady(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts))
-	if err != nil {
+	if _, err := waitTelemetryPipelineReady(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
-	}
-
-	// Flatten the full Get output (from the waiter) into state, since Create only returns ARN.
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, waitOutput.Pipeline, &data))
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
-	if waitOutput.Pipeline.StatusReason != nil {
-		data.StatusReason = fwflex.StringToFramework(ctx, waitOutput.Pipeline.StatusReason.Description)
-	} else {
-		data.StatusReason = types.StringNull()
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, data))
@@ -180,17 +152,12 @@ func (r *telemetryPipelineResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Pipeline, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
-	if out.Pipeline.StatusReason != nil {
-		data.StatusReason = fwflex.StringToFramework(ctx, out.Pipeline.StatusReason.Description)
-	} else {
-		data.StatusReason = types.StringNull()
-	}
+	setTagsOut(ctx, out.Tags)
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
@@ -229,44 +196,9 @@ func (r *telemetryPipelineResource) Update(ctx context.Context, request resource
 		}
 
 		name := fwflex.StringValueFromFramework(ctx, new.Name)
-		waitOutput, err := waitTelemetryPipelineReady(ctx, conn, name, r.UpdateTimeout(ctx, new.Timeouts))
-		if err != nil {
+		if _, err := waitTelemetryPipelineReady(ctx, conn, name, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 			return
-		}
-
-		// Flatten the waiter output to populate computed fields.
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, waitOutput.Pipeline, &new))
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
-		if waitOutput.Pipeline.StatusReason != nil {
-			new.StatusReason = fwflex.StringToFramework(ctx, waitOutput.Pipeline.StatusReason.Description)
-		} else {
-			new.StatusReason = types.StringNull()
-		}
-	} else {
-		// Tags-only changes skip the block above, but the plan data still has
-		// Unknown computed fields. Re-read the resource to populate them.
-		name := fwflex.StringValueFromFramework(ctx, new.Name)
-		out, err := findTelemetryPipelineByName(ctx, conn, name)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-			return
-		}
-
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, out.Pipeline, &new))
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		// StatusReason is a struct in the SDK but a flat string in the TF model (autoflex:"-").
-		if out.Pipeline.StatusReason != nil {
-			new.StatusReason = fwflex.StringToFramework(ctx, out.Pipeline.StatusReason.Description)
-		} else {
-			new.StatusReason = types.StringNull()
 		}
 	}
 
@@ -286,13 +218,18 @@ func (r *telemetryPipelineResource) Delete(ctx context.Context, request resource
 	input := observabilityadmin.DeleteTelemetryPipelineInput{
 		PipelineIdentifier: aws.String(arn),
 	}
-
 	_, err := conn.DeleteTelemetryPipeline(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
+		return
+	}
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	if _, err := waitTelemetryPipelineDeleted(ctx, conn, name, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 }
@@ -303,33 +240,32 @@ func (r *telemetryPipelineResource) ImportState(ctx context.Context, request res
 
 type telemetryPipelineResourceModel struct {
 	framework.WithRegionModel
-	ARN                 types.String                                                         `tfsdk:"arn"`
-	Configuration       fwtypes.ListNestedObjectValueOf[telemetryPipelineConfigurationModel] `tfsdk:"configuration"`
-	CreatedTimestamp    types.Int64                                                          `tfsdk:"created_timestamp"`
-	LastUpdateTimestamp types.Int64                                                          `tfsdk:"last_update_timestamp"`
-	Name                types.String                                                         `tfsdk:"name"`
-	Status              types.String                                                         `tfsdk:"status"`
-	StatusReason        types.String                                                         `tfsdk:"status_reason" autoflex:"-"`
-	Tags                tftags.Map                                                           `tfsdk:"tags"`
-	TagsAll             tftags.Map                                                           `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value                                                       `tfsdk:"timeouts"`
+	ARN           types.String                                                         `tfsdk:"arn"`
+	Configuration fwtypes.ListNestedObjectValueOf[telemetryPipelineConfigurationModel] `tfsdk:"configuration"`
+	Name          types.String                                                         `tfsdk:"name"`
+	Tags          tftags.Map                                                           `tfsdk:"tags"`
+	TagsAll       tftags.Map                                                           `tfsdk:"tags_all"`
+	Timeouts      timeouts.Value                                                       `tfsdk:"timeouts"`
 }
 
 type telemetryPipelineConfigurationModel struct {
 	Body types.String `tfsdk:"body"`
 }
 
-func findTelemetryPipelineByName(ctx context.Context, conn *observabilityadmin.Client, name string) (*observabilityadmin.GetTelemetryPipelineOutput, error) {
+func findTelemetryPipelineByName(ctx context.Context, conn *observabilityadmin.Client, name string) (*awstypes.TelemetryPipeline, error) {
 	input := observabilityadmin.GetTelemetryPipelineInput{
 		PipelineIdentifier: aws.String(name),
 	}
 
-	output, err := conn.GetTelemetryPipeline(ctx, &input)
+	return findTelemetryPipeline(ctx, conn, &input)
+}
+
+func findTelemetryPipeline(ctx context.Context, conn *observabilityadmin.Client, input *observabilityadmin.GetTelemetryPipelineInput) (*awstypes.TelemetryPipeline, error) {
+	output, err := conn.GetTelemetryPipeline(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -341,7 +277,7 @@ func findTelemetryPipelineByName(ctx context.Context, conn *observabilityadmin.C
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output, nil
+	return output.Pipeline, nil
 }
 
 func statusTelemetryPipeline(conn *observabilityadmin.Client, name string) retry.StateRefreshFunc {
@@ -353,14 +289,14 @@ func statusTelemetryPipeline(conn *observabilityadmin.Client, name string) retry
 		}
 
 		if err != nil {
-			return nil, "", smarterr.NewError(err)
+			return nil, "", err
 		}
 
-		return output, string(output.Pipeline.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Client, name string, timeout time.Duration) (*observabilityadmin.GetTelemetryPipelineOutput, error) {
+func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Client, name string, timeout time.Duration) (*awstypes.TelemetryPipeline, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.TelemetryPipelineStatusCreating, awstypes.TelemetryPipelineStatusUpdating),
 		Target:                    enum.Slice(awstypes.TelemetryPipelineStatusActive),
@@ -370,13 +306,33 @@ func waitTelemetryPipelineReady(ctx context.Context, conn *observabilityadmin.Cl
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*observabilityadmin.GetTelemetryPipelineOutput); ok {
-		if out.Pipeline != nil && out.Pipeline.StatusReason != nil && out.Pipeline.StatusReason.Description != nil {
-			retry.SetLastError(err, fmt.Errorf("%s", aws.ToString(out.Pipeline.StatusReason.Description)))
+	if output, ok := outputRaw.(*awstypes.TelemetryPipeline); ok {
+		if v := output.StatusReason; v != nil && v.Description != nil {
+			retry.SetLastError(err, errors.New(aws.ToString(v.Description)))
 		}
 
-		return out, smarterr.NewError(err)
+		return output, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
+}
+
+func waitTelemetryPipelineDeleted(ctx context.Context, conn *observabilityadmin.Client, name string, timeout time.Duration) (*awstypes.TelemetryPipeline, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TelemetryPipelineStatusDeleting),
+		Target:  []string{},
+		Refresh: statusTelemetryPipeline(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.TelemetryPipeline); ok {
+		if v := output.StatusReason; v != nil && v.Description != nil {
+			retry.SetLastError(err, errors.New(aws.ToString(v.Description)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

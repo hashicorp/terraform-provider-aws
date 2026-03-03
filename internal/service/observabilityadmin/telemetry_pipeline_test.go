@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -41,7 +42,7 @@ func testAccTelemetryPipelinePreCheck(ctx context.Context, t *testing.T) {
 
 func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pipeline observabilityadmin.GetTelemetryPipelineOutput
+	var pipeline awstypes.TelemetryPipeline
 	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
@@ -67,7 +68,6 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("observabilityadmin", regexache.MustCompile(`telemetry-pipeline/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
 							"body": knownvalue.NotNull(),
@@ -89,7 +89,7 @@ func TestAccObservabilityAdminTelemetryPipeline_basic(t *testing.T) {
 
 func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pipeline observabilityadmin.GetTelemetryPipelineOutput
+	var pipeline awstypes.TelemetryPipeline
 	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
 	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
 
@@ -122,6 +122,138 @@ func TestAccObservabilityAdminTelemetryPipeline_disappears(t *testing.T) {
 	})
 }
 
+func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipeline awstypes.TelemetryPipeline
+	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccTelemetryPipelinePreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryPipelineConfig_vpcFlow(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"body": knownvalue.NotNull(),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTelemetryPipelineConfig_vpcFlowWithProcessor(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"body": knownvalue.NotNull(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pipeline awstypes.TelemetryPipeline
+	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
+	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccTelemetryPipelinePreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTelemetryPipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccTelemetryPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccTelemetryPipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTelemetryPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
@@ -148,7 +280,7 @@ func testAccCheckTelemetryPipelineDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckTelemetryPipelineExists(ctx context.Context, n string, v *observabilityadmin.GetTelemetryPipelineOutput) resource.TestCheckFunc {
+func testAccCheckTelemetryPipelineExists(ctx context.Context, n string, v *awstypes.TelemetryPipeline) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -243,63 +375,6 @@ resource "aws_observabilityadmin_telemetry_pipeline" "test" {
 `, rName))
 }
 
-func TestAccObservabilityAdminTelemetryPipeline_configurationUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	var pipeline observabilityadmin.GetTelemetryPipelineOutput
-	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
-	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccTelemetryPipelinePreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTelemetryPipelineConfig_vpcFlow(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"body": knownvalue.NotNull(),
-						}),
-					})),
-				},
-			},
-			{
-				Config: testAccTelemetryPipelineConfig_vpcFlowWithProcessor(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"body": knownvalue.NotNull(),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
-				},
-			},
-		},
-	})
-}
-
 func testAccTelemetryPipelineConfig_vpcFlow(rName string) string {
 	return acctest.ConfigCompose(testAccTelemetryPipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_pipeline" "test" {
@@ -373,81 +448,6 @@ resource "aws_observabilityadmin_telemetry_pipeline" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
-}
-
-func TestAccObservabilityAdminTelemetryPipeline_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var pipeline observabilityadmin.GetTelemetryPipelineOutput
-	rName := fmt.Sprintf("tf-acc-%s", sdkacctest.RandStringFromCharSet(20, sdkacctest.CharSetAlpha))
-	resourceName := "aws_observabilityadmin_telemetry_pipeline.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccTelemetryPipelinePreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTelemetryPipelineDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTelemetryPipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-					})),
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
-				ImportStateVerifyIdentifierAttribute: names.AttrName,
-			},
-			{
-				Config: testAccTelemetryPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-			{
-				Config: testAccTelemetryPipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTelemetryPipelineExists(ctx, resourceName, &pipeline),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-					})),
-				},
-			},
-		},
-	})
 }
 
 func testAccTelemetryPipelineConfig_tags1(rName, tag1Key, tag1Value string) string {

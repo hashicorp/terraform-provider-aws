@@ -151,10 +151,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the telemetry pipeline.
-* `created_timestamp` - Unix epoch timestamp (in seconds) when the pipeline was created.
-* `last_update_timestamp` - Unix epoch timestamp (in seconds) when the pipeline was last updated.
-* `status` - Current status of the pipeline (e.g., `CREATING`, `ACTIVE`, `UPDATING`, `DELETING`).
-* `status_reason` - Description of the reason for the current status, if available.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
