@@ -45,7 +45,7 @@ func TestAccCleanRoomsMembership_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -89,7 +89,7 @@ func TestAccCleanRoomsMembership_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -137,7 +137,7 @@ func TestAccCleanRoomsMembership_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -178,7 +178,7 @@ func TestAccCleanRoomsMembership_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -231,7 +231,7 @@ func TestAccCleanRoomsMembership_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -295,7 +295,7 @@ func TestAccCleanRoomsMembership_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -349,7 +349,7 @@ func TestAccCleanRoomsMembership_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -372,7 +372,7 @@ func TestAccCleanRoomsMembership_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -435,7 +435,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -476,7 +476,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -529,7 +529,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -561,7 +561,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -609,7 +609,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -672,7 +672,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -703,7 +703,7 @@ func TestAccCleanRoomsMembership_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -767,7 +767,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -811,7 +811,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -857,7 +857,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -897,7 +897,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -954,7 +954,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1008,7 +1008,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1061,7 +1061,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1118,7 +1118,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1171,7 +1171,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1228,7 +1228,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1295,7 +1295,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_updateToProviderOnly(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1328,7 +1328,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1390,7 +1390,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1418,7 +1418,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_updateToResourceOnly(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1485,7 +1485,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1553,7 +1553,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1617,7 +1617,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_nullOverlappingResourceTag(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1690,7 +1690,7 @@ func TestAccCleanRoomsMembership_Tags_DefaultTags_nullNonOverlappingResourceTag(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1760,7 +1760,7 @@ func TestAccCleanRoomsMembership_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1821,7 +1821,7 @@ func TestAccCleanRoomsMembership_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1853,7 +1853,7 @@ func TestAccCleanRoomsMembership_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1922,7 +1922,7 @@ func TestAccCleanRoomsMembership_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1952,7 +1952,7 @@ func TestAccCleanRoomsMembership_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2020,7 +2020,7 @@ func TestAccCleanRoomsMembership_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2069,7 +2069,7 @@ func TestAccCleanRoomsMembership_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2118,7 +2118,7 @@ func TestAccCleanRoomsMembership_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2184,7 +2184,7 @@ func TestAccCleanRoomsMembership_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2242,7 +2242,7 @@ func TestAccCleanRoomsMembership_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2299,7 +2299,7 @@ func TestAccCleanRoomsMembership_Tags_IgnoreTags_Overlap_resourceTag(t *testing.
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMembershipExists(ctx, resourceName, &v),
+					testAccCheckMembershipExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
