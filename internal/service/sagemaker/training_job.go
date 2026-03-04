@@ -225,10 +225,10 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"debug_rule_configurations":    debugRuleConfigurationsBlock(ctx),
 			"experiment_config":            experimentConfigBlock(),
 			"infra_check_config":           infraCheckConfigBlock(),
-			"input_data_config":            inputDataConfigBlock(ctx), // marker for tarun
+			"input_data_config":            inputDataConfigBlock(ctx),
 			"mlflow_config":                mlflowConfigBlock(),
 			"model_package_config":         modelPackageConfigBlock(),
-			"output_data_config":           outputDataConfigBlock(ctx),
+			"output_data_config":           outputDataConfigBlock(ctx), // marker for tarun
 			"profiler_config":              profilerConfigBlock(),
 			"profiler_rule_configurations": profilerRuleConfigurationsBlock(),
 			"remote_debug_config":          remoteDebugConfigBlock(),
@@ -824,9 +824,34 @@ func mlflowConfigBlock() schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"mlflow_experiment_name": schema.StringAttribute{Optional: true},
-				"mlflow_resource_arn":    schema.StringAttribute{Optional: true},
-				"mlflow_run_name":        schema.StringAttribute{Optional: true},
+				"mlflow_experiment_name": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"mlflow_resource_arn": schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 2048),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"mlflow_run_name": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 			},
 		},
 	}
@@ -839,8 +864,28 @@ func modelPackageConfigBlock() schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"model_package_group_arn":  schema.StringAttribute{Optional: true},
-				"source_model_package_arn": schema.StringAttribute{Optional: true},
+				"model_package_group_arn": schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package-group/[\S]{1,2048}`), "must be a valid model package group ARN"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"source_model_package_arn": schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Optional:   true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package/[\S]{1,2048}`), "must be a valid source model package ARN"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 			},
 		},
 	}
@@ -854,9 +899,33 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"compression_type": schema.StringAttribute{Optional: true},
-				"kms_key_id":       schema.StringAttribute{Optional: true},
-				"s3_output_path":   schema.StringAttribute{Optional: true},
+				"compression_type": schema.StringAttribute{
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"kms_key_id": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 2048),
+						stringvalidator.RegexMatches(regexp.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_output_path": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 1024),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 			},
 		},
 	}
