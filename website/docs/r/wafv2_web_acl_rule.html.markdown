@@ -368,8 +368,12 @@ Exactly one of the following statement blocks must be specified:
 
 #### Rate Based Statement
 
-* `limit` - (Required) Rate limit threshold (requests per 5-minute period).
+* `limit` - (Required) Rate limit threshold (requests per evaluation window period).
 * `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Defaults to `IP`. Valid values: `IP`, `FORWARDED_IP`, `CUSTOM_KEYS`, `CONSTANT`.
+* `custom_keys` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [Custom Keys](#custom-keys) below.
+* `evaluation_window_sec` - (Optional) Time window for which the rate limit applies, in seconds. Defaults to `300` (5 minutes). Valid values: `60`, `120`, `300`, `600`.
+* `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header instead of using the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below.
+* `scope_down_statement` - (Optional) Additional statement to narrow the scope of requests that the rate-based rule evaluates. See [Scope Down Statement](#scope-down-statement) below.
 
 ### Override Action
 
@@ -447,6 +451,39 @@ Exactly one of the following scope down statement blocks must be specified:
 * `size_constraint_statement` - (Optional) Match requests based on size constraints. See [Size Constraint Statement](#size-constraint-statement) above.
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks.
+
+### Custom Keys
+
+Exactly one of the following custom key blocks must be specified:
+
+* `cookie` - (Optional) Use a cookie as an aggregate key. See [Custom Key Cookie](#custom-key-cookie) below.
+* `forwarded_ip` - (Optional) Use the forwarded IP address as an aggregate key.
+* `header` - (Optional) Use a header as an aggregate key. See [Custom Key Header](#custom-key-header) below.
+* `http_method` - (Optional) Use the HTTP method as an aggregate key.
+* `ip` - (Optional) Use the IP address as an aggregate key.
+* `label_namespace` - (Optional) Use a label namespace as an aggregate key. See [Custom Key Label Namespace](#custom-key-label-namespace) below.
+* `query_argument` - (Optional) Use a query argument as an aggregate key. See [Custom Key Query Argument](#custom-key-query-argument) below.
+* `query_string` - (Optional) Use the query string as an aggregate key.
+* `uri_path` - (Optional) Use the URI path as an aggregate key.
+
+#### Custom Key Cookie
+
+* `name` - (Required) Name of the cookie.
+* `text_transformation` - (Required) Text transformations to apply to the cookie value. See [Text Transformation](#text-transformation) above.
+
+#### Custom Key Header
+
+* `name` - (Required) Name of the header.
+* `text_transformation` - (Required) Text transformations to apply to the header value. See [Text Transformation](#text-transformation) above.
+
+#### Custom Key Label Namespace
+
+* `namespace` - (Required) Label namespace to use as the custom key.
+
+#### Custom Key Query Argument
+
+* `name` - (Required) Name of the query argument.
+* `text_transformation` - (Required) Text transformations to apply to the query argument value. See [Text Transformation](#text-transformation) above.
 
 ## Import
 
