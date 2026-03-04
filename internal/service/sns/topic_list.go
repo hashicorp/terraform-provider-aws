@@ -67,7 +67,7 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 
 			rd := l.ResourceData()
 			rd.SetId(topicARN)
-			rd.Set(names.AttrARN, topicARN) //nolint:errcheck
+			rd.Set(names.AttrARN, topicARN)
 
 			if request.IncludeResource {
 				attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, topicARN)
