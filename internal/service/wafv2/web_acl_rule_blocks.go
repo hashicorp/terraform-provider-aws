@@ -29,18 +29,18 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),                 //
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),                //
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),                 //
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),           //
-				"label_match_statement":                 labelMatchStatementBlock(ctx),               //
-				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),         //
-				"rate_based_statement":                  rateBasedStatementBlock(ctx),                //
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),               //
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx), //
-				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),       //
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),           //
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),                //
+				"asn_match_statement":                   asnMatchStatementBlock(ctx),
+				"byte_match_statement":                  byteMatchStatementBlock(ctx),
+				"geo_match_statement":                   geoMatchStatementBlock(ctx),
+				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+				"label_match_statement":                 labelMatchStatementBlock(ctx),
+				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
+				"rate_based_statement":                  rateBasedStatementBlock(ctx),
+				"regex_match_statement":                 regexMatchStatementBlock(ctx),
+				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
+				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 				"xss_match_statement":                   xssMatchStatementBlock(ctx),
 			},
 		},
