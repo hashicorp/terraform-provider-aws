@@ -307,15 +307,28 @@ One of the following action blocks must be specified:
 
 Exactly one of the following statement blocks must be specified:
 
-* `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) below.
-* `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) below.
-* `rule_group_reference_statement` - (Optional) Reference to a rule group. See [Rule Group Reference Statement](#rule-group-reference-statement) below.
-* `managed_rule_group_statement` - (Optional) Reference to a managed rule group. See [Managed Rule Group Statement](#managed-rule-group-statement) below.
-* `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
-* `rate_based_statement` - (Optional) Rate-based rule to track request rates. See [Rate Based Statement](#rate-based-statement) below.
+* `asn_match_statement` - (Optional) Match requests based on Autonomous System Number (ASN). See [ASN Match Statement](#asn-match-statement) below.
 * `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) below.
+* `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) below.
+* `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) below.
+* `managed_rule_group_statement` - (Optional) Reference to a managed rule group. See [Managed Rule Group Statement](#managed-rule-group-statement) below.
+* `rate_based_statement` - (Optional) Rate-based rule to track request rates. See [Rate Based Statement](#rate-based-statement) below.
+* `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
+* `rule_group_reference_statement` - (Optional) Reference to a rule group. See [Rule Group Reference Statement](#rule-group-reference-statement) below.
 
-#### IP Set Reference Statement
+#### ASN Match Statement
+
+* `asn_list` - (Required) List of Autonomous System Numbers (ASNs) to match against. ASNs are unique identifiers assigned to large internet networks managed by organizations such as internet service providers, enterprises, universities, or government agencies.
+* `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header instead of using the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below.
+
+#### Byte Match Statement
+
+* `search_string` - (Required) String value to search for within the request (1-200 characters).
+* `positional_constraint` - (Required) Area within the portion of the web request that you want WAF to search for `search_string`. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
+* `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
+
+#### Geo Match Statement
 
 * `arn` - (Required) ARN of the IP set to reference.
 * `ip_set_forwarded_ip_config` - (Optional) Configuration for inspecting forwarded IP headers. See [IP Set Forwarded IP Config](#ip-set-forwarded-ip-config) below.

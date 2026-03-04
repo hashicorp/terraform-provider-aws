@@ -38,7 +38,7 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 				"regex_match_statement":                 regexMatchStatementBlock(ctx),               //
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx), //
 				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),       //
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),//
 				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 				"xss_match_statement":                   xssMatchStatementBlock(ctx),
 			},
