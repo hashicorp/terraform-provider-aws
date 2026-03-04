@@ -115,7 +115,7 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 	c := meta.(*conns.AWSClient)
 	conn := c.GuardDutyClient(ctx)
 
-	threatIntelSetID, detectorID, err := threatIntelSetParseResourceID(d.Id())
+	detectorID, threatIntelSetID, err := threatIntelSetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -148,7 +148,7 @@ func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		threatIntelSetID, detectorID, err := threatIntelSetParseResourceID(d.Id())
+		detectorID, threatIntelSetID, err := threatIntelSetParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -181,7 +181,7 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	threatIntelSetID, detectorID, err := threatIntelSetParseResourceID(d.Id())
+	detectorID, threatIntelSetID, err := threatIntelSetParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
