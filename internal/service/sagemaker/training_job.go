@@ -970,29 +970,54 @@ func profilerConfigBlock() schema.Block {
 
 func profilerRuleConfigurationsBlock() schema.Block {
 	return schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeBetween(0, 20),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"instance_type": schema.StringAttribute{
-					Optional: true,
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.ProcessingInstanceType](),
 				},
 				"local_path": schema.StringAttribute{
 					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 4096),
+					},
 				},
 				"rule_configuration_name": schema.StringAttribute{
-					Optional: true,
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
 				},
 				"rule_evaluator_image": schema.StringAttribute{
-					Optional: true,
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 255),
+					},
 				},
 				"rule_parameters": schema.MapAttribute{
 					ElementType: types.StringType,
 					Optional:    true,
+					Validators: []validator.Map{
+						mapvalidator.SizeBetween(0, 100),
+						mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 256)),
+						mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 256)),
+					},
 				},
 				"s3_output_path": schema.StringAttribute{
 					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 1024),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+					},
 				},
 				"volume_size_in_gb": schema.Int64Attribute{
 					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(0),
+					},
 				},
 			},
 		},
