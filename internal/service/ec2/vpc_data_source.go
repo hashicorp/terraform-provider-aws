@@ -20,6 +20,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/sync/errgroup"
 )
 
 // @SDKDataSource("aws_vpc", name="VPC")
@@ -174,30 +175,60 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
-	} else {
-		d.Set("enable_dns_hostnames", v)
+	var (
+		enableDnsHostnames bool
+		enableDnsSupport   bool
+		enableNAUMetrics   bool
+		mainRouteTableID   *string
+	)
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames)
+		if err != nil {
+			return err
+		}
+		enableDnsHostnames = v
+		return nil
+	})
+
+	g.Go(func() error {
+		v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport)
+		if err != nil {
+			return err
+		}
+		enableDnsSupport = v
+		return nil
+	})
+
+	g.Go(func() error {
+		v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+		if err != nil {
+			return err
+		}
+		enableNAUMetrics = v
+		return nil
+	})
+
+	g.Go(func() error {
+		v, err := findVPCMainRouteTable(ctx, conn, d.Id())
+		if err != nil {
+			log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
+			return nil
+		}
+		mainRouteTableID = v.RouteTableId
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) attributes: %s", d.Id(), err)
 	}
 
-	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
-	} else {
-		d.Set("enable_dns_support", v)
-	}
-
-	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
-	} else {
-		d.Set("enable_network_address_usage_metrics", v)
-	}
-
-	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
-		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
-		d.Set("main_route_table_id", nil)
-	} else {
-		d.Set("main_route_table_id", v.RouteTableId)
-	}
+	d.Set("enable_dns_hostnames", enableDnsHostnames)
+	d.Set("enable_dns_support", enableDnsSupport)
+	d.Set("enable_network_address_usage_metrics", enableNAUMetrics)
+	d.Set("main_route_table_id", mainRouteTableID)
 
 	cidrAssociations := []any{}
 	for _, v := range vpc.CidrBlockAssociationSet {
