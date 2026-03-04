@@ -254,3 +254,19 @@ func statusHub(conn *sagemaker.Client, name string) retry.StateRefreshFunc {
 		return output, string(output.HubStatus), nil
 	}
 }
+
+func statusMlflowApp(conn *sagemaker.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findMlflowAppByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}

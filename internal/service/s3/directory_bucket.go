@@ -211,7 +211,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 		return
 	}
 
-	flattenDirectoryBucketResource(ctx, output, &data, &response.Diagnostics)
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -219,10 +219,10 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func flattenDirectoryBucketResource(ctx context.Context, bucket *s3.HeadBucketOutput, data *directoryBucketResourceModel, diags *diag.Diagnostics) {
+func (r *directoryBucketResource) flatten(ctx context.Context, bucket *s3.HeadBucketOutput, data *directoryBucketResourceModel) (diags diag.Diagnostics) {
 	diags.Append(fwflex.Flatten(ctx, bucket, data, fwflex.WithFieldNamePrefix("Bucket"))...)
 	if diags.HasError() {
-		return
+		return diags
 	}
 	data.DataRedundancy = fwtypes.StringEnumValue(defaultDirectoryBucketDataRedundancy(bucket.BucketLocationType))
 	data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
@@ -230,6 +230,8 @@ func flattenDirectoryBucketResource(ctx context.Context, bucket *s3.HeadBucketOu
 		Type: fwtypes.StringEnumValue(bucket.BucketLocationType),
 	})
 	data.Type = fwtypes.StringEnumValue(awstypes.BucketTypeDirectory)
+
+	return diags
 }
 
 func (r *directoryBucketResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

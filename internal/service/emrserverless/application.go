@@ -179,6 +179,21 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"job_level_cost_allocation_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maximum_capacity": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -441,6 +456,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("job_level_cost_allocation_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.JobLevelCostAllocationConfiguration = expandJobLevelCostAllocationConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.MaximumCapacity = expandMaximumCapacity(v.([]any)[0].(map[string]any))
 	}
@@ -518,6 +537,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "setting interactive_configuration: %s", err)
 	}
 
+	if err := d.Set("job_level_cost_allocation_configuration", []any{flattenJobLevelCostAllocationConfiguration(application.JobLevelCostAllocationConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting job_level_cost_allocation_configuration: %s", err)
+	}
+
 	if err := d.Set("maximum_capacity", []any{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
@@ -575,6 +598,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("job_level_cost_allocation_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.JobLevelCostAllocationConfiguration = expandJobLevelCostAllocationConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -836,6 +863,34 @@ func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) 
 
 	if v := apiObject.StudioEnabled; v != nil {
 		tfMap["studio_enabled"] = aws.ToBool(v)
+	}
+
+	return tfMap
+}
+
+func expandJobLevelCostAllocationConfiguration(tfMap map[string]any) *types.JobLevelCostAllocationConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.JobLevelCostAllocationConfiguration{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenJobLevelCostAllocationConfiguration(apiObject *types.JobLevelCostAllocationConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap

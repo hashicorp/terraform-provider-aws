@@ -1591,113 +1591,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, service.ServiceArn)
-	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
-	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
-	}
-	// Save cluster in the same format.
-	if arn.IsARN(cluster) {
-		d.Set("cluster", service.ClusterArn)
-	} else {
-		d.Set("cluster", clusterNameFromARN(aws.ToString(service.ClusterArn)))
-	}
-	if service.DeploymentConfiguration != nil {
-		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
-		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
-
-		if service.DeploymentConfiguration.Alarms != nil {
-			if err := d.Set("alarms", []any{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting alarms: %s", err)
-			}
-		} else {
-			d.Set("alarms", nil)
-		}
-
-		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
-			if err := d.Set("deployment_circuit_breaker", []any{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
-			}
-		} else {
-			d.Set("deployment_circuit_breaker", nil)
-		}
-
-		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
-		}
-	}
-	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
-	}
-	d.Set("desired_count", service.DesiredCount)
-	d.Set("enable_execute_command", service.EnableExecuteCommand)
-	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
-	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
-	// Save IAM role in the same format.
-	if service.RoleArn != nil {
-		if arn.IsARN(d.Get("iam_role").(string)) {
-			d.Set("iam_role", service.RoleArn)
-		} else {
-			d.Set("iam_role", roleNameFromARN(aws.ToString(service.RoleArn)))
-		}
-	}
-	d.Set("launch_type", service.LaunchType)
-	if service.LoadBalancers != nil {
-		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
-		}
-	}
-	d.Set(names.AttrName, service.ServiceName)
-	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
-	}
-	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
-	}
-	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
-	}
-	d.Set("platform_version", service.PlatformVersion)
-	d.Set(names.AttrPropagateTags, service.PropagateTags)
-	d.Set("scheduling_strategy", service.SchedulingStrategy)
-	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
-	}
-	// When creating a service that uses the EXTERNAL deployment controller,
-	// you can specify only parameters that aren't controlled at the task set level
-	// hence TaskDefinition will not be set by aws sdk
-	if service.TaskDefinition != nil {
-		// Save task definition in the same format.
-		if arn.IsARN(d.Get("task_definition").(string)) {
-			d.Set("task_definition", service.TaskDefinition)
-		} else {
-			d.Set("task_definition", familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
-		}
-	}
-	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
-	for _, deployment := range service.Deployments {
-		if aws.ToString(deployment.Status) == "PRIMARY" {
-			if v := deployment.ServiceConnectConfiguration; v != nil {
-				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(v)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
-				}
-			} else {
-				d.Set("service_connect_configuration", nil)
-			}
-			if v := deployment.VolumeConfigurations; len(v) > 0 {
-				if err := d.Set("volume_configuration", flattenServiceVolumeConfigurations(ctx, v)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
-				}
-			}
-			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
-			}
-		}
-	}
-
-	setTagsOut(ctx, service.Tags)
-
-	return diags
+	return append(diags, resourceServiceFlatten(ctx, d, service, cluster)...)
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -3856,6 +3750,118 @@ func flattenServiceRegistries(apiObjects []awstypes.ServiceRegistry) []any {
 	}
 
 	return tfList
+}
+
+func resourceServiceFlatten(ctx context.Context, d *schema.ResourceData, service *awstypes.Service, cluster string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	d.Set(names.AttrARN, service.ServiceArn)
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
+	}
+	// Save cluster in the same format.
+	if arn.IsARN(cluster) {
+		d.Set("cluster", service.ClusterArn)
+	} else {
+		d.Set("cluster", clusterNameFromARN(aws.ToString(service.ClusterArn)))
+	}
+	if service.DeploymentConfiguration != nil {
+		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
+		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
+
+		if service.DeploymentConfiguration.Alarms != nil {
+			if err := d.Set("alarms", []any{flattenAlarms(service.DeploymentConfiguration.Alarms)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting alarms: %s", err)
+			}
+		} else {
+			d.Set("alarms", nil)
+		}
+
+		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
+			if err := d.Set("deployment_circuit_breaker", []any{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
+			}
+		} else {
+			d.Set("deployment_circuit_breaker", nil)
+		}
+
+		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
+		}
+	}
+	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
+	}
+	d.Set("desired_count", service.DesiredCount)
+	d.Set("enable_execute_command", service.EnableExecuteCommand)
+	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
+	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
+	// Save IAM role in the same format.
+	if service.RoleArn != nil {
+		if arn.IsARN(d.Get("iam_role").(string)) {
+			d.Set("iam_role", service.RoleArn)
+		} else {
+			d.Set("iam_role", roleNameFromARN(aws.ToString(service.RoleArn)))
+		}
+	}
+	d.Set("launch_type", service.LaunchType)
+	if service.LoadBalancers != nil {
+		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
+		}
+	}
+	d.Set(names.AttrName, service.ServiceName)
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
+	}
+	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
+	}
+	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
+	}
+	d.Set("platform_version", service.PlatformVersion)
+	d.Set(names.AttrPropagateTags, service.PropagateTags)
+	d.Set("scheduling_strategy", service.SchedulingStrategy)
+	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
+	}
+	// When creating a service that uses the EXTERNAL deployment controller,
+	// you can specify only parameters that aren't controlled at the task set level
+	// hence TaskDefinition will not be set by aws sdk
+	if service.TaskDefinition != nil {
+		// Save task definition in the same format.
+		if arn.IsARN(d.Get("task_definition").(string)) {
+			d.Set("task_definition", service.TaskDefinition)
+		} else {
+			d.Set("task_definition", familyAndRevisionFromTaskDefinitionARN(aws.ToString(service.TaskDefinition)))
+		}
+	}
+	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
+	for _, deployment := range service.Deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			if v := deployment.ServiceConnectConfiguration; v != nil {
+				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(v)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
+				}
+			} else {
+				d.Set("service_connect_configuration", nil)
+			}
+			if v := deployment.VolumeConfigurations; len(v) > 0 {
+				if err := d.Set("volume_configuration", flattenServiceVolumeConfigurations(ctx, v)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting volume_configurations: %s", err)
+				}
+			}
+			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
+			}
+		}
+	}
+
+	setTagsOut(ctx, service.Tags)
+
+	return diags
 }
 
 func familyAndRevisionFromTaskDefinitionARN(arn string) string {
