@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.13
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.38.14
-	github.com/aws/aws-sdk-go-v2/service/dlm v1.35.13
+	github.com/aws/aws-sdk-go-v2/service/dlm v1.35.14
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.48.10
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/drs v1.36.10
