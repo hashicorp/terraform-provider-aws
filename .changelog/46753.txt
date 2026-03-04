@@ -1,0 +1,4 @@
+```release-note:enhancement
+:enhancement
+data-source/aws_vpc: Improve performance by parallelizing API calls
+```
