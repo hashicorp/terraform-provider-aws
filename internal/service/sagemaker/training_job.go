@@ -938,13 +938,31 @@ func profilerConfigBlock() schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"disable_profiler":                   schema.BoolAttribute{Optional: true},
-				"profiling_interval_in_milliseconds": schema.Int64Attribute{Optional: true},
+				"disable_profiler": schema.BoolAttribute{
+					Optional: true,
+				},
+				"profiling_interval_in_milliseconds": schema.Int64Attribute{
+					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.OneOf(100, 200, 500, 1000, 5000, 60000),
+					},
+				},
 				"profiling_parameters": schema.MapAttribute{
 					ElementType: types.StringType,
 					Optional:    true,
+					Validators: []validator.Map{
+						mapvalidator.SizeBetween(0, 20),
+						mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 256)),
+						mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 256)),
+					},
 				},
-				"s3_output_path": schema.StringAttribute{Optional: true},
+				"s3_output_path": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 1024),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+					},
+				},
 			},
 		},
 	}
