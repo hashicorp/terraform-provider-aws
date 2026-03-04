@@ -6,7 +6,6 @@ package elbv2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -47,40 +46,60 @@ func (l *listResourceTargetGroup) List(ctx context.Context, request list.ListReq
 	tflog.Info(ctx, "Listing ELB Target Group")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input elasticloadbalancingv2.DescribeTargetGroupsInput
-		for item, err := range listTargetGroups(ctx, conn, &input) {
+		pages := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ELB Target Group resources: %w", err))
 				yield(result)
 				return
 			}
 
-			arn := aws.ToString(item.TargetGroupArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			rd.Set(names.AttrARN, arn)
-
+			var tags map[string][]awstypes.Tag
 			if request.IncludeResource {
-				if err := resourceTargetGroupFlatten(ctx, l.Meta(), &item, rd); err != nil {
-					tflog.Error(ctx, "Reading ELB Target Group", map[string]any{
-						"error": err.Error(),
-					})
-					continue
+				arns := make([]string, len(page.TargetGroups))
+				for i, tg := range page.TargetGroups {
+					arns[i] = aws.ToString(tg.TargetGroupArn)
+				}
+
+				tags, err = batchListTags(ctx, conn, arns)
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ELB Target Group resource tags: %w", err))
+					yield(result)
+					return
 				}
 			}
 
-			result.DisplayName = aws.ToString(item.TargetGroupName)
+			for _, item := range page.TargetGroups {
+				arn := aws.ToString(item.TargetGroupArn)
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
+				result := request.NewListResult(ctx)
+				rd := l.ResourceData()
+				rd.SetId(arn)
+				rd.Set(names.AttrARN, arn)
 
-			if !yield(result) {
-				return
+				if request.IncludeResource {
+					setTagsOut(ctx, tags[arn])
+					if err := resourceTargetGroupFlatten(ctx, l.Meta(), &item, rd); err != nil {
+						tflog.Error(ctx, "Reading ELB Target Group", map[string]any{
+							"error": err.Error(),
+						})
+						continue
+					}
+				}
+
+				result.DisplayName = aws.ToString(item.TargetGroupName)
+
+				l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
 			}
 		}
 	}
@@ -88,23 +107,4 @@ func (l *listResourceTargetGroup) List(ctx context.Context, request list.ListReq
 
 type listTargetGroupModel struct {
 	framework.WithRegionModel
-}
-
-func listTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetGroupsInput) iter.Seq2[awstypes.TargetGroup, error] {
-	return func(yield func(awstypes.TargetGroup, error) bool) {
-		pages := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.TargetGroup{}, fmt.Errorf("listing ELB Target Group resources: %w", err))
-				return
-			}
-
-			for _, item := range page.TargetGroups {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
 }
