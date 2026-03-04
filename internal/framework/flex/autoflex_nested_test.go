@@ -470,7 +470,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandListOfNestedObjectField(t *testing.T) {
