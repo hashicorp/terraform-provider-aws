@@ -4,18 +4,6 @@
 package sagemaker
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/sagemaker/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"regexp"
@@ -55,17 +43,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_sagemaker_training_job", name="Training Job")
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
@@ -91,54 +68,11 @@ type resourceTrainingJob struct {
 	framework.WithTimeouts
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -1399,7 +1333,7 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	out, err := findTrainingJobByID(ctx, conn, state.ID.ValueString())
+	out, err := findTrainingJobByName(ctx, conn, state.TrainingJobName.String())
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -1421,26 +1355,6 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
 
 	conn := r.Meta().SageMakerClient(ctx)
 
@@ -1475,7 +1389,13 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+		fullOut, err := findTrainingJobByName(ctx, conn, plan.TrainingJobName.String())
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, fullOut, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -1492,42 +1412,23 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 }
 
 func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Populate a delete input structure
-	// 4. Call the AWS delete function
-	// 5. Use a waiter to wait for delete to complete
-	// TIP: -- 1. Get a client connection to the relevant service
+
 	conn := r.Meta().SageMakerClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceTrainingJobModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	input := sagemaker.DeleteTrainingJobInput{
-		TrainingJobId: state.ID.ValueStringPointer(),
+		TrainingJobName: state.TrainingJobName.ValueStringPointer(),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteTrainingJob(ctx, &input)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.Contains(err, "ResourceNotFound") {
 			return
 		}
 
@@ -1535,7 +1436,6 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitTrainingJobDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
@@ -1555,17 +1455,6 @@ func (r *resourceTrainingJob) ImportState(ctx context.Context, req resource.Impo
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-// TIP: ==== STATUS CONSTANTS ====
-// Create constants for states and statuses if the service does not
-// already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., awstypes.StatusInProgress).
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
 // TIP: ==== WAITERS ====
 // Some resources of some services have waiters provided by the AWS API.
 // Unless they do not work properly, use them rather than defining new ones
@@ -1579,10 +1468,10 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*awstypes.TrainingJob, error) {
+func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
+		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
+		Target:                    []string{string(awstypes.TrainingJobStatusCompleted), string(awstypes.TrainingJobStatusStopped)},
 		Refresh:                   statusTrainingJob(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -1590,7 +1479,7 @@ func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id stri
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TrainingJob); ok {
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -1601,10 +1490,10 @@ func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id stri
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*awstypes.TrainingJob, error) {
+func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
+		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
+		Target:                    []string{string(awstypes.TrainingJobStatusCompleted), string(awstypes.TrainingJobStatusStopped)},
 		Refresh:                   statusTrainingJob(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -1612,7 +1501,7 @@ func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id stri
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TrainingJob); ok {
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -1621,16 +1510,16 @@ func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id stri
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
-func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*awstypes.TrainingJob, error) {
+func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: []string{string(awstypes.TrainingJobStatusDeleting), string(awstypes.TrainingJobStatusInProgress), string(awstypes.TrainingJobStatusStopping)},
 		Target:  []string{},
 		Refresh: statusTrainingJob(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.TrainingJob); ok {
+	if out, ok := outputRaw.(*sagemaker.DescribeTrainingJobOutput); ok {
 		return out, smarterr.NewError(err)
 	}
 
@@ -1646,7 +1535,7 @@ func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id stri
 // that it can be reused by a create, update, and delete waiter, if possible.
 func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		out, err := findTrainingJobByID(ctx, conn, id)
+		out, err := findTrainingJobByName(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -1655,7 +1544,7 @@ func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc
 			return nil, "", smarterr.NewError(err)
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.TrainingJobStatus), nil
 	}
 }
 
@@ -1664,14 +1553,14 @@ func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc
 // request from the status function. However, we have found that find often
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
-func findTrainingJobByID(ctx context.Context, conn *sagemaker.Client, id string) (*awstypes.TrainingJob, error) {
-	input := sagemaker.GetTrainingJobInput{
-		Id: aws.String(id),
+func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id string) (*sagemaker.DescribeTrainingJobOutput, error) {
+	input := sagemaker.DescribeTrainingJobInput{
+		TrainingJobName: aws.String(id),
 	}
 
-	out, err := conn.GetTrainingJob(ctx, &input)
+	out, err := conn.DescribeTrainingJob(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.Contains(err, "ResourceNotFound") {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -1680,11 +1569,11 @@ func findTrainingJobByID(ctx context.Context, conn *sagemaker.Client, id string)
 		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil || out.TrainingJob == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+	if out == nil || out.TrainingJobArn == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	return out.TrainingJob, nil
+	return out, nil
 }
 
 // TIP: ==== DATA STRUCTURES ====
@@ -1701,23 +1590,36 @@ func findTrainingJobByID(ctx context.Context, conn *sagemaker.Client, id string)
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTrainingJobModel struct {
 	framework.WithRegionModel
-	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel] `tfsdk:"algorithm_specification"`
-	ARN                                   types.String                                                            `tfsdk:"arn"`
-	DebugRuleConfigurations               fwtypes.ListNestedObjectValueOf[trainingJobDebugRuleConfigurationModel] `tfsdk:"debug_rule_configurations"`
-	EnableInterContainerTrafficEncryption types.Bool                                                              `tfsdk:"enable_inter_container_traffic_encryption"`
-	EnableManagedSpotTraining             types.Bool                                                              `tfsdk:"enable_managed_spot_training"`
-	EnableNetworkIsolation                types.Bool                                                              `tfsdk:"enable_network_isolation"`
-	Environment                           types.Map                                                               `tfsdk:"environment"`
-	HyperParameters                       types.Map                                                               `tfsdk:"hyper_parameters"`
-	ID                                    types.String                                                            `tfsdk:"id"`
-	InputDataConfig                       fwtypes.ListNestedObjectValueOf[trainingJobInputDataConfigModel]        `tfsdk:"input_data_config"`
-	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[trainingJobOutputDataConfigModel]       `tfsdk:"output_data_config"`
-	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingJobResourceConfigModel]         `tfsdk:"resource_config"`
-	RoleARN                               fwtypes.ARN                                                             `tfsdk:"role_arn"`
-	StoppingCondition                     fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel]      `tfsdk:"stopping_condition"`
-	Timeouts                              timeouts.Value                                                          `tfsdk:"timeouts"`
-	TrainingJobName                       types.String                                                            `tfsdk:"training_job_name"`
-	VPCConfig                             fwtypes.ListNestedObjectValueOf[trainingJobVPCConfigModel]              `tfsdk:"vpc_config"`
+	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
+	ARN                                   types.String                                                             `tfsdk:"arn"`
+	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[trainingJobCheckpointConfigModel]        `tfsdk:"checkpoint_config"`
+	DebugHookConfig                       fwtypes.ListNestedObjectValueOf[trainingJobDebugHookConfigModel]         `tfsdk:"debug_hook_config"`
+	DebugRuleConfigurations               fwtypes.ListNestedObjectValueOf[trainingJobDebugRuleConfigurationModel]  `tfsdk:"debug_rule_configurations"`
+	EnableInterContainerTrafficEncryption types.Bool                                                               `tfsdk:"enable_inter_container_traffic_encryption"`
+	EnableManagedSpotTraining             types.Bool                                                               `tfsdk:"enable_managed_spot_training"`
+	EnableNetworkIsolation                types.Bool                                                               `tfsdk:"enable_network_isolation"`
+	Environment                           types.Map                                                                `tfsdk:"environment"`
+	ExperimentConfig                      fwtypes.ListNestedObjectValueOf[trainingJobExperimentConfigModel]        `tfsdk:"experiment_config"`
+	HyperParameters                       types.Map                                                                `tfsdk:"hyper_parameters"`
+	ID                                    types.String                                                             `tfsdk:"id"`
+	InfraCheckConfig                      fwtypes.ListNestedObjectValueOf[trainingJobInfraCheckConfigModel]        `tfsdk:"infra_check_config"`
+	InputDataConfig                       fwtypes.ListNestedObjectValueOf[trainingJobInputDataConfigModel]         `tfsdk:"input_data_config"`
+	MlflowConfig                          fwtypes.ListNestedObjectValueOf[trainingJobMlflowConfigModel]            `tfsdk:"mlflow_config"`
+	ModelPackageConfig                    fwtypes.ListNestedObjectValueOf[trainingJobModelPackageConfigModel]      `tfsdk:"model_package_config"`
+	OutputDataConfig                      fwtypes.ListNestedObjectValueOf[trainingJobOutputDataConfigModel]        `tfsdk:"output_data_config"`
+	ProfilerConfig                        fwtypes.ListNestedObjectValueOf[trainingJobProfilerConfigModel]          `tfsdk:"profiler_config"`
+	ProfilerRuleConfigurations            fwtypes.ListNestedObjectValueOf[trainingJobProfilerRuleConfigModel]      `tfsdk:"profiler_rule_configurations"`
+	RemoteDebugConfig                     fwtypes.ListNestedObjectValueOf[trainingJobRemoteDebugConfigModel]       `tfsdk:"remote_debug_config"`
+	ResourceConfig                        fwtypes.ListNestedObjectValueOf[trainingJobResourceConfigModel]          `tfsdk:"resource_config"`
+	RetryStrategy                         fwtypes.ListNestedObjectValueOf[trainingJobRetryStrategyModel]           `tfsdk:"retry_strategy"`
+	RoleARN                               fwtypes.ARN                                                              `tfsdk:"role_arn"`
+	ServerlessJobConfig                   fwtypes.ListNestedObjectValueOf[trainingJobServerlessJobConfigModel]     `tfsdk:"serverless_job_config"`
+	SessionChainingConfig                 fwtypes.ListNestedObjectValueOf[trainingJobSessionChainingConfigModel]   `tfsdk:"session_chaining_config"`
+	StoppingCondition                     fwtypes.ListNestedObjectValueOf[trainingJobStoppingConditionModel]       `tfsdk:"stopping_condition"`
+	TensorBoardOutputConfig               fwtypes.ListNestedObjectValueOf[trainingJobTensorBoardOutputConfigModel] `tfsdk:"tensor_board_output_config"`
+	Timeouts                              timeouts.Value                                                           `tfsdk:"timeouts"`
+	TrainingJobName                       types.String                                                             `tfsdk:"training_job_name"`
+	VPCConfig                             fwtypes.ListNestedObjectValueOf[trainingJobVPCConfigModel]               `tfsdk:"vpc_config"`
 }
 
 type trainingJobAlgorithmSpecificationModel struct {
@@ -1833,6 +1735,23 @@ type trainingJobVPCConfigModel struct {
 	Subnets          fwtypes.ListOfString `tfsdk:"subnets"`
 }
 
+type trainingJobCheckpointConfigModel struct {
+	LocalPath types.String `tfsdk:"local_path"`
+	S3URI     types.String `tfsdk:"s3_uri"`
+}
+
+type trainingJobDebugHookConfigModel struct {
+	CollectionConfigurations fwtypes.ListNestedObjectValueOf[trainingJobCollectionConfigurationModel] `tfsdk:"collection_configurations"`
+	HookParameters           types.Map                                                                `tfsdk:"hook_parameters"`
+	LocalPath                types.String                                                             `tfsdk:"local_path"`
+	S3OutputPath             types.String                                                             `tfsdk:"s3_output_path"`
+}
+
+type trainingJobCollectionConfigurationModel struct {
+	CollectionName       types.String `tfsdk:"collection_name"`
+	CollectionParameters types.Map    `tfsdk:"collection_parameters"`
+}
+
 type trainingJobDebugRuleConfigurationModel struct {
 	InstanceType          fwtypes.StringEnum[awstypes.ProcessingInstanceType] `tfsdk:"instance_type"`
 	LocalPath             types.String                                        `tfsdk:"local_path"`
@@ -1843,23 +1762,72 @@ type trainingJobDebugRuleConfigurationModel struct {
 	VolumeSizeInGB        types.Int64                                         `tfsdk:"volume_size_in_gb"`
 }
 
-// TIP: ==== SWEEPERS ====
-// When acceptance testing resources, interrupted or failed tests may
-// leave behind orphaned resources in an account. To facilitate cleaning
-// up lingering resources, each resource implementation should include
-// a corresponding "sweeper" function.
-//
-// The sweeper function lists all resources of a given type and sets the
-// appropriate identifers required to delete the resource via the Delete
-// method implemented above.
-//
-// Once the sweeper function is implemented, register it in sweep.go
-// as follows:
-//
-//	awsv2.Register("aws_sagemaker_training_job", sweepTrainingJobs)
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
+type trainingJobExperimentConfigModel struct {
+	ExperimentName            types.String `tfsdk:"experiment_name"`
+	RunName                   types.String `tfsdk:"run_name"`
+	TrialComponentDisplayName types.String `tfsdk:"trial_component_display_name"`
+	TrialName                 types.String `tfsdk:"trial_name"`
+}
+
+type trainingJobInfraCheckConfigModel struct {
+	EnableInfraCheck types.Bool `tfsdk:"enable_infra_check"`
+}
+
+type trainingJobMlflowConfigModel struct {
+	MlflowExperimentName types.String `tfsdk:"mlflow_experiment_name"`
+	MlflowResourceARN    fwtypes.ARN  `tfsdk:"mlflow_resource_arn"`
+	MlflowRunName        types.String `tfsdk:"mlflow_run_name"`
+}
+
+type trainingJobModelPackageConfigModel struct {
+	ModelPackageGroupARN  fwtypes.ARN `tfsdk:"model_package_group_arn"`
+	SourceModelPackageARN fwtypes.ARN `tfsdk:"source_model_package_arn"`
+}
+
+type trainingJobProfilerConfigModel struct {
+	DisableProfiler                 types.Bool   `tfsdk:"disable_profiler"`
+	ProfilingIntervalInMilliseconds types.Int64  `tfsdk:"profiling_interval_in_milliseconds"`
+	ProfilingParameters             types.Map    `tfsdk:"profiling_parameters"`
+	S3OutputPath                    types.String `tfsdk:"s3_output_path"`
+}
+
+type trainingJobProfilerRuleConfigModel struct {
+	InstanceType          fwtypes.StringEnum[awstypes.ProcessingInstanceType] `tfsdk:"instance_type"`
+	LocalPath             types.String                                        `tfsdk:"local_path"`
+	RuleConfigurationName types.String                                        `tfsdk:"rule_configuration_name"`
+	RuleEvaluatorImage    types.String                                        `tfsdk:"rule_evaluator_image"`
+	RuleParameters        types.Map                                           `tfsdk:"rule_parameters"`
+	S3OutputPath          types.String                                        `tfsdk:"s3_output_path"`
+	VolumeSizeInGB        types.Int64                                         `tfsdk:"volume_size_in_gb"`
+}
+
+type trainingJobRemoteDebugConfigModel struct {
+	EnableRemoteDebug types.Bool `tfsdk:"enable_remote_debug"`
+}
+
+type trainingJobRetryStrategyModel struct {
+	MaximumRetryAttempts types.Int64 `tfsdk:"maximum_retry_attempts"`
+}
+
+type trainingJobServerlessJobConfigModel struct {
+	AcceptEULA             types.Bool                                          `tfsdk:"accept_eula"`
+	BaseModelARN           types.String                                        `tfsdk:"base_model_arn"`
+	CustomizationTechnique fwtypes.StringEnum[awstypes.CustomizationTechnique] `tfsdk:"customization_technique"`
+	EvaluationType         fwtypes.StringEnum[awstypes.EvaluationType]         `tfsdk:"evaluation_type"`
+	EvaluatorARN           types.String                                        `tfsdk:"evaluator_arn"`
+	JobType                fwtypes.StringEnum[awstypes.ServerlessJobType]      `tfsdk:"job_type"`
+	Peft                   fwtypes.StringEnum[awstypes.Peft]                   `tfsdk:"peft"`
+}
+
+type trainingJobSessionChainingConfigModel struct {
+	EnableSessionTagChaining types.Bool `tfsdk:"enable_session_tag_chaining"`
+}
+
+type trainingJobTensorBoardOutputConfigModel struct {
+	LocalPath    types.String `tfsdk:"local_path"`
+	S3OutputPath types.String `tfsdk:"s3_output_path"`
+}
+
 func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	input := sagemaker.ListTrainingJobsInput{}
 	conn := client.SageMakerClient(ctx)
@@ -1872,9 +1840,9 @@ func sweepTrainingJobs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 			return nil, smarterr.NewError(err)
 		}
 
-		for _, v := range page.TrainingJobs {
+		for _, v := range page.TrainingJobSummaries {
 			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceTrainingJob, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.TrainingJobId))),
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.TrainingJobName))),
 			)
 		}
 	}
