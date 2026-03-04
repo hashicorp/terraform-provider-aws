@@ -52,6 +52,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_sagemaker_pipeline", sweepPipelines)
 	awsv2.Register("aws_sagemaker_hub", sweepHubs)
 	awsv2.Register("aws_sagemaker_model_card", sweepModelCards)
+	awsv2.Register("aws_sagemaker_training_job", sweepTrainingJobs)
 }
 
 func sweepAppImagesConfig(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
