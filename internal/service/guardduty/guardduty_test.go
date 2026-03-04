@@ -19,6 +19,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
 			acctest.CtBasic:                     testAccDetector_basic,
+			acctest.CtDisappears:                testAccDetector_disappears,
 			"datasources_s3logs":                testAccDetector_datasources_s3logs,
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,

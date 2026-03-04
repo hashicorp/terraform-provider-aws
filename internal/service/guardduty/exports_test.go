@@ -5,6 +5,7 @@ package guardduty
 
 // Exports for use in tests only.
 var (
+	ResourceDetector                 = resourceDetector
 	ResourceFilter                   = resourceFilter
 	ResourceInviteAccepter           = resourceInviteAccepter
 	ResourceMalwareProtectionPlan    = newMalwareProtectionPlanResource
