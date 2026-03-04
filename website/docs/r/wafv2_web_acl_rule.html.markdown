@@ -311,6 +311,7 @@ Exactly one of the following statement blocks must be specified:
 * `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) below.
 * `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) below.
 * `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) below.
+* `label_match_statement` - (Optional) Match requests based on labels. See [Label Match Statement](#label-match-statement) below.
 * `managed_rule_group_statement` - (Optional) Reference to a managed rule group. See [Managed Rule Group Statement](#managed-rule-group-statement) below.
 * `rate_based_statement` - (Optional) Rate-based rule to track request rates. See [Rate Based Statement](#rate-based-statement) below.
 * `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
@@ -344,7 +345,12 @@ Exactly one of the following statement blocks must be specified:
 * `header_name` - (Required) Name of the header containing the forwarded IP address.
 * `position` - (Required) Position in the header to use. Valid values: `FIRST`, `LAST`, `ANY`.
 
-#### Forwarded IP Config
+#### Label Match Statement
+
+* `key` - (Required) String to match against. For `LABEL` scope, include the name and any preceding namespace specifications. For `NAMESPACE` scope, include namespace strings. Labels are case sensitive and components must be separated by colon (e.g., `NS1:NS2:name`).
+* `scope` - (Required) Whether to match using the label name or namespace. Valid values: `LABEL`, `NAMESPACE`.
+
+#### Managed Rule Group Statement
 
 * `fallback_behavior` - (Required) Action to take when the IP address in the header is invalid. Valid values: `MATCH`, `NO_MATCH`.
 * `header_name` - (Required) Name of the header containing the forwarded IP address.
