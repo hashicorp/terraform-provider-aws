@@ -507,6 +507,15 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	return output.Attributes, nil
 }
 
+func parseTopicNameFromARN(input string) (string, error) {
+	arn, err := arn.Parse(input)
+	if err != nil {
+		return "", err
+	}
+
+	return arn.Resource, nil
+}
+
 func resourceTopicFlatten(_ context.Context, d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	err := topicAttributeMap.APIAttributesToResourceData(attributes, d)
@@ -514,12 +523,11 @@ func resourceTopicFlatten(_ context.Context, d *schema.ResourceData, attributes 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	arn, err := arn.Parse(d.Id())
+	name, err := parseTopicNameFromARN(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	name := arn.Resource
 	d.Set(names.AttrName, name)
 	if d.Get("fifo_topic").(bool) {
 		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))

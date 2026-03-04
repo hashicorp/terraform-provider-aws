@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"iter"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -87,7 +86,14 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 			}
 
 			// Set display name from topic name (last segment of ARN)
-			result.DisplayName = topicARN[strings.LastIndex(topicARN, ":")+1:]
+			name, err := parseTopicNameFromARN(topicARN)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			result.DisplayName = name
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
