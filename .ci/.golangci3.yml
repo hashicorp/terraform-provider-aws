@@ -64,6 +64,7 @@ linters:
         - intBetweenSchema
         - stringLenBetweenSchema
         # Terraform Plugin Framework
+        - fwactions.TimeoutOr
         - int32validator.*
         - int64validator.*
         - listvalidator.*
