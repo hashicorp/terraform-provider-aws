@@ -91,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.39.12
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.12
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.18
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.57.2
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.57.3
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.13
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.10
