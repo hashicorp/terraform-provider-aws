@@ -330,6 +330,11 @@ Exactly one of the following statement blocks must be specified:
 
 #### Geo Match Statement
 
+* `country_codes` - (Required) List of two-character country codes (ISO 3166-1 alpha-2).
+* `forwarded_ip_config` - (Optional) Configuration for inspecting forwarded IP headers. See [Forwarded IP Config](#forwarded-ip-config) below.
+
+#### IP Set Reference Statement
+
 * `arn` - (Required) ARN of the IP set to reference.
 * `ip_set_forwarded_ip_config` - (Optional) Configuration for inspecting forwarded IP headers. See [IP Set Forwarded IP Config](#ip-set-forwarded-ip-config) below.
 
@@ -338,11 +343,6 @@ Exactly one of the following statement blocks must be specified:
 * `fallback_behavior` - (Required) Action to take when the IP address in the header is invalid. Valid values: `MATCH`, `NO_MATCH`.
 * `header_name` - (Required) Name of the header containing the forwarded IP address.
 * `position` - (Required) Position in the header to use. Valid values: `FIRST`, `LAST`, `ANY`.
-
-#### Geo Match Statement
-
-* `country_codes` - (Required) List of two-character country codes (ISO 3166-1 alpha-2).
-* `forwarded_ip_config` - (Optional) Configuration for inspecting forwarded IP headers. See [Forwarded IP Config](#forwarded-ip-config) below.
 
 #### Forwarded IP Config
 
