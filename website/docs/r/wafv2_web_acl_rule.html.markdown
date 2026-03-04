@@ -366,6 +366,8 @@ Exactly one of the following statement blocks must be specified:
 #### Regex Pattern Set Reference Statement
 
 * `arn` - (Required) ARN of the regex pattern set to reference.
+* `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
 #### Rate Based Statement
 
@@ -382,7 +384,7 @@ Exactly one of the following statement blocks must be specified:
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
-#### Regex Pattern Set Reference Statement
+### Override Action
 
 One of the following override action blocks must be specified when using managed rule groups:
 
