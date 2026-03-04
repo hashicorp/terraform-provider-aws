@@ -349,8 +349,8 @@ github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.13 h1:5ZWlbwY9MTuvu2XnRE+th
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.13/go.mod h1:oyzogombsISIdZul3Sm/HQ+0OL9NUL06vt5vP7guy6U=
 github.com/aws/aws-sdk-go-v2/service/location v1.50.11 h1:8Mzu5eUdMLzflViQ2W23FscMcoUJy35hQ0j61S4wX34=
 github.com/aws/aws-sdk-go-v2/service/location v1.50.11/go.mod h1:PX3xFbx/9X+cIiFj6vIhFqLDjeaWTD5xWTw2b5LmSKQ=
-github.com/aws/aws-sdk-go-v2/service/m2 v1.26.11 h1:uha6vTs1fSCwmsa/am/RJ7EMP33UfwNKZiz3V068VvQ=
-github.com/aws/aws-sdk-go-v2/service/m2 v1.26.11/go.mod h1:fw0A4+aFNTXTH34B7UO5MDswaD01vkre9yGtX+Ch2fs=
+github.com/aws/aws-sdk-go-v2/service/m2 v1.26.12 h1:jQ+keBchPgS9VJdWYPuvzeiWsPvEgbRk6+qmIg5gWxc=
+github.com/aws/aws-sdk-go-v2/service/m2 v1.26.12/go.mod h1:snUO2ReWM3ntThTdhzev5kfGvVDIy+GJtA6t5MEJ0FA=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.10 h1:9IsSMmDFdBtE9wOIhbCcf8cHIjOnEOgwrwL1Xaeoyek=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.10/go.mod h1:1AU5hp+e97y8Un7bmzbK3XLNgiGNnUBDNlVWhmEzc90=
 github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.47.1 h1:KtN51RQuX3trEiTBxkxo6KJtxmJt2i/hxT2rSXO7wsA=
