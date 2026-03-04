@@ -235,7 +235,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/savingsplans v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.20
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.10
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.2
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.25.10
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.30.9
