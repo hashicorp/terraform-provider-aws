@@ -900,7 +900,7 @@ func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
