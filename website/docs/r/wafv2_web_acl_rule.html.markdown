@@ -317,6 +317,7 @@ Exactly one of the following statement blocks must be specified:
 * `regex_match_statement` - (Optional) Match requests using regex patterns. See [Regex Match Statement](#regex-match-statement) below.
 * `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
 * `rule_group_reference_statement` - (Optional) Reference to a rule group. See [Rule Group Reference Statement](#rule-group-reference-statement) below.
+* `size_constraint_statement` - (Optional) Match requests based on size constraints. See [Size Constraint Statement](#size-constraint-statement) below.
 
 #### ASN Match Statement
 
@@ -364,6 +365,13 @@ Exactly one of the following statement blocks must be specified:
 * `arn` - (Required) ARN of the rule group to reference.
 * `excluded_rule` - (Optional) Rules to exclude from the rule group. See [Excluded Rule](#excluded-rule) below.
 * `rule_action_override` - (Optional) Override actions for specific rules within the rule group. See [Rule Action Override](#rule-action-override) below.
+
+#### Size Constraint Statement
+
+* `comparison_operator` - (Required) Operator to use to compare the request part to the size setting. Valid values: `EQ`, `NE`, `LE`, `LT`, `GE`, `GT`.
+* `size` - (Required) Size, in bytes, to compare to the request part, after any transformations.
+* `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
 #### Regex Pattern Set Reference Statement
 
