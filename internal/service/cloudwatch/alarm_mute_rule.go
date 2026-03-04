@@ -350,7 +350,6 @@ func (r *alarmMuteRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.Name.String())
 		return
 	}
-
 }
 
 func (r *alarmMuteRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
