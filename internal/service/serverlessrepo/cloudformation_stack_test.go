@@ -238,6 +238,36 @@ func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 	})
 }
 
+func TestAccServerlessRepoCloudFormationStack_noChangeUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack cloudformationtypes.Stack
+	stackName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	appARN := testAccCloudFormationApplicationID()
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
+
+	config := testAccCloudFormationStackConfig_basic(stackName, appARN)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists(ctx, t, resourceName, &stack),
+				),
+			},
+			{
+				Config:             config,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stack cloudformationtypes.Stack
