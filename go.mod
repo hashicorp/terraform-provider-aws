@@ -205,7 +205,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.13
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.103.0
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.103.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/rds v1.116.1
