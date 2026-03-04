@@ -971,7 +971,7 @@ func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
