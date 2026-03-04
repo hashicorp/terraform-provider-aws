@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.71.7
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.60.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.12.21
-	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.18
+	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.32.9
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.55.6
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.55.0
