@@ -63,7 +63,7 @@ type webACLRuleAndStatementLevel0Model struct {
 }
 
 type webACLRuleNotStatementLevel0Model struct {
-	Statement fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel0Model] `tfsdk:"statement"`
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel0Model] `tfsdk:"statement"`
 }
 
 type webACLRuleOrStatementLevel0Model struct {
@@ -97,7 +97,7 @@ type webACLRuleAndStatementLevel1Model struct {
 }
 
 type webACLRuleNotStatementLevel1Model struct {
-	Statement fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel1Model] `tfsdk:"statement"`
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel1Model] `tfsdk:"statement"`
 }
 
 type webACLRuleOrStatementLevel1Model struct {
@@ -131,7 +131,7 @@ type webACLRuleAndStatementLevel2Model struct {
 }
 
 type webACLRuleNotStatementLevel2Model struct {
-	Statement fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel2Model] `tfsdk:"statement"`
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel2Model] `tfsdk:"statement"`
 }
 
 type webACLRuleOrStatementLevel2Model struct {

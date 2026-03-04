@@ -995,6 +995,36 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 
 		return &awstypes.Statement{AndStatement: &andStmt}, diags
 
+	case !m.NotStatement.IsNull():
+		notData, d := m.NotStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var notStmt awstypes.NotStatement
+		diags.Append(flex.Expand(ctx, notData, &notStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{NotStatement: &notStmt}, diags
+
+	case !m.OrStatement.IsNull():
+		orData, d := m.OrStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var orStmt awstypes.OrStatement
+		diags.Append(flex.Expand(ctx, orData, &orStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{OrStatement: &orStmt}, diags
+
 	case !m.IPSetReferenceStatement.IsNull():
 		ipSetData, d := m.IPSetReferenceStatement.ToPtr(ctx)
 		diags.Append(d...)
@@ -1212,6 +1242,8 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 	var diags diag.Diagnostics
 
 	m.AndStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAndStatementModel](ctx)
+	m.NotStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleNotStatementModel](ctx)
+	m.OrStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOrStatementModel](ctx)
 	m.IPSetReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIPSetReferenceStatementModel](ctx)
 	m.GeoMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleGeoMatchStatementModel](ctx)
 	m.RuleGroupReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleRuleGroupReferenceStatementModel](ctx)
@@ -1232,6 +1264,20 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		diags.Append(flex.Flatten(ctx, stmt.AndStatement, &andModel)...)
 		if !diags.HasError() {
 			m.AndStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleAndStatementModel{&andModel}, nil)
+		}
+
+	case stmt.NotStatement != nil:
+		var notModel webACLRuleNotStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.NotStatement, &notModel)...)
+		if !diags.HasError() {
+			m.NotStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleNotStatementModel{&notModel}, nil)
+		}
+
+	case stmt.OrStatement != nil:
+		var orModel webACLRuleOrStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.OrStatement, &orModel)...)
+		if !diags.HasError() {
+			m.OrStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleOrStatementModel{&orModel}, nil)
 		}
 
 	case stmt.IPSetReferenceStatement != nil:

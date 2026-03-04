@@ -486,6 +486,53 @@ func TestAccWAFV2WebACLRule_andStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_orStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_orStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.0.geo_match_statement.0.country_codes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.1.geo_match_statement.0.country_codes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_notStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_notStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.not_statement.0.statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.not_statement.0.statement.0.geo_match_statement.0.country_codes.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
@@ -1184,6 +1231,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
 func testAccWebACLRuleConfig_sqliMatchStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -1289,6 +1337,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
 func testAccWebACLRuleConfig_managedRuleGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -1334,6 +1383,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
 func testAccWebACLRuleConfig_asnMatchStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -1383,6 +1433,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
 func testAccWebACLRuleConfig_sizeConstraintStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -1437,6 +1488,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
 func testAccWebACLRuleConfig_andStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -1488,6 +1540,110 @@ resource "aws_wafv2_web_acl_rule" "test" {
             priority = 0
             type     = "LOWERCASE"
           }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_orStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    or_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["US"]
+        }
+      }
+
+      statement {
+        geo_match_statement {
+          country_codes = ["CA"]
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_notStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    not_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["US"]
         }
       }
     }

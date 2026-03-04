@@ -69,7 +69,7 @@ type webACLRuleAndStatementLevel{{minus .}}Model struct {
 }
 
 type webACLRuleNotStatementLevel{{minus .}}Model struct {
-	Statement fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel{{minus .}}Model] ` + "`" + `tfsdk:"statement"` + "`" + `
+	Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel{{minus .}}Model] ` + "`" + `tfsdk:"statement"` + "`" + `
 }
 
 type webACLRuleOrStatementLevel{{minus .}}Model struct {
@@ -242,6 +242,8 @@ func statementBlock(ctx context.Context, level int) schema.ListNestedBlock {
 `
 
 func main() {
+	fmt.Println("Generating web_acl_rule_statement_models_gen.go") // nosemgrep:ci.calling-fmt.Print-and-variants
+
 	funcMap := template.FuncMap{
 		"minus": func(a int) int { return a - 1 },
 	}
@@ -282,6 +284,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
 		os.Exit(1)
 	}
-
-	fmt.Println("Generated web_acl_rule_statement_models_gen.go") // nosemgrep:ci.calling-fmt.Print-and-variants
 }
