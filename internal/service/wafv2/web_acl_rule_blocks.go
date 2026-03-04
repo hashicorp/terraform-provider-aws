@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -38,8 +39,8 @@ func statementBlock(ctx context.Context) schema.ListNestedBlock {
 				"regex_match_statement":                 regexMatchStatementBlock(ctx),               //
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx), //
 				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),       //
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),//
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),           //
+				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),                //
 				"xss_match_statement":                   xssMatchStatementBlock(ctx),
 			},
 		},
@@ -303,10 +304,24 @@ func byteMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 
 func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleSqliMatchStatementModel](ctx),
-		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "SQL injection match statement.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSqliMatchStatementModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"sensitivity_level": schema.StringAttribute{
+					CustomType:  fwtypes.StringEnumType[awstypes.SensitivityLevel](),
+					Optional:    true,
+					Computed:    true,
+					Default:     stringdefault.StaticString(string(awstypes.SensitivityLevelLow)),
+					Description: "Sensitivity level for detecting SQL injection attacks. Valid values: `HIGH`, `LOW`. Defaults to `LOW`.",
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"field_to_match":      fieldToMatchBlock(ctx),
+				"text_transformation": textTransformationBlock(ctx),
+			},
+		},
+		Description: "SQL injection match statement.",
 	}
 }
 
