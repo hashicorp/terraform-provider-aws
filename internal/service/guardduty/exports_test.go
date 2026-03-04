@@ -8,6 +8,7 @@ var (
 	ResourceDetector                 = resourceDetector
 	ResourceFilter                   = resourceFilter
 	ResourceInviteAccepter           = resourceInviteAccepter
+	ResourceIPSet                    = resourceIPSet
 	ResourceMalwareProtectionPlan    = newMalwareProtectionPlanResource
 	ResourceOrganizationAdminAccount = resourceOrganizationAdminAccount
 	ResourcePublishingDestination    = resourcePublishingDestination

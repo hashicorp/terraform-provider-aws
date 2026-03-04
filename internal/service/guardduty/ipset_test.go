@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -60,6 +61,42 @@ func testAccIPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "activate", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrLocation, regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),
+			},
+		},
+	})
+}
+
+func testAccIPSet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	keyName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	ipsetName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	resourceName := "aws_guardduty_ipset.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPSetConfig_basic(bucketName, keyName, ipsetName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPSetExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceIPSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

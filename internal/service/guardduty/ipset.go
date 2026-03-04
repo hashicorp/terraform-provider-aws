@@ -190,6 +190,9 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		IpSetId:    aws.String(ipSetID),
 	}
 	_, err = conn.DeleteIPSet(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
