@@ -9,6 +9,7 @@ var (
 	ResourceInviteAccepter        = resourceInviteAccepter
 	ResourceMalwareProtectionPlan = newMalwareProtectionPlanResource
 	ResourcePublishingDestination = resourcePublishingDestination
+	ResourceThreatIntelSet        = resourceThreatIntelSet
 
 	FindDetectorByID                        = findDetectorByID
 	FindDetectorID                          = findDetectorID
