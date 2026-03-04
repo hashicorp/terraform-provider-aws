@@ -279,8 +279,8 @@ github.com/aws/aws-sdk-go-v2/service/grafana v1.33.2 h1:ebQ7mhPzKk6XwqY41iC4gMMu
 github.com/aws/aws-sdk-go-v2/service/grafana v1.33.2/go.mod h1:HpZFRDot9dyU50OhHBfUbgj2E/ltstCsYWXT7DVV8po=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.19 h1:X69k9TpEzPDF761puJ9i+vmiBMivXbvCL5OZbBVuXhw=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.32.19/go.mod h1:8wYTJEVwOaFGlZmzAjiN5Xctjqpeg0YMybIzgjsQnqo=
-github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.1 h1:CP6q4wHyVUDC+sEPMiugG1UPL/dbg/IalhBFH1MlPxQ=
-github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.1/go.mod h1:EL3ivkUQb062hY+w1c+mlzCczoJ+iZNkdsqGAwstigg=
+github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.2 h1:cceh3X9PbPAXO9USsS9/fdE5FTe/O+4bPNXhSXNTdeY=
+github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.2/go.mod h1:sLXPQ7fHiZa61vvgvBX2Op83QseQ5kC8klSGXWFJTP0=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.1 h1:1Zp+XmEgiPfs0IbzXzAnx071KoNmlsDnc5qgIXA2iDM=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.73.1/go.mod h1:O4v0uEFkaezASRsB1Cuo9h/cjD8piEx+anWS6RbQqNA=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.10 h1:Q03tYEF4hEJgHvCPF7ic3MHZ6uulH7ADMLr75aW69A4=
