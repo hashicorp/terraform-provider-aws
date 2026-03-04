@@ -54,7 +54,6 @@ const (
 
 type alarmMuteRuleResource struct {
 	framework.ResourceWithModel[alarmMuteRuleResourceModel]
-	framework.WithImportByIdentity
 }
 
 func (r *alarmMuteRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
