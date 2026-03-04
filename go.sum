@@ -507,8 +507,8 @@ github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.24 h1:1V7LKYZ6pfv1x3
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.24/go.mod h1:2artDAy//Ns8gCA6O9vedV3tnGogP/ecKgRd5bdPAV4=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.34.3 h1:sImEaE1KtqSb+y7SZh71y4O0mIgXndXEYDxqGQ5TEyI=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.34.3/go.mod h1:zOPufbmfmRDQw0ewok+EoPkLSBjFdMnkDtNocC723Ns=
-github.com/aws/aws-sdk-go-v2/service/ses v1.34.19 h1:VLnpicdfZNlcPEeOKiQOY8LZFsXUpSY3kLeDkUm3ic8=
-github.com/aws/aws-sdk-go-v2/service/ses v1.34.19/go.mod h1:duToCjVVoY4JKAxarP1VE3uYNVT8WwZq5RkWsbNV1lo=
+github.com/aws/aws-sdk-go-v2/service/ses v1.34.20 h1:Um9uSkeZjs/6akH92UPkO+AWMLk5JgWS4c1EaizPX/k=
+github.com/aws/aws-sdk-go-v2/service/ses v1.34.20/go.mod h1:AlIQDhS8iQHx/DSfn2nwAy/aFtx8ZwuXfOSJ8r1RapU=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.59.2 h1:MJ6IIv3VdXESqoORpAgQJYSWLrY7G1AuT8XBQKWCUq8=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.59.2/go.mod h1:Qj7f4iKqd4n/UKcuWwlFhd1irk6S3H27r8QpfVItCZc=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.40.7 h1:XmPb4MyLtKgqyLjXrfIwbWGUqQhsxXoi4/0SnS28R5k=
