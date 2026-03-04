@@ -86,20 +86,23 @@ func (l *topicSubscriptionListResource) List(ctx context.Context, request list.L
 			result := request.NewListResult(ctx)
 			rd := l.ResourceData()
 			rd.SetId(arn)
+			rd.Set(names.AttrARN, arn)
 
-			attributes, err := findSubscriptionAttributesByARN(ctx, conn, arn)
-			if err != nil {
-				tflog.Error(ctx, "Reading SNS Topic Subscription", map[string]any{
-					"err": err.Error(),
-				})
-				continue
-			}
+			if request.IncludeResource {
+				attributes, err := findSubscriptionAttributesByARN(ctx, conn, arn)
+				if err != nil {
+					tflog.Error(ctx, "Reading SNS Topic Subscription", map[string]any{
+						"err": err.Error(),
+					})
+					continue
+				}
 
-			if err := subscriptionAttributeMap.APIAttributesToResourceData(attributes, rd); err != nil {
-				tflog.Error(ctx, "Reading SNS Topic Subscription", map[string]any{
-					"err": err.Error(),
-				})
-				continue
+				if err := subscriptionAttributeMap.APIAttributesToResourceData(attributes, rd); err != nil {
+					tflog.Error(ctx, "Reading SNS Topic Subscription", map[string]any{
+						"err": err.Error(),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = arn
