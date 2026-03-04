@@ -503,8 +503,8 @@ github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.10 h1:lfyL122hSoBQbRSf
 github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.39.10/go.mod h1:QP4Cm1T2yxVN3qbChXAUGXkW2KKdoKtJTKk5nVeUehs=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.35.19 h1:haZCRZ5Msn9UucKNyQ0X2sjaXbAg6JKK2oFHkJRjF80=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.35.19/go.mod h1:8+7jmMq4Ma6QsUSYHEcUcl7c9ZvQlHJZ6sBYUrnOE0g=
-github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.23 h1:L2G5mAzdcKTLkSuXF+IxM+fyFe2vgMbcIzHlng4lxnA=
-github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.23/go.mod h1:qm93XYAUCzcMCK6Hd8GRhcCKpIC/yWevplytmSoZles=
+github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.24 h1:1V7LKYZ6pfv1x318O+r6cBzmBWWJfpe04yN1Eghh5DM=
+github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.24/go.mod h1:2artDAy//Ns8gCA6O9vedV3tnGogP/ecKgRd5bdPAV4=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.34.2 h1:sm6NBL6B4zM9NwDukeXb9j6/aYRrBWtMjEwmSpc+Bss=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.34.2/go.mod h1:5X/vFNucNV7Ab1dqsncCnenSs/AbZH8cv8I30feCpdg=
 github.com/aws/aws-sdk-go-v2/service/ses v1.34.19 h1:VLnpicdfZNlcPEeOKiQOY8LZFsXUpSY3kLeDkUm3ic8=
