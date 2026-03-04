@@ -1106,7 +1106,19 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 		return &awstypes.Statement{XssMatchStatement: &awstypes.XssMatchStatement{}}, diags
 
 	case !m.SizeConstraintStatement.IsNull():
-		return &awstypes.Statement{SizeConstraintStatement: &awstypes.SizeConstraintStatement{}}, diags
+		scsData, d := m.SizeConstraintStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var scs awstypes.SizeConstraintStatement
+		diags.Append(flex.Expand(ctx, scsData, &scs)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{SizeConstraintStatement: &scs}, diags
 
 	case !m.RegexMatchStatement.IsNull():
 		rmsData, d := m.RegexMatchStatement.ToPtr(ctx)
@@ -1250,8 +1262,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		m.XssMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleXssMatchStatementModel{&xssModel}, nil)
 
 	case stmt.SizeConstraintStatement != nil:
-		sizeModel := webACLRuleSizeConstraintStatementModel{}
-		m.SizeConstraintStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleSizeConstraintStatementModel{&sizeModel}, nil)
+		var sizeModel webACLRuleSizeConstraintStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.SizeConstraintStatement, &sizeModel)...)
+		if !diags.HasError() {
+			m.SizeConstraintStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleSizeConstraintStatementModel{&sizeModel}, nil)
+		}
 
 	case stmt.RegexMatchStatement != nil:
 		var rmsModel webACLRuleRegexMatchStatementModel
@@ -1415,6 +1430,10 @@ type webACLRuleXssMatchStatementModel struct {
 }
 
 type webACLRuleSizeConstraintStatementModel struct {
+	ComparisonOperator  fwtypes.StringEnum[awstypes.ComparisonOperator]               `tfsdk:"comparison_operator"`
+	Size                types.Int64                                                   `tfsdk:"size"`
+	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
 }
 
 type webACLRuleRegexMatchStatementModel struct {

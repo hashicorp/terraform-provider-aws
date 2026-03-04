@@ -321,10 +321,27 @@ func xssMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 
 func sizeConstraintStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleSizeConstraintStatementModel](ctx),
-		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "Size constraint statement.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleSizeConstraintStatementModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"comparison_operator": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.ComparisonOperator](),
+					Required:   true,
+				},
+				names.AttrSize: schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(0),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"field_to_match":      fieldToMatchBlock(ctx),
+				"text_transformation": textTransformationBlock(ctx),
+			},
+		},
+		Description: "Size constraint statement.",
 	}
 }
 

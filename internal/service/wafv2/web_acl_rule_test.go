@@ -273,6 +273,29 @@ func TestAccWAFV2WebACLRule_ruleGroupReferenceStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_sizeConstraintStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_sizeConstraintStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_rateBasedStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1253,6 +1276,60 @@ resource "aws_wafv2_web_acl_rule" "test" {
       forwarded_ip_config {
         fallback_behavior = "NO_MATCH"
         header_name       = "X-Forwarded-For"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+func testAccWebACLRuleConfig_sizeConstraintStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    size_constraint_statement {
+      comparison_operator = "GT"
+      size                = 1000
+
+      field_to_match {
+        uri_path {}
+      }
+
+      text_transformation {
+        priority = 0
+        type     = "NONE"
       }
     }
   }
