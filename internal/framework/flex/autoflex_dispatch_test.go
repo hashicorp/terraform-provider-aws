@@ -118,6 +118,14 @@ func (t *tfFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) 
 		t.Field1 = StringValueToFramework(ctx, val.AWSField)
 		return diags
 
+	case *awsExpander:
+		if val != nil {
+			t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		} else {
+			t.Field1 = types.StringNull()
+		}
+		return diags
+
 	default:
 		return diags
 	}
@@ -1635,3 +1643,85 @@ func TestFlattenFlattener(t *testing.T) {
 	}
 	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
+
+// TestFlattenFlattener_PointerToListNestedObject tests that AutoFlex properly calls
+// custom Flatteners when flattening *struct -> ListNestedObjectValueOf[Model].
+// This is a regression test for the issue where AutoFlex detects the Flattener
+// but doesn't call it because ListNestedObjectValueOf is treated as a List type.
+func TestFlattenFlattener_PointerToListNestedObject(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"*struct with custom Flattener to ListNestedObjectValueOf": {
+			Source: awsFlattenerSinglePtr{
+				Field1: &awsFlattenerUnion{
+					FieldA: aws.String("value-a"),
+				},
+			},
+			Target: &tfFlattenerListNestedObject{},
+			WantTarget: &tfFlattenerListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlattenerUnionModel{
+					{
+						FieldA: types.StringValue("value-a"),
+						FieldB: types.StringNull(),
+					},
+				}),
+			},
+		},
+		"nil *struct to null ListNestedObjectValueOf": {
+			Source: awsFlattenerSinglePtr{
+				Field1: nil,
+			},
+			Target: &tfFlattenerListNestedObject{},
+			WantTarget: &tfFlattenerListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfNull[tfFlattenerUnionModel](ctx),
+			},
+		},
+	}
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+}
+
+// Test types for TestFlattenFlattener_PointerToListNestedObject
+
+type awsFlattenerUnion struct {
+	FieldA *string
+	FieldB *string
+}
+
+type awsFlattenerSinglePtr struct {
+	Field1 *awsFlattenerUnion
+}
+
+type tfFlattenerUnionModel struct {
+	FieldA types.String `tfsdk:"field_a"`
+	FieldB types.String `tfsdk:"field_b"`
+}
+
+var _ Flattener = &tfFlattenerUnionModel{}
+
+func (m *tfFlattenerUnionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	val, ok := v.(*awsFlattenerUnion)
+	if !ok || val == nil {
+		m.FieldA = types.StringNull()
+		m.FieldB = types.StringNull()
+		return diags
+	}
+
+	if val.FieldA != nil {
+		m.FieldA = types.StringValue(*val.FieldA)
+	} else {
+		m.FieldA = types.StringNull()
+	}
+
+	if val.FieldB != nil {
+		m.FieldB = types.StringValue(*val.FieldB)
+	} else {
+		m.FieldB = types.StringNull()
+	}
+
+	return diags
+}
+
+type tfFlattenerListNestedObject tfListNestedObject[tfFlattenerUnionModel]
