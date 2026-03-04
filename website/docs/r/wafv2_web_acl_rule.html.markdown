@@ -362,6 +362,8 @@ Exactly one of the following statement blocks must be specified:
 #### Rule Group Reference Statement
 
 * `arn` - (Required) ARN of the rule group to reference.
+* `excluded_rule` - (Optional) Rules to exclude from the rule group. See [Excluded Rule](#excluded-rule) below.
+* `rule_action_override` - (Optional) Override actions for specific rules within the rule group. See [Rule Action Override](#rule-action-override) below.
 
 #### Regex Pattern Set Reference Statement
 
@@ -493,6 +495,10 @@ Exactly one of the following custom key blocks must be specified:
 
 * `name` - (Required) Name of the query argument.
 * `text_transformation` - (Required) Text transformations to apply to the query argument value. See [Text Transformation](#text-transformation) above.
+
+### Excluded Rule
+
+* `name` - (Required) Name of the rule to exclude from the rule group.
 
 ## Import
 
