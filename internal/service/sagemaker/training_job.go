@@ -233,7 +233,7 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"profiler_rule_configurations": profilerRuleConfigurationsBlock(),
 			"remote_debug_config":          remoteDebugConfigBlock(),
 			"resource_config":              resourceConfigBlock(ctx),
-			"retry_strategy":               retryStrategyBlock(), // marker for tarun
+			"retry_strategy":               retryStrategyBlock(),
 			"serverless_job_config":        serverlessJobConfigBlock(),
 			"session_chaining_config":      sessionChainingConfigBlock(),
 			"stopping_condition":           stoppingConditionBlock(ctx),
@@ -1242,7 +1242,9 @@ func sessionChainingConfigBlock() schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"enable_session_tag_chaining": schema.BoolAttribute{Optional: true},
+				"enable_session_tag_chaining": schema.BoolAttribute{
+					Optional: true,
+				},
 			},
 		},
 	}
@@ -1258,18 +1260,27 @@ func stoppingConditionBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"max_pending_time_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.Between(7200, 2419200),
+					},
 					PlanModifiers: []planmodifier.Int64{
 						int64planmodifier.RequiresReplace(),
 					},
 				},
 				"max_runtime_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(1),
+					},
 					PlanModifiers: []planmodifier.Int64{
 						int64planmodifier.RequiresReplace(),
 					},
 				},
 				"max_wait_time_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(1),
+					},
 					PlanModifiers: []planmodifier.Int64{
 						int64planmodifier.RequiresReplace(),
 					},
@@ -1286,8 +1297,26 @@ func tensorBoardOutputConfigBlock() schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"local_path":     schema.StringAttribute{Optional: true},
-				"s3_output_path": schema.StringAttribute{Optional: true},
+				"local_path": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 4096),
+						stringvalidator.RegexMatches(regexp.MustCompile(`.*`), ""),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_output_path": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 1024),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(https|s3)://([^/]+)/?(.*)`), "must be a valid S3 or HTTPS URI"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 			},
 		},
 	}
@@ -1301,8 +1330,34 @@ func vpcConfigBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"security_group_ids": schema.ListAttribute{ElementType: types.StringType, Optional: true},
-				"subnets":            schema.ListAttribute{ElementType: types.StringType, Optional: true},
+				"security_group_ids": schema.ListAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 5),
+						listvalidator.ValueStringsAre(
+							stringvalidator.LengthBetween(0, 32),
+							stringvalidator.RegexMatches(regexp.MustCompile(`[-0-9a-zA-Z]+`), "must be a valid security group ID"),
+						),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+				},
+				"subnets": schema.ListAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 16),
+						listvalidator.ValueStringsAre(
+							stringvalidator.LengthBetween(0, 32),
+							stringvalidator.RegexMatches(regexp.MustCompile(`[-0-9a-zA-Z]+`), "must be a valid subnet ID"),
+						),
+					},
+					PlanModifiers: []planmodifier.List{
+						listplanmodifier.RequiresReplace(),
+					},
+				},
 			},
 		},
 	}
