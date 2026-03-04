@@ -377,7 +377,7 @@ func TestExpandSetOfNestedObject(t *testing.T) {
 			WantTarget: &awsSingleStringValue{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
 }
 
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
