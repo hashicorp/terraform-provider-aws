@@ -352,18 +352,15 @@ Exactly one of the following statement blocks must be specified:
 
 #### Managed Rule Group Statement
 
-* `fallback_behavior` - (Required) Action to take when the IP address in the header is invalid. Valid values: `MATCH`, `NO_MATCH`.
-* `header_name` - (Required) Name of the header containing the forwarded IP address.
+* `name` - (Required) Name of the managed rule group.
+* `vendor_name` - (Required) Name of the managed rule group vendor (e.g., "AWS").
+* `version` - (Optional) Version of the managed rule group.
+* `rule_action_override` - (Optional) Override actions for specific rules within the managed rule group. See [Rule Action Override](#rule-action-override) below.
+* `scope_down_statement` - (Optional) Additional statement to narrow the scope of requests that the managed rule group evaluates. See [Scope Down Statement](#scope-down-statement) below.
 
 #### Rule Group Reference Statement
 
 * `arn` - (Required) ARN of the rule group to reference.
-
-#### Managed Rule Group Statement
-
-* `name` - (Required) Name of the managed rule group.
-* `vendor_name` - (Required) Name of the managed rule group vendor (e.g., "AWS").
-* `version` - (Optional) Version of the managed rule group.
 
 #### Regex Pattern Set Reference Statement
 
@@ -431,6 +428,25 @@ Exactly one of the following field to match blocks must be specified:
 
 * `priority` - (Required) Relative processing order for multiple transformations (0-based).
 * `type` - (Required) Transformation to apply. Valid values: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`, `BASE64_DECODE`, `HEX_DECODE`, `MD5`, `REPLACE_COMMENTS`, `ESCAPE_SEQ_DECODE`, `SQL_HEX_DECODE`, `CSS_DECODE`, `JS_DECODE`, `NORMALIZE_PATH`, `NORMALIZE_PATH_WIN`, `REMOVE_NULLS`, `REPLACE_NULLS`, `BASE64_DECODE_EXT`, `URL_DECODE_UNI`, `UTF8_TO_UNICODE`.
+
+### Rule Action Override
+
+* `name` - (Required) Name of the rule to override.
+* `action_to_use` - (Required) Override action to use for the rule. See [Action](#action) below.
+
+### Scope Down Statement
+
+Exactly one of the following scope down statement blocks must be specified:
+
+* `asn_match_statement` - (Optional) Match requests based on Autonomous System Number (ASN). See [ASN Match Statement](#asn-match-statement) above.
+* `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) above.
+* `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) above.
+* `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) above.
+* `label_match_statement` - (Optional) Match requests based on labels. See [Label Match Statement](#label-match-statement) above.
+* `regex_match_statement` - (Optional) Match requests using regex patterns. See [Regex Match Statement](#regex-match-statement) above.
+* `size_constraint_statement` - (Optional) Match requests based on size constraints. See [Size Constraint Statement](#size-constraint-statement) above.
+* `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks.
+* `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks.
 
 ## Import
 
