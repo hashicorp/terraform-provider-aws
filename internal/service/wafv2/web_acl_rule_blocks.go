@@ -327,10 +327,15 @@ func sqliMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 
 func xssMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleXssMatchStatementModel](ctx),
-		Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "Cross-site scripting match statement.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleXssMatchStatementModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"field_to_match":      fieldToMatchBlock(ctx),
+				"text_transformation": textTransformationBlock(ctx),
+			},
+		},
+		Description: "Cross-site scripting match statement.",
 	}
 }
 

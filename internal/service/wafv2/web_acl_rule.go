@@ -1115,7 +1115,19 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 		return &awstypes.Statement{SqliMatchStatement: &sqli}, diags
 
 	case !m.XssMatchStatement.IsNull():
-		return &awstypes.Statement{XssMatchStatement: &awstypes.XssMatchStatement{}}, diags
+		xssData, d := m.XssMatchStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var xss awstypes.XssMatchStatement
+		diags.Append(flex.Expand(ctx, xssData, &xss)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{XssMatchStatement: &xss}, diags
 
 	case !m.SizeConstraintStatement.IsNull():
 		scsData, d := m.SizeConstraintStatement.ToPtr(ctx)
@@ -1273,8 +1285,11 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		}
 
 	case stmt.XssMatchStatement != nil:
-		xssModel := webACLRuleXssMatchStatementModel{}
-		m.XssMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleXssMatchStatementModel{&xssModel}, nil)
+		var xssModel webACLRuleXssMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.XssMatchStatement, &xssModel)...)
+		if !diags.HasError() {
+			m.XssMatchStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleXssMatchStatementModel{&xssModel}, nil)
+		}
 
 	case stmt.SizeConstraintStatement != nil:
 		var sizeModel webACLRuleSizeConstraintStatementModel
@@ -1445,6 +1460,8 @@ type webACLRuleSqliMatchStatementModel struct {
 }
 
 type webACLRuleXssMatchStatementModel struct {
+	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
 }
 
 type webACLRuleSizeConstraintStatementModel struct {
