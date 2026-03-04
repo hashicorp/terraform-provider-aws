@@ -8,6 +8,7 @@ package guardduty
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -243,7 +244,15 @@ func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta an
 	input := guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, membershipPropagationTimeout, func(ctx context.Context) (any, error) {
+	const (
+		// Maximum amount of time to wait for membership to propagate
+		// When removing Organization Admin Accounts, there is eventual
+		// consistency even after the account is no longer listed.
+		// Reference error message:
+		// BadRequestException: The request is rejected because the current account cannot delete detector while it has invited or associated members.
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.BadRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDetector(ctx, &input)
 	}, "cannot delete detector while it has invited or associated members")
 
