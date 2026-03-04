@@ -103,18 +103,48 @@ output "selected_layer_version" {
 }
 ```
 
+### Cross-Account Layer Access
+
+```terraform
+# Reference a layer from another AWS account using full ARN with version
+data "aws_lambda_layer_version" "shared_layer" {
+  layer_version_arn = "arn:aws:lambda:us-east-1:123456789012:layer:shared-utilities:5"
+}
+
+# Use in your Lambda function
+resource "aws_lambda_function" "example" {
+  filename      = "function.zip"
+  function_name = "cross_account_example"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+
+  layers = [data.aws_lambda_layer_version.shared_layer.arn]
+}
+```
+
+```terraform
+# Reference a layer ARN without version (requires ListLayerVersions permission)
+data "aws_lambda_layer_version" "latest_shared" {
+  layer_version_arn = "arn:aws:lambda:us-east-1:123456789012:layer:shared-utilities"
+}
+```
+
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
+
+One of the following is required:
 
 * `layer_name` - (Required) Name of the Lambda layer.
+* `layer_version_arn` - (Required) ARN of the Lambda layer version. Can be a full ARN with version (e.g., `arn:aws:lambda:region:account:layer:name:1`) or without version (e.g., `arn:aws:lambda:region:account:layer:name`). When the version is omitted, the latest version will be retrieved (requires `lambda:ListLayerVersions` permission). Use the full ARN with version for cross-account layers where you don't have list permissions.
 
-The following arguments are optional:
+The following are optional when using `layer_name`:
 
-* `compatible_architecture` - (Optional) Specific architecture the layer version must support. Conflicts with `version`. If specified, the latest available layer version supporting the provided architecture will be used.
-* `compatible_runtime` - (Optional) Specific runtime the layer version must support. Conflicts with `version`. If specified, the latest available layer version supporting the provided runtime will be used.
+* `compatible_architecture` - (Optional) Specific architecture the layer version must support. Conflicts with `version` and `layer_version_arn`. If specified, the latest available layer version supporting the provided architecture will be used.
+* `compatible_runtime` - (Optional) Specific runtime the layer version must support. Conflicts with `version` and `layer_version_arn`. If specified, the latest available layer version supporting the provided runtime will be used.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime` and `compatible_architecture`. If omitted, the latest available layer version will be used.
+* `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime`, `compatible_architecture`, and `layer_version_arn`. If omitted, the latest available layer version will be used.
 
 ## Attribute Reference
 
@@ -132,4 +162,3 @@ This data source exports the following attributes in addition to the arguments a
 * `signing_profile_version_arn` - ARN for a signing profile version.
 * `source_code_hash` - (**Deprecated** use `code_sha256` instead) Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - Size in bytes of the function .zip file.
-* `version` - Lambda Layer version.
