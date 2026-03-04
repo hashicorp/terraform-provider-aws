@@ -135,6 +135,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalARNIdentity(),
 		},
+		{
+			Factory:  newTopicSubscriptionResourceAsListResource,
+			TypeName: "aws_sns_topic_subscription",
+			Name:     "Topic Subscription",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
 	})
 }
 

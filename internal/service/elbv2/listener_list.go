@@ -6,7 +6,6 @@ package elbv2
 import (
 	"context"
 	"fmt"
-	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -67,40 +66,61 @@ func (l *listResourceListener) List(ctx context.Context, request list.ListReques
 		input := elasticloadbalancingv2.DescribeListenersInput{
 			LoadBalancerArn: aws.String(loadBalancerARN),
 		}
-		for item, err := range listListeners(ctx, conn, &input) {
+
+		pages := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ELB Listener resources: %w", err))
 				yield(result)
 				return
 			}
 
-			arn := aws.ToString(item.ListenerArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(arn)
-			rd.Set(names.AttrARN, arn)
-
+			var tags map[string][]awstypes.Tag
 			if request.IncludeResource {
-				if err := resourceListenerFlatten(ctx, l.Meta(), &item, rd); err != nil {
-					tflog.Error(ctx, "Reading ELB Listener", map[string]any{
-						"error": err.Error(),
-					})
-					continue
+				arns := make([]string, len(page.Listeners))
+				for i, lb := range page.Listeners {
+					arns[i] = aws.ToString(lb.ListenerArn)
+				}
+
+				tags, err = batchListTags(ctx, conn, arns)
+				if err != nil {
+					result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing ELB Listener resource tags: %w", err))
+					yield(result)
+					return
 				}
 			}
 
-			result.DisplayName = arn
+			for _, item := range page.Listeners {
+				arn := aws.ToString(item.ListenerArn)
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
+				result := request.NewListResult(ctx)
+				rd := l.ResourceData()
+				rd.SetId(arn)
+				rd.Set(names.AttrARN, arn)
 
-			if !yield(result) {
-				return
+				if request.IncludeResource {
+					setTagsOut(ctx, tags[arn])
+					if err := resourceListenerFlatten(ctx, l.Meta(), &item, rd); err != nil {
+						tflog.Error(ctx, "Reading ELB Listener", map[string]any{
+							"error": err.Error(),
+						})
+						continue
+					}
+				}
+
+				result.DisplayName = arn
+
+				l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
 			}
 		}
 	}
@@ -109,23 +129,4 @@ func (l *listResourceListener) List(ctx context.Context, request list.ListReques
 type listListenerModel struct {
 	framework.WithRegionModel
 	LoadBalancerARN fwtypes.ARN `tfsdk:"load_balancer_arn"`
-}
-
-func listListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenersInput) iter.Seq2[awstypes.Listener, error] {
-	return func(yield func(awstypes.Listener, error) bool) {
-		pages := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Listener{}, fmt.Errorf("listing ELB Listener resources: %w", err))
-				return
-			}
-
-			for _, item := range page.Listeners {
-				if !yield(item, nil) {
-					return
-				}
-			}
-		}
-	}
 }

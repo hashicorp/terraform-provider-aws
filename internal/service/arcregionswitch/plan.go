@@ -43,7 +43,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
 // @Testing(altRegionTfVars=true)
 // @Testing(preIdentityVersion="6.30.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Testing(preCheck="testAccPreCheck")
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
@@ -1815,7 +1814,7 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{"exists"},
-		Refresh: statusPlan(ctx, conn, arn),
+		Refresh: statusPlan(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1846,7 +1845,7 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 		healthCheckConf := &retry.StateChangeConf{
 			Pending: []string{"pending"},
 			Target:  []string{"allocated"},
-			Refresh: statusRoute53HealthChecks(ctx, conn, arn, expectedCount),
+			Refresh: statusRoute53HealthChecks(conn, arn, expectedCount),
 			Timeout: timeout,
 		}
 
@@ -1859,8 +1858,8 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 	return plan, nil
 }
 
-func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusRoute53HealthChecks(conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		healthChecks, err := findRoute53HealthChecksByARN(ctx, conn, arn)
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
@@ -1883,8 +1882,8 @@ func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client
 	}
 }
 
-func statusPlan(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusPlan(conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		plan, err := findPlanByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -1901,7 +1900,7 @@ func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn st
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"health_check_allocation_in_progress"},
 		Target:  []string{"deletable"},
-		Refresh: statusPlanDeletable(ctx, conn, arn),
+		Refresh: statusPlanDeletable(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1914,8 +1913,8 @@ func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn st
 	return nil, smarterr.NewError(err)
 }
 
-func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusPlanDeletable(conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		plan, err := findPlanByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
