@@ -228,10 +228,10 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"input_data_config":            inputDataConfigBlock(ctx),
 			"mlflow_config":                mlflowConfigBlock(),
 			"model_package_config":         modelPackageConfigBlock(),
-			"output_data_config":           outputDataConfigBlock(ctx), // marker for tarun
+			"output_data_config":           outputDataConfigBlock(ctx),
 			"profiler_config":              profilerConfigBlock(),
 			"profiler_rule_configurations": profilerRuleConfigurationsBlock(),
-			"remote_debug_config":          remoteDebugConfigBlock(),
+			"remote_debug_config":          remoteDebugConfigBlock(), // marker for tarun
 			"resource_config":              resourceConfigBlock(ctx),
 			"retry_strategy":               retryStrategyBlock(),
 			"serverless_job_config":        serverlessJobConfigBlock(),
@@ -1033,9 +1033,6 @@ func remoteDebugConfigBlock() schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"enable_remote_debug": schema.BoolAttribute{
 					Optional: true,
-					PlanModifiers: []planmodifier.Bool{
-						boolplanmodifier.RequiresReplace(),
-					},
 				},
 			},
 		},
@@ -1052,31 +1049,51 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"instance_count": schema.Int64Attribute{
 					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(0),
+					},
 					PlanModifiers: []planmodifier.Int64{
 						int64planmodifier.RequiresReplace(),
 					},
 				},
 				"instance_type": schema.StringAttribute{
-					Optional: true,
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"keep_alive_period_in_seconds": schema.Int64Attribute{Optional: true},
+				"keep_alive_period_in_seconds": schema.Int64Attribute{
+					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.Between(0, 3600),
+					},
+				},
 				"training_plan_arn": schema.StringAttribute{
 					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(50, 2048),
+						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*`), "must be a valid training plan ARN"),
+					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"volume_kms_key_id": schema.StringAttribute{
 					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(0, 2048),
+						stringvalidator.RegexMatches(regexp.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
+					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"volume_size_in_gb": schema.Int64Attribute{
 					Optional: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(0),
+					},
 					PlanModifiers: []planmodifier.Int64{
 						int64planmodifier.RequiresReplace(),
 					},
@@ -1085,10 +1102,16 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 			Blocks: map[string]schema.Block{
 				"instance_groups": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobInstanceGroupModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeBetween(0, 5),
+					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"instance_count": schema.Int64Attribute{
 								Optional: true,
+								Validators: []validator.Int64{
+									int64validator.AtLeast(0),
+								},
 								PlanModifiers: []planmodifier.Int64{
 									int64planmodifier.RequiresReplace(),
 								},
@@ -1100,7 +1123,8 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 								},
 							},
 							"instance_type": schema.StringAttribute{
-								Optional: true,
+								Optional:   true,
+								CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
 								},
@@ -1129,6 +1153,9 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 									Attributes: map[string]schema.Attribute{
 										"instance_count": schema.Int64Attribute{
 											Optional: true,
+											Validators: []validator.Int64{
+												int64validator.AtLeast(0),
+											},
 											PlanModifiers: []planmodifier.Int64{
 												int64planmodifier.RequiresReplace(),
 											},
