@@ -20,33 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func statementBlock(ctx context.Context) schema.ListNestedBlock {
-	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleStatementModel](ctx),
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
-			listvalidator.SizeAtLeast(1),
-		},
-		NestedObject: schema.NestedBlockObject{
-			Blocks: map[string]schema.Block{
-				"asn_match_statement":                   asnMatchStatementBlock(ctx),
-				"byte_match_statement":                  byteMatchStatementBlock(ctx),
-				"geo_match_statement":                   geoMatchStatementBlock(ctx),
-				"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-				"label_match_statement":                 labelMatchStatementBlock(ctx),
-				"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
-				"rate_based_statement":                  rateBasedStatementBlock(ctx),
-				"regex_match_statement":                 regexMatchStatementBlock(ctx),
-				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-				"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-				"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-				"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-				"xss_match_statement":                   xssMatchStatementBlock(ctx),
-			},
-		},
-		Description: "Rule statement. Exactly one statement type must be specified.",
-	}
-}
+// statementBlock and related functions are generated in web_acl_rule_statement_models_gen.go
 
 func ipSetReferenceStatementBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
@@ -755,3 +729,5 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 		Description: "Aggregate keys for rate-based statement.",
 	}
 }
+
+// andStatementBlock and related functions are generated in web_acl_rule_statement_models_gen.go

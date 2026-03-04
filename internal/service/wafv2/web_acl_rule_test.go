@@ -462,6 +462,30 @@ func TestAccWAFV2WebACLRule_xssMatchStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_andStatement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_andStatement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.geo_match_statement.0.country_codes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.search_string", "test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
@@ -1401,6 +1425,70 @@ resource "aws_wafv2_web_acl_rule" "test" {
       text_transformation {
         priority = 0
         type     = "NONE"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+func testAccWebACLRuleConfig_andStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    and_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["US"]
+        }
+      }
+
+      statement {
+        byte_match_statement {
+          search_string         = "test"
+          positional_constraint = "CONTAINS"
+
+          field_to_match {
+            uri_path {}
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        }
       }
     }
   }

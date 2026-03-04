@@ -205,7 +205,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: "Labels to apply to matching web requests.",
 			},
-			"statement": statementBlock(ctx),
+			"statement": statementBlock(ctx, webACLRuleStatementSchemaLevel),
 			"visibility_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleVisibilityConfigModel](ctx),
 				Validators: []validator.List{
@@ -973,24 +973,28 @@ type webACLRuleCustomHeaderModel struct {
 	Value types.String `tfsdk:"value"`
 }
 
-type webACLRuleStatementModel struct {
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	RuleGroupReferenceStatement       fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]       `tfsdk:"rule_group_reference_statement"`
-	ManagedRuleGroupStatement         fwtypes.ListNestedObjectValueOf[webACLRuleManagedRuleGroupStatementModel]         `tfsdk:"managed_rule_group_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	RateBasedStatement                fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementModel]                `tfsdk:"rate_based_statement"`
-	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
-}
+// webACLRuleStatementModel is defined in web_acl_rule_statement_models_gen.go
+// as a type alias to webACLRuleStatementLevel3Model (the top level).
+// This allows logical operations (and_statement, or_statement, not_statement)
+// to nest up to 3 levels deep, matching the legacy aws_wafv2_web_acl behavior.
 
 func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
+	case !m.AndStatement.IsNull():
+		andData, d := m.AndStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var andStmt awstypes.AndStatement
+		diags.Append(flex.Expand(ctx, andData, &andStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{AndStatement: &andStmt}, diags
+
 	case !m.IPSetReferenceStatement.IsNull():
 		ipSetData, d := m.IPSetReferenceStatement.ToPtr(ctx)
 		diags.Append(d...)
@@ -1207,6 +1211,7 @@ func (m *webACLRuleStatementModel) Flatten(ctx context.Context, v any) (diags di
 func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *awstypes.Statement) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	m.AndStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAndStatementModel](ctx)
 	m.IPSetReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIPSetReferenceStatementModel](ctx)
 	m.GeoMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleGeoMatchStatementModel](ctx)
 	m.RuleGroupReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleRuleGroupReferenceStatementModel](ctx)
@@ -1222,6 +1227,13 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 	m.AsnMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAsnMatchStatementModel](ctx)
 
 	switch {
+	case stmt.AndStatement != nil:
+		var andModel webACLRuleAndStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.AndStatement, &andModel)...)
+		if !diags.HasError() {
+			m.AndStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleAndStatementModel{&andModel}, nil)
+		}
+
 	case stmt.IPSetReferenceStatement != nil:
 		var ipSetModel webACLRuleIPSetReferenceStatementModel
 		diags.Append(flex.Flatten(ctx, stmt.IPSetReferenceStatement, &ipSetModel)...)
@@ -1486,6 +1498,8 @@ type webACLRuleAsnMatchStatementModel struct {
 	AsnList           fwtypes.ListValueOf[types.Int64]                                  `tfsdk:"asn_list"`
 	ForwardedIPConfig fwtypes.ListNestedObjectValueOf[webACLRuleForwardedIPConfigModel] `tfsdk:"forwarded_ip_config"`
 }
+
+// webACLRuleAndStatementModel is defined in web_acl_rule_statement_models_gen.go
 
 type webACLRuleLabelModel struct {
 	Name types.String `tfsdk:"name"`
