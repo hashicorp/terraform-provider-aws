@@ -270,7 +270,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.9
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.18
-	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.18
+	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.19
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.39.18
 	github.com/aws/aws-sdk-go-v2/service/workmail v1.36.16
