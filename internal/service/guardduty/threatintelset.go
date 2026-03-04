@@ -191,6 +191,9 @@ func resourceThreatIntelSetDelete(ctx context.Context, d *schema.ResourceData, m
 		ThreatIntelSetId: aws.String(threatIntelSetID),
 	}
 	_, err = conn.DeleteThreatIntelSet(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected since no such resource found.") {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 	}
