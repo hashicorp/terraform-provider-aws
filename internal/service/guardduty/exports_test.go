@@ -11,15 +11,17 @@ var (
 	ResourcePublishingDestination = resourcePublishingDestination
 	ResourceThreatIntelSet        = resourceThreatIntelSet
 
-	FindDetectorByID                        = findDetectorByID
-	FindDetectorID                          = findDetectorID
-	FindDetectorFeatureByTwoPartKey         = findDetectorFeatureByTwoPartKey
-	FindFilterByTwoPartKey                  = findFilterByTwoPartKey
-	FindIPSetByTwoPartKey                   = findIPSetByTwoPartKey
-	FindMalwareProtectionPlanByID           = findMalwareProtectionPlanByID
-	FindMemberDetectorFeatureByThreePartKey = findMemberDetectorFeatureByThreePartKey
-	FindPublishingDestinationByTwoPartKey   = findPublishingDestinationByTwoPartKey
-	FindThreatIntelSetByTwoPartKey          = findThreatIntelSetByTwoPartKey
+	FindDetectorByID                                 = findDetectorByID
+	FindDetectorID                                   = findDetectorID
+	FindDetectorFeatureByTwoPartKey                  = findDetectorFeatureByTwoPartKey
+	FindFilterByTwoPartKey                           = findFilterByTwoPartKey
+	FindIPSetByTwoPartKey                            = findIPSetByTwoPartKey
+	FindMalwareProtectionPlanByID                    = findMalwareProtectionPlanByID
+	FindMemberDetectorFeatureByThreePartKey          = findMemberDetectorFeatureByThreePartKey
+	FindOrganizationConfigurationByID                = findOrganizationConfigurationByID
+	FindOrganizationConfigurationFeatureByTwoPartKey = findOrganizationConfigurationFeatureByTwoPartKey
+	FindPublishingDestinationByTwoPartKey            = findPublishingDestinationByTwoPartKey
+	FindThreatIntelSetByTwoPartKey                   = findThreatIntelSetByTwoPartKey
 
 	GetOrganizationAdminAccount = getOrganizationAdminAccount
 )
