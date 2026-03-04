@@ -234,6 +234,124 @@ With this configuration, when you remove both the `aws_wafv2_web_acl_rule` and `
 
 This prevents the `WAFAssociatedItemException` error.
 
+### Logical AND Statement
+
+Block requests that match multiple conditions (e.g., from a specific country AND containing a specific string):
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "block_suspicious" {
+  name        = "block-suspicious"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    and_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["CN"]
+        }
+      }
+
+      statement {
+        byte_match_statement {
+          search_string         = "admin"
+          positional_constraint = "CONTAINS"
+
+          field_to_match {
+            uri_path {}
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "block-suspicious"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
+### Logical OR Statement
+
+Block requests that match any of multiple conditions:
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "block_countries" {
+  name        = "block-countries"
+  priority    = 2
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    or_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["CN"]
+        }
+      }
+
+      statement {
+        geo_match_statement {
+          country_codes = ["RU"]
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "block-countries"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
+### Logical NOT Statement
+
+Allow requests only from specific countries by negating a geo match:
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "allow_only_us" {
+  name        = "allow-only-us"
+  priority    = 3
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    not_statement {
+      statement {
+        geo_match_statement {
+          country_codes = ["US", "CA"]
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "allow-only-us"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -307,12 +425,15 @@ One of the following action blocks must be specified:
 
 Exactly one of the following statement blocks must be specified:
 
+* `and_statement` - (Optional) Logical AND statement that combines multiple statements. See [And Statement](#and-statement) below.
 * `asn_match_statement` - (Optional) Match requests based on Autonomous System Number (ASN). See [ASN Match Statement](#asn-match-statement) below.
 * `byte_match_statement` - (Optional) Match requests based on byte patterns. See [Byte Match Statement](#byte-match-statement) below.
 * `geo_match_statement` - (Optional) Match requests by geographic location. See [Geo Match Statement](#geo-match-statement) below.
 * `ip_set_reference_statement` - (Optional) Reference to an IP set. See [IP Set Reference Statement](#ip-set-reference-statement) below.
 * `label_match_statement` - (Optional) Match requests based on labels. See [Label Match Statement](#label-match-statement) below.
 * `managed_rule_group_statement` - (Optional) Reference to a managed rule group. See [Managed Rule Group Statement](#managed-rule-group-statement) below.
+* `not_statement` - (Optional) Logical NOT statement that negates a single statement. See [Not Statement](#not-statement) below.
+* `or_statement` - (Optional) Logical OR statement that combines multiple statements. See [Or Statement](#or-statement) below.
 * `rate_based_statement` - (Optional) Rate-based rule to track request rates. See [Rate Based Statement](#rate-based-statement) below.
 * `regex_match_statement` - (Optional) Match requests using regex patterns. See [Regex Match Statement](#regex-match-statement) below.
 * `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
@@ -320,6 +441,26 @@ Exactly one of the following statement blocks must be specified:
 * `size_constraint_statement` - (Optional) Match requests based on size constraints. See [Size Constraint Statement](#size-constraint-statement) below.
 * `sqli_match_statement` - (Optional) Match requests that appear to contain SQL injection attacks. See [SQL Injection Match Statement](#sql-injection-match-statement) below.
 * `xss_match_statement` - (Optional) Match requests that appear to contain cross-site scripting attacks. See [Cross-Site Scripting Match Statement](#cross-site-scripting-match-statement) below.
+
+~> **NOTE:** Logical statements (`and_statement`, `not_statement`, `or_statement`) can be nested up to 3 levels deep. This matches the nesting limit of the `aws_wafv2_web_acl` resource.
+
+#### And Statement
+
+Combines multiple statements using logical AND. All nested statements must match for the AND statement to match.
+
+* `statement` - (Required) List of statements to combine. At least one statement is required. Each nested statement supports the same statement types listed above.
+
+#### Not Statement
+
+Negates a single statement. The NOT statement matches when the nested statement does not match.
+
+* `statement` - (Required) Single statement to negate. Exactly one statement must be specified.
+
+#### Or Statement
+
+Combines multiple statements using logical OR. At least one nested statement must match for the OR statement to match.
+
+* `statement` - (Required) List of statements to combine. At least one statement is required. Each nested statement supports the same statement types listed above.
 
 #### ASN Match Statement
 
@@ -436,10 +577,6 @@ One of the following override action blocks must be specified when using managed
 * `metric_name` - (Optional) Name of the CloudWatch metric. Defaults to the rule name.
 * `sampled_requests_enabled` - (Optional) Whether to store sampled requests. Defaults to `true`.
 
-## Attribute Reference
-
-This resource exports no additional attributes.
-
 ### Field to Match
 
 Exactly one of the following field to match blocks must be specified:
@@ -520,6 +657,10 @@ Exactly one of the following custom key blocks must be specified:
 ### Excluded Rule
 
 * `name` - (Required) Name of the rule to exclude from the rule group.
+
+## Attribute Reference
+
+This resource exports no additional attributes.
 
 ## Import
 
