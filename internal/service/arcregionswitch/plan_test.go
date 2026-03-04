@@ -36,12 +36,12 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
@@ -80,12 +80,12 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarcregionswitch.ResourcePlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -107,12 +107,12 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_update(rName, "Initial description", 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "30"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "1"),
@@ -124,7 +124,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 			{
 				Config: testAccPlanConfig_update(rName, "Updated description", 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "2"),
@@ -154,12 +154,12 @@ func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_minimalRegions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "primary_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -182,12 +182,12 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_multipleWorkflowsSameAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*", map[string]string{
 						"workflow_target_action": "activate",
@@ -220,12 +220,12 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
@@ -268,12 +268,12 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region(), zoneName.String(), recordName.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
@@ -456,7 +456,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_regionOverride(rName, acctest.AlternateRegion()),
@@ -467,7 +467,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 				),
 			},
@@ -497,7 +497,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
@@ -1586,12 +1586,12 @@ func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_reportConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.0.report_output.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.0.report_output.0.s3_configuration.#", "1"),
@@ -1608,7 +1608,7 @@ func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "report_configuration.#", "0"),
 				),
 			},

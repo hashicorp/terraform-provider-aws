@@ -38,7 +38,7 @@ func TestAccARCRegionSwitchPlan_Identity_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -131,7 +131,7 @@ func TestAccARCRegionSwitchPlan_Identity_regionOverride(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitchServiceID),
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup

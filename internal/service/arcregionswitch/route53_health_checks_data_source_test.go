@@ -30,7 +30,7 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthChecksDataSourceConfig_basic(rName, zoneName.String(), recordName.String()),
@@ -81,7 +81,7 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_regionOverride(t *testi
 						},
 						ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlanDestroy(ctx),
+						CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 						Steps: []resource.TestStep{
 							{
 								// Cross-region test cases will succeed because `aws_arcregionswitch_route53_health_checks` is global

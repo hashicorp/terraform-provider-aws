@@ -26,7 +26,7 @@ func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_basic(rName),
@@ -70,7 +70,7 @@ func TestAccARCRegionSwitchPlanDataSource_regionOverride(t *testing.T) {
 						},
 						ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlanDestroy(ctx),
+						CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 						Steps: []resource.TestStep{
 							{
 								// Cross-region test cases will succeed because `aws_arcregionswitch_plan` is global

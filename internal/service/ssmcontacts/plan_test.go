@@ -40,7 +40,7 @@ func testAccPlan_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneStage(rName),
@@ -90,7 +90,7 @@ func testAccPlan_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneStage(rName),
@@ -124,7 +124,7 @@ func testAccPlan_updateContactId(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_contactID(rName, contactOneResourceName),
@@ -173,7 +173,7 @@ func testAccPlan_updateStages(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneStage(rName),
@@ -245,7 +245,7 @@ func testAccPlan_updateDurationInMinutes(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_durationInMinutes(rName, oldDurationInMinutes),
@@ -304,7 +304,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_oneTarget(rName, testContactOneResourceArn),
@@ -412,7 +412,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_contactTargetInfo(rName, false, testContactOneResourceArn),
@@ -488,7 +488,7 @@ func testAccPlan_updateChannelTargetInfo(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_channelTargetInfo(
