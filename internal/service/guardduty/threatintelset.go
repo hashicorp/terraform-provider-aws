@@ -121,7 +121,7 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := findThreatIntelSetByTwoPartKey(ctx, conn, detectorID, threatIntelSetID)
-	if retry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Threat Intel Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

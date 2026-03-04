@@ -119,7 +119,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	gdo, err := findPublishingDestinationByTwoPartKey(ctx, conn, detectorID, destinationID)
-	if retry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Publishing Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

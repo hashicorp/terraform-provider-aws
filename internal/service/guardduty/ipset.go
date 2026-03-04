@@ -121,7 +121,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	output, err := findIPSetByTwoPartKey(ctx, conn, detectorID, ipSetID)
-	if retry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty IPSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

@@ -204,7 +204,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	filter, err := findFilterByTwoPartKey(ctx, conn, detectorID, name)
 
-	if retry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
