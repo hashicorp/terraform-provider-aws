@@ -23,7 +23,7 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -74,7 +74,7 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_regionOverride(t *testi
 					zoneName := acctest.RandomDomain()
 					recordName := zoneName.RandomSubdomain()
 
-					resource.ParallelTest(t, resource.TestCase{
+					acctest.ParallelTest(ctx, t, resource.TestCase{
 						PreCheck: func() {
 							acctest.PreCheck(ctx, t)
 							testAccPreCheck(ctx, t)

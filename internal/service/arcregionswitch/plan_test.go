@@ -29,7 +29,7 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -73,7 +73,7 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -100,7 +100,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -147,7 +147,7 @@ func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -175,7 +175,7 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -213,7 +213,7 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	zoneName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -261,7 +261,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -418,7 +418,7 @@ func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -449,7 +449,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -1579,7 +1579,7 @@ func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
