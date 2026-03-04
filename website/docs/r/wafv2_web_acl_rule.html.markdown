@@ -200,6 +200,17 @@ resource "aws_wafv2_web_acl_rule" "captcha_with_headers" {
   }
 }
 ```
+
+## Example Usage - IP Set Reference
+
+```terraform
+resource "aws_wafv2_web_acl_rule" "blocked_ips" {
+  name        = "blocked-ips"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  action {
+    block {}
   }
 
   statement {
