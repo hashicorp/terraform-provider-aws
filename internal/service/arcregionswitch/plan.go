@@ -998,21 +998,21 @@ func sortWorkflows(ctx context.Context, m *resourcePlanModel) fwdiag.Diagnostics
 
 type resourcePlanModel struct {
 	framework.WithRegionModel
-	ARN                          types.String                                         `tfsdk:"arn"`
-	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
-	Description                  types.String                                         `tfsdk:"description"`
-	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
-	Name                         types.String                                         `tfsdk:"name"`
-	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
-	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
-	RecoveryTimeObjectiveMinutes types.Int64                                          `tfsdk:"recovery_time_objective_minutes"`
-	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
+	ARN                          types.String                                              `tfsdk:"arn"`
+	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel]      `tfsdk:"associated_alarms"`
+	Description                  types.String                                              `tfsdk:"description"`
+	ExecutionRole                types.String                                              `tfsdk:"execution_role"`
+	Name                         types.String                                              `tfsdk:"name"`
+	PrimaryRegion                types.String                                              `tfsdk:"primary_region"`
+	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]             `tfsdk:"recovery_approach"`
+	RecoveryTimeObjectiveMinutes types.Int64                                               `tfsdk:"recovery_time_objective_minutes"`
+	Regions                      fwtypes.ListOfString                                      `tfsdk:"regions"`
 	ReportConfiguration          fwtypes.ListNestedObjectValueOf[reportConfigurationModel] `tfsdk:"report_configuration"`
-	Tags                         tftags.Map                                           `tfsdk:"tags"`
-	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
-	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
-	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
-	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
+	Tags                         tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                            `tfsdk:"timeouts"`
+	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]             `tfsdk:"triggers"`
+	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]            `tfsdk:"workflow"`
 }
 
 type associatedAlarmModel struct {
