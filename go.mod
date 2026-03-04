@@ -162,7 +162,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.12
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.5
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.8
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.12
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.13
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.10
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.11
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.50.10
