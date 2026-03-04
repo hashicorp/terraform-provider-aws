@@ -1441,10 +1441,9 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 	// 4. Call the AWS modify/update function
 	// 5. Use a waiter to wait for update to complete
 	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
+
 	conn := r.Meta().SageMakerClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan, state resourceTrainingJobModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
@@ -1452,7 +1451,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	// TIP: -- 3. Get the difference between the plan and state, if any
 	diff, d := flex.Diff(ctx, plan, state)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
@@ -1466,25 +1464,23 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateTrainingJob(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
-		if out == nil || out.TrainingJob == nil {
+
+		if out == nil || out.TrainingJobArn == nil {
 			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
 			return
 		}
 
-		// TIP: Using the output from the update function, re-set any computed attributes
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := waitTrainingJobUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
@@ -1492,7 +1488,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
