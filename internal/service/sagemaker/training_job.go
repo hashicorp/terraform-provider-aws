@@ -231,9 +231,9 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			"output_data_config":           outputDataConfigBlock(ctx),
 			"profiler_config":              profilerConfigBlock(),
 			"profiler_rule_configurations": profilerRuleConfigurationsBlock(),
-			"remote_debug_config":          remoteDebugConfigBlock(), // marker for tarun
+			"remote_debug_config":          remoteDebugConfigBlock(),
 			"resource_config":              resourceConfigBlock(ctx),
-			"retry_strategy":               retryStrategyBlock(),
+			"retry_strategy":               retryStrategyBlock(), // marker for tarun
 			"serverless_job_config":        serverlessJobConfigBlock(),
 			"session_chaining_config":      sessionChainingConfigBlock(),
 			"stopping_condition":           stoppingConditionBlock(ctx),
@@ -1185,7 +1185,10 @@ func retryStrategyBlock() schema.Block {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"maximum_retry_attempts": schema.Int64Attribute{
-					Optional: true,
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.Between(1, 30),
+					},
 					PlanModifiers: []planmodifier.Int64{
 						int64planmodifier.RequiresReplace(),
 					},
@@ -1202,13 +1205,31 @@ func serverlessJobConfigBlock() schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"accept_eula":             schema.BoolAttribute{Optional: true},
-				"base_model_arn":          schema.StringAttribute{Optional: true},
-				"customization_technique": schema.StringAttribute{Optional: true},
-				"evaluation_type":         schema.StringAttribute{Optional: true},
-				"evaluator_arn":           schema.StringAttribute{Optional: true},
-				"job_type":                schema.StringAttribute{Optional: true},
-				"peft":                    schema.StringAttribute{Optional: true},
+				"accept_eula": schema.BoolAttribute{Optional: true},
+				"base_model_arn": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 2048),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid base model ARN"),
+					},
+				},
+				"customization_technique": schema.StringAttribute{
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.CustomizationTechnique](),
+				},
+				"evaluation_type": schema.StringAttribute{
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.EvaluationType](),
+				},
+				"evaluator_arn": schema.StringAttribute{Optional: true},
+				"job_type": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.ServerlessJobType](),
+				},
+				"peft": schema.StringAttribute{
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.Peft](),
+				},
 			},
 		},
 	}
