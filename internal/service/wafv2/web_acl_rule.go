@@ -1491,8 +1491,6 @@ func (m webACLRuleOverrideActionModel) Expand(ctx context.Context) (result any, 
 	oa := &awstypes.OverrideAction{}
 	if !m.Count.IsNull() {
 		oa.Count = &awstypes.CountAction{}
-	} else if !m.None.IsNull() {
-		oa.None = &awstypes.NoneAction{}
 	} else {
 		// Default to None if override_action block is present but no specific action is set
 		oa.None = &awstypes.NoneAction{}
