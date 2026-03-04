@@ -3,23 +3,6 @@
 
 package sagemaker
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
 	// TIP: ==== IMPORTS ====
 	// This is a common set of imports but not customized to your code since
@@ -1364,58 +1347,38 @@ func vpcConfigBlock(ctx context.Context) schema.Block {
 }
 
 func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
 
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().SageMakerClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceTrainingJobModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a Create input structure
 	var input sagemaker.CreateTrainingJobInput
-	// TIP: Using a field name prefix allows mapping fields such as `ID` to `TrainingJobId`
+	// TODO : try out without WithFieldNamePrefix
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TrainingJob")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.CreateTrainingJob(ctx, &input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.String())
 		return
 	}
-	if out == nil || out.TrainingJob == nil {
+
+	if out == nil || out.TrainingJobArn == nil {
 		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.TrainingJobName.String())
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set attributes
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitTrainingJobCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
@@ -1423,7 +1386,6 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -1514,7 +1476,7 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 
 	if diff.HasChanges() {
 		var input sagemaker.UpdateTrainingJobInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TrainingJob")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
