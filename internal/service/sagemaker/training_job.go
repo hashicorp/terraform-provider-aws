@@ -47,14 +47,9 @@ import (
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(2 * time.Minute)
+	r.SetDefaultUpdateTimeout(2 * time.Minute)
+	r.SetDefaultDeleteTimeout(2 * time.Minute)
 
 	return r, nil
 }
@@ -1444,30 +1439,10 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-// TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 func (r *resourceTrainingJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
 func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
@@ -1486,10 +1461,6 @@ func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id stri
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
 func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
@@ -1508,8 +1479,6 @@ func waitTrainingJobUpdated(ctx context.Context, conn *sagemaker.Client, id stri
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
 func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{string(awstypes.TrainingJobStatusDeleting), string(awstypes.TrainingJobStatusInProgress), string(awstypes.TrainingJobStatusStopping)},
@@ -1526,13 +1495,6 @@ func waitTrainingJobDeleted(ctx context.Context, conn *sagemaker.Client, id stri
 	return nil, smarterr.NewError(err)
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
 func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findTrainingJobByName(ctx, conn, id)
@@ -1548,11 +1510,6 @@ func statusTrainingJob(conn *sagemaker.Client, id string) retry.StateRefreshFunc
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
 func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id string) (*sagemaker.DescribeTrainingJobOutput, error) {
 	input := sagemaker.DescribeTrainingJobInput{
 		TrainingJobName: aws.String(id),
@@ -1576,18 +1533,6 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 	return out, nil
 }
 
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTrainingJobModel struct {
 	framework.WithRegionModel
 	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
