@@ -7,6 +7,7 @@ FEATURES:
 * **New List Resource:** `aws_lb_listener` ([#46679](https://github.com/hashicorp/terraform-provider-aws/issues/46679))
 * **New List Resource:** `aws_lb_listener_rule` ([#46731](https://github.com/hashicorp/terraform-provider-aws/issues/46731))
 * **New List Resource:** `aws_lb_target_group` ([#46662](https://github.com/hashicorp/terraform-provider-aws/issues/46662))
+* **New List Resource:** `aws_sns_topic_subscription` ([#46738](https://github.com/hashicorp/terraform-provider-aws/issues/46738))
 * **New Resource:** `aws_observabilityadmin_telemetry_pipeline` ([#46698](https://github.com/hashicorp/terraform-provider-aws/issues/46698))
 * **New Resource:** `aws_sagemaker_mlflow_app` ([#45565](https://github.com/hashicorp/terraform-provider-aws/issues/45565))
 
