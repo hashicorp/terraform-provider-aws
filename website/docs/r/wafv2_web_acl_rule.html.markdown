@@ -314,6 +314,7 @@ Exactly one of the following statement blocks must be specified:
 * `label_match_statement` - (Optional) Match requests based on labels. See [Label Match Statement](#label-match-statement) below.
 * `managed_rule_group_statement` - (Optional) Reference to a managed rule group. See [Managed Rule Group Statement](#managed-rule-group-statement) below.
 * `rate_based_statement` - (Optional) Rate-based rule to track request rates. See [Rate Based Statement](#rate-based-statement) below.
+* `regex_match_statement` - (Optional) Match requests using regex patterns. See [Regex Match Statement](#regex-match-statement) below.
 * `regex_pattern_set_reference_statement` - (Optional) Reference to a regex pattern set. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below.
 * `rule_group_reference_statement` - (Optional) Reference to a rule group. See [Rule Group Reference Statement](#rule-group-reference-statement) below.
 
@@ -375,7 +376,13 @@ Exactly one of the following statement blocks must be specified:
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header instead of using the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below.
 * `scope_down_statement` - (Optional) Additional statement to narrow the scope of requests that the rate-based rule evaluates. See [Scope Down Statement](#scope-down-statement) below.
 
-### Override Action
+#### Regex Match Statement
+
+* `regex_string` - (Required) Regular expression pattern to match against the web request component.
+* `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
+
+#### Regex Pattern Set Reference Statement
 
 One of the following override action blocks must be specified when using managed rule groups:
 
