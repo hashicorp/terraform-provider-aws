@@ -226,7 +226,19 @@ func findIPSetByTwoPartKey(ctx context.Context, conn *guardduty.Client, detector
 		IpSetId:    aws.String(ipSetID),
 	}
 
-	return findIPSet(ctx, conn, &input)
+	output, err := findIPSet(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == awstypes.IpSetStatusDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(status),
+		}
+	}
+
+	return output, nil
 }
 
 func findIPSet(ctx context.Context, conn *guardduty.Client, input *guardduty.GetIPSetInput) (*guardduty.GetIPSetOutput, error) {
@@ -244,12 +256,6 @@ func findIPSet(ctx context.Context, conn *guardduty.Client, input *guardduty.Get
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
-	}
-
-	if status := output.Status; status == awstypes.IpSetStatusDeleted {
-		return nil, &retry.NotFoundError{
-			Message: string(status),
-		}
 	}
 
 	return output, nil
