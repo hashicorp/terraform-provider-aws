@@ -368,11 +368,6 @@ Exactly one of the following statement blocks must be specified:
 * `limit` - (Required) Rate limit threshold (requests per 5-minute period).
 * `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Defaults to `IP`. Valid values: `IP`, `FORWARDED_IP`, `CUSTOM_KEYS`, `CONSTANT`.
 
-#### Byte Match Statement
-
-* `search_string` - (Required) String value to search for within the request (1-200 characters).
-* `positional_constraint` - (Required) Area within the portion of a web request that you want AWS WAF to search for the search string. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
-
 ### Override Action
 
 One of the following override action blocks must be specified when using managed rule groups:
@@ -405,6 +400,31 @@ One of the following override action blocks must be specified when using managed
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+### Field to Match
+
+Exactly one of the following field to match blocks must be specified:
+
+* `all_query_arguments` - (Optional) Inspect all query arguments.
+* `body` - (Optional) Inspect the request body as plain text.
+* `method` - (Optional) Inspect the HTTP method.
+* `query_string` - (Optional) Inspect the query string.
+* `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below.
+* `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below.
+* `uri_path` - (Optional) Inspect the request URI path.
+
+#### Single Header
+
+* `name` - (Required) Name of the header to inspect (case insensitive).
+
+#### Single Query Argument
+
+* `name` - (Required) Name of the query argument to inspect.
+
+### Text Transformation
+
+* `priority` - (Required) Relative processing order for multiple transformations (0-based).
+* `type` - (Required) Transformation to apply. Valid values: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`, `BASE64_DECODE`, `HEX_DECODE`, `MD5`, `REPLACE_COMMENTS`, `ESCAPE_SEQ_DECODE`, `SQL_HEX_DECODE`, `CSS_DECODE`, `JS_DECODE`, `NORMALIZE_PATH`, `NORMALIZE_PATH_WIN`, `REMOVE_NULLS`, `REPLACE_NULLS`, `BASE64_DECODE_EXT`, `URL_DECODE_UNI`, `UTF8_TO_UNICODE`.
 
 ## Import
 
