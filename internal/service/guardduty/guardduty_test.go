@@ -52,7 +52,8 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"tags":          testAccGuardDutyIPSet_tagsSerial,
 		},
 		"OrganizationAdminAccount": {
-			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
+			acctest.CtBasic:      testAccOrganizationAdminAccount_basic,
+			acctest.CtDisappears: testAccOrganizationAdminAccount_disappears,
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic:                 testAccOrganizationConfiguration_basic,

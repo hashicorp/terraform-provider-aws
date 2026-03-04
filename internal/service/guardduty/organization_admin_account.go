@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -96,6 +97,9 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 		AdminAccountId: aws.String(d.Id()),
 	}
 	_, err := conn.DisableOrganizationAdminAccount(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request failed because the delegated administrator account has already been disabled and/or GuardDuty protection has been disabled.") {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
 	}
