@@ -1636,12 +1636,71 @@ type webACLRuleTrulyEmptyModel struct{}
 
 type webACLRuleFieldToMatchModel struct {
 	AllQueryArguments   fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"all_query_arguments"`
-	Body                fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"body"`
+	Body                fwtypes.ListNestedObjectValueOf[webACLRuleBodyModel]                `tfsdk:"body"`
+	Cookies             fwtypes.ListNestedObjectValueOf[webACLRuleCookiesModel]             `tfsdk:"cookies"`
+	HeaderOrder         fwtypes.ListNestedObjectValueOf[webACLRuleHeaderOrderModel]         `tfsdk:"header_order"`
+	Headers             fwtypes.ListNestedObjectValueOf[webACLRuleHeadersModel]             `tfsdk:"headers"`
+	JA3Fingerprint      fwtypes.ListNestedObjectValueOf[webACLRuleJAFingerprintModel]       `tfsdk:"ja3_fingerprint"`
+	JA4Fingerprint      fwtypes.ListNestedObjectValueOf[webACLRuleJAFingerprintModel]       `tfsdk:"ja4_fingerprint"`
+	JsonBody            fwtypes.ListNestedObjectValueOf[webACLRuleJsonBodyModel]            `tfsdk:"json_body"`
 	Method              fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"method"`
 	QueryString         fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"query_string"`
 	SingleHeader        fwtypes.ListNestedObjectValueOf[webACLRuleSingleHeaderModel]        `tfsdk:"single_header"`
 	SingleQueryArgument fwtypes.ListNestedObjectValueOf[webACLRuleSingleQueryArgumentModel] `tfsdk:"single_query_argument"`
+	UriFragment         fwtypes.ListNestedObjectValueOf[webACLRuleUriFragmentModel]         `tfsdk:"uri_fragment"`
 	UriPath             fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]          `tfsdk:"uri_path"`
+}
+
+type webACLRuleBodyModel struct {
+	OversizeHandling fwtypes.StringEnum[awstypes.OversizeHandling] `tfsdk:"oversize_handling"`
+}
+
+type webACLRuleCookiesModel struct {
+	MatchPattern     fwtypes.ListNestedObjectValueOf[webACLRuleCookiesMatchPatternModel] `tfsdk:"match_pattern"`
+	MatchScope       fwtypes.StringEnum[awstypes.MapMatchScope]                          `tfsdk:"match_scope"`
+	OversizeHandling fwtypes.StringEnum[awstypes.OversizeHandling]                       `tfsdk:"oversize_handling"`
+}
+
+type webACLRuleCookiesMatchPatternModel struct {
+	All             fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel] `tfsdk:"all"`
+	ExcludedCookies types.List                                                 `tfsdk:"excluded_cookies"`
+	IncludedCookies types.List                                                 `tfsdk:"included_cookies"`
+}
+
+type webACLRuleHeaderOrderModel struct {
+	OversizeHandling fwtypes.StringEnum[awstypes.OversizeHandling] `tfsdk:"oversize_handling"`
+}
+
+type webACLRuleHeadersModel struct {
+	MatchPattern     fwtypes.ListNestedObjectValueOf[webACLRuleHeadersMatchPatternModel] `tfsdk:"match_pattern"`
+	MatchScope       fwtypes.StringEnum[awstypes.MapMatchScope]                          `tfsdk:"match_scope"`
+	OversizeHandling fwtypes.StringEnum[awstypes.OversizeHandling]                       `tfsdk:"oversize_handling"`
+}
+
+type webACLRuleHeadersMatchPatternModel struct {
+	All             fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel] `tfsdk:"all"`
+	ExcludedHeaders types.List                                                 `tfsdk:"excluded_headers"`
+	IncludedHeaders types.List                                                 `tfsdk:"included_headers"`
+}
+
+type webACLRuleJAFingerprintModel struct {
+	FallbackBehavior fwtypes.StringEnum[awstypes.FallbackBehavior] `tfsdk:"fallback_behavior"`
+}
+
+type webACLRuleJsonBodyModel struct {
+	InvalidFallbackBehavior fwtypes.StringEnum[awstypes.BodyParsingFallbackBehavior]             `tfsdk:"invalid_fallback_behavior"`
+	MatchPattern            fwtypes.ListNestedObjectValueOf[webACLRuleJsonBodyMatchPatternModel] `tfsdk:"match_pattern"`
+	MatchScope              fwtypes.StringEnum[awstypes.JsonMatchScope]                          `tfsdk:"match_scope"`
+	OversizeHandling        fwtypes.StringEnum[awstypes.OversizeHandling]                        `tfsdk:"oversize_handling"`
+}
+
+type webACLRuleJsonBodyMatchPatternModel struct {
+	All           fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel] `tfsdk:"all"`
+	IncludedPaths types.List                                                 `tfsdk:"included_paths"`
+}
+
+type webACLRuleUriFragmentModel struct {
+	FallbackBehavior fwtypes.StringEnum[awstypes.FallbackBehavior] `tfsdk:"fallback_behavior"`
 }
 
 type webACLRuleSingleHeaderModel struct {

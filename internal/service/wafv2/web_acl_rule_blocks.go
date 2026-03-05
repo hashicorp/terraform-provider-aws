@@ -568,9 +568,177 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 					NestedObject: schema.NestedBlockObject{},
 				},
 				"body": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBodyModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"oversize_handling": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
+								Optional:   true,
+								Computed:   true,
+								Default:    stringdefault.StaticString(string(awstypes.OversizeHandlingContinue)),
+							},
+						},
+					},
+				},
+				"cookies": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCookiesModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"match_scope": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.MapMatchScope](),
+								Required:   true,
+							},
+							"oversize_handling": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
+								Required:   true,
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"match_pattern": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleCookiesMatchPatternModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtLeast(1)},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"excluded_cookies": schema.ListAttribute{
+											ElementType: types.StringType,
+											Optional:    true,
+										},
+										"included_cookies": schema.ListAttribute{
+											ElementType: types.StringType,
+											Optional:    true,
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"all": schema.ListNestedBlock{
+											CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+											Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+											NestedObject: schema.NestedBlockObject{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"header_order": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleHeaderOrderModel](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"oversize_handling": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
+								Required:   true,
+							},
+						},
+					},
+				},
+				"headers": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleHeadersModel](ctx),
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"match_scope": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.MapMatchScope](),
+								Required:   true,
+							},
+							"oversize_handling": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
+								Required:   true,
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"match_pattern": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleHeadersMatchPatternModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"excluded_headers": schema.ListAttribute{
+											ElementType: types.StringType,
+											Optional:    true,
+										},
+										"included_headers": schema.ListAttribute{
+											ElementType: types.StringType,
+											Optional:    true,
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"all": schema.ListNestedBlock{
+											CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+											Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+											NestedObject: schema.NestedBlockObject{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"ja3_fingerprint": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"fallback_behavior": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
+				"ja4_fingerprint": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJAFingerprintModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"fallback_behavior": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
+				"json_body": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJsonBodyModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"invalid_fallback_behavior": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.BodyParsingFallbackBehavior](),
+								Optional:   true,
+							},
+							"match_scope": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.JsonMatchScope](),
+								Required:   true,
+							},
+							"oversize_handling": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.OversizeHandling](),
+								Optional:   true,
+								Computed:   true,
+								Default:    stringdefault.StaticString(string(awstypes.OversizeHandlingContinue)),
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"match_pattern": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleJsonBodyMatchPatternModel](ctx),
+								Validators: []validator.List{listvalidator.SizeAtMost(1), listvalidator.SizeAtLeast(1)},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"included_paths": schema.ListAttribute{
+											ElementType: types.StringType,
+											Optional:    true,
+										},
+									},
+									Blocks: map[string]schema.Block{
+										"all": schema.ListNestedBlock{
+											CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+											Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+											NestedObject: schema.NestedBlockObject{},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				"method": schema.ListNestedBlock{
 					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
@@ -600,6 +768,19 @@ func fieldToMatchBlock(ctx context.Context) schema.ListNestedBlock {
 						Attributes: map[string]schema.Attribute{
 							names.AttrName: schema.StringAttribute{
 								Required: true,
+							},
+						},
+					},
+				},
+				"uri_fragment": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleUriFragmentModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"fallback_behavior": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+								Optional:   true,
+								Computed:   true,
 							},
 						},
 					},

@@ -1126,58 +1126,6 @@ resource "aws_wafv2_web_acl_rule" "test" {
 `, rName)
 }
 
-func testAccWebACLRuleConfig_captchaCustomRequestHandling(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_web_acl" "test" {
-  name  = %[1]q
-  scope = "REGIONAL"
-
-  default_action {
-    allow {}
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = %[1]q
-    sampled_requests_enabled   = false
-  }
-
-  lifecycle {
-    ignore_changes = [rule]
-  }
-}
-
-resource "aws_wafv2_web_acl_rule" "test" {
-  name        = %[1]q
-  priority    = 1
-  web_acl_arn = aws_wafv2_web_acl.test.arn
-
-  action {
-    captcha {
-      custom_request_handling {
-        insert_header {
-          name  = "x-custom-header"
-          value = "custom-value"
-        }
-      }
-    }
-  }
-
-  statement {
-    geo_match_statement {
-      country_codes = ["US"]
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = %[1]q
-    sampled_requests_enabled   = false
-  }
-}
-`, rName)
-}
-
 func testAccWebACLRuleConfig_regexPatternSetReference(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
