@@ -12,6 +12,7 @@ package flex
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -1702,8 +1703,8 @@ type tfFlattenerUnionModel struct {
 var _ Flattener = &tfFlattenerUnionModel{}
 
 func (m *tfFlattenerUnionModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
-	val, ok := v.(*awsFlattenerUnion)
-	if !ok || val == nil {
+	val, ok := v.(awsFlattenerUnion)
+	if !ok {
 		m.FieldA = types.StringNull()
 		m.FieldB = types.StringNull()
 		return diags
@@ -1725,3 +1726,63 @@ func (m *tfFlattenerUnionModel) Flatten(ctx context.Context, v any) (diags diag.
 }
 
 type tfFlattenerListNestedObject tfListNestedObject[tfFlattenerUnionModel]
+
+// TestFlattenFlattener_StructValue tests that custom Flatteners receive struct values
+// (not pointers) when flattening *struct -> ListNestedObjectValueOf[Model].
+// This is a regression test for issue #46761 where the S3 lifecycleRuleAndOperatorModel
+// Flattener broke because it received *LifecycleRuleAndOperator instead of LifecycleRuleAndOperator.
+func TestFlattenFlattener_StructValue(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		"Flattener receives struct value, not pointer": {
+			Source: awsFlattenerSinglePtr{
+				Field1: &awsFlattenerUnion{
+					FieldA: aws.String("test-value"),
+				},
+			},
+			Target: &tfFlattenerStructValueListNestedObject{},
+			WantTarget: &tfFlattenerStructValueListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfFlattenerStructValueModel{
+					{
+						FieldA: types.StringValue("test-value"),
+					},
+				}),
+			},
+		},
+	}
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+}
+
+// tfFlattenerStructValueModel is a Flattener that strictly requires a struct value.
+// It returns an error diagnostic if it receives a pointer, catching regressions
+// where AutoFlex incorrectly passes pointers to Flatteners.
+type tfFlattenerStructValueModel struct {
+	FieldA types.String `tfsdk:"field_a"`
+}
+
+var _ Flattener = &tfFlattenerStructValueModel{}
+
+func (m *tfFlattenerStructValueModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	// This Flattener strictly expects a struct value, not a pointer.
+	// If AutoFlex passes a pointer, this type assertion fails and we return an error.
+	val, ok := v.(awsFlattenerUnion)
+	if !ok {
+		diags.AddError(
+			"Flattener received wrong type",
+			fmt.Sprintf("Expected awsFlattenerUnion (struct), got %T. AutoFlex should dereference pointers before calling Flatteners.", v),
+		)
+		return diags
+	}
+
+	if val.FieldA != nil {
+		m.FieldA = types.StringValue(*val.FieldA)
+	} else {
+		m.FieldA = types.StringNull()
+	}
+	return diags
+}
+
+type tfFlattenerStructValueListNestedObject tfListNestedObject[tfFlattenerStructValueModel]
