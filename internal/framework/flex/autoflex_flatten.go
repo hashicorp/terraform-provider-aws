@@ -622,12 +622,7 @@ func (flattener autoFlattener) pointer(ctx context.Context, sourcePath path.Path
 		return diags
 
 	case reflect.Struct:
-		// For NestedObjectType targets, pass the original pointer so custom Flatteners receive the correct type
-		if _, ok := tTo.(fwtypes.NestedObjectType); ok && !isNilFrom {
-			diags.Append(flattener.struct_(ctx, sourcePath, vFrom, isNilFrom, targetPath, tTo, vTo, fieldOpts)...)
-		} else {
-			diags.Append(flattener.struct_(ctx, sourcePath, vElem, isNilFrom, targetPath, tTo, vTo, fieldOpts)...)
-		}
+		diags.Append(flattener.struct_(ctx, sourcePath, vElem, isNilFrom, targetPath, tTo, vTo, fieldOpts)...)
 		return diags
 	}
 
@@ -1282,25 +1277,19 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 		}
 	}
 
-	// Get the struct value for field inspection (dereference if pointer)
-	vFromStruct := vFrom
-	if vFrom.Kind() == reflect.Pointer && !vFrom.IsNil() {
-		vFromStruct = vFrom.Elem()
-	}
-
 	// Check if source is a Rule 2 XML wrapper struct with all zero values and omitempty
-	if potentialXMLWrapperStruct(vFromStruct.Type()) && fieldOpts.omitempty {
-		wrapperFieldName := getXMLWrapperSliceFieldName(vFromStruct.Type())
-		itemsField := vFromStruct.FieldByName(wrapperFieldName)
+	if potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
+		wrapperFieldName := getXMLWrapperSliceFieldName(vFrom.Type())
+		itemsField := vFrom.FieldByName(wrapperFieldName)
 
 		if itemsField.IsValid() {
 			itemsEmpty := itemsField.IsNil() || (itemsField.Kind() == reflect.Slice && itemsField.Len() == 0)
 
 			if itemsEmpty {
 				allOtherFieldsZero := true
-				for i := 0; i < vFromStruct.NumField(); i++ {
-					sourceField := vFromStruct.Field(i)
-					fieldName := vFromStruct.Type().Field(i).Name
+				for i := 0; i < vFrom.NumField(); i++ {
+					sourceField := vFrom.Field(i)
+					fieldName := vFrom.Type().Field(i).Name
 
 					if fieldName == wrapperFieldName || fieldName == xmlWrapperFieldQuantity {
 						continue
@@ -1330,10 +1319,10 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 	}
 
 	// Check if source is a regular struct with all zero values and omitempty
-	if !potentialXMLWrapperStruct(vFromStruct.Type()) && fieldOpts.omitempty {
+	if !potentialXMLWrapperStruct(vFrom.Type()) && fieldOpts.omitempty {
 		allFieldsZero := true
-		for i := 0; i < vFromStruct.NumField(); i++ {
-			sourceField := vFromStruct.Field(i)
+		for i := 0; i < vFrom.NumField(); i++ {
+			sourceField := vFrom.Field(i)
 			isFieldZero := sourceField.Kind() == reflect.Pointer && sourceField.IsNil() ||
 				sourceField.Kind() == reflect.Pointer && sourceField.Elem().IsZero() ||
 				sourceField.Kind() != reflect.Pointer && sourceField.IsZero()
@@ -1367,18 +1356,12 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener", map[string]any{
 			logAttrKeyTargetType: fullTypeName(reflect.TypeOf(to)),
 		})
-		// Pass the source value as-is to the Flattener
 		diags.Append(targetFlattener.Flatten(ctx, vFrom.Interface())...)
 		if diags.HasError() {
 			return diags
 		}
 	} else {
-		// Dereference pointer if needed for standard struct flattening
-		sourceValue := vFrom
-		if vFrom.Kind() == reflect.Pointer && !vFrom.IsNil() {
-			sourceValue = vFrom.Elem()
-		}
-		diags.Append(flattenStruct(ctx, sourcePath, sourceValue.Interface(), targetPath, to, flattener)...)
+		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
