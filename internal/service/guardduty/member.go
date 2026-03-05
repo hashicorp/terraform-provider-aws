@@ -309,7 +309,7 @@ func statusMember(conn *guardduty.Client, detectorID, accountID string) retry.St
 	}
 }
 
-func waitMemberInvited(ctx context.Context, conn *guardduty.Client, detectorID, accountID string, timeout time.Duration) (*awstypes.Member, error) {
+func waitMemberInvited(ctx context.Context, conn *guardduty.Client, detectorID, accountID string, timeout time.Duration) (*awstypes.Member, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{memberRelationshipStatusCreated, memberRelationshipStatusEmailVerificationInProgress},
 		Target:  []string{memberRelationshipStatusDisabled, memberRelationshipStatusEnabled, memberRelationshipStatusInvited},
