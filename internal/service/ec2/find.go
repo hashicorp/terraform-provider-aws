@@ -431,7 +431,7 @@ func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 }
 
 func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
-	output, err := tfslices.CollectWithError(listInstances(ctx, conn, input))
+	output, err := findInstances(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -440,29 +440,33 @@ func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInst
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
 }
 
+func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) ([]awstypes.Instance, error) {
+	output, err := tfslices.CollectWithError(listInstances(ctx, conn, input))
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: &input,
+		}
+	}
+
+	return output, nil
+}
+
 // DescribeInstances is an "All-Or-Some" call.
 func listInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) iter.Seq2[awstypes.Instance, error] {
 	return func(yield func(awstypes.Instance, error) bool) {
 		pages := ec2.NewDescribeInstancesPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
-
-			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
-				yield(awstypes.Instance{}, &sdkretry.NotFoundError{
-					LastError:   err,
-					LastRequest: &input,
-				})
-				return
-			}
-
 			if err != nil {
-				yield(awstypes.Instance{}, err)
+				yield(inttypes.Zero[awstypes.Instance](), fmt.Errorf("listing EC2 Instances: %w", err))
 				return
 			}
 
 			for _, v := range page.Reservations {
-				for _, instance := range v.Instances {
-					if !yield(instance, nil) {
+				for _, v := range v.Instances {
+					if !yield(v, nil) {
 						return
 					}
 				}
