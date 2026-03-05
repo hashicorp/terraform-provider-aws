@@ -80,7 +80,7 @@ func TestExpandCollections(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandListOfInt64(t *testing.T) {
