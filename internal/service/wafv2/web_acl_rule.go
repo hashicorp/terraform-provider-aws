@@ -1684,15 +1684,16 @@ type webACLRuleRuleActionOverrideModel struct {
 }
 
 type webACLRuleScopeDownStatementModel struct {
-	IPSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel] `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement       fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]       `tfsdk:"geo_match_statement"`
-	ByteMatchStatement      fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]      `tfsdk:"byte_match_statement"`
-	SqliMatchStatement      fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]      `tfsdk:"sqli_match_statement"`
-	XssMatchStatement       fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]       `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel] `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement     fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]     `tfsdk:"regex_match_statement"`
-	LabelMatchStatement     fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]     `tfsdk:"label_match_statement"`
-	AsnMatchStatement       fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]       `tfsdk:"asn_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 }
 
 func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx context.Context, stmt *awstypes.Statement) diag.Diagnostics {
@@ -1706,6 +1707,7 @@ func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx contex
 	m.XssMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleXssMatchStatementModel](ctx)
 	m.SizeConstraintStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleSizeConstraintStatementModel](ctx)
 	m.RegexMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleRegexMatchStatementModel](ctx)
+	m.RegexPatternSetReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleRegexPatternSetReferenceStatementModel](ctx)
 	m.LabelMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleLabelMatchStatementModel](ctx)
 	m.AsnMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAsnMatchStatementModel](ctx)
 
@@ -1744,6 +1746,11 @@ func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx contex
 		var model webACLRuleRegexMatchStatementModel
 		diags.Append(flex.Flatten(ctx, stmt.RegexMatchStatement, &model)...)
 		m.RegexMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.RegexPatternSetReferenceStatement != nil:
+		var model webACLRuleRegexPatternSetReferenceStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.RegexPatternSetReferenceStatement, &model)...)
+		m.RegexPatternSetReferenceStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 
 	case stmt.LabelMatchStatement != nil:
 		var model webACLRuleLabelMatchStatementModel
@@ -1795,6 +1802,11 @@ func (m webACLRuleScopeDownStatementModel) Expand(ctx context.Context) (result a
 		var stmt awstypes.RegexMatchStatement
 		diags.Append(flex.Expand(ctx, m.RegexMatchStatement, &stmt)...)
 		return &awstypes.Statement{RegexMatchStatement: &stmt}, diags
+
+	case !m.RegexPatternSetReferenceStatement.IsNull():
+		var stmt awstypes.RegexPatternSetReferenceStatement
+		diags.Append(flex.Expand(ctx, m.RegexPatternSetReferenceStatement, &stmt)...)
+		return &awstypes.Statement{RegexPatternSetReferenceStatement: &stmt}, diags
 
 	case !m.LabelMatchStatement.IsNull():
 		var stmt awstypes.LabelMatchStatement
