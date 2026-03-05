@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestAppliedToEach(t *testing.T) {
+func TestApplyToAll(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -37,7 +37,7 @@ func TestAppliedToEach(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			iter := AppliedToEach(slices.Values(test.input), strings.ToUpper)
+			iter := ApplyToAll(slices.Values(test.input), strings.ToUpper)
 
 			got := slices.Collect(iter)
 
