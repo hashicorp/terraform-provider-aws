@@ -4,37 +4,27 @@
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New List Resource
 
-List resources in the Terraform AWS Provider allow users to retrieve and manage collections of AWS resources.
+List Resources in the Terraform AWS Provider allow users to retrieve and manage collections of AWS resources.
 
-Each list resource should be submitted for review individually. Pull requests containing multiple list resources or other resources are more difficult to review, and maintainers will typically request that they be split into separate submissions.
+Each List Resource should be submitted for review individually.
+Pull requests containing multiple list resources or other resources are more difficult to review, and maintainers will typically request that they be split into separate submissions.
 
 ## Prerequisites
 
-List Resources are dependent on [resource identity](https://developer.hashicorp.com/terraform/plugin/framework/resources/identity) being implemented on the target resource. Ensure that the resource identity has been created and merged first. Refer to [Adding Resource Identity](ai-agent-guides/parameterized-resource-identity.md) for detailed instructions.
+List Resources are dependent on [Resource Identity](https://developer.hashicorp.com/terraform/plugin/framework/resources/identity) being implemented on the target resource.
+Ensure that the resource identity has been created and merged first.
+Refer to [Adding Resource Identity Support](add-resource-identity-support.md) for detailed instructions.
 
 ## Steps to Add a List Resource
 
-Naming of a new List Resource should be identical to the target resource. For example, if adding a new list resource for `aws_batch_job_definition`, the list resource should be named `aws_batch_job_definition`.
+Naming of a new List Resource should be identical to the target resource.
+For example, if adding a new list resource for `aws_batch_job_definition`, the list resource should be named `aws_batch_job_definition`.
 
-Always use the [`skaff`](skaff.md) provider scaffolding tool to generate new list resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
+Always use the [`skaff`](skaff.md) provider scaffolding tool to generate new list resource and test templates using your chosen name.
+Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework.
+The implementation type can be identified by inspecting the tags in the resource file.
 
-### SDK resources
-
-SDKv2 target resource will have the tag `@SDKResource()` in the resource file. For these resources use the following, replacing `<resource name>` with the name of the resource being added, eg `JobDefinition`.
-
-```console
-skaff list --name <resource name>
-```
-
-### Framework resources
-
-Framework target resource will have the tag `@FrameworkResource()` in the resource file. For these resources use the following, replacing `<resource-name>` with the name of the resource being added, eg `JobDefinition`.
-
-```console
-skaff list --framework --name <resource-name>
-```
-
-`Skaff` will generate the following files:
+`skaff` will generate the following files:
 
 - `internal/service/<service-name>/<resource-name>_list.go` - List Resource implementation
 - `internal/service/<service-name>/<resource-name>_list_test.go` - List Resource acceptance tests
@@ -42,21 +32,47 @@ skaff list --framework --name <resource-name>
 - `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/main.tf` - Basic List Resource acceptance test configuration
 - `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/query.tfquery.hcl` - Query for using list resource
 
+### SDK resources
+
+SDKv2 target resource will have the tag `@SDKResource()` in the resource file.
+For these resources use the following, replacing `<resource name>` with the name of the resource being added, eg `JobDefinition`.
+
+```console
+skaff list --name <resource name>
+```
+
+### Framework resources
+
+Framework target resource will have the tag `@FrameworkResource()` in the resource file.
+For these resources use the following, replacing `<resource-name>` with the name of the resource being added, eg `JobDefinition`.
+
+```console
+skaff list --framework --name <resource-name>
+```
+
 ### Fill in the `List` handler
 
-Use the AWS API documentation to resolve the appropriate types to be able to list the resource. This is typically done using `Describe` or `List` API calls.
+Use the AWS API documentation to resolve the appropriate types to be able to list the resource.
+This is typically done using `Describe` or `List` API calls.
 
-For `@SdkResource()` resources, the primary identifier is set using `d.SetId()`. Sometimes additional identifiers are needed and can be found in the annotation `@IdentityAttribute(<attribute>)`. These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute>", value)`.
+For `@SDKResource()` resources, the primary identifier is set using `d.SetId()`.
+Sometimes additional identifiers are needed and can be found in the annotation `@IdentityAttribute(<attribute>)`.
+These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute>", value)`.
 
-For `@FrameworkResource()` resources, `flex.Flatten` will be used to set all attributes. If an attribute is not set correctly, use the `flex` functions to set values.
+For `@FrameworkResource()` resources, `flex.Flatten` will be used to set all attributes.
+If an attribute is not set correctly, use the `flex` functions to set values.
 
 ### Adding custom query parameters
 
-Sometimes a list resource will have custom query parameters that can be used to filter the results returned by the AWS API. If this is the case, these parameters should be added by implementing the `ListResourceConfigSchema` method on the resource. A simple example can be found on the `aws_s3_object` list resource.
+Sometimes a list resource will have custom query parameters that can be used to filter the results returned by the AWS API.
+If this is the case, these parameters should be added by implementing the `ListResourceConfigSchema` method on the resource.
+A simple example can be found on the `aws_s3_object` list resource.
 
 ### Implement acceptance tests
 
-Acceptance tests are mostly generated by `skaff` but will need some modifications to function correctly. A functioning Terraform configuration is necessary to run the acceptance tests. The generated test configuration will need to be updated to include any required parameters for the resource.
+Acceptance tests are mostly generated by `skaff` but will need some modifications to function correctly.
+A functioning Terraform configuration is necessary to run the acceptance tests.
+The generated test configuration will need to be updated to include any required parameters for the resource.
 
 #### Example test file
 
@@ -117,7 +133,8 @@ go generate internal/service/<service>/generate.go
 
 ## Run Acceptance Tests
 
-Run the acceptance tests for the new list resource to ensure everything is functioning as expected. Replace `<service-name>` and `<resource-name>` with the appropriate service and resource names.
+Run the acceptance tests for the new list resource to ensure everything is functioning as expected.
+Replace `<service-name>` and `<resource-name>` with the appropriate service and resource names.
 
 ```sh
   make testacc PKG=<service-name> TESTARGS='-run=TestAcc<service-name><resource-name>_List_'
@@ -127,11 +144,13 @@ Run the acceptance tests for the new list resource to ensure everything is funct
 
 ### Prerequisites Issues
 
-- **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first. This is a hard blocker - the list resource cannot be created without it.
+- **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first.
+  This is a hard blocker - the list resource cannot be created without it.
 
 ### Common Implementation Issues
 
-- **Incorrect AWS API Types**: The `skaff` generator may use incorrect response types. Check AWS API documentation for the correct type (e.g., `awstypes.Batch` vs `awstypes.BatchDefinition`)
+- **Incorrect AWS API Types**: The `skaff` generator may use incorrect response types.
+  Check AWS API documentation for the correct type (e.g., `awstypes.Batch` vs `awstypes.BatchDefinition`)
 - **Resource Identifier**: Use the same identifier as the target resource (often name, not ARN)
 
 ### Test Configuration Issues
