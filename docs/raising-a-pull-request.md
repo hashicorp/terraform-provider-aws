@@ -5,20 +5,16 @@
 
 1. [Fork the GitHub repository](https://help.github.com/en/articles/fork-a-repo) allowing you to make the changes in your own copy of the repository.
 
-1. Create a branch using the following naming prefixes:
+1. Create a branch for your changes.
+Branch names should be descriptive and related to the change being made. For example:
 
-    - f = feature
-    - b = bug fix
-    - d = documentation
-    - t = tests
-    - td = technical debt
-    - v = dependencies ("vendoring" previously)
-
-    Some indicative example branch names would be `f-aws_emr_instance_group-refactor` or `td-staticcheck-st1008`
+    - fix-aws-instance-timeout
+    - docs-update-pull-request-guide
+    - feature-add-ecs-capacity-provider
 
 1. Make the changes you would like to include in the provider, add new tests as required, and make sure that all relevant existing tests are passing.
 
-1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). Please ensure (if possible) that the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
+1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). If available, enabling the "Allow edits from maintainers" option can make it easier for maintainers to apply small fixes during review. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
    You are welcome to submit your pull request for commentary or review before
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests).
    Please include specific questions or items you'd like feedback on.
