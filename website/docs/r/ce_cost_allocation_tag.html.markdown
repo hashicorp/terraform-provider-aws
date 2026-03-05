@@ -10,6 +10,9 @@ description: |-
 
 Provides a CE Cost Allocation Tag.
 
+~> **NOTE:** After the user-defined tags are created and applied to resources, it can take up to 24 hours for the tag keys to appear on Cost Allocation tag page for activation.
+
+
 ## Example Usage
 
 ```terraform
