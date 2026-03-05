@@ -240,7 +240,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			WantTarget: &[]*int32{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandListOfStringEnum(t *testing.T) {
