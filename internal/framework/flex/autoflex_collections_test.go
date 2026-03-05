@@ -266,7 +266,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestExpandSetOfStringEnum(t *testing.T) {
