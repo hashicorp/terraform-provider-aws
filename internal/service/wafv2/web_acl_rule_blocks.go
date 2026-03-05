@@ -828,14 +828,18 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 		Validators: []validator.List{listvalidator.SizeAtMost(5)},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
+				"asn": schema.ListNestedBlock{
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
+					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{},
+				},
 				"cookie": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyCookieModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrName: schema.StringAttribute{
-								Required:    true,
-								Description: "Name of the cookie.",
+								Required: true,
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -854,8 +858,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrName: schema.StringAttribute{
-								Required:    true,
-								Description: "Name of the header.",
+								Required: true,
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -873,14 +876,37 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{},
 				},
+				"ja3_fingerprint": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyJAFingerprintModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"fallback_behavior": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
+				"ja4_fingerprint": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyJAFingerprintModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"fallback_behavior": schema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.FallbackBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
 				"label_namespace": schema.ListNestedBlock{
 					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel](ctx),
 					Validators: []validator.List{listvalidator.SizeAtMost(1)},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrNamespace: schema.StringAttribute{
-								Required:    true,
-								Description: "Label namespace to use as an aggregate key.",
+								Required: true,
 							},
 						},
 					},
@@ -891,8 +917,7 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrName: schema.StringAttribute{
-								Required:    true,
-								Description: "Name of the query argument.",
+								Required: true,
 							},
 						},
 						Blocks: map[string]schema.Block{
@@ -901,18 +926,25 @@ func rateBasedStatementCustomKeysBlock(ctx context.Context) schema.ListNestedBlo
 					},
 				},
 				"query_string": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyQueryStringModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"text_transformation": textTransformationBlock(ctx),
+						},
+					},
 				},
 				"uri_path": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleTrulyEmptyModel](ctx),
-					Validators:   []validator.List{listvalidator.SizeAtMost(1)},
-					NestedObject: schema.NestedBlockObject{},
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRateBasedStatementCustomKeyUriPathModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"text_transformation": textTransformationBlock(ctx),
+						},
+					},
 				},
 			},
 		},
-		Description: "Aggregate keys for rate-based statement.",
 	}
 }
 

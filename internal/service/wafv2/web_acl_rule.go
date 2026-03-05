@@ -1447,15 +1447,30 @@ type webACLRuleRegexPatternSetReferenceStatementModel struct {
 }
 
 type webACLRuleRateBasedStatementCustomKeyModel struct {
+	ASN            fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"asn"`
 	Cookie         fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyCookieModel]         `tfsdk:"cookie"`
 	ForwardedIP    fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"forwarded_ip"`
 	Header         fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyHeaderModel]         `tfsdk:"header"`
 	HTTPMethod     fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"http_method"`
 	IP             fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"ip"`
+	JA3Fingerprint fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyJAFingerprintModel]  `tfsdk:"ja3_fingerprint"`
+	JA4Fingerprint fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyJAFingerprintModel]  `tfsdk:"ja4_fingerprint"`
 	LabelNamespace fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel] `tfsdk:"label_namespace"`
 	QueryArgument  fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyQueryArgumentModel]  `tfsdk:"query_argument"`
-	QueryString    fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"query_string"`
-	UriPath        fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]                                `tfsdk:"uri_path"`
+	QueryString    fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyQueryStringModel]    `tfsdk:"query_string"`
+	UriPath        fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyUriPathModel]        `tfsdk:"uri_path"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyJAFingerprintModel struct {
+	FallbackBehavior fwtypes.StringEnum[awstypes.FallbackBehavior] `tfsdk:"fallback_behavior"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyQueryStringModel struct {
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+}
+
+type webACLRuleRateBasedStatementCustomKeyUriPathModel struct {
+	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
 }
 
 type webACLRuleRateBasedStatementCustomKeyCookieModel struct {
