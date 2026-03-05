@@ -345,7 +345,7 @@ func TestAccWAFV2WebACLRule_rateBasedStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "statement.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.limit", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.limit", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.aggregate_key_type", "IP"),
 				),
 			},
