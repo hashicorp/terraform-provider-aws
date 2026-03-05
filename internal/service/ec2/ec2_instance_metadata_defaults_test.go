@@ -48,6 +48,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "http_tokens_enforced", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),
 				),
 			},
@@ -153,6 +154,7 @@ resource "aws_ec2_instance_metadata_defaults" "test" {}
 	testAccInstanceMetadataDefaultsConfig_full = `
 resource "aws_ec2_instance_metadata_defaults" "test" {
   http_tokens                 = "required" # non-default
+  http_tokens_enforced        = "enabled"
   instance_metadata_tags      = "disabled"
   http_endpoint               = "enabled"
   http_put_response_hop_limit = 1
