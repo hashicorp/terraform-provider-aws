@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -86,25 +84,25 @@ func TestParseRoutingRuleARN(t *testing.T) {
 func TestAccAPIGatewayV2RoutingRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routingrule apigatewayv2.GetRoutingRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 	resourceName := "aws_apigatewayv2_routing_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.APIGatewayV2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingRuleConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoutingRuleExists(ctx, resourceName, &routingrule),
+					testAccCheckRoutingRuleExists(ctx, t, resourceName, &routingrule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "routing_rule_arn", "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
@@ -124,25 +122,25 @@ func TestAccAPIGatewayV2RoutingRule_basic(t *testing.T) {
 func TestAccAPIGatewayV2RoutingRule_v2Domain(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routingrule apigatewayv2.GetRoutingRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 	resourceName := "aws_apigatewayv2_routing_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.APIGatewayV2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingRuleConfig_basicV2(rName, certificate, key, 1, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoutingRuleExists(ctx, resourceName, &routingrule),
+					testAccCheckRoutingRuleExists(ctx, t, resourceName, &routingrule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "routing_rule_arn", "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
@@ -162,25 +160,25 @@ func TestAccAPIGatewayV2RoutingRule_v2Domain(t *testing.T) {
 func TestAccAPIGatewayV2RoutingRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routingrule apigatewayv2.GetRoutingRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_apigatewayv2_routing_rule.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.APIGatewayV2EndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckRoutingRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingRuleConfig_basic(rName, certificate, key, 1, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRoutingRuleExists(ctx, resourceName, &routingrule),
+					testAccCheckRoutingRuleExists(ctx, t, resourceName, &routingrule),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfapigatewayv2.ResourceRoutingRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -189,9 +187,9 @@ func TestAccAPIGatewayV2RoutingRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRoutingRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRoutingRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_routing_rule" {
@@ -215,14 +213,14 @@ func testAccCheckRoutingRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckRoutingRuleExists(ctx context.Context, n string, v *apigatewayv2.GetRoutingRuleOutput) resource.TestCheckFunc {
+func testAccCheckRoutingRuleExists(ctx context.Context, t *testing.T, n string, v *apigatewayv2.GetRoutingRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindRoutingRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["routing_rule_id"])
 

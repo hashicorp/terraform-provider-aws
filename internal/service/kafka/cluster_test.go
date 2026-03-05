@@ -1254,6 +1254,60 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 	})
 }
 
+func TestAccKafkaCluster_loggingInfoForExpress(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.ClusterInfo
+	acctest.SkipIfEnvVarNotSet(t, "MSK_EXPRESS_BROKER_ENABLED")
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_loggingInfoForExpress(rName, false, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				Config: testAccClusterConfig_loggingInfoForExpress(rName, true, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &cluster2),
+					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 types.ClusterInfo
@@ -2364,6 +2418,106 @@ resource "aws_msk_cluster" "test" {
         volume_size = 10
       }
     }
+  }
+
+  logging_info {
+    broker_logs {
+      cloudwatch_logs {
+        enabled   = %[2]t
+        log_group = %[3]s
+      }
+
+      firehose {
+        enabled         = %[4]t
+        delivery_stream = %[5]s
+      }
+
+      s3 {
+        enabled = %[6]t
+        bucket  = %[7]s
+        prefix  = ""
+      }
+    }
+  }
+}
+`, rName, cloudwatchLogsEnabled, cloudwatchLogsLogGroup, firehoseEnabled, firehoseDeliveryStream, s3Enabled, s3Bucket))
+}
+
+func testAccClusterConfig_loggingInfoForExpress(rName string, cloudwatchLogsEnabled, firehoseEnabled, s3Enabled bool) string {
+	cloudwatchLogsLogGroup := "\"\""
+	firehoseDeliveryStream := "\"\""
+	s3Bucket := "\"\""
+
+	if cloudwatchLogsEnabled {
+		cloudwatchLogsLogGroup = "aws_cloudwatch_log_group.test.name"
+	}
+	if firehoseEnabled {
+		firehoseDeliveryStream = "aws_kinesis_firehose_delivery_stream.test.name"
+	}
+	if s3Enabled {
+		s3Bucket = "aws_s3_bucket.bucket.id"
+	}
+
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_iam_role" "firehose_role" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose_role.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  tags = {
+    LogDeliveryEnabled = "placeholder"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to LogDeliveryEnabled tag as API adds this tag when broker log delivery is enabled
+      tags["LogDeliveryEnabled"],
+    ]
+  }
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "3.8.x"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "express.m7g.large"
+    security_groups = [aws_security_group.test.id]
   }
 
   logging_info {

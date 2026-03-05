@@ -445,8 +445,8 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusDBInstance(conn *docdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -479,7 +479,7 @@ func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string,
 			"upgrading",
 		},
 		Target:                    []string{"available"},
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		MinTimeout:                10 * time.Second,
 		Delay:                     30 * time.Second,
@@ -503,7 +503,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *docdb.Client, id string, t
 			"deleting",
 		},
 		Target:     []string{},
-		Refresh:    statusDBInstance(ctx, conn, id),
+		Refresh:    statusDBInstance(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
