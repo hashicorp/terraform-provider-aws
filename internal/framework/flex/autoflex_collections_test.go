@@ -380,7 +380,7 @@ func TestExpandStructSetOfStringEnum(t *testing.T) {
 			WantTarget: &awsSliceOfStringEnum{},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 type tfSingleStringFieldIgnore struct {
