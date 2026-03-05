@@ -1605,3 +1605,171 @@ resource "aws_wafv2_web_acl_rule" "test" {
 }
 `, rName)
 }
+
+func TestAccWAFV2WebACLRule_fieldToMatch(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_fieldToMatch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					// json_body
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope", "VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#", "1"),
+					// headers
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.0.match_scope", "KEY"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.1.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#", "2"),
+					// cookies
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.byte_match_statement.0.field_to_match.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.2.byte_match_statement.0.field_to_match.0.cookies.0.match_scope", "ALL"),
+					// single_header
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.3.byte_match_statement.0.field_to_match.0.single_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.and_statement.0.statement.3.byte_match_statement.0.field_to_match.0.single_header.0.name", "user-agent"),
+				),
+			},
+		},
+	})
+}
+
+func testAccWebACLRuleConfig_fieldToMatch(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    and_statement {
+      # json_body with match_pattern all
+      statement {
+        byte_match_statement {
+          search_string         = "bad"
+          positional_constraint = "CONTAINS"
+
+          field_to_match {
+            json_body {
+              match_scope = "VALUE"
+
+              match_pattern {
+                all {}
+              }
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "NONE"
+          }
+        }
+      }
+
+      # headers with included_headers
+      statement {
+        byte_match_statement {
+          search_string         = "malicious"
+          positional_constraint = "CONTAINS"
+
+          field_to_match {
+            headers {
+              match_scope       = "KEY"
+              oversize_handling = "MATCH"
+
+              match_pattern {
+                included_headers = ["x-custom", "x-forwarded-for"]
+              }
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        }
+      }
+
+      # cookies with all pattern
+      statement {
+        byte_match_statement {
+          search_string         = "session"
+          positional_constraint = "STARTS_WITH"
+
+          field_to_match {
+            cookies {
+              match_scope       = "ALL"
+              oversize_handling = "NO_MATCH"
+
+              match_pattern {
+                all {}
+              }
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "NONE"
+          }
+        }
+      }
+
+      # single_header
+      statement {
+        byte_match_statement {
+          search_string         = "bot"
+          positional_constraint = "CONTAINS"
+
+          field_to_match {
+            single_header {
+              name = "user-agent"
+            }
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
