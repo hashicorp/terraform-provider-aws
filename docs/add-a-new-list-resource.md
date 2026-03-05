@@ -9,6 +9,8 @@ List Resources in the Terraform AWS Provider allow users to retrieve and manage 
 Each List Resource should be submitted for review individually.
 Pull requests containing multiple list resources or other resources are more difficult to review, and maintainers will typically request that they be split into separate submissions.
 
+The [List Resource Reference](list-resources.md) provides more detail on adding List Resources.
+
 ## Prerequisites
 
 List Resources are dependent on [Resource Identity](https://developer.hashicorp.com/terraform/plugin/framework/resources/identity) being implemented on the target resource.
@@ -55,12 +57,30 @@ skaff list --framework --name <resource-name>
 Use the AWS API documentation to resolve the appropriate types to be able to list the resource.
 This is typically done using `Describe` or `List` API calls.
 
-For `@SDKResource()` resources, the primary identifier is set using `d.SetId()`.
-Sometimes additional identifiers are needed and can be found in the annotation `@IdentityAttribute(<attribute>)`.
-These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute>", value)`.
+#### Plugin SDK
 
-For `@FrameworkResource()` resources, `flex.Flatten` will be used to set all attributes.
-If an attribute is not set correctly, use the `flex` functions to set values.
+The annotation `@SDKListResource("<resource_name>")` is required to register the List Resource with the provider.
+The value of `<resource_name>` must match the name of the associated resource type.
+
+In the iterator loop body,
+the resource data `rd` must always be populated with the `id` value, using `rd.SetId(<value>)`.
+Any additional attributes needed for the Resource Identity must be set using `rd.Set(<attribute-name>, <attribute-value>)`.
+
+If the list request parameter `IncludeResource` is set, the resource data should be populated.
+This should be done using a function named `resource<Resource Name>Flatten`.
+Both the List Resource and the resource's Read operation should use this flatten function.
+If the function does not exist, refactor the resource's Read operation so that the body of the function that sets values on the resource data is moved to the flattening function.
+
+#### Plugin Framework
+
+The annotation `@FrameworkListResource("<resource_name>")` is required to register the List Resource with the provider.
+The value of `<resource_name>` must match the name of the associated resource type.
+
+When adding a List Resource for an existing resource type,
+extract the portion of the existing resource type's Read operation that flattens the API response into the resource data model into a new method `flatten`.
+For many resource types, this will simply call `flex.Flatten(...)`.
+
+Both the List Resource and the resource type's Read operation should call the `flatten` function.
 
 ### Adding custom query parameters
 
@@ -128,7 +148,7 @@ go test -c ./internal/service/<service>
 To register the new list resource:
 
 ```sh
-go generate internal/service/<service>/generate.go
+go generate ./internal/service/<service>
 ```
 
 ## Run Acceptance Tests
