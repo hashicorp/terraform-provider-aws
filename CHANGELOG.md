@@ -6,12 +6,6 @@ BUG FIXES:
 * resource/aws_bedrockagentcore_gateway_target: Fix "Incompatible Types" errors during schema definition flattening ([#46778](https://github.com/hashicorp/terraform-provider-aws/issues/46778))
 * resource/aws_s3_bucket_lifecycle_configuration: Fix "Incompatible Types" errors for `LifecycleRuleAndOperator` while flattening configuration ([#46778](https://github.com/hashicorp/terraform-provider-aws/issues/46778))
 
-BUG FIXES:
-
-* provider: Fix regression causing "Incompatible Types" errors during flattening ([#46778](https://github.com/hashicorp/terraform-provider-aws/issues/46778))
-* resource/aws_bedrockagentcore_gateway_target: Fix "Incompatible Types" errors during schema definition flattening ([#46778](https://github.com/hashicorp/terraform-provider-aws/issues/46778))
-* resource/aws_s3_bucket_lifecycle_configuration: Fix "Incompatible Types" errors for `LifecycleRuleAndOperator` while flattening configuration ([#46778](https://github.com/hashicorp/terraform-provider-aws/issues/46778))
-
 ## 6.35.0 (March 4, 2026)
 
 FEATURES:
