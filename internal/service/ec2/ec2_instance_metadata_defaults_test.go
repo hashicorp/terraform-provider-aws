@@ -116,7 +116,11 @@ func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.T
 
 			output, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
 
-			if retry.NotFound(err) || err == nil && inttypes.IsZero(output) {
+			if retry.NotFound(err) || err == nil && (inttypes.IsZero(output) || (output.InstanceMetadataTags == "" &&
+				output.HttpEndpoint == "" &&
+				output.HttpTokens == "" &&
+				output.HttpTokensEnforced == "" &&
+				output.HttpPutResponseHopLimit == nil)) {
 				continue
 			}
 
