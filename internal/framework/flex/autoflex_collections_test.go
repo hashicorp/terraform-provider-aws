@@ -460,7 +460,7 @@ func TestExpandEmbeddedStruct(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 // List/Set/Map of string types.
