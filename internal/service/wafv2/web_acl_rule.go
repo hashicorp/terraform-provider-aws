@@ -1631,8 +1631,8 @@ func (m *webACLRuleOverrideActionModel) Flatten(ctx context.Context, v any) (dia
 	m.Count = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOverrideActionEmptyModel](ctx)
 	m.None = fwtypes.NewListNestedObjectValueOfNull[webACLRuleOverrideActionEmptyModel](ctx)
 
-	oa, ok := v.(*awstypes.OverrideAction)
-	if !ok || oa == nil {
+	oa, ok := v.(awstypes.OverrideAction)
+	if !ok {
 		return diags
 	}
 
