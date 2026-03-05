@@ -490,6 +490,10 @@ func DataSourceParametersSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"authentication_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 							names.AttrDatabase: {
 								Type:         schema.TypeString,
 								Required:     true,
@@ -998,6 +1002,9 @@ func ExpandDataSourceParameters(tfList []any) awstypes.DataSourceParameters {
 		if tfMap, ok := v[0].(map[string]any); ok {
 			ps := &awstypes.DataSourceParametersMemberSnowflakeParameters{}
 
+			if v, ok := tfMap["authentication_type"].(string); ok && v != "" {
+				ps.Value.AuthenticationType = awstypes.AuthenticationType(v)
+			}
 			if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 				ps.Value.Database = aws.String(v)
 			}
@@ -1214,9 +1221,10 @@ func FlattenDataSourceParameters(apiObject awstypes.DataSourceParameters) []any 
 	case *awstypes.DataSourceParametersMemberSnowflakeParameters:
 		tfMap["snowflake"] = []any{
 			map[string]any{
-				names.AttrDatabase: aws.ToString(v.Value.Database),
-				"host":             aws.ToString(v.Value.Host),
-				"warehouse":        aws.ToString(v.Value.Warehouse),
+				"authentication_type": string(v.Value.AuthenticationType),
+				names.AttrDatabase:    aws.ToString(v.Value.Database),
+				"host":                aws.ToString(v.Value.Host),
+				"warehouse":           aws.ToString(v.Value.Warehouse),
 			},
 		}
 	case *awstypes.DataSourceParametersMemberSparkParameters:
