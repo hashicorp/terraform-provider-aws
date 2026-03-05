@@ -13,6 +13,8 @@ import (
 )
 
 func TestFlattenNonDefaultCloudFormationParameters(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		name             string
 		cfParams         []cloudformationtypes.Parameter
@@ -77,6 +79,7 @@ func TestFlattenNonDefaultCloudFormationParameters(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			result := flattenNonDefaultCloudFormationParameters(tc.cfParams, tc.parameterDefs, tc.configuredParams)
 			if diff := cmp.Diff(tc.expected, result); diff != "" {
 				t.Errorf("unexpected result (-want +got):\n%s", diff)

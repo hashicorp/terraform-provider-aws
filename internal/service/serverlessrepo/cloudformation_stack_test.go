@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfserverlessrepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
@@ -260,9 +261,12 @@ func TestAccServerlessRepoCloudFormationStack_noChangeUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config:             config,
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
