@@ -413,9 +413,339 @@ func asnMatchStatementBlock(ctx context.Context) schema.ListNestedBlock {
 
 func managedRuleGroupConfigsBlock(ctx context.Context) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupConfigModel](ctx),
-		NestedObject: schema.NestedBlockObject{},
-		Description:  "Managed rule group configurations.",
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleManagedRuleGroupConfigModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"login_path": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+				},
+				"payload_type": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.PayloadType](),
+					Optional:   true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"aws_managed_rules_acfp_rule_set":        awsManagedRulesACFPRuleSetBlock(ctx),
+				"aws_managed_rules_anti_ddos_rule_set":   awsManagedRulesAntiDDoSRuleSetBlock(ctx),
+				"aws_managed_rules_atp_rule_set":         awsManagedRulesATPRuleSetBlock(ctx),
+				"aws_managed_rules_bot_control_rule_set": awsManagedRulesBotControlRuleSetBlock(ctx),
+				"password_field":                         identifierFieldBlock(ctx),
+				"username_field":                         identifierFieldBlock(ctx),
+			},
+		},
+	}
+}
+
+func identifierFieldBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifierFieldModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrIdentifier: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 512),
+					},
+				},
+			},
+		},
+	}
+}
+
+func identifiersFieldBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleIdentifiersFieldModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"identifiers": schema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					Required:    true,
+					ElementType: types.StringType,
+				},
+			},
+		},
+	}
+}
+
+func awsManagedRulesBotControlRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesBotControlRuleSetModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"enable_machine_learning": schema.BoolAttribute{
+					Optional: true,
+				},
+				"inspection_level": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.InspectionLevel](),
+					Required:   true,
+				},
+			},
+		},
+	}
+}
+
+func awsManagedRulesACFPRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesACFPRuleSetModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"creation_path": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+				},
+				"enable_regex_in_path": schema.BoolAttribute{
+					Optional: true,
+					Computed: true,
+				},
+				"registration_page_path": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"request_inspection":  requestInspectionACFPBlock(ctx),
+				"response_inspection": responseInspectionBlock(ctx),
+			},
+		},
+	}
+}
+
+func awsManagedRulesATPRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesATPRuleSetModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"enable_regex_in_path": schema.BoolAttribute{
+					Optional: true,
+					Computed: true,
+				},
+				"login_path": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 256),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"request_inspection":  requestInspectionBlock(ctx),
+				"response_inspection": responseInspectionBlock(ctx),
+			},
+		},
+	}
+}
+
+func awsManagedRulesAntiDDoSRuleSetBlock(ctx context.Context) schema.ListNestedBlock { // nosempgrep:ci.aws-in-func-name
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"sensitivity_to_block": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.SensitivityToAct](),
+					Optional:   true,
+					Computed:   true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"client_side_action_config": clientSideActionConfigBlock(ctx),
+			},
+		},
+	}
+}
+
+func clientSideActionConfigBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleClientSideActionConfigModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"challenge": clientSideActionBlock(ctx),
+			},
+		},
+	}
+}
+
+func clientSideActionBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleClientSideActionModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"sensitivity": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.SensitivityToAct](),
+					Optional:   true,
+					Computed:   true,
+				},
+				"usage_of_action": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.UsageOfAction](),
+					Required:   true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"exempt_uri_regular_expression": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRegexModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(5)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"regex_string": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 512),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func requestInspectionBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRequestInspectionModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"payload_type": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.PayloadType](),
+					Required:   true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"password_field": identifierFieldBlock(ctx),
+				"username_field": identifierFieldBlock(ctx),
+			},
+		},
+	}
+}
+
+func requestInspectionACFPBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleRequestInspectionACFPModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"payload_type": schema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.PayloadType](),
+					Required:   true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"address_fields":      identifiersFieldBlock(ctx),
+				"email_field":         identifierFieldBlock(ctx),
+				"password_field":      identifierFieldBlock(ctx),
+				"phone_number_fields": identifiersFieldBlock(ctx),
+				"username_field":      identifierFieldBlock(ctx),
+			},
+		},
+	}
+}
+
+func responseInspectionBlock(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"body_contains": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionBodyContainsModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"failure_strings": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.String](ctx),
+								Required:    true,
+								ElementType: types.StringType,
+							},
+							"success_strings": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.String](ctx),
+								Required:    true,
+								ElementType: types.StringType,
+							},
+						},
+					},
+				},
+				names.AttrHeader: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionHeaderModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrName: schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 256),
+								},
+							},
+							"failure_values": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.String](ctx),
+								Required:    true,
+								ElementType: types.StringType,
+							},
+							"success_values": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.String](ctx),
+								Required:    true,
+								ElementType: types.StringType,
+							},
+						},
+					},
+				},
+				names.AttrJSON: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionJSONModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrIdentifier: schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 256),
+								},
+							},
+							"failure_values": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.String](ctx),
+								Required:    true,
+								ElementType: types.StringType,
+							},
+							"success_values": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.String](ctx),
+								Required:    true,
+								ElementType: types.StringType,
+							},
+						},
+					},
+				},
+				names.AttrStatusCode: schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleResponseInspectionStatusCodeModel](ctx),
+					Validators: []validator.List{listvalidator.SizeAtMost(1)},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"failure_codes": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.Int64](ctx),
+								Required:    true,
+								ElementType: types.Int64Type,
+							},
+							"success_codes": schema.SetAttribute{
+								CustomType:  fwtypes.NewSetTypeOf[types.Int64](ctx),
+								Required:    true,
+								ElementType: types.Int64Type,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

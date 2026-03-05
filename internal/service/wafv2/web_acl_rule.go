@@ -1086,6 +1086,45 @@ func (m webACLRuleStatementModel) Expand(ctx context.Context) (result any, diags
 			mrg.Version = mrgData.Version.ValueStringPointer()
 		}
 
+		// Expand ManagedRuleGroupConfigs
+		if !mrgData.ManagedRuleGroupConfigs.IsNull() {
+			configsData, d := mrgData.ManagedRuleGroupConfigs.ToSlice(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			mrg.ManagedRuleGroupConfigs = make([]awstypes.ManagedRuleGroupConfig, len(configsData))
+			for i, cfg := range configsData {
+				expanded, d := cfg.expand(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return nil, diags
+				}
+				mrg.ManagedRuleGroupConfigs[i] = expanded
+			}
+		}
+
+		// Expand RuleActionOverrides
+		diags.Append(flex.Expand(ctx, mrgData.RuleActionOverrides, &mrg.RuleActionOverrides)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		// Expand ScopeDownStatement
+		if !mrgData.ScopeDownStatement.IsNull() {
+			sdsData, d := mrgData.ScopeDownStatement.ToPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			sds, d := sdsData.Expand(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			mrg.ScopeDownStatement = sds.(*awstypes.Statement)
+		}
+
 		return &awstypes.Statement{ManagedRuleGroupStatement: mrg}, diags
 
 	case !m.RegexPatternSetReferenceStatement.IsNull():
@@ -1304,14 +1343,39 @@ func (m *webACLRuleStatementModel) flattenStatement(ctx context.Context, stmt *a
 		}
 
 	case stmt.ManagedRuleGroupStatement != nil:
+		mrg := stmt.ManagedRuleGroupStatement
 		mrgModel := webACLRuleManagedRuleGroupStatementModel{
-			Name:                    types.StringPointerValue(stmt.ManagedRuleGroupStatement.Name),
-			VendorName:              types.StringPointerValue(stmt.ManagedRuleGroupStatement.VendorName),
-			Version:                 types.StringPointerValue(stmt.ManagedRuleGroupStatement.Version),
+			Name:                    types.StringPointerValue(mrg.Name),
+			VendorName:              types.StringPointerValue(mrg.VendorName),
+			Version:                 types.StringPointerValue(mrg.Version),
 			ManagedRuleGroupConfigs: fwtypes.NewListNestedObjectValueOfNull[webACLRuleManagedRuleGroupConfigModel](ctx),
 			RuleActionOverrides:     fwtypes.NewListNestedObjectValueOfNull[webACLRuleRuleActionOverrideModel](ctx),
 			ScopeDownStatement:      fwtypes.NewListNestedObjectValueOfNull[webACLRuleScopeDownStatementModel](ctx),
 		}
+
+		// Flatten ManagedRuleGroupConfigs
+		if len(mrg.ManagedRuleGroupConfigs) > 0 {
+			configs := make([]*webACLRuleManagedRuleGroupConfigModel, len(mrg.ManagedRuleGroupConfigs))
+			for i, cfg := range mrg.ManagedRuleGroupConfigs {
+				var cfgModel webACLRuleManagedRuleGroupConfigModel
+				diags.Append(cfgModel.flatten(ctx, cfg)...)
+				configs[i] = &cfgModel
+			}
+			mrgModel.ManagedRuleGroupConfigs, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, configs, nil)
+		}
+
+		// Flatten RuleActionOverrides
+		if len(mrg.RuleActionOverrides) > 0 {
+			diags.Append(flex.Flatten(ctx, mrg.RuleActionOverrides, &mrgModel.RuleActionOverrides)...)
+		}
+
+		// Flatten ScopeDownStatement
+		if mrg.ScopeDownStatement != nil {
+			var sdsModel webACLRuleScopeDownStatementModel
+			diags.Append(sdsModel.flattenScopeDownStatement(ctx, mrg.ScopeDownStatement)...)
+			mrgModel.ScopeDownStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleScopeDownStatementModel{&sdsModel}, nil)
+		}
+
 		m.ManagedRuleGroupStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleManagedRuleGroupStatementModel{&mrgModel}, nil)
 
 	case stmt.RegexPatternSetReferenceStatement != nil:
@@ -1420,7 +1484,198 @@ type webACLRuleManagedRuleGroupStatementModel struct {
 	ScopeDownStatement      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownStatementModel]     `tfsdk:"scope_down_statement"`
 }
 
+// Helper models for identifier fields
+type webACLRuleIdentifierFieldModel struct {
+	Identifier types.String `tfsdk:"identifier"`
+}
+
+type webACLRuleIdentifiersFieldModel struct {
+	Identifiers fwtypes.ListValueOf[types.String] `tfsdk:"identifiers"`
+}
+
+// Response inspection models
+type webACLRuleResponseInspectionModel struct {
+	BodyContains fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionBodyContainsModel] `tfsdk:"body_contains"`
+	Header       fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionHeaderModel]       `tfsdk:"header"`
+	JSON         fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionJSONModel]         `tfsdk:"json"`
+	StatusCode   fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionStatusCodeModel]   `tfsdk:"status_code"`
+}
+
+type webACLRuleResponseInspectionBodyContainsModel struct {
+	FailureStrings fwtypes.SetValueOf[types.String] `tfsdk:"failure_strings"`
+	SuccessStrings fwtypes.SetValueOf[types.String] `tfsdk:"success_strings"`
+}
+
+type webACLRuleResponseInspectionHeaderModel struct {
+	Name          types.String                     `tfsdk:"name"`
+	FailureValues fwtypes.SetValueOf[types.String] `tfsdk:"failure_values"`
+	SuccessValues fwtypes.SetValueOf[types.String] `tfsdk:"success_values"`
+}
+
+type webACLRuleResponseInspectionJSONModel struct {
+	Identifier    types.String                     `tfsdk:"identifier"`
+	FailureValues fwtypes.SetValueOf[types.String] `tfsdk:"failure_values"`
+	SuccessValues fwtypes.SetValueOf[types.String] `tfsdk:"success_values"`
+}
+
+type webACLRuleResponseInspectionStatusCodeModel struct {
+	FailureCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"failure_codes"`
+	SuccessCodes fwtypes.SetValueOf[types.Int64] `tfsdk:"success_codes"`
+}
+
+// Request inspection models
+type webACLRuleRequestInspectionModel struct {
+	PasswordField fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel] `tfsdk:"password_field"`
+	PayloadType   fwtypes.StringEnum[awstypes.PayloadType]                        `tfsdk:"payload_type"`
+	UsernameField fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel] `tfsdk:"username_field"`
+}
+
+type webACLRuleRequestInspectionACFPModel struct {
+	AddressFields     fwtypes.ListNestedObjectValueOf[webACLRuleIdentifiersFieldModel] `tfsdk:"address_fields"`
+	EmailField        fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel]  `tfsdk:"email_field"`
+	PasswordField     fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel]  `tfsdk:"password_field"`
+	PayloadType       fwtypes.StringEnum[awstypes.PayloadType]                         `tfsdk:"payload_type"`
+	PhoneNumberFields fwtypes.ListNestedObjectValueOf[webACLRuleIdentifiersFieldModel] `tfsdk:"phone_number_fields"`
+	UsernameField     fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel]  `tfsdk:"username_field"`
+}
+
+// Anti-DDoS models
+type webACLRuleClientSideActionConfigModel struct {
+	Challenge fwtypes.ListNestedObjectValueOf[webACLRuleClientSideActionModel] `tfsdk:"challenge"`
+}
+
+type webACLRuleClientSideActionModel struct {
+	ExemptUriRegularExpressions fwtypes.ListNestedObjectValueOf[webACLRuleRegexModel] `tfsdk:"exempt_uri_regular_expression"`
+	Sensitivity                 fwtypes.StringEnum[awstypes.SensitivityToAct]         `tfsdk:"sensitivity"`
+	UsageOfAction               fwtypes.StringEnum[awstypes.UsageOfAction]            `tfsdk:"usage_of_action"`
+}
+
+type webACLRuleRegexModel struct {
+	RegexString types.String `tfsdk:"regex_string"`
+}
+
+// Rule set models
+type webACLRuleAWSManagedRulesBotControlRuleSetModel struct {
+	EnableMachineLearning types.Bool                                   `tfsdk:"enable_machine_learning"`
+	InspectionLevel       fwtypes.StringEnum[awstypes.InspectionLevel] `tfsdk:"inspection_level"`
+}
+
+type webACLRuleAWSManagedRulesACFPRuleSetModel struct {
+	CreationPath         types.String                                                          `tfsdk:"creation_path"`
+	EnableRegexInPath    types.Bool                                                            `tfsdk:"enable_regex_in_path"`
+	RegistrationPagePath types.String                                                          `tfsdk:"registration_page_path"`
+	RequestInspection    fwtypes.ListNestedObjectValueOf[webACLRuleRequestInspectionACFPModel] `tfsdk:"request_inspection"`
+	ResponseInspection   fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionModel]    `tfsdk:"response_inspection"`
+}
+
+type webACLRuleAWSManagedRulesATPRuleSetModel struct {
+	EnableRegexInPath  types.Bool                                                         `tfsdk:"enable_regex_in_path"`
+	LoginPath          types.String                                                       `tfsdk:"login_path"`
+	RequestInspection  fwtypes.ListNestedObjectValueOf[webACLRuleRequestInspectionModel]  `tfsdk:"request_inspection"`
+	ResponseInspection fwtypes.ListNestedObjectValueOf[webACLRuleResponseInspectionModel] `tfsdk:"response_inspection"`
+}
+
+type webACLRuleAWSManagedRulesAntiDDoSRuleSetModel struct {
+	ClientSideActionConfig fwtypes.ListNestedObjectValueOf[webACLRuleClientSideActionConfigModel] `tfsdk:"client_side_action_config"`
+	SensitivityToBlock     fwtypes.StringEnum[awstypes.SensitivityToAct]                          `tfsdk:"sensitivity_to_block"`
+}
+
+// Main managed rule group config model
 type webACLRuleManagedRuleGroupConfigModel struct {
+	AWSManagedRulesACFPRuleSet       fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesACFPRuleSetModel]       `tfsdk:"aws_managed_rules_acfp_rule_set"`
+	AWSManagedRulesAntiDDoSRuleSet   fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel]   `tfsdk:"aws_managed_rules_anti_ddos_rule_set"`
+	AWSManagedRulesATPRuleSet        fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesATPRuleSetModel]        `tfsdk:"aws_managed_rules_atp_rule_set"`
+	AWSManagedRulesBotControlRuleSet fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesBotControlRuleSetModel] `tfsdk:"aws_managed_rules_bot_control_rule_set"`
+	LoginPath                        types.String                                                                     `tfsdk:"login_path"`
+	PasswordField                    fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel]                  `tfsdk:"password_field"`
+	PayloadType                      fwtypes.StringEnum[awstypes.PayloadType]                                         `tfsdk:"payload_type"`
+	UsernameField                    fwtypes.ListNestedObjectValueOf[webACLRuleIdentifierFieldModel]                  `tfsdk:"username_field"`
+}
+
+func (m webACLRuleManagedRuleGroupConfigModel) expand(ctx context.Context) (result awstypes.ManagedRuleGroupConfig, diags diag.Diagnostics) {
+	r := awstypes.ManagedRuleGroupConfig{}
+
+	// Legacy fields
+	if !m.LoginPath.IsNull() {
+		r.LoginPath = m.LoginPath.ValueStringPointer()
+	}
+	if !m.PayloadType.IsNull() {
+		r.PayloadType = m.PayloadType.ValueEnum()
+	}
+	if !m.PasswordField.IsNull() {
+		diags.Append(flex.Expand(ctx, m.PasswordField, &r.PasswordField)...)
+	}
+	if !m.UsernameField.IsNull() {
+		diags.Append(flex.Expand(ctx, m.UsernameField, &r.UsernameField)...)
+	}
+
+	// Rule sets
+	if !m.AWSManagedRulesBotControlRuleSet.IsNull() {
+		diags.Append(flex.Expand(ctx, m.AWSManagedRulesBotControlRuleSet, &r.AWSManagedRulesBotControlRuleSet)...)
+	}
+	if !m.AWSManagedRulesACFPRuleSet.IsNull() {
+		diags.Append(flex.Expand(ctx, m.AWSManagedRulesACFPRuleSet, &r.AWSManagedRulesACFPRuleSet)...)
+	}
+	if !m.AWSManagedRulesATPRuleSet.IsNull() {
+		diags.Append(flex.Expand(ctx, m.AWSManagedRulesATPRuleSet, &r.AWSManagedRulesATPRuleSet)...)
+	}
+	if !m.AWSManagedRulesAntiDDoSRuleSet.IsNull() {
+		diags.Append(flex.Expand(ctx, m.AWSManagedRulesAntiDDoSRuleSet, &r.AWSManagedRulesAntiDDoSRuleSet)...)
+	}
+
+	return r, diags
+}
+
+func (m *webACLRuleManagedRuleGroupConfigModel) flatten(ctx context.Context, v awstypes.ManagedRuleGroupConfig) (diags diag.Diagnostics) {
+	// Initialize all nested fields to null
+	m.AWSManagedRulesACFPRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesACFPRuleSetModel](ctx)
+	m.AWSManagedRulesAntiDDoSRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel](ctx)
+	m.AWSManagedRulesATPRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesATPRuleSetModel](ctx)
+	m.AWSManagedRulesBotControlRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesBotControlRuleSetModel](ctx)
+	m.PasswordField = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifierFieldModel](ctx)
+	m.UsernameField = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIdentifierFieldModel](ctx)
+
+	// Legacy fields
+	if v.LoginPath != nil {
+		m.LoginPath = types.StringPointerValue(v.LoginPath)
+	}
+	if v.PayloadType != "" {
+		m.PayloadType = fwtypes.StringEnumValue(v.PayloadType)
+	}
+	if v.PasswordField != nil {
+		var model webACLRuleIdentifierFieldModel
+		diags.Append(flex.Flatten(ctx, v.PasswordField, &model)...)
+		m.PasswordField = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if v.UsernameField != nil {
+		var model webACLRuleIdentifierFieldModel
+		diags.Append(flex.Flatten(ctx, v.UsernameField, &model)...)
+		m.UsernameField = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+
+	// Rule sets
+	if v.AWSManagedRulesBotControlRuleSet != nil {
+		var model webACLRuleAWSManagedRulesBotControlRuleSetModel
+		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesBotControlRuleSet, &model)...)
+		m.AWSManagedRulesBotControlRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if v.AWSManagedRulesACFPRuleSet != nil {
+		var model webACLRuleAWSManagedRulesACFPRuleSetModel
+		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesACFPRuleSet, &model)...)
+		m.AWSManagedRulesACFPRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if v.AWSManagedRulesATPRuleSet != nil {
+		var model webACLRuleAWSManagedRulesATPRuleSetModel
+		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesATPRuleSet, &model)...)
+		m.AWSManagedRulesATPRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if v.AWSManagedRulesAntiDDoSRuleSet != nil {
+		var model webACLRuleAWSManagedRulesAntiDDoSRuleSetModel
+		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesAntiDDoSRuleSet, &model)...)
+		m.AWSManagedRulesAntiDDoSRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+
+	return diags
 }
 
 type webACLRuleRuleActionOverrideModel struct {
@@ -1438,6 +1693,121 @@ type webACLRuleScopeDownStatementModel struct {
 	RegexMatchStatement     fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]     `tfsdk:"regex_match_statement"`
 	LabelMatchStatement     fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]     `tfsdk:"label_match_statement"`
 	AsnMatchStatement       fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]       `tfsdk:"asn_match_statement"`
+}
+
+func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx context.Context, stmt *awstypes.Statement) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Initialize all to null
+	m.IPSetReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIPSetReferenceStatementModel](ctx)
+	m.GeoMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleGeoMatchStatementModel](ctx)
+	m.ByteMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleByteMatchStatementModel](ctx)
+	m.SqliMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleSqliMatchStatementModel](ctx)
+	m.XssMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleXssMatchStatementModel](ctx)
+	m.SizeConstraintStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleSizeConstraintStatementModel](ctx)
+	m.RegexMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleRegexMatchStatementModel](ctx)
+	m.LabelMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleLabelMatchStatementModel](ctx)
+	m.AsnMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAsnMatchStatementModel](ctx)
+
+	switch {
+	case stmt.IPSetReferenceStatement != nil:
+		var model webACLRuleIPSetReferenceStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.IPSetReferenceStatement, &model)...)
+		m.IPSetReferenceStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.GeoMatchStatement != nil:
+		var model webACLRuleGeoMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.GeoMatchStatement, &model)...)
+		m.GeoMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.ByteMatchStatement != nil:
+		var model webACLRuleByteMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.ByteMatchStatement, &model)...)
+		m.ByteMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.SqliMatchStatement != nil:
+		var model webACLRuleSqliMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.SqliMatchStatement, &model)...)
+		m.SqliMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.XssMatchStatement != nil:
+		var model webACLRuleXssMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.XssMatchStatement, &model)...)
+		m.XssMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.SizeConstraintStatement != nil:
+		var model webACLRuleSizeConstraintStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.SizeConstraintStatement, &model)...)
+		m.SizeConstraintStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.RegexMatchStatement != nil:
+		var model webACLRuleRegexMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.RegexMatchStatement, &model)...)
+		m.RegexMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.LabelMatchStatement != nil:
+		var model webACLRuleLabelMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.LabelMatchStatement, &model)...)
+		m.LabelMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case stmt.AsnMatchStatement != nil:
+		var model webACLRuleAsnMatchStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.AsnMatchStatement, &model)...)
+		m.AsnMatchStatement = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+
+	return diags
+}
+
+func (m webACLRuleScopeDownStatementModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.IPSetReferenceStatement.IsNull():
+		var stmt awstypes.IPSetReferenceStatement
+		diags.Append(flex.Expand(ctx, m.IPSetReferenceStatement, &stmt)...)
+		return &awstypes.Statement{IPSetReferenceStatement: &stmt}, diags
+
+	case !m.GeoMatchStatement.IsNull():
+		var stmt awstypes.GeoMatchStatement
+		diags.Append(flex.Expand(ctx, m.GeoMatchStatement, &stmt)...)
+		return &awstypes.Statement{GeoMatchStatement: &stmt}, diags
+
+	case !m.ByteMatchStatement.IsNull():
+		var stmt awstypes.ByteMatchStatement
+		diags.Append(flex.Expand(ctx, m.ByteMatchStatement, &stmt)...)
+		return &awstypes.Statement{ByteMatchStatement: &stmt}, diags
+
+	case !m.SqliMatchStatement.IsNull():
+		var stmt awstypes.SqliMatchStatement
+		diags.Append(flex.Expand(ctx, m.SqliMatchStatement, &stmt)...)
+		return &awstypes.Statement{SqliMatchStatement: &stmt}, diags
+
+	case !m.XssMatchStatement.IsNull():
+		var stmt awstypes.XssMatchStatement
+		diags.Append(flex.Expand(ctx, m.XssMatchStatement, &stmt)...)
+		return &awstypes.Statement{XssMatchStatement: &stmt}, diags
+
+	case !m.SizeConstraintStatement.IsNull():
+		var stmt awstypes.SizeConstraintStatement
+		diags.Append(flex.Expand(ctx, m.SizeConstraintStatement, &stmt)...)
+		return &awstypes.Statement{SizeConstraintStatement: &stmt}, diags
+
+	case !m.RegexMatchStatement.IsNull():
+		var stmt awstypes.RegexMatchStatement
+		diags.Append(flex.Expand(ctx, m.RegexMatchStatement, &stmt)...)
+		return &awstypes.Statement{RegexMatchStatement: &stmt}, diags
+
+	case !m.LabelMatchStatement.IsNull():
+		var stmt awstypes.LabelMatchStatement
+		diags.Append(flex.Expand(ctx, m.LabelMatchStatement, &stmt)...)
+		return &awstypes.Statement{LabelMatchStatement: &stmt}, diags
+
+	case !m.AsnMatchStatement.IsNull():
+		var stmt awstypes.AsnMatchStatement
+		diags.Append(flex.Expand(ctx, m.AsnMatchStatement, &stmt)...)
+		return &awstypes.Statement{AsnMatchStatement: &stmt}, diags
+	}
+
+	return nil, diags
 }
 
 type webACLRuleRegexPatternSetReferenceStatementModel struct {
