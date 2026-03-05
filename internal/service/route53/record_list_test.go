@@ -35,7 +35,6 @@ func TestAccRoute53Record_List_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
