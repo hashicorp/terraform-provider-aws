@@ -139,71 +139,11 @@ func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
 	return l.resourceSchema.Data(&terraform.InstanceState{})
 }
 
-func (l *ListResourceWithSDKv2Resource) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
-	identity, err := d.Identity()
-	if err != nil {
-		return err
-	}
-
-	for _, attr := range l.identitySpec.Attributes {
-		switch attr.Name() {
-		case names.AttrAccountID:
-			if err := identity.Set(attr.Name(), client.AccountID(ctx)); err != nil {
-				return err
-			}
-
-		case names.AttrRegion:
-			if err := identity.Set(attr.Name(), client.Region(ctx)); err != nil {
-				return err
-			}
-
-		default:
-			val, ok := getAttributeOk(d, attr.ResourceAttributeName())
-			if !ok {
-				continue
-			}
-			if err := identity.Set(attr.Name(), val); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-type resourceData interface {
-	Id() string
-	GetOk(string) (any, bool)
-}
-
-func getAttributeOk(d resourceData, name string) (any, bool) {
-	if name == "id" {
-		return d.Id(), true
-	}
-	if v, ok := d.GetOk(name); !ok {
-		return nil, false
-	} else {
-		return v, true
-	}
-}
-
 // TODO modify to accept func() as parameter
 // will allow to use before interceptors as well
 func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
 	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd, includeResource); err.HasError() {
 		result.Diagnostics.Append(err...)
-		return
-	}
-
-	err := l.setResourceIdentity(ctx, awsClient, rd)
-	if err != nil {
-		result.Diagnostics.Append(diag.NewErrorDiagnostic(
-			"Error Listing Remote Resources",
-			"An unexpected error occurred setting resource identity. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				"Error: "+err.Error(),
-		))
 		return
 	}
 

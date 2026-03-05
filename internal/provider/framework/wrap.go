@@ -1004,6 +1004,8 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	}
 
 	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
+		v.AppendResultInterceptor(listresource.IdentityInterceptorSDK(spec.Identity.Attributes))
+
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
