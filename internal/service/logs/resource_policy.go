@@ -7,6 +7,7 @@ package logs
 
 import (
 	"context"
+	"fmt"
 	"iter"
 	"log"
 
@@ -180,7 +181,7 @@ func listResourcePolicies(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 		}, optFns...)
 
 		if err != nil {
-			yield(inttypes.Zero[awstypes.ResourcePolicy](), err)
+			yield(inttypes.Zero[awstypes.ResourcePolicy](), fmt.Errorf("listing CloudWatch Logs Resource Policies: %w", err))
 			return
 		}
 	}

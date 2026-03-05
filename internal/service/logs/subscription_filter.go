@@ -281,7 +281,7 @@ func listSubscriptionFilters(ctx context.Context, conn *cloudwatchlogs.Client, i
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.SubscriptionFilter](), err)
+				yield(inttypes.Zero[awstypes.SubscriptionFilter](), fmt.Errorf("listing CloudWatch Logs Subscription Filters: %w", err))
 				return
 			}
 

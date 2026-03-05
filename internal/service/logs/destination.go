@@ -7,6 +7,7 @@ package logs
 
 import (
 	"context"
+	"fmt"
 	"iter"
 	"log"
 	"time"
@@ -206,7 +207,7 @@ func listDestinations(ctx context.Context, conn *cloudwatchlogs.Client, input *c
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Destination](), err)
+				yield(inttypes.Zero[awstypes.Destination](), fmt.Errorf("listing CloudWatch Logs Destinations: %w", err))
 				return
 			}
 

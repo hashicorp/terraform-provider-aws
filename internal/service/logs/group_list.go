@@ -5,6 +5,7 @@ package logs
 
 import (
 	"context"
+	"fmt"
 	"iter"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -79,7 +80,7 @@ func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.LogGroup](), err)
+				yield(inttypes.Zero[awstypes.LogGroup](), fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
 				return
 			}
 

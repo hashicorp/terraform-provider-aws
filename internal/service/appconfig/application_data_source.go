@@ -7,6 +7,7 @@ package appconfig
 
 import (
 	"context"
+	"fmt"
 	"iter"
 
 	"github.com/YakDriver/regexache"
@@ -142,7 +143,7 @@ func listApplications(ctx context.Context, conn *appconfig.Client, input *appcon
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.Application](), err)
+				yield(inttypes.Zero[awstypes.Application](), fmt.Errorf("listing AppConfig Applications: %w", err))
 				return
 			}
 

@@ -188,7 +188,7 @@ func listLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *clo
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.LogStream](), err)
+				yield(inttypes.Zero[awstypes.LogStream](), fmt.Errorf("listing CloudWatch Logs Log Streams: %w", err))
 				return
 			}
 

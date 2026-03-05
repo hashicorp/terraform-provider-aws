@@ -422,7 +422,7 @@ func listSubscriptionsByTopic(ctx context.Context, conn *sns.Client, input *sns.
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[types.Subscription](), err)
+				yield(inttypes.Zero[types.Subscription](), fmt.Errorf("listing SNS Topic Subscriptions: %w", err))
 				return
 			}
 

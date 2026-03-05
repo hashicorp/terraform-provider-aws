@@ -213,7 +213,7 @@ func listQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, inpu
 		}, optFns...)
 
 		if err != nil {
-			yield(inttypes.Zero[awstypes.QueryDefinition](), err)
+			yield(inttypes.Zero[awstypes.QueryDefinition](), fmt.Errorf("listing CloudWatch Logs Query Definitions: %w", err))
 			return
 		}
 	}

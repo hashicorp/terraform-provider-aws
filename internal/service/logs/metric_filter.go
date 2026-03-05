@@ -266,7 +266,7 @@ func listMetricFilters(ctx context.Context, conn *cloudwatchlogs.Client, input *
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(inttypes.Zero[awstypes.MetricFilter](), err)
+				yield(inttypes.Zero[awstypes.MetricFilter](), fmt.Errorf("listing CloudWatch Logs Metric Filters: %w", err))
 				return
 			}
 
