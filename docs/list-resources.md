@@ -148,6 +148,8 @@ If the function does not exist, refactor the resource's Read operation so that t
 
 The `skaff` tool will generate scaffolding for acceptance tests for the List Resource.
 
+### Tests to Create
+
 List Resources must have the following tests:
 
 * A `basic` test that validates that multiple resources can be queried
@@ -157,9 +159,20 @@ List Resources for regional resources, which is most resource types, must also h
 
 * A `regionOverride` test that validates that the `region` attribute on the `list` block overrides the default region of the provider.
 
+In general, the configuration should be as simple as possible, avoiding optional attributes.
+One exception is if a resource type has an optional `name` attribute or the combination of `name` and `name_prefix`.
+In that case, `name` should be specified if the `name` value is used in the Resource Identity.
+
+If a resource type has attribute settings that could affect listing behavior,
+additional tests to validate that behavior should be added.
+
+### Test Configuration
+
 All tests should create multiple instances of the resource type being tested.
 Set the [`count` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/count) to `var.resource_count`.
 Other resources in the configuration should have a single instance, unless more than one is needed, for example EC2 Subnets when testing ELB Load Balancers.
+
+For **property entities**, multiple instances of the parent resource must be created and each **property entity** resource must be associated with an instance of the parent resource.
 
 The `includeResource` test should set the `tags` attribute if the resource type supports tagging.
 Tags should only be applied to the resource that is being tested.
