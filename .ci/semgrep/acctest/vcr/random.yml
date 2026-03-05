@@ -52,3 +52,37 @@ rules:
         - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
+
+  - id: use-acctest-randstring
+    languages: [go]
+    message: "Use acctest.RandString instead of sdkacctest.RandString for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandString($L)
+    fix: |
+      acctest.RandString(t, $L)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-randstringfromcharset
+    languages: [go]
+    message: "Use acctest.RandStringFromCharSet instead of sdkacctest.RandStringFromCharSet for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandStringFromCharSet($L, $S)
+    fix: |
+      acctest.RandStringFromCharSet(t, $L, $S)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
