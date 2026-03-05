@@ -790,7 +790,7 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true})
 }
 
 func TestFlattenStructListOfStringEnum(t *testing.T) {
