@@ -765,7 +765,7 @@ func TestFlattenSimpleSetOfPrimitiveValues(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true})
+			runAutoFlattenTestCases(t, cases, runChecks{CompareDiags: false, CompareTarget: true})
 		})
 	}
 }
