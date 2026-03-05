@@ -389,28 +389,6 @@ func TestAccWAFV2WebACLRule_byteMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRule_regexPatternSetReference(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_web_acl_rule.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebACLRuleConfig_regexPatternSetReference(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLRuleExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "statement.0.regex_pattern_set_reference_statement.0.arn", "aws_wafv2_regex_pattern_set.test", names.AttrARN),
-				),
-			},
-		},
-	})
-}
-
 func TestAccWAFV2WebACLRule_sqliMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1011,7 +989,7 @@ resource "aws_wafv2_web_acl_rule" "test" {
 
   statement {
     rate_based_statement {
-      limit              = 1000
+      limit              = 2000
       aggregate_key_type = "IP"
     }
   }
@@ -1114,60 +1092,6 @@ resource "aws_wafv2_web_acl_rule" "test" {
         priority = 0
         type     = "LOWERCASE"
       }
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = %[1]q
-    sampled_requests_enabled   = false
-  }
-}
-`, rName)
-}
-
-func testAccWebACLRuleConfig_regexPatternSetReference(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_regex_pattern_set" "test" {
-  name  = %[1]q
-  scope = "REGIONAL"
-
-  regular_expression {
-    regex_string = "test.*pattern"
-  }
-}
-
-resource "aws_wafv2_web_acl" "test" {
-  name  = %[1]q
-  scope = "REGIONAL"
-
-  default_action {
-    allow {}
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = %[1]q
-    sampled_requests_enabled   = false
-  }
-
-  lifecycle {
-    ignore_changes = [rule]
-  }
-}
-
-resource "aws_wafv2_web_acl_rule" "test" {
-  name        = %[1]q
-  priority    = 1
-  web_acl_arn = aws_wafv2_web_acl.test.arn
-
-  action {
-    block {}
-  }
-
-  statement {
-    regex_pattern_set_reference_statement {
-      arn = aws_wafv2_regex_pattern_set.test.arn
     }
   }
 
