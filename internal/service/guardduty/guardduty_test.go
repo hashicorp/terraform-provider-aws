@@ -81,6 +81,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,
+			acctest.CtDisappears: testAccMember_disappears,
 			"inviteOnUpdate":     testAccMember_invite_onUpdate,
 			"inviteDisassociate": testAccMember_invite_disassociate,
 			"invitationMessage":  testAccMember_invitationMessage,

@@ -10,6 +10,7 @@ var (
 	ResourceInviteAccepter           = resourceInviteAccepter
 	ResourceIPSet                    = resourceIPSet
 	ResourceMalwareProtectionPlan    = newMalwareProtectionPlanResource
+	ResourceMember                   = resourceMember
 	ResourceOrganizationAdminAccount = resourceOrganizationAdminAccount
 	ResourcePublishingDestination    = resourcePublishingDestination
 	ResourceThreatIntelSet           = resourceThreatIntelSet
@@ -20,6 +21,7 @@ var (
 	FindFilterByTwoPartKey                           = findFilterByTwoPartKey
 	FindIPSetByTwoPartKey                            = findIPSetByTwoPartKey
 	FindMalwareProtectionPlanByID                    = findMalwareProtectionPlanByID
+	FindMemberByTwoPartKey                           = findMemberByTwoPartKey
 	FindMemberDetectorFeatureByThreePartKey          = findMemberDetectorFeatureByThreePartKey
 	FindOrganizationAdminAccountByID                 = findOrganizationAdminAccountByID
 	FindOrganizationConfigurationByID                = findOrganizationConfigurationByID
