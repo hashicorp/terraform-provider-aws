@@ -919,5 +919,5 @@ func TestFlattenEmbeddedStruct(t *testing.T) {
 		},
 	}
 	// cmp.Diff cannot handle an unexported field
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true}, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true}, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
 }
