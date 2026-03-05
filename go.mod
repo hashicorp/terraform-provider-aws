@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.19
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.6
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.2
-	github.com/aws/aws-sdk-go-v2/service/connect v1.163.1
+	github.com/aws/aws-sdk-go-v2/service/connect v1.164.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.11
@@ -112,10 +112,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.12
 	github.com/aws/aws-sdk-go-v2/service/eks v1.80.2
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.11
-	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.21
+	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.21
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.8
-	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.57.7
 	github.com/aws/aws-sdk-go-v2/service/emrcontainers v1.40.15
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.37.18
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.19
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.5
-	github.com/aws/aws-sdk-go-v2/service/gamelift v1.50.2
+	github.com/aws/aws-sdk-go-v2/service/gamelift v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.13
 	github.com/aws/aws-sdk-go-v2/service/glue v1.137.2
@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.13
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.9.1
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.58.1
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.12
@@ -205,7 +205,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.40.13
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.32.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.103.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.104.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/rds v1.116.2
