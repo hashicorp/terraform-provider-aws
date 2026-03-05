@@ -6,9 +6,11 @@
 package ecs
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -273,6 +275,7 @@ func (r *expressGatewayServiceResource) Create(ctx context.Context, req resource
 
 	// Set values for unknowns.
 	if len(waitOut.ActiveConfigurations) > 0 {
+		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
 			return
@@ -315,6 +318,7 @@ func (r *expressGatewayServiceResource) Read(ctx context.Context, req resource.R
 	}
 
 	if len(out.ActiveConfigurations) > 0 {
+		orderExpressGatewayContainerEnvironmentVariables(&out.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.ActiveConfigurations[0], &state))
 		if resp.Diagnostics.HasError() {
 			return
@@ -422,6 +426,7 @@ func (r *expressGatewayServiceResource) Update(ctx context.Context, req resource
 
 	// Set values for unknowns.
 	if len(waitOut.ActiveConfigurations) > 0 {
+		orderExpressGatewayContainerEnvironmentVariables(&waitOut.ActiveConfigurations[0])
 		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut.ActiveConfigurations[0], &plan))
 		if resp.Diagnostics.HasError() {
 			return
@@ -772,6 +777,21 @@ type expressGatewayScalingTargetModel struct {
 type ingressPathSummaryModel struct {
 	AccessType fwtypes.StringEnum[awstypes.AccessType] `tfsdk:"access_type"`
 	Endpoint   types.String                            `tfsdk:"endpoint"`
+}
+
+// orderExpressGatewayContainerEnvironmentVariables sorts the environment variables and secrets
+// in an ExpressGatewayServiceConfiguration by name. This prevents spurious diffs when the API
+// returns environment variables in a different order than the Terraform configuration.
+func orderExpressGatewayContainerEnvironmentVariables(config *awstypes.ExpressGatewayServiceConfiguration) {
+	if config == nil || config.PrimaryContainer == nil {
+		return
+	}
+	slices.SortFunc(config.PrimaryContainer.Environment, func(a, b awstypes.KeyValuePair) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
+	slices.SortFunc(config.PrimaryContainer.Secrets, func(a, b awstypes.Secret) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
 }
 
 func retryExpressGatewayServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateExpressGatewayServiceInput) (*ecs.CreateExpressGatewayServiceOutput, error) {
