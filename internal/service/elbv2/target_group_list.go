@@ -43,7 +43,8 @@ func (l *listResourceTargetGroup) List(ctx context.Context, request list.ListReq
 		}
 	}
 
-	tflog.Info(ctx, "Listing ELB Target Group")
+	tflog.Info(ctx, "ListingResources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input elasticloadbalancingv2.DescribeTargetGroupsInput
 		pages := elasticloadbalancingv2.NewDescribeTargetGroupsPaginator(conn, &input)

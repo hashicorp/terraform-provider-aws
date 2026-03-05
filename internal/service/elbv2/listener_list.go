@@ -59,8 +59,8 @@ func (l *listResourceListener) List(ctx context.Context, request list.ListReques
 
 	loadBalancerARN := query.LoadBalancerARN.ValueString()
 
-	tflog.Info(ctx, "Listing ELB Listener", map[string]any{
-		logging.ResourceAttributeKey("load_balancer_arn"): loadBalancerARN,
+	tflog.Info(ctx, "Listing Resources", map[string]any{
+		"tf_list.request.config.load_balancer_arn": loadBalancerARN,
 	})
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := elasticloadbalancingv2.DescribeListenersInput{
