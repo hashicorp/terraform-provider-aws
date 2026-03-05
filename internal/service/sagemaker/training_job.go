@@ -94,8 +94,8 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"environment": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
 				Validators: []validator.Map{
 					mapvalidator.SizeBetween(0, 100),
 					mapvalidator.KeysAre(stringvalidator.All(
@@ -111,12 +111,16 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"hyper_parameters": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
+				CustomType: fwtypes.MapOfStringType,
+				Optional:   true,
 				Validators: []validator.Map{
 					mapvalidator.SizeBetween(0, 100),
-					mapvalidator.KeysAre(stringvalidator.LengthBetween(0, 256)),
-					mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 2500)),
+					mapvalidator.KeysAre(stringvalidator.All(
+						stringvalidator.LengthBetween(0, 256),
+					)),
+					mapvalidator.ValueStringsAre(stringvalidator.All(
+						stringvalidator.LengthBetween(0, 2500),
+					)),
 				},
 				PlanModifiers: []planmodifier.Map{
 					mapplanmodifier.RequiresReplace(),
@@ -132,24 +136,24 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"algorithm_specification":      trainingJobAlgorithmSpecificationBlock(ctx),
-			"checkpoint_config":            checkpointConfigBlock(),
-			"debug_hook_config":            debugHookConfigBlock(),
+			"checkpoint_config":            checkpointConfigBlock(ctx),
+			"debug_hook_config":            debugHookConfigBlock(ctx),
 			"debug_rule_configurations":    debugRuleConfigurationsBlock(ctx),
-			"experiment_config":            experimentConfigBlock(),
-			"infra_check_config":           infraCheckConfigBlock(),
+			"experiment_config":            experimentConfigBlock(ctx),
+			"infra_check_config":           infraCheckConfigBlock(ctx),
 			"input_data_config":            inputDataConfigBlock(ctx),
-			"mlflow_config":                mlflowConfigBlock(),
-			"model_package_config":         modelPackageConfigBlock(),
+			"mlflow_config":                mlflowConfigBlock(ctx),
+			"model_package_config":         modelPackageConfigBlock(ctx),
 			"output_data_config":           outputDataConfigBlock(ctx),
-			"profiler_config":              profilerConfigBlock(),
-			"profiler_rule_configurations": profilerRuleConfigurationsBlock(),
-			"remote_debug_config":          remoteDebugConfigBlock(),
+			"profiler_config":              profilerConfigBlock(ctx),
+			"profiler_rule_configurations": profilerRuleConfigurationsBlock(ctx),
+			"remote_debug_config":          remoteDebugConfigBlock(ctx),
 			"resource_config":              resourceConfigBlock(ctx),
-			"retry_strategy":               retryStrategyBlock(),
-			"serverless_job_config":        serverlessJobConfigBlock(),
-			"session_chaining_config":      sessionChainingConfigBlock(),
+			"retry_strategy":               retryStrategyBlock(ctx),
+			"serverless_job_config":        serverlessJobConfigBlock(ctx),
+			"session_chaining_config":      sessionChainingConfigBlock(ctx),
 			"stopping_condition":           stoppingConditionBlock(ctx),
-			"tensor_board_output_config":   tensorBoardOutputConfigBlock(),
+			"tensor_board_output_config":   tensorBoardOutputConfigBlock(ctx),
 			"vpc_config":                   vpcConfigBlock(ctx),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
@@ -172,7 +176,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 170),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*\/)?([a-zA-Z0-9]([a-zA-Z0-9-]){0,62})(?<!-)`), "must be a valid algorithm name or ARN"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:[a-z\-]*\/)?([a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)?`), "must be a valid algorithm name or ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -291,8 +295,9 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func checkpointConfigBlock() schema.Block {
+func checkpointConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobCheckpointConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -322,20 +327,25 @@ func checkpointConfigBlock() schema.Block {
 	}
 }
 
-func debugHookConfigBlock() schema.Block {
+func debugHookConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobDebugHookConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"hook_parameters": schema.MapAttribute{
-					ElementType: types.StringType,
-					Optional:    true,
+					CustomType: fwtypes.MapOfStringType,
+					Optional:   true,
 					Validators: []validator.Map{
 						mapvalidator.SizeBetween(0, 20),
-						mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 256)),
-						mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 256)),
+						mapvalidator.KeysAre(stringvalidator.All(
+							stringvalidator.LengthBetween(1, 256),
+						)),
+						mapvalidator.ValueStringsAre(stringvalidator.All(
+							stringvalidator.LengthBetween(0, 256),
+						)),
 					},
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.RequiresReplace(),
@@ -375,8 +385,8 @@ func debugHookConfigBlock() schema.Block {
 								},
 							},
 							"collection_parameters": schema.MapAttribute{
-								ElementType: types.StringType,
-								Optional:    true,
+								CustomType: fwtypes.MapOfStringType,
+								Optional:   true,
 								PlanModifiers: []planmodifier.Map{
 									mapplanmodifier.RequiresReplace(),
 								},
@@ -429,12 +439,16 @@ func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 					},
 				},
 				"rule_parameters": schema.MapAttribute{
-					ElementType: types.StringType,
-					Optional:    true,
+					CustomType: fwtypes.MapOfStringType,
+					Optional:   true,
 					Validators: []validator.Map{
 						mapvalidator.SizeBetween(0, 100),
-						mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 256)),
-						mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 256)),
+						mapvalidator.KeysAre(stringvalidator.All(
+							stringvalidator.LengthBetween(1, 256),
+						)),
+						mapvalidator.ValueStringsAre(stringvalidator.All(
+							stringvalidator.LengthBetween(0, 256),
+						)),
 					},
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.RequiresReplace(),
@@ -464,8 +478,9 @@ func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func experimentConfigBlock() schema.Block {
+func experimentConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobExperimentConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -504,8 +519,9 @@ func experimentConfigBlock() schema.Block {
 	}
 }
 
-func infraCheckConfigBlock() schema.Block {
+func infraCheckConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobInfraCheckConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -729,8 +745,9 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func mlflowConfigBlock() schema.Block {
+func mlflowConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobMlflowConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -769,8 +786,9 @@ func mlflowConfigBlock() schema.Block {
 	}
 }
 
-func modelPackageConfigBlock() schema.Block {
+func modelPackageConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobModelPackageConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -781,7 +799,7 @@ func modelPackageConfigBlock() schema.Block {
 					Required:   true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package-group/[\S]{1,2048}`), "must be a valid model package group ARN"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package-group/[\S]+`), "must be a valid model package group ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -792,7 +810,7 @@ func modelPackageConfigBlock() schema.Block {
 					Optional:   true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package/[\S]{1,2048}`), "must be a valid source model package ARN"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]{9,16}:[0-9]{12}:model-package/[\S]+`), "must be a valid source model package ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -813,7 +831,7 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"compression_type": schema.StringAttribute{
 					Optional:   true,
-					CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
+					CustomType: fwtypes.StringEnumType[awstypes.OutputCompressionType](),
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -843,8 +861,9 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func profilerConfigBlock() schema.Block {
+func profilerConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobProfilerConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -860,12 +879,16 @@ func profilerConfigBlock() schema.Block {
 					},
 				},
 				"profiling_parameters": schema.MapAttribute{
-					ElementType: types.StringType,
-					Optional:    true,
+					CustomType: fwtypes.MapOfStringType,
+					Optional:   true,
 					Validators: []validator.Map{
 						mapvalidator.SizeBetween(0, 20),
-						mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 256)),
-						mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 256)),
+						mapvalidator.KeysAre(stringvalidator.All(
+							stringvalidator.LengthBetween(1, 256),
+						)),
+						mapvalidator.ValueStringsAre(stringvalidator.All(
+							stringvalidator.LengthBetween(0, 256),
+						)),
 					},
 				},
 				"s3_output_path": schema.StringAttribute{
@@ -880,8 +903,9 @@ func profilerConfigBlock() schema.Block {
 	}
 }
 
-func profilerRuleConfigurationsBlock() schema.Block {
+func profilerRuleConfigurationsBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobProfilerRuleConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeBetween(0, 20),
 		},
@@ -914,8 +938,12 @@ func profilerRuleConfigurationsBlock() schema.Block {
 					Optional:    true,
 					Validators: []validator.Map{
 						mapvalidator.SizeBetween(0, 100),
-						mapvalidator.KeysAre(stringvalidator.LengthBetween(1, 256)),
-						mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 256)),
+						mapvalidator.KeysAre(stringvalidator.All(
+							stringvalidator.LengthBetween(1, 256),
+						)),
+						mapvalidator.ValueStringsAre(stringvalidator.All(
+							stringvalidator.LengthBetween(0, 256),
+						)),
 					},
 				},
 				"s3_output_path": schema.StringAttribute{
@@ -936,8 +964,9 @@ func profilerRuleConfigurationsBlock() schema.Block {
 	}
 }
 
-func remoteDebugConfigBlock() schema.Block {
+func remoteDebugConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobRemoteDebugConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -1089,8 +1118,9 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func retryStrategyBlock() schema.Block {
+func retryStrategyBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobRetryStrategyModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -1110,8 +1140,9 @@ func retryStrategyBlock() schema.Block {
 	}
 }
 
-func serverlessJobConfigBlock() schema.Block {
+func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobServerlessJobConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -1147,8 +1178,9 @@ func serverlessJobConfigBlock() schema.Block {
 	}
 }
 
-func sessionChainingConfigBlock() schema.Block {
+func sessionChainingConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobSessionChainingConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -1202,8 +1234,9 @@ func stoppingConditionBlock(ctx context.Context) schema.Block {
 	}
 }
 
-func tensorBoardOutputConfigBlock() schema.Block {
+func tensorBoardOutputConfigBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobTensorBoardOutputConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
@@ -1543,9 +1576,9 @@ type resourceTrainingJobModel struct {
 	EnableInterContainerTrafficEncryption types.Bool                                                               `tfsdk:"enable_inter_container_traffic_encryption"`
 	EnableManagedSpotTraining             types.Bool                                                               `tfsdk:"enable_managed_spot_training"`
 	EnableNetworkIsolation                types.Bool                                                               `tfsdk:"enable_network_isolation"`
-	Environment                           types.Map                                                                `tfsdk:"environment"`
+	Environment                           fwtypes.MapOfString                                                      `tfsdk:"environment"`
 	ExperimentConfig                      fwtypes.ListNestedObjectValueOf[trainingJobExperimentConfigModel]        `tfsdk:"experiment_config"`
-	HyperParameters                       types.Map                                                                `tfsdk:"hyper_parameters"`
+	HyperParameters                       fwtypes.MapOfString                                                      `tfsdk:"hyper_parameters"`
 	ID                                    types.String                                                             `tfsdk:"id"`
 	InfraCheckConfig                      fwtypes.ListNestedObjectValueOf[trainingJobInfraCheckConfigModel]        `tfsdk:"infra_check_config"`
 	InputDataConfig                       fwtypes.ListNestedObjectValueOf[trainingJobInputDataConfigModel]         `tfsdk:"input_data_config"`
@@ -1637,9 +1670,9 @@ type trainingJobShuffleConfigModel struct {
 }
 
 type trainingJobOutputDataConfigModel struct {
-	CompressionType types.String `tfsdk:"compression_type"`
-	KMSKeyID        types.String `tfsdk:"kms_key_id"`
-	S3OutputPath    types.String `tfsdk:"s3_output_path"`
+	CompressionType fwtypes.StringEnum[awstypes.OutputCompressionType] `tfsdk:"compression_type"`
+	KMSKeyID        types.String                                       `tfsdk:"kms_key_id"`
+	S3OutputPath    types.String                                       `tfsdk:"s3_output_path"`
 }
 
 type trainingJobResourceConfigModel struct {
@@ -1687,14 +1720,14 @@ type trainingJobCheckpointConfigModel struct {
 
 type trainingJobDebugHookConfigModel struct {
 	CollectionConfigurations fwtypes.ListNestedObjectValueOf[trainingJobCollectionConfigurationModel] `tfsdk:"collection_configurations"`
-	HookParameters           types.Map                                                                `tfsdk:"hook_parameters"`
+	HookParameters           fwtypes.MapOfString                                                      `tfsdk:"hook_parameters"`
 	LocalPath                types.String                                                             `tfsdk:"local_path"`
 	S3OutputPath             types.String                                                             `tfsdk:"s3_output_path"`
 }
 
 type trainingJobCollectionConfigurationModel struct {
-	CollectionName       types.String `tfsdk:"collection_name"`
-	CollectionParameters types.Map    `tfsdk:"collection_parameters"`
+	CollectionName       types.String        `tfsdk:"collection_name"`
+	CollectionParameters fwtypes.MapOfString `tfsdk:"collection_parameters"`
 }
 
 type trainingJobDebugRuleConfigurationModel struct {
@@ -1702,7 +1735,7 @@ type trainingJobDebugRuleConfigurationModel struct {
 	LocalPath             types.String                                        `tfsdk:"local_path"`
 	RuleConfigurationName types.String                                        `tfsdk:"rule_configuration_name"`
 	RuleEvaluatorImage    types.String                                        `tfsdk:"rule_evaluator_image"`
-	RuleParameters        types.Map                                           `tfsdk:"rule_parameters"`
+	RuleParameters        fwtypes.MapOfString                                 `tfsdk:"rule_parameters"`
 	S3OutputPath          types.String                                        `tfsdk:"s3_output_path"`
 	VolumeSizeInGB        types.Int64                                         `tfsdk:"volume_size_in_gb"`
 }
@@ -1730,10 +1763,10 @@ type trainingJobModelPackageConfigModel struct {
 }
 
 type trainingJobProfilerConfigModel struct {
-	DisableProfiler                 types.Bool   `tfsdk:"disable_profiler"`
-	ProfilingIntervalInMilliseconds types.Int64  `tfsdk:"profiling_interval_in_milliseconds"`
-	ProfilingParameters             types.Map    `tfsdk:"profiling_parameters"`
-	S3OutputPath                    types.String `tfsdk:"s3_output_path"`
+	DisableProfiler                 types.Bool          `tfsdk:"disable_profiler"`
+	ProfilingIntervalInMilliseconds types.Int64         `tfsdk:"profiling_interval_in_milliseconds"`
+	ProfilingParameters             fwtypes.MapOfString `tfsdk:"profiling_parameters"`
+	S3OutputPath                    types.String        `tfsdk:"s3_output_path"`
 }
 
 type trainingJobProfilerRuleConfigModel struct {
@@ -1741,7 +1774,7 @@ type trainingJobProfilerRuleConfigModel struct {
 	LocalPath             types.String                                        `tfsdk:"local_path"`
 	RuleConfigurationName types.String                                        `tfsdk:"rule_configuration_name"`
 	RuleEvaluatorImage    types.String                                        `tfsdk:"rule_evaluator_image"`
-	RuleParameters        types.Map                                           `tfsdk:"rule_parameters"`
+	RuleParameters        fwtypes.MapOfString                                 `tfsdk:"rule_parameters"`
 	S3OutputPath          types.String                                        `tfsdk:"s3_output_path"`
 	VolumeSizeInGB        types.Int64                                         `tfsdk:"volume_size_in_gb"`
 }
