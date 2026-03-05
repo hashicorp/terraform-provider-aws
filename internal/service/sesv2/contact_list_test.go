@@ -40,7 +40,6 @@ func testAccContactList_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_basic(rName),
@@ -72,7 +71,6 @@ func testAccContactList_description(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_description(rName, "description1"),
@@ -107,7 +105,6 @@ func testAccContactList_topic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_topic1(rName),
@@ -150,7 +147,6 @@ func testAccContactList_disappears(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_basic(rName),
