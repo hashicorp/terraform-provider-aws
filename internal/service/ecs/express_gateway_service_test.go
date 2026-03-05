@@ -354,6 +354,72 @@ func TestAccECSExpressGatewayService_checkIdempotency(t *testing.T) {
 	})
 }
 
+// TestAccECSExpressGatewayService_environmentVariableOrdering verifies that
+// environment variables defined in non-alphabetical order do not cause
+// "Provider produced inconsistent result after apply" errors.
+// See: https://github.com/hashicorp/terraform-provider-aws/issues/45792
+func TestAccECSExpressGatewayService_environmentVariableOrdering(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.name", "ALPHA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.0.value", "first"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.name", "BETA"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.1.value", "second"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.2.name", "ZULU"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.2.value", "third"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Re-apply the same config to verify no diff is detected (the bug caused
+			// "Provider produced inconsistent result after apply" here).
+			{
+				Config: testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -704,6 +770,38 @@ resource "aws_ecs_express_gateway_service" "duplicate" {
   depends_on = [
     aws_ecs_express_gateway_service.test
   ]
+}
+`)
+}
+
+// testAccExpressGatewayServiceConfig_environmentVariableOrdering creates an express
+// gateway service with environment variables intentionally in non-alphabetical order
+// (ZULU, BETA, ALPHA). The API returns them sorted alphabetically, so the provider
+// must sort them before storing in state to avoid spurious diffs.
+func testAccExpressGatewayServiceConfig_environmentVariableOrdering(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName), `
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+
+    environment {
+      name  = "ZULU"
+      value = "third"
+    }
+
+    environment {
+      name  = "BETA"
+      value = "second"
+    }
+
+    environment {
+      name  = "ALPHA"
+      value = "first"
+    }
+  }
 }
 `)
 }
