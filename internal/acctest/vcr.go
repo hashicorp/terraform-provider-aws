@@ -173,40 +173,14 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		// Reuse the existing VCR-enabled HTTP client if one was already created
 		// for a prior step, otherwise create a new one with a recorder.
 		var httpClient *http.Client
+		var err error
 		if ok {
 			httpClient = store.meta.HTTPClient(ctx)
 		} else {
-			vcrMode, err := vcr.Mode()
+			httpClient, err = vcrHTTPClient(ctx, testName)
 			if err != nil {
 				return nil, sdkdiag.AppendFromErr(diags, err)
 			}
-
-			// Real transport config, cribbed from aws-sdk-go-base.
-			httpClient = cleanhttp.DefaultPooledClient()
-			transport := httpClient.Transport.(*http.Transport)
-			transport.MaxIdleConnsPerHost = 10
-			if transport.TLSClientConfig == nil {
-				transport.TLSClientConfig = &tls.Config{
-					MinVersion: tls.VersionTLS13,
-				}
-			}
-
-			cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
-
-			// Create a VCR recorder around a default HTTP client.
-			r, err := recorder.New(cassetteName,
-				recorder.WithHook(vcrSensitiveHeaderHook, recorder.AfterCaptureHook),
-				recorder.WithMatcher(vcrMatcherFunc(ctx)),
-				recorder.WithMode(vcrMode),
-				recorder.WithRealTransport(httpClient.Transport),
-				recorder.WithSkipRequestLatency(true),
-			)
-
-			if err != nil {
-				return nil, sdkdiag.AppendFromErr(diags, err)
-			}
-
-			httpClient.Transport = r
 		}
 
 		// Use the wrapped HTTP Client for AWS APIs.
@@ -307,6 +281,40 @@ func vcrMatcherFunc(ctx context.Context) recorder.MatcherFunc {
 
 		return false
 	}
+}
+
+func vcrHTTPClient(ctx context.Context, testName string) (*http.Client, error) {
+	vcrMode, err := vcr.Mode()
+	if err != nil {
+		return nil, err
+	}
+
+	// Real transport config, cribbed from aws-sdk-go-base.
+	httpClient := cleanhttp.DefaultPooledClient()
+	transport := httpClient.Transport.(*http.Transport)
+	transport.MaxIdleConnsPerHost = 10
+	if transport.TLSClientConfig == nil {
+		transport.TLSClientConfig = &tls.Config{
+			MinVersion: tls.VersionTLS13,
+		}
+	}
+
+	cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
+
+	// Create a VCR recorder around a default HTTP client.
+	r, err := recorder.New(cassetteName,
+		recorder.WithHook(vcrSensitiveHeaderHook, recorder.AfterCaptureHook),
+		recorder.WithMatcher(vcrMatcherFunc(ctx)),
+		recorder.WithMode(vcrMode),
+		recorder.WithRealTransport(httpClient.Transport),
+		recorder.WithSkipRequestLatency(true),
+	)
+	if err != nil {
+		return httpClient, err
+	}
+
+	httpClient.Transport = r
+	return httpClient, nil
 }
 
 // vcrRandomnessSource returns a rand.Source for VCR testing
