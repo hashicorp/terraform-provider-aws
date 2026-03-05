@@ -329,6 +329,39 @@ func TestAccWAFV2WebACLRule_rateBasedStatement(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACLRule_rateBasedStatementCustomKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_rateBasedStatementCustomKeys(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.aggregate_key_type", "CUSTOM_KEYS"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.custom_keys.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.custom_keys.0.header.0.name", "x-api-key"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.custom_keys.1.uri_path.0.text_transformation.0.type", "LOWERCASE"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.rate_based_statement.0.custom_keys.2.ip.#", "1"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACLRule_labelMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -991,6 +1024,75 @@ resource "aws_wafv2_web_acl_rule" "test" {
     rate_based_statement {
       limit              = 2000
       aggregate_key_type = "IP"
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleConfig_rateBasedStatementCustomKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    rate_based_statement {
+      limit              = 2000
+      aggregate_key_type = "CUSTOM_KEYS"
+
+      custom_keys {
+        header {
+          name = "x-api-key"
+          text_transformation {
+            priority = 0
+            type     = "NONE"
+          }
+        }
+      }
+
+      custom_keys {
+        uri_path {
+          text_transformation {
+            priority = 0
+            type     = "LOWERCASE"
+          }
+        }
+      }
+
+      custom_keys {
+        ip {}
+      }
     }
   }
 

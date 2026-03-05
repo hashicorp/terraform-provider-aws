@@ -1461,6 +1461,111 @@ type webACLRuleRateBasedStatementCustomKeyModel struct {
 	UriPath        fwtypes.ListNestedObjectValueOf[webACLRuleRateBasedStatementCustomKeyUriPathModel]        `tfsdk:"uri_path"`
 }
 
+func (m webACLRuleRateBasedStatementCustomKeyModel) expand(ctx context.Context) (result awstypes.RateBasedStatementCustomKey, diags diag.Diagnostics) {
+	r := awstypes.RateBasedStatementCustomKey{}
+
+	if !m.ASN.IsNull() {
+		r.ASN = &awstypes.RateLimitAsn{}
+	}
+	if !m.Cookie.IsNull() {
+		diags.Append(flex.Expand(ctx, m.Cookie, &r.Cookie)...)
+	}
+	if !m.ForwardedIP.IsNull() {
+		r.ForwardedIP = &awstypes.RateLimitForwardedIP{}
+	}
+	if !m.Header.IsNull() {
+		diags.Append(flex.Expand(ctx, m.Header, &r.Header)...)
+	}
+	if !m.HTTPMethod.IsNull() {
+		r.HTTPMethod = &awstypes.RateLimitHTTPMethod{}
+	}
+	if !m.IP.IsNull() {
+		r.IP = &awstypes.RateLimitIP{}
+	}
+	if !m.JA3Fingerprint.IsNull() {
+		diags.Append(flex.Expand(ctx, m.JA3Fingerprint, &r.JA3Fingerprint)...)
+	}
+	if !m.JA4Fingerprint.IsNull() {
+		diags.Append(flex.Expand(ctx, m.JA4Fingerprint, &r.JA4Fingerprint)...)
+	}
+	if !m.LabelNamespace.IsNull() {
+		diags.Append(flex.Expand(ctx, m.LabelNamespace, &r.LabelNamespace)...)
+	}
+	if !m.QueryArgument.IsNull() {
+		diags.Append(flex.Expand(ctx, m.QueryArgument, &r.QueryArgument)...)
+	}
+	if !m.QueryString.IsNull() {
+		diags.Append(flex.Expand(ctx, m.QueryString, &r.QueryString)...)
+	}
+	if !m.UriPath.IsNull() {
+		diags.Append(flex.Expand(ctx, m.UriPath, &r.UriPath)...)
+	}
+
+	return r, diags
+}
+
+func (m *webACLRuleRateBasedStatementCustomKeyModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	t, ok := v.(awstypes.RateBasedStatementCustomKey)
+	if !ok {
+		return diags
+	}
+
+	if t.ASN != nil {
+		m.ASN = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &webACLRuleTrulyEmptyModel{})
+	}
+	if t.Cookie != nil {
+		var model webACLRuleRateBasedStatementCustomKeyCookieModel
+		diags.Append(flex.Flatten(ctx, t.Cookie, &model)...)
+		m.Cookie = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.ForwardedIP != nil {
+		m.ForwardedIP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &webACLRuleTrulyEmptyModel{})
+	}
+	if t.Header != nil {
+		var model webACLRuleRateBasedStatementCustomKeyHeaderModel
+		diags.Append(flex.Flatten(ctx, t.Header, &model)...)
+		m.Header = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.HTTPMethod != nil {
+		m.HTTPMethod = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &webACLRuleTrulyEmptyModel{})
+	}
+	if t.IP != nil {
+		m.IP = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &webACLRuleTrulyEmptyModel{})
+	}
+	if t.JA3Fingerprint != nil {
+		var model webACLRuleRateBasedStatementCustomKeyJAFingerprintModel
+		diags.Append(flex.Flatten(ctx, t.JA3Fingerprint, &model)...)
+		m.JA3Fingerprint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.JA4Fingerprint != nil {
+		var model webACLRuleRateBasedStatementCustomKeyJAFingerprintModel
+		diags.Append(flex.Flatten(ctx, t.JA4Fingerprint, &model)...)
+		m.JA4Fingerprint = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.LabelNamespace != nil {
+		var model webACLRuleRateBasedStatementCustomKeyLabelNamespaceModel
+		diags.Append(flex.Flatten(ctx, t.LabelNamespace, &model)...)
+		m.LabelNamespace = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.QueryArgument != nil {
+		var model webACLRuleRateBasedStatementCustomKeyQueryArgumentModel
+		diags.Append(flex.Flatten(ctx, t.QueryArgument, &model)...)
+		m.QueryArgument = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.QueryString != nil {
+		var model webACLRuleRateBasedStatementCustomKeyQueryStringModel
+		diags.Append(flex.Flatten(ctx, t.QueryString, &model)...)
+		m.QueryString = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if t.UriPath != nil {
+		var model webACLRuleRateBasedStatementCustomKeyUriPathModel
+		diags.Append(flex.Flatten(ctx, t.UriPath, &model)...)
+		m.UriPath = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+
+	return diags
+}
+
 type webACLRuleRateBasedStatementCustomKeyJAFingerprintModel struct {
 	FallbackBehavior fwtypes.StringEnum[awstypes.FallbackBehavior] `tfsdk:"fallback_behavior"`
 }
@@ -1507,9 +1612,26 @@ func (m webACLRuleRateBasedStatementModel) Expand(ctx context.Context) (result a
 	}
 
 	diags.Append(flex.Expand(ctx, m.Limit, &rbs.Limit)...)
-	diags.Append(flex.Expand(ctx, m.CustomKeys, &rbs.CustomKeys)...)
 	diags.Append(flex.Expand(ctx, m.ForwardedIPConfig, &rbs.ForwardedIPConfig)...)
 	diags.Append(flex.Expand(ctx, m.ScopeDownStatement, &rbs.ScopeDownStatement)...)
+
+	// Manually expand custom_keys since it's a union-like structure
+	if !m.CustomKeys.IsNull() {
+		customKeysData, d := m.CustomKeys.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		rbs.CustomKeys = make([]awstypes.RateBasedStatementCustomKey, len(customKeysData))
+		for i, ck := range customKeysData {
+			expanded, d := ck.expand(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			rbs.CustomKeys[i] = expanded
+		}
+	}
 
 	// EvaluationWindowSec: only set if explicitly provided (not null)
 	if !m.EvaluationWindowSec.IsNull() {
