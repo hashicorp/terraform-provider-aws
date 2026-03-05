@@ -83,6 +83,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  resourceInsightSelectors,
+			TypeName: "aws_cloudtrail_insight_selectors",
+			Name:     "Insight Selectors",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
