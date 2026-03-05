@@ -8,6 +8,7 @@ var (
 	ResourceFilter                = resourceFilter
 	ResourceInviteAccepter        = resourceInviteAccepter
 	ResourceMalwareProtectionPlan = newMalwareProtectionPlanResource
+	ResourceMalwareScanSettings   = newResourceMalwareScanSettings
 	ResourcePublishingDestination = resourcePublishingDestination
 
 	FindDetectorByID                        = findDetectorByID
