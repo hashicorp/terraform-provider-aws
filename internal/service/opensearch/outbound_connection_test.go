@@ -20,6 +20,8 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
+	// Satisfy the pw requirements
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,7 +30,7 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundConnectionConfig(name),
+				Config: testAccOutboundConnectionConfig(name, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
@@ -51,6 +53,8 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
+	// Satisfy the pw requirements
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -59,7 +63,7 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundConnectionConfig_vpcEndpoint(name),
+				Config: testAccOutboundConnectionConfig_vpcEndpoint(name, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
@@ -83,6 +87,8 @@ func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
 	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
+	// Satisfy the pw requirements
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -91,7 +97,7 @@ func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundConnectionConfig(name),
+				Config: testAccOutboundConnectionConfig(name, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, t, "aws_opensearch_domain.domain_2", &domain),
@@ -103,9 +109,7 @@ func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccOutboundConnectionConfig(name string) string {
-	// Satisfy the pw requirements
-	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
+func testAccOutboundConnectionConfig(name, pw string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "domain_1" {
   domain_name = "%s-1"
@@ -208,10 +212,7 @@ resource "aws_opensearch_outbound_connection" "test" {
 `, name, pw, name, pw, name)
 }
 
-func testAccOutboundConnectionConfig_vpcEndpoint(name string) string {
-	// Satisfy the pw requirements
-	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
-
+func testAccOutboundConnectionConfig_vpcEndpoint(name, pw string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
