@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +28,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 	userTrustProviderType := "iam-identity-center"
 	description := sdkacctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -38,12 +37,12 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_basic("test", trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
@@ -69,19 +68,19 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	deviceTrustProviderType := "jamf"
 	tenantId := sdkacctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions("test", trustProviderType, deviceTrustProviderType, tenantId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "device_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "device_options.0.tenant_id", tenantId),
 					resource.TestCheckResourceAttr(resourceName, "device_trust_provider_type", deviceTrustProviderType),
@@ -108,7 +107,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	userTrustProviderType := "iam-identity-center"
 	description := sdkacctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
@@ -117,12 +116,12 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_basic("test", trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessTrustProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -146,19 +145,19 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	tokenEndpoint := "https://token.example.com"
 	userInfoEndpoint := "https://user.example.com"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions("test", trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.authorization_endpoint", authorizationEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_id", clientId),
@@ -191,7 +190,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	userTrustProviderType := "iam-identity-center"
 	description := sdkacctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
@@ -199,12 +198,12 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_tags1("test", trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -212,7 +211,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_tags2("test", trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -221,7 +220,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_tags1("test", trustProviderType, userTrustProviderType, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -236,14 +235,14 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string, v *awstypes.VerifiedAccessTrustProvider) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, t *testing.T, n string, v *awstypes.VerifiedAccessTrustProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindVerifiedAccessTrustProviderByID(ctx, conn, rs.Primary.ID)
 
@@ -257,9 +256,9 @@ func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string
 	}
 }
 
-func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_verifiedaccess_trust_provider" {
@@ -284,7 +283,7 @@ func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context) resourc
 }
 
 func testAccPreCheckVerifiedAccess(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{}
 	_, err := conn.DescribeVerifiedAccessTrustProviders(ctx, input)

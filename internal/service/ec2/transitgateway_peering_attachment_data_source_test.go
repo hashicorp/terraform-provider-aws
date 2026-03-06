@@ -6,7 +6,6 @@ package ec2_test
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -15,11 +14,11 @@ import (
 
 func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -47,12 +46,12 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *test
 
 func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -80,11 +79,11 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t 
 
 func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -111,12 +110,12 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.
 
 func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -144,11 +143,11 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *tes
 
 func testAccTransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)

@@ -51,7 +51,7 @@ func testAccEC2SecondarySubnet_List_basic(t *testing.T) {
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx),
+		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -108,7 +108,7 @@ func TestAccEC2SecondarySubnet_List_filtered(t *testing.T) {
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx),
+		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -177,7 +177,7 @@ func testAccEC2SecondarySubnet_List_includeResource(t *testing.T) {
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx),
+		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -230,7 +230,7 @@ func testAccEC2SecondarySubnet_List_regionOverride(t *testing.T) {
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx),
+		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
