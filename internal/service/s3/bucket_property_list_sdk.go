@@ -32,7 +32,6 @@ func newListResourceBaseBucketProperty(resource *schema.Resource, f func(listRes
 	l.SetResourceSchema(resource)
 	l.handler = f(&l)
 	return &l
-
 }
 
 type listResourceBaseBucketProperty struct {
