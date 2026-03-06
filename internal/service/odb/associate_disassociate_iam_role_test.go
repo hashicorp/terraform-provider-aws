@@ -170,7 +170,6 @@ data "aws_iam_role" "test" {
 resource "aws_odb_associate_disassociate_iam_role" "test" {
  aws_integration= "KmsTde" 
  composite_arn{
-
  	iam_role_arn = data.aws_iam_role.arn
  	resource_arn = aws_odb_cloud_vm_cluster.test.arn
  }
