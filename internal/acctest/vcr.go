@@ -455,11 +455,21 @@ func RandIntRange(t *testing.T, minInt int, maxInt int) int {
 	return rand.New(s.source).Intn(maxInt-minInt) + minInt
 }
 
+const (
+	// CharSetAlphaNum is the alphanumeric character set for use with
+	// RandStringFromCharSet
+	CharSetAlphaNum = "abcdefghijklmnopqrstuvwxyz012346789"
+
+	// CharSetAlpha is the alphabetical character set for use with
+	// RandStringFromCharSet
+	CharSetAlpha = "abcdefghijklmnopqrstuvwxyz"
+)
+
 // RandString is a VCR-friendly replacement for sdkacctest.RandString
 func RandString(t *testing.T, strlen int) string {
 	t.Helper()
 
-	return RandStringFromCharSet(t, strlen, sdkacctest.CharSetAlphaNum)
+	return RandStringFromCharSet(t, strlen, CharSetAlphaNum)
 }
 
 // RandStringFromCharSet is a VCR-friendly replacement for sdkacctest.RandStringFromCharSet
