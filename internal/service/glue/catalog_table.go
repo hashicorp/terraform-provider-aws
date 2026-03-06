@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -486,7 +485,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		DatabaseName: aws.String(dbName),
 		TableName:    aws.String(name),
 	}
-	partitionIndexes, err := findPartitionIndexes(ctx, conn, &input, tfslices.PredicateTrue[awstypes.PartitionIndexDescriptor]())
+	partitionIndexes, err := findPartitionIndexes(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)

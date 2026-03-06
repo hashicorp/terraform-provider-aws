@@ -216,16 +216,16 @@ func findPartitionIndexByFourPartKey(ctx context.Context, conn *glue.Client, cat
 }
 
 func findPartitionIndex(ctx context.Context, conn *glue.Client, input *glue.GetPartitionIndexesInput, filter tfslices.Predicate[awstypes.PartitionIndexDescriptor]) (*awstypes.PartitionIndexDescriptor, error) {
-	output, err := findPartitionIndexes(ctx, conn, input, filter)
+	output, err := findPartitionIndexes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, filter))
 }
 
-func findPartitionIndexes(ctx context.Context, conn *glue.Client, input *glue.GetPartitionIndexesInput, filter tfslices.Predicate[awstypes.PartitionIndexDescriptor]) ([]awstypes.PartitionIndexDescriptor, error) {
+func findPartitionIndexes(ctx context.Context, conn *glue.Client, input *glue.GetPartitionIndexesInput) ([]awstypes.PartitionIndexDescriptor, error) {
 	var output []awstypes.PartitionIndexDescriptor
 
 	pages := glue.NewGetPartitionIndexesPaginator(conn, input)
@@ -242,11 +242,7 @@ func findPartitionIndexes(ctx context.Context, conn *glue.Client, input *glue.Ge
 			return nil, err
 		}
 
-		for _, v := range page.PartitionIndexDescriptorList {
-			if filter(v) {
-				output = append(output, v)
-			}
-		}
+		output = append(output, page.PartitionIndexDescriptorList...)
 	}
 
 	return output, nil

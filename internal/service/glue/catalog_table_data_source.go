@@ -341,7 +341,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 
 	catalogID, dbName, name := cmp.Or(d.Get(names.AttrCatalogID).(string), c.AccountID(ctx)), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string)
 	id := catalogTableCreateResourceID(catalogID, dbName, name)
-	input := glue.GetTableInput{
+	inputGT := glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		Name:         aws.String(name),
@@ -349,13 +349,13 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("query_as_of_time"); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
-		input.QueryAsOfTime = aws.Time(t)
+		inputGT.QueryAsOfTime = aws.Time(t)
 	}
 	if v, ok := d.GetOk("transaction_id"); ok {
-		input.TransactionId = aws.String(v.(string))
+		inputGT.TransactionId = aws.String(v.(string))
 	}
 
-	table, err := findTable(ctx, conn, &input)
+	table, err := findTable(ctx, conn, &inputGT)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", id, err)
 	}
@@ -388,20 +388,19 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("view_original_text", table.ViewOriginalText)
 	d.Set("view_expanded_text", table.ViewExpandedText)
 
-	partIndexInput := &glue.GetPartitionIndexesInput{
+	inputGPI := glue.GetPartitionIndexesInput{
 		CatalogId:    aws.String(catalogID),
-		TableName:    aws.String(name),
 		DatabaseName: aws.String(dbName),
+		TableName:    aws.String(name),
 	}
-	partOut, err := conn.GetPartitionIndexes(ctx, partIndexInput)
+	partitionIndexes, err := findPartitionIndexes(ctx, conn, &inputGPI)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
 	}
 
-	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partOut.PartitionIndexDescriptorList)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
-		}
+	if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 	}
 
 	return diags
