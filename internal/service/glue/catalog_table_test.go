@@ -1181,12 +1181,7 @@ func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCh
 				continue
 			}
 
-			catalogID, dbName, name, err := tfglue.ReadTableID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfglue.FindTableByName(ctx, conn, catalogID, dbName, name)
+			_, err := tfglue.FindTableByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrName])
 
 			if retry.NotFound(err) {
 				continue
@@ -1210,14 +1205,9 @@ func testAccCheckCatalogTableExists(ctx context.Context, t *testing.T, n string)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		catalogID, dbName, name, err := tfglue.ReadTableID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
-		_, err = tfglue.FindTableByName(ctx, conn, catalogID, dbName, name)
+		_, err := tfglue.FindTableByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

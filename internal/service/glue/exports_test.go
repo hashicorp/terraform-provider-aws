@@ -39,6 +39,6 @@ var (
 	FindRegistryByID             = findRegistryByID
 	FindResourcePolicy           = findResourcePolicy
 	FindSchemaByID               = findSchemaByID
-	FindTableByName              = findTableByName
+	FindTableByThreePartKey      = findTableByThreePartKey
 	FindTriggerByName            = findTriggerByName
 )

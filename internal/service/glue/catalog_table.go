@@ -6,6 +6,7 @@
 package glue
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -71,6 +71,34 @@ func resourceCatalogTable() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
+			"open_table_format_input": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iceberg_input": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"metadata_operation": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"CREATE"}, false),
+									},
+									names.AttrVersion: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -79,6 +107,32 @@ func resourceCatalogTable() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"partition_index": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 3,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
+						"index_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"keys": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"partition_keys": {
 				Type:     schema.TypeList,
@@ -222,6 +276,11 @@ func resourceCatalogTable() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"registry_name": {
+													Type:          schema.TypeString,
+													Optional:      true,
+													ConflictsWith: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn"},
+												},
 												"schema_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -232,11 +291,6 @@ func resourceCatalogTable() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
-												},
-												"registry_name": {
-													Type:          schema.TypeString,
-													Optional:      true,
-													ConflictsWith: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn"},
 												},
 											},
 										},
@@ -268,13 +322,13 @@ func resourceCatalogTable() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 									},
-									"skewed_column_values": {
-										Type:     schema.TypeList,
+									"skewed_column_value_location_maps": {
+										Type:     schema.TypeMap,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"skewed_column_value_location_maps": {
-										Type:     schema.TypeMap,
+									"skewed_column_values": {
+										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -310,34 +364,6 @@ func resourceCatalogTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"open_table_format_input": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iceberg_input": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"metadata_operation": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice([]string{"CREATE"}, false),
-									},
-									names.AttrVersion: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"target_table": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -364,61 +390,27 @@ func resourceCatalogTable() *schema.Resource {
 					},
 				},
 			},
-			"view_original_text": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 409600),
-			},
 			"view_expanded_text": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 409600),
 			},
-			"partition_index": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"index_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"keys": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"index_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+			"view_original_text": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 409600),
 			},
 		},
 	}
 }
 
-func ReadTableID(id string) (string, string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 3 {
-		return "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name, received: %s", id)
-	}
-	return idParts[0], idParts[1], idParts[2], nil
-}
-
 func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
-	dbName := d.Get(names.AttrDatabaseName).(string)
-	name := d.Get(names.AttrName).(string)
+	c := meta.(*conns.AWSClient)
+	conn := c.GlueClient(ctx)
 
+	catalogID, dbName, name := cmp.Or(d.Get(names.AttrCatalogID).(string), c.AccountID(ctx)), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string)
+	id := catalogTableCreateResourceID(catalogID, dbName, name)
 	input := &glue.CreateTableInput{
 		CatalogId:            aws.String(catalogID),
 		DatabaseName:         aws.String(dbName),
@@ -429,24 +421,25 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 
 	_, err := conn.CreateTable(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
+	d.SetId(id)
 
 	return append(diags, resourceCatalogTableRead(ctx, d, meta)...)
 }
 
 func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GlueClient(ctx)
 
-	catalogID, dbName, name, err := ReadTableID(d.Id())
+	catalogID, dbName, name, err := catalogTableParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	table, err := findTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
@@ -458,37 +451,23 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	tableArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
-	}.String()
-	d.Set(names.AttrARN, tableArn)
+	d.Set(names.AttrARN, tableARN(ctx, c, dbName, name))
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
 	d.Set(names.AttrName, table.Name)
 	d.Set(names.AttrOwner, table.Owner)
-	d.Set("retention", table.Retention)
-
-	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
-	}
-
-	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
-	}
-
-	d.Set("view_original_text", table.ViewOriginalText)
-	d.Set("view_expanded_text", table.ViewExpandedText)
-	d.Set("table_type", table.TableType)
-
 	if err := d.Set(names.AttrParameters, flattenNonManagedParameters(table)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
-
+	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting partition_keys: %s", err)
+	}
+	d.Set("retention", table.Retention)
+	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
+	}
+	d.Set("table_type", table.TableType)
 	if table.TargetTable != nil {
 		if err := d.Set("target_table", []any{flattenTableTargetTable(table.TargetTable)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
@@ -496,6 +475,8 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("target_table", nil)
 	}
+	d.Set("view_original_text", table.ViewOriginalText)
+	d.Set("view_expanded_text", table.ViewExpandedText)
 
 	input := &glue.GetPartitionIndexesInput{
 		CatalogId:    aws.String(catalogID),
@@ -522,7 +503,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID, dbName, name, err := ReadTableID(d.Id())
+	catalogID, dbName, name, err := catalogTableParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -534,7 +515,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// Add back any managed parameters. See flattenNonManagedParameters.
-	table, err := findTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
@@ -564,17 +545,18 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID, dbName, name, err := ReadTableID(d.Id())
+	catalogID, dbName, name, err := catalogTableParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Catalog Table: %s", d.Id())
-	_, err = conn.DeleteTable(ctx, &glue.DeleteTableInput{
+	input := glue.DeleteTableInput{
 		CatalogId:    aws.String(catalogID),
-		Name:         aws.String(name),
 		DatabaseName: aws.String(dbName),
-	})
+		Name:         aws.String(name),
+	}
+	_, err = conn.DeleteTable(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
@@ -587,13 +569,36 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findTableByName(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
-	input := &glue.GetTableInput{
+const catalogTableResourceIDSeparator = ":"
+
+func catalogTableCreateResourceID(catalogID, dbName, name string) string {
+	parts := []string{catalogID, dbName, name}
+	id := strings.Join(parts, catalogTableResourceIDSeparator)
+
+	return id
+}
+
+func catalogTableParseResourceID(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, catalogTableResourceIDSeparator, 3)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog-id%[2]sdatabase-name%[2]stable-name", id, catalogTableResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], parts[2], nil
+}
+
+func findTableByThreePartKey(ctx context.Context, conn *glue.Client, catalogID, dbName, name string) (*awstypes.Table, error) {
+	input := glue.GetTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		Name:         aws.String(name),
 	}
 
+	return findTable(ctx, conn, &input)
+}
+
+func findTable(ctx context.Context, conn *glue.Client, input *glue.GetTableInput) (*awstypes.Table, error) {
 	output, err := conn.GetTable(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
@@ -1172,4 +1177,8 @@ func flattenNonManagedParameters(table *awstypes.Table) map[string]string {
 		delete(allParameters, "metadata_location")
 	}
 	return allParameters
+}
+
+func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
+	return c.RegionalARN(ctx, "glue", "table/"+dbName+"/"+name)
 }
