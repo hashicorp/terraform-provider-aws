@@ -9,14 +9,12 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/guardduty"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,6 +66,42 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 	})
 }
 
+func testAccThreatIntelSet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
+	keyName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	threatintelsetName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	resourceName := "aws_guardduty_threatintelset.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName, threatintelsetName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckThreatIntelSetExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceThreatIntelSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckThreatIntelSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
@@ -77,53 +111,34 @@ func testAccCheckThreatIntelSetDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			threatIntelSetId, detectorId, err := tfguardduty.DecodeThreatIntelSetID(rs.Primary.ID)
+			_, err := tfguardduty.FindThreatIntelSetByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["threat_intel_set_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
-			input := &guardduty.GetThreatIntelSetInput{
-				ThreatIntelSetId: aws.String(threatIntelSetId),
-				DetectorId:       aws.String(detectorId),
-			}
 
-			resp, err := conn.GetThreatIntelSet(ctx, input)
-			if err != nil {
-				if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-					return nil
-				}
-				return err
-			}
-
-			if resp.Status == awstypes.ThreatIntelSetStatusDeletePending || resp.Status == awstypes.ThreatIntelSetStatusDeleted {
-				return nil
-			}
-
-			return fmt.Errorf("Expected GuardDuty ThreatIntelSet to be destroyed, %s found", rs.Primary.ID)
+			return fmt.Errorf("GuardDuty Threat Intel Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckThreatIntelSetExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
+func testAccCheckThreatIntelSetExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		threatIntelSetId, detectorId, err := tfguardduty.DecodeThreatIntelSetID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &guardduty.GetThreatIntelSetInput{
-			DetectorId:       aws.String(detectorId),
-			ThreatIntelSetId: aws.String(threatIntelSetId),
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.ProviderMeta(ctx, t).GuardDutyClient(ctx)
-		_, err = conn.GetThreatIntelSet(ctx, input)
+
+		_, err := tfguardduty.FindThreatIntelSetByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["threat_intel_set_id"])
+
 		return err
 	}
 }
