@@ -1,5 +1,12 @@
 ## 6.36.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_guardduty_ipset: Add `ip_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
+* resource/aws_guardduty_publishing_destination: Add `arn` and `destination_id` attributes ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
+* resource/aws_guardduty_publishing_destination: Add tagging support ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
+* resource/aws_guardduty_threatintelset: Add `threat_intel_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
+
 ## 6.35.1 (March 5, 2026)
 
 BUG FIXES:
