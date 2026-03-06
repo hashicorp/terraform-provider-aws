@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -30,7 +28,9 @@ func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
 	l := bucketVersioningListResource{}
 	l.SetResourceSchema(resourceBucketVersioning())
 	l.handler = bucketVersioningListHandler{
-		lister: &l,
+		baseBucketPropertyListHandlerSDK{
+			lister: &l,
+		},
 	}
 	return &l
 }
@@ -90,19 +90,7 @@ type listBucketVersioningModel struct {
 var _ bucketPropertyListHandlerSDK = bucketVersioningListHandler{}
 
 type bucketVersioningListHandler struct {
-	lister listResourceSDK
-}
-
-func (l bucketVersioningListHandler) Meta() *conns.AWSClient {
-	return l.lister.Meta()
-}
-
-func (l bucketVersioningListHandler) ResourceData() *schema.ResourceData {
-	return l.lister.ResourceData()
-}
-
-func (l bucketVersioningListHandler) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
-	l.lister.SetResult(ctx, awsClient, includeResource, result, rd)
+	baseBucketPropertyListHandlerSDK
 }
 
 func (l bucketVersioningListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {

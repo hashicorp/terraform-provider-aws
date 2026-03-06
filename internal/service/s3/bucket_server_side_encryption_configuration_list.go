@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -30,7 +28,9 @@ func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes
 	l := listResourceBucketServerSideEncryptionConfiguration{}
 	l.SetResourceSchema(resourceBucketServerSideEncryptionConfiguration())
 	l.handler = bucketServerSideEncryptionConfigurationListHandler{
-		lister: &l,
+		baseBucketPropertyListHandlerSDK{
+			lister: &l,
+		},
 	}
 	return &l
 }
@@ -90,19 +90,7 @@ type listBucketServerSideEncryptionConfigurationModel struct {
 var _ bucketPropertyListHandlerSDK = bucketServerSideEncryptionConfigurationListHandler{}
 
 type bucketServerSideEncryptionConfigurationListHandler struct {
-	lister listResourceSDK
-}
-
-func (l bucketServerSideEncryptionConfigurationListHandler) Meta() *conns.AWSClient {
-	return l.lister.Meta()
-}
-
-func (l bucketServerSideEncryptionConfigurationListHandler) ResourceData() *schema.ResourceData {
-	return l.lister.ResourceData()
-}
-
-func (l bucketServerSideEncryptionConfigurationListHandler) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
-	l.lister.SetResult(ctx, awsClient, includeResource, result, rd)
+	baseBucketPropertyListHandlerSDK
 }
 
 func (l bucketServerSideEncryptionConfigurationListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {

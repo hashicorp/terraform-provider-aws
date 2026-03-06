@@ -35,3 +35,19 @@ func parseQuery[T any](ctx context.Context, config tfsdk.Config) (diags diag.Dia
 	}
 	return diags
 }
+
+type baseBucketPropertyListHandlerSDK struct {
+	lister listResourceSDK
+}
+
+func (l baseBucketPropertyListHandlerSDK) Meta() *conns.AWSClient {
+	return l.lister.Meta()
+}
+
+func (l baseBucketPropertyListHandlerSDK) ResourceData() *schema.ResourceData {
+	return l.lister.ResourceData()
+}
+
+func (l baseBucketPropertyListHandlerSDK) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+	l.lister.SetResult(ctx, awsClient, includeResource, result, rd)
+}
