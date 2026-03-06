@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,11 +20,11 @@ import (
 
 func testAccThreatIntelSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
-	keyName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
-	keyName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
-	threatintelsetName1 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
-	threatintelsetName2 := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(t, 5))
+	keyName1 := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
+	keyName2 := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
+	threatintelsetName1 := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
+	threatintelsetName2 := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -68,9 +67,9 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 
 func testAccThreatIntelSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
-	keyName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
-	threatintelsetName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(t, 5))
+	keyName := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
+	threatintelsetName := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
