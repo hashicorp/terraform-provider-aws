@@ -72,7 +72,7 @@ func (iamRoleAssociationDisassociationDSTest) testAccAssociateDisassociateIAMRol
 	return fmt.Sprintf(`
 
 data "aws_odb_associate_disassociate_iam_role" "test" {
-  combined_arn{
+  composite_arn{
  	iam_role_arn = "arn:aws:iam::711387093194:role/OracleDBKMS_avmc_wxdhmnurzo"
  	resource_arn = "arn:aws:odb:us-east-1:711387093194:cloud-autonomous-vm-cluster/avmc_wxdhmnurzo"
   }

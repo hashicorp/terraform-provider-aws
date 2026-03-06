@@ -78,8 +78,8 @@ func (r *resourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req r
 				Update: true,
 				Delete: true,
 			}),
-			"combined_arn": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceCombinedARNModel](ctx),
+			"composite_arn": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceCompositeARNModel](ctx),
 				Validators: []validator.List{
 					// Only one combination of resource ARN and IAM role ARN is mandatory
 					listvalidator.SizeAtMost(1),
@@ -115,7 +115,7 @@ func (r *resourceAssociateDisassociateIAMRole) Create(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARN resourceCombinedARNModel
+	var combinedARN resourceCompositeARNModel
 	flex.Flatten(ctx, &combinedARN, plan.IAMRoleResourceCombinedARN)
 	var input odb.AssociateIamRoleToResourceInput
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
@@ -162,7 +162,7 @@ func (r *resourceAssociateDisassociateIAMRole) Read(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARN resourceCombinedARNModel
+	var combinedARN resourceCompositeARNModel
 	flex.Flatten(ctx, &combinedARN, state.IAMRoleResourceCombinedARN)
 	out, err := FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx, conn, combinedARN.ResourceARN.ValueStringPointer(), combinedARN.ResourceARN.ValueStringPointer())
 	if tfresource.NotFound(err) {
@@ -192,7 +192,7 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	var combinedARN resourceCombinedARNModel
+	var combinedARN resourceCompositeARNModel
 	flex.Flatten(ctx, &combinedARN, state.IAMRoleResourceCombinedARN)
 	var input odb.DisassociateIamRoleFromResourceInput
 	resp.Diagnostics.Append(flex.Expand(ctx, state, &input, flex.WithFieldNamePrefix("AssociateDisassociateIAMRole"))...)
@@ -343,15 +343,15 @@ func FindAssociatedDisassociatedIAMRoleOracleDBResource(ctx context.Context, con
 
 type resourceAssociateDisassociateIAMRoleResourceModel struct {
 	framework.WithRegionModel
-	IAMRoleResourceCombinedARN fwtypes.ListNestedObjectValueOf[resourceCombinedARNModel] `tfsdk:"combined_arn"`
-	AWSIntegration             types.String                                              `tfsdk:"aws_integration"`
-	Status                     fwtypes.StringEnum[odbtypes.IamRoleStatus]                `tfsdk:"status"`
-	StatusReason               types.String                                              `tfsdk:"status_reason"`
-	Timeouts                   timeouts.Value                                            `tfsdk:"timeouts"`
+	IAMRoleResourceCombinedARN fwtypes.ListNestedObjectValueOf[resourceCompositeARNModel] `tfsdk:"composite_arn"`
+	AWSIntegration             types.String                                               `tfsdk:"aws_integration"`
+	Status                     fwtypes.StringEnum[odbtypes.IamRoleStatus]                 `tfsdk:"status"`
+	StatusReason               types.String                                               `tfsdk:"status_reason"`
+	Timeouts                   timeouts.Value                                             `tfsdk:"timeouts"`
 }
 
 // Composite ID for IAM role resource
-type resourceCombinedARNModel struct {
+type resourceCompositeARNModel struct {
 	IAMRoleARN  types.String `tfsdk:"iam_role_arn"`
 	ResourceARN types.String `tfsdk:"resource_arn"`
 }

@@ -55,8 +55,8 @@ func (d *dataSourceAssociateDisassociateIAMRole) Schema(ctx context.Context, req
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"combined_arn": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceCombinedARNModel](ctx),
+			"composite_arn": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceCompositeARNModel](ctx),
 				Validators: []validator.List{
 					// Only one combination of resource ARN and IAM role ARN is mandatory
 					listvalidator.SizeAtMost(1),
@@ -86,7 +86,7 @@ func (d *dataSourceAssociateDisassociateIAMRole) Read(ctx context.Context, req d
 		return
 	}
 
-	var combinedARNs []dataSourceCombinedARNModel
+	var combinedARNs []dataSourceCompositeARNModel
 	data.CombinedARN.ElementsAs(ctx, &combinedARNs, false)
 
 	out, err := FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx, conn, combinedARNs[0].ResourceARN.ValueStringPointer(), combinedARNs[0].IAMRoleARN.ValueStringPointer())
@@ -171,13 +171,13 @@ func FindAssociatedDisassociatedIAMRoleOracleDBDataSource(ctx context.Context, c
 
 type dataSourceAssociateDisassociateIAMRoleModel struct {
 	framework.WithRegionModel
-	CombinedARN    fwtypes.ListNestedObjectValueOf[dataSourceCombinedARNModel] `tfsdk:"combined_arn"`
-	AWSIntegration types.String                                                `tfsdk:"aws_integration"`
-	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                  `tfsdk:"status"`
-	StatusReason   types.String                                                `tfsdk:"status_reason"`
+	CombinedARN    fwtypes.ListNestedObjectValueOf[dataSourceCompositeARNModel] `tfsdk:"composite_arn"`
+	AWSIntegration types.String                                                 `tfsdk:"aws_integration"`
+	Status         fwtypes.StringEnum[odbtypes.IamRoleStatus]                   `tfsdk:"status"`
+	StatusReason   types.String                                                 `tfsdk:"status_reason"`
 }
 
-type dataSourceCombinedARNModel struct {
+type dataSourceCompositeARNModel struct {
 	IAMRoleARN  types.String `tfsdk:"iam_role_arn"`
 	ResourceARN types.String `tfsdk:"resource_arn"`
 }
