@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -65,7 +64,7 @@ func TestAccWAFXSSMatchSet_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.XssMatchSet
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", sdkacctest.RandString(5))
+	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(t, 5))
 	resourceName := "aws_waf_xss_match_set.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
