@@ -67,9 +67,9 @@ func testAccIPSet_basic(t *testing.T) {
 
 func testAccIPSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketName := fmt.Sprintf("tf-test-%s", sdkacctest.RandString(5))
-	keyName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
-	ipsetName := fmt.Sprintf("tf-%s", sdkacctest.RandString(5))
+	bucketName := fmt.Sprintf("tf-test-%s", acctest.RandString(t, 5))
+	keyName := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
+	ipsetName := fmt.Sprintf("tf-%s", acctest.RandString(t, 5))
 	resourceName := "aws_guardduty_ipset.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
