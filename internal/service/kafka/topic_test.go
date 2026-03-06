@@ -43,6 +43,7 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
 			},
 			{
@@ -51,6 +52,14 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrName, "cluster_arn"),
 				ImportState:                          true,
 				ImportStateVerify:                    true,
+			},
+			{
+				Config: testAccTopicConfig_basic(rName, clusterName, 3, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &topic),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
+				),
 			},
 		},
 	})
@@ -78,6 +87,7 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, t, resourceName, &topic),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
 				),
 			},
 			{
@@ -85,7 +95,24 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{"configs"},
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrName, "cluster_arn"),
+			},
+			{
+				Config: testAccTopicConfig_configsUpdate(rName, clusterName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &topic),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
+				),
+			},
+			{
+				Config: testAccTopicConfig_basic(rName, clusterName, 2, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTopicExists(ctx, t, resourceName, &topic),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(fmt.Sprintf(`topic/.+/.+/%s$`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "configs_actual"),
+				),
 			},
 		},
 	})
@@ -164,13 +191,35 @@ resource "aws_msk_topic" "test" {
   partition_count    = 2
   replication_factor = 2
 
-  configs = base64encode(jsonencode({
+  configs = jsonencode({
     "retention.ms"        = "604800000"
     "retention.bytes"     = "-1",
     "cleanup.policy"      = "delete",
     "min.insync.replicas" = "2"
-  }))
+  })
 }
+
+`, rName, clusterName))
+}
+
+func testAccTopicConfig_configsUpdate(rName, clusterName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(clusterName), fmt.Sprintf(`
+resource "aws_msk_topic" "test" {
+  name               = %[1]q
+  cluster_arn        = aws_msk_cluster.test.arn
+  partition_count    = 2
+  replication_factor = 2
+
+  configs = jsonencode({
+    "retention.ms"        = "604800000"
+    "retention.bytes"     = "-1",
+    "cleanup.policy"      = "delete",
+    "min.insync.replicas" = "3",
+    "segment.bytes"       = "1073741824",
+    "compression.type"    = "snappy"
+  })
+}
+
 
 `, rName, clusterName))
 }

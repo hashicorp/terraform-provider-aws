@@ -7,6 +7,7 @@ package kafka
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -89,8 +91,18 @@ func (r *topicResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				},
 			},
 			"configs": schema.StringAttribute{
-				Optional: true,
+				CustomType: NormalizedType{},
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					TopicConfigsDiffSuppress(),
+				},
+			},
+			"configs_actual": schema.StringAttribute{
+				// configs_actual is only for display purposes of all config on the topic, also outside 'configs'
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -118,6 +130,11 @@ func (r *topicResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	if plan.Configs.ValueString() != "" {
+		// Configs is base64encoded in the AWS API
+		input.Configs = aws.String(base64.StdEncoding.EncodeToString([]byte(plan.Configs.ValueString())))
+	}
+
 	outPartial, err := conn.CreateTopic(ctx, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
@@ -138,6 +155,18 @@ func (r *topicResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
+	}
+
+	// Configs is base64encoded in the AWS API
+	if outFull.Configs != nil {
+		decodedConfigs, err := base64.StdEncoding.DecodeString(*outFull.Configs)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("failed to decode configs: %w", err), smerr.ID, plan.Name.String())
+			return
+		}
+
+		configsActual, _ := structure.NormalizeJsonString(string(decodedConfigs))
+		plan.ConfigsActual = types.StringValue(configsActual)
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outFull, &plan, flex.WithFieldNamePrefix("Topic")))
@@ -173,6 +202,18 @@ func (r *topicResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	// Configs is base64encoded in the AWS API
+	if out.Configs != nil {
+		decodedConfigs, err := base64.StdEncoding.DecodeString(*out.Configs)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("failed to decode configs: %w", err), smerr.ID, state.Name.String())
+			return
+		}
+
+		configsActual, _ := structure.NormalizeJsonString(string(decodedConfigs))
+		state.ConfigsActual = types.StringValue(configsActual)
+	}
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
@@ -186,7 +227,10 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	// 'configs' and 'partition_count' are updated via separate API calls:
+	// "You must specify either configs or partitionCount to update."
+
+	diff, d := flex.Diff(ctx, plan, state, flex.WithIgnoredField("Configs"))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -199,27 +243,69 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		out, err := conn.UpdateTopic(ctx, &input)
+		_, err := conn.UpdateTopic(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 			return
 		}
-		if out == nil || out.TopicName == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
-			return
-		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan, flex.WithFieldNamePrefix("Topic")))
-		if resp.Diagnostics.HasError() {
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 			return
 		}
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
+	diff, d = flex.Diff(ctx, plan, state, flex.WithIgnoredField("PartitionCount"))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input kafka.UpdateTopicInput
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Topic"), flex.WithIgnoredFieldNamesAppend("PartitionCount")))
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if plan.Configs.ValueString() != "" {
+			// Configs is base64encoded in the AWS API
+			input.Configs = aws.String(base64.StdEncoding.EncodeToString([]byte(plan.Configs.ValueString())))
+		} else {
+			input.Configs = aws.String(base64.StdEncoding.EncodeToString([]byte("{}")))
+		}
+
+		_, err := conn.UpdateTopic(ctx, &input)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+			return
+		}
+
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+			return
+		}
+	}
+
+	out, err := findTopicByTwoPartKey(ctx, conn, state.Name.ValueString(), state.ClusterARN.ValueString())
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
+	}
+
+	// Configs is base64encoded in the AWS API
+	if out.Configs != nil {
+		decodedConfigs, err := base64.StdEncoding.DecodeString(*out.Configs)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("failed to decode configs: %w", err), smerr.ID, state.Name.String())
+			return
+		}
+
+		plan.ConfigsActual = types.StringValue(string(decodedConfigs))
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -355,7 +441,8 @@ type topicResourceModel struct {
 	Name              types.String   `tfsdk:"name"`
 	PartitionCount    types.Int64    `tfsdk:"partition_count"`
 	ReplicationFactor types.Int64    `tfsdk:"replication_factor"`
-	Configs           types.String   `tfsdk:"configs"`
+	Configs           Normalized     `tfsdk:"configs" autoflex:"-"`
+	ConfigsActual     types.String   `tfsdk:"configs_actual"`
 	Timeouts          timeouts.Value `tfsdk:"timeouts"`
 }
 
@@ -365,13 +452,13 @@ var (
 
 type topicImportID struct{}
 
-func (topicImportID) Parse(id string) (string, map[string]string, error) {
+func (topicImportID) Parse(id string) (string, map[string]any, error) {
 	name, clusterARN, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <topic name>"+intflex.ResourceIdSeparator+"<cluster ARN>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrName: name,
 		"cluster_arn":  clusterARN,
 	}

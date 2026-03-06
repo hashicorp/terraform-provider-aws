@@ -22,12 +22,12 @@ resource "aws_msk_topic" "example" {
   partition_count    = 2
   replication_factor = 2
 
-  configs = base64encode(jsonencode({
+  configs = jsonencode({
     "retention.ms"        = "604800000"
     "retention.bytes"     = "-1",
     "cleanup.policy"      = "delete",
     "min.insync.replicas" = "2"
-  }))
+  })
 }
 ```
 
@@ -43,21 +43,22 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `configs` - (Optional) Base64-encoded Kafka configuration in JSON format for Topic.
+* `configs` - (Optional) Explicit configured Kafka configuration in JSON format for Topic.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Topic.
+* `configs_actual` - (Optional) Aggregated Kafka configuration in JSON format for Topic, both explicit set values from `configs` and implicit set values (AWS default configuration, historically set values or manual configuration from outside Terraform).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
