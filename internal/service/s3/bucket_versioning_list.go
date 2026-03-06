@@ -11,8 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -25,6 +29,9 @@ import (
 func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
 	l := bucketVersioningListResource{}
 	l.SetResourceSchema(resourceBucketVersioning())
+	l.handler = bucketVersioningListHandler{
+		lister: &l,
+	}
 	return &l
 }
 
@@ -32,15 +39,13 @@ var _ list.ListResource = &bucketVersioningListResource{}
 
 type bucketVersioningListResource struct {
 	framework.ListResourceWithSDKv2Resource
+	handler bucketPropertyListHandlerSDK
 }
 
 func (l *bucketVersioningListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listBucketVersioningModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
+	if diags := l.handler.parseQuery(ctx, request.Config); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
 	}
 
 	tflog.Info(ctx, "Listing Resources")
@@ -53,7 +58,7 @@ func (l *bucketVersioningListResource) List(ctx context.Context, request list.Li
 			MaxBuckets:   aws.Int32(int32(request.Limit)),
 		}
 		var count int64
-		for result := range l.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
+		for result := range l.handler.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
 			count++
 			if !yield(result) {
 				return
@@ -70,7 +75,7 @@ func (l *bucketVersioningListResource) List(ctx context.Context, request list.Li
 		dirInput := s3.ListDirectoryBucketsInput{
 			MaxDirectoryBuckets: aws.Int32(int32(limit)),
 		}
-		for result := range l.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
+		for result := range l.handler.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
 			if !yield(result) {
 				return
 			}
@@ -78,7 +83,33 @@ func (l *bucketVersioningListResource) List(ctx context.Context, request list.Li
 	}
 }
 
-func (l *bucketVersioningListResource) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
+type listBucketVersioningModel struct {
+	framework.WithRegionModel
+}
+
+var _ bucketPropertyListHandlerSDK = bucketVersioningListHandler{}
+
+type bucketVersioningListHandler struct {
+	lister listResourceSDK
+}
+
+func (l bucketVersioningListHandler) Meta() *conns.AWSClient {
+	return l.lister.Meta()
+}
+
+func (l bucketVersioningListHandler) ResourceData() *schema.ResourceData {
+	return l.lister.ResourceData()
+}
+
+func (l bucketVersioningListHandler) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+	l.lister.SetResult(ctx, awsClient, includeResource, result, rd)
+}
+
+func (l bucketVersioningListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {
+	return parseQuery[listBucketVersioningModel](ctx, config)
+}
+
+func (l bucketVersioningListHandler) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
@@ -132,8 +163,4 @@ func (l *bucketVersioningListResource) list(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type listBucketVersioningModel struct {
-	framework.WithRegionModel
 }
