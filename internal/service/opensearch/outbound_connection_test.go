@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
@@ -18,7 +17,7 @@ import (
 func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	ri := sdkacctest.RandString(10)
+	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
 
@@ -49,7 +48,7 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	ri := sdkacctest.RandString(10)
+	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
 
@@ -81,7 +80,7 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain awstypes.DomainStatus
-	ri := sdkacctest.RandString(10)
+	ri := acctest.RandString(t, 10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_outbound_connection.test"
 
@@ -106,7 +105,7 @@ func TestAccOpenSearchOutboundConnection_disappears(t *testing.T) {
 
 func testAccOutboundConnectionConfig(name string) string {
 	// Satisfy the pw requirements
-	pw := fmt.Sprintf("Aa1-%s", sdkacctest.RandString(10))
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "domain_1" {
   domain_name = "%s-1"
@@ -211,7 +210,7 @@ resource "aws_opensearch_outbound_connection" "test" {
 
 func testAccOutboundConnectionConfig_vpcEndpoint(name string) string {
 	// Satisfy the pw requirements
-	pw := fmt.Sprintf("Aa1-%s", sdkacctest.RandString(10))
+	pw := fmt.Sprintf("Aa1-%s", acctest.RandString(t, 10))
 
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
