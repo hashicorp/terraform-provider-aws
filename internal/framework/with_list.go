@@ -42,8 +42,8 @@ func (w *WithList) runResultInterceptors(ctx context.Context, when listresource.
 	params := listresource.InterceptorParams{
 		C:               awsClient,
 		IncludeResource: includeResource,
-		Result:          result,
 		Data:            data,
+		Result:          result,
 		When:            when,
 	}
 
