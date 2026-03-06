@@ -30,14 +30,14 @@ const (
 	openSearchDomainRemainderLen = openSearchDomainMaxLen - openSearchDomainPrefixLen
 )
 
-func randomOpenSearchDomainName() string {
+func randomOpenSearchDomainName(t *testing.T) string {
 	return fmt.Sprintf(openSearchDomainPrefix+"%s", acctest.RandString(t, openSearchDomainRemainderLen))
 }
 
 func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +105,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_namePattern(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -137,7 +137,7 @@ func TestAccCognitoIDPManagedUserPoolClient_namePattern(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -186,7 +186,7 @@ func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -233,7 +233,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity_error(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -260,7 +260,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity_error(t *testing
 func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -307,7 +307,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity_error(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -334,7 +334,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity_error(t *testing.T) 
 func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -381,7 +381,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity_error(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -404,7 +404,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity_error(t *testin
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -486,7 +486,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_explicitDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -517,7 +517,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_explicitDefaults(
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -581,7 +581,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -647,7 +647,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -715,7 +715,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -785,7 +785,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 	pinpointResourceName := "aws_pinpoint_app.analytics"
 
@@ -878,7 +878,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 	pinpointResourceName := "aws_pinpoint_app.analytics"
 
@@ -951,7 +951,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -999,7 +999,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1023,7 +1023,7 @@ func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testi
 func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1089,7 +1089,7 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1168,7 +1168,7 @@ func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_upgradeFromV5(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1224,7 +1224,7 @@ func TestAccCognitoIDPManagedUserPoolClient_upgradeFromV5(t *testing.T) {
 func TestAccCognitoIDPManagedUserPoolClient_upgradeFromV5AndUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var client awstypes.UserPoolClientType
-	rName := randomOpenSearchDomainName()
+	rName := randomOpenSearchDomainName(t)
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
