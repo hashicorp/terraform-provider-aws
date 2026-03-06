@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -400,6 +401,83 @@ func resourceCatalogTable() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 409600),
 			},
+			"view_definition": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"definer": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"is_protected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"last_refresh_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LastRefreshType](),
+						},
+						"refresh_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"representations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"dialect": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ViewDialect](),
+									},
+									"dialect_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"validation_connection": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"view_expanded_text": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 409600),
+									},
+									"view_original_text": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 409600),
+									},
+								},
+							},
+						},
+						"sub_object_version_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
+						},
+						"sub_objects": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"view_version_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"view_version_token": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -662,6 +740,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 
 	if v, ok := d.GetOk("view_expanded_text"); ok {
 		apiObject.ViewExpandedText = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
 	}
 
 	return apiObject
@@ -1165,6 +1247,75 @@ func flattenNonManagedParameters(allParameters map[string]string) map[string]str
 		delete(allParameters, "metadata_location")
 	}
 	return allParameters
+}
+
+func expandViewDefinitionInput(tfMap map[string]any) *awstypes.ViewDefinitionInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ViewDefinitionInput{}
+
+	if v, ok := tfMap["definer"].(string); ok && v != "" {
+		apiObject.Definer = aws.String(v)
+	}
+
+	if v, ok := tfMap["is_protected"].(bool); ok {
+		apiObject.IsProtected = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["representations"].([]any); ok && len(v) > 0 {
+		apiObject.Representations = expandViewRepresentationInputs(v)
+	}
+
+	if v, ok := tfMap["sub_objects"].([]any); ok && len(v) > 0 {
+		apiObject.SubObjects = flex.ExpandStringValueList(v)
+	}
+
+	// TODO
+
+	return apiObject
+}
+
+func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationInput {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.ViewRepresentationInput
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.ViewRepresentationInput{}
+
+		if v, ok := tfMap["dialect"].(string); ok && v != "" {
+			apiObject.Dialect = awstypes.ViewDialect(v)
+		}
+
+		if v, ok := tfMap["dialect_version"].(string); ok && v != "" {
+			apiObject.DialectVersion = aws.String(v)
+		}
+
+		if v, ok := tfMap["validation_connection"].(string); ok && v != "" {
+			apiObject.ValidationConnection = aws.String(v)
+		}
+
+		if v, ok := tfMap["view_expanded_text"].(string); ok && v != "" {
+			apiObject.ViewExpandedText = aws.String(v)
+		}
+
+		if v, ok := tfMap["view_original_text"].(string); ok && v != "" {
+			apiObject.ViewOriginalText = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {
