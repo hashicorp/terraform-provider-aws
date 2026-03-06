@@ -47,9 +47,9 @@ import (
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
 
-	r.SetDefaultCreateTimeout(2 * time.Minute)
-	r.SetDefaultUpdateTimeout(2 * time.Minute)
-	r.SetDefaultDeleteTimeout(2 * time.Minute)
+	r.SetDefaultCreateTimeout(25 * time.Minute)
+	r.SetDefaultUpdateTimeout(25 * time.Minute)
+	r.SetDefaultDeleteTimeout(25 * time.Minute)
 
 	return r, nil
 }
@@ -67,7 +67,6 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -77,19 +76,25 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"enable_inter_container_traffic_encryption": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
 			"enable_managed_spot_training": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
 			"enable_network_isolation": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
@@ -131,6 +136,9 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
 					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -236,7 +244,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							"name": schema.StringAttribute{
-								Optional: true,
+								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(0, 255),
 								},
@@ -245,7 +253,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 								},
 							},
 							"regex": schema.StringAttribute{
-								Optional: true,
+								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(0, 500),
 								},
@@ -492,12 +500,18 @@ func experimentConfigBlock(ctx context.Context) schema.Block {
 						stringvalidator.LengthBetween(1, 120),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"run_name": schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 120),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"trial_component_display_name": schema.StringAttribute{
@@ -506,12 +520,18 @@ func experimentConfigBlock(ctx context.Context) schema.Block {
 						stringvalidator.LengthBetween(1, 120),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
 					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"trial_name": schema.StringAttribute{
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 120),
 						stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,119}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
+					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
 					},
 				},
 			},
@@ -529,6 +549,9 @@ func infraCheckConfigBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"enable_infra_check": schema.BoolAttribute{
 					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -555,31 +578,39 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 				},
 				"compression_type": schema.StringAttribute{
 					Optional:   true,
+					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.CompressionType](),
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"content_type": schema.StringAttribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 256),
 					},
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"input_mode": schema.StringAttribute{
 					Optional:   true,
+					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.TrainingInputMode](),
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"record_wrapper_type": schema.StringAttribute{
 					Optional:   true,
+					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.RecordWrapper](),
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
@@ -719,6 +750,9 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 												Attributes: map[string]schema.Attribute{
 													"accept_eula": schema.BoolAttribute{
 														Required: true,
+														PlanModifiers: []planmodifier.Bool{
+															boolplanmodifier.RequiresReplace(),
+														},
 													},
 												},
 											},
@@ -736,7 +770,12 @@ func inputDataConfigBlock(ctx context.Context) schema.Block {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							"seed": schema.Int64Attribute{Optional: true},
+							"seed": schema.Int64Attribute{
+								Optional: true,
+								PlanModifiers: []planmodifier.Int64{
+									int64planmodifier.RequiresReplace(),
+								},
+							},
 						},
 					},
 				},
@@ -791,6 +830,9 @@ func modelPackageConfigBlock(ctx context.Context) schema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobModelPackageConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.AlsoRequires(
+				path.MatchRoot("serverless_job_config"),
+			),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -831,8 +873,10 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"compression_type": schema.StringAttribute{
 					Optional:   true,
+					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.OutputCompressionType](),
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
@@ -990,24 +1034,43 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"instance_count": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.AtLeast(0),
+						int64validator.ConflictsWith(
+							path.MatchRelative().AtParent().AtName("instance_groups"),
+						),
 					},
 					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 						int64planmodifier.RequiresReplace(),
 					},
 				},
 				"instance_type": schema.StringAttribute{
 					Optional:   true,
+					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.TrainingInstanceType](),
+					Validators: []validator.String{
+						stringvalidator.ConflictsWith(
+							path.MatchRelative().AtParent().AtName("instance_groups"),
+						),
+					},
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
 				"keep_alive_period_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.Between(0, 3600),
+						int64validator.ConflictsWith(
+							path.MatchRelative().AtParent().AtName("instance_groups"),
+						),
+					},
+					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 					},
 				},
 				"training_plan_arn": schema.StringAttribute{
@@ -1032,10 +1095,12 @@ func resourceConfigBlock(ctx context.Context) schema.Block {
 				},
 				"volume_size_in_gb": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.AtLeast(0),
 					},
 					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 						int64planmodifier.RequiresReplace(),
 					},
 				},
@@ -1145,6 +1210,18 @@ func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobServerlessJobConfigModel](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(
+				path.MatchRoot("algorithm_specification"),
+				path.MatchRoot("enable_managed_spot_training"),
+				path.MatchRoot("environment"),
+				path.MatchRoot("retry_strategy"),
+				path.MatchRoot("checkpoint_config"),
+				path.MatchRoot("debug_hook_config"),
+				path.MatchRoot("experiment_config"),
+				path.MatchRoot("profiler_config"),
+				path.MatchRoot("profiler_rule_configurations"),
+				path.MatchRoot("tensor_board_output_config"),
+			),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -1153,7 +1230,7 @@ func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid base model ARN"),
+						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid SageMaker Public Hub model ARN (hub-content)"),
 					},
 				},
 				"customization_technique": schema.StringAttribute{
@@ -1204,28 +1281,34 @@ func stoppingConditionBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"max_pending_time_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.Between(7200, 2419200),
 					},
 					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 						int64planmodifier.RequiresReplace(),
 					},
 				},
 				"max_runtime_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.AtLeast(1),
 					},
 					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 						int64planmodifier.RequiresReplace(),
 					},
 				},
 				"max_wait_time_in_seconds": schema.Int64Attribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.Int64{
 						int64validator.AtLeast(1),
 					},
 					PlanModifiers: []planmodifier.Int64{
+						int64planmodifier.UseStateForUnknown(),
 						int64planmodifier.RequiresReplace(),
 					},
 				},
@@ -1319,13 +1402,14 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	var input sagemaker.CreateTrainingJobInput
-	// TODO : try out without WithFieldNamePrefix
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TrainingJob")))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.CreateTrainingJob(ctx, &input)
+	out, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
+		return conn.CreateTrainingJob(ctx, &input)
+	}, ErrCodeValidationException, "Could not assume role")
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.String())
 		return
@@ -1336,17 +1420,38 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// Save the user-configured AlgorithmSpecification before flatten overwrites it.
+	// SageMaker auto-populates MetricDefinitions for built-in algorithms, which would
+	// cause drift if we let the API response overwrite the plan's empty list.
+	planAlgoSpec := plan.AlgorithmSpecification
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Restore MetricDefinitions from the plan to avoid drift from API defaults.
+	plan.AlgorithmSpecification = planAlgoSpec
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitTrainingJobCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	waitOut, err := waitTrainingJobCreated(ctx, conn, plan.TrainingJobName.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.String())
 		return
 	}
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, waitOut, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Restore MetricDefinitions again after the waiter flatten.
+	plan.AlgorithmSpecification = planAlgoSpec
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -1361,7 +1466,7 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	out, err := findTrainingJobByName(ctx, conn, state.TrainingJobName.String())
+	out, err := findTrainingJobByName(ctx, conn, state.TrainingJobName.ValueString())
 
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -1370,14 +1475,22 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 		return
 	}
+
+	// Save the user-configured AlgorithmSpecification before flatten overwrites it.
+	// SageMaker auto-populates MetricDefinitions for built-in algorithms, which would
+	// cause drift if we let the API response overwrite the state's list.
+	stateAlgoSpec := state.AlgorithmSpecification
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Restore MetricDefinitions from state to avoid drift from API defaults.
+	state.AlgorithmSpecification = stateAlgoSpec
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -1393,47 +1506,115 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	if !plan.ResourceConfig.Equal(state.ResourceConfig) ||
+		!plan.RemoteDebugConfig.Equal(state.RemoteDebugConfig) ||
+		!plan.ProfilerConfig.Equal(state.ProfilerConfig) ||
+		!plan.ProfilerRuleConfigurations.Equal(state.ProfilerRuleConfigurations) {
+		input := &sagemaker.UpdateTrainingJobInput{
+			TrainingJobName: plan.TrainingJobName.ValueStringPointer(),
+		}
 
-	if diff.HasChanges() {
-		var input sagemaker.UpdateTrainingJobInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("TrainingJob")))
+		// ProfilerConfig
+		pc, d := plan.ProfilerConfig.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if pc != nil {
+			input.ProfilerConfig = &awstypes.ProfilerConfigForUpdate{
+				DisableProfiler:                 pc.DisableProfiler.ValueBoolPointer(),
+				ProfilingIntervalInMilliseconds: pc.ProfilingIntervalInMilliseconds.ValueInt64Pointer(),
+				S3OutputPath:                    pc.S3OutputPath.ValueStringPointer(),
+			}
+			if !pc.ProfilingParameters.IsNull() && !pc.ProfilingParameters.IsUnknown() {
+				params := make(map[string]string)
+				resp.Diagnostics.Append(pc.ProfilingParameters.ElementsAs(ctx, &params, false)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				input.ProfilerConfig.ProfilingParameters = params
+			}
+		}
+
+		// ProfilerRuleConfigurations
+		prcs, d := plan.ProfilerRuleConfigurations.ToSlice(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if len(prcs) > 0 {
+			rules := make([]awstypes.ProfilerRuleConfiguration, 0, len(prcs))
+			for _, prc := range prcs {
+				rule := awstypes.ProfilerRuleConfiguration{
+					RuleConfigurationName: prc.RuleConfigurationName.ValueStringPointer(),
+					RuleEvaluatorImage:    prc.RuleEvaluatorImage.ValueStringPointer(),
+					LocalPath:             prc.LocalPath.ValueStringPointer(),
+					S3OutputPath:          prc.S3OutputPath.ValueStringPointer(),
+				}
+				if !prc.InstanceType.IsNull() && !prc.InstanceType.IsUnknown() {
+					rule.InstanceType = awstypes.ProcessingInstanceType(prc.InstanceType.ValueString())
+				}
+				if !prc.VolumeSizeInGB.IsNull() && !prc.VolumeSizeInGB.IsUnknown() {
+					rule.VolumeSizeInGB = aws.Int32(int32(prc.VolumeSizeInGB.ValueInt64()))
+				}
+				if !prc.RuleParameters.IsNull() && !prc.RuleParameters.IsUnknown() {
+					params := make(map[string]string)
+					resp.Diagnostics.Append(prc.RuleParameters.ElementsAs(ctx, &params, false)...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					rule.RuleParameters = params
+				}
+				rules = append(rules, rule)
+			}
+			input.ProfilerRuleConfigurations = rules
+		}
+
+		// RemoteDebugConfig
+		rdc, d := plan.RemoteDebugConfig.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if rdc != nil && !rdc.EnableRemoteDebug.IsNull() && !rdc.EnableRemoteDebug.IsUnknown() {
+			input.RemoteDebugConfig = &awstypes.RemoteDebugConfigForUpdate{
+				EnableRemoteDebug: rdc.EnableRemoteDebug.ValueBoolPointer(),
+			}
+		}
+
+		// ResourceConfig (warm pool keep-alive)
+		resCfg, d := plan.ResourceConfig.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if resCfg != nil && !resCfg.KeepAlivePeriodInSeconds.IsNull() && !resCfg.KeepAlivePeriodInSeconds.IsUnknown() {
+			input.ResourceConfig = &awstypes.ResourceConfigForUpdate{
+				KeepAlivePeriodInSeconds: aws.Int32(int32(resCfg.KeepAlivePeriodInSeconds.ValueInt64())),
+			}
+		}
+
+		if _, err := conn.UpdateTrainingJob(ctx, input); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.ValueString())
+			return
+		}
+
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		out, err := waitTrainingJobUpdated(ctx, conn, plan.TrainingJobName.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.ValueString())
+			return
+		}
+
+		// Preserve AlgorithmSpecification to avoid metric_definitions drift.
+		planAlgoSpec := plan.AlgorithmSpecification
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateTrainingJob(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-
-		if out == nil || out.TrainingJobArn == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
-			return
-		}
-
-		fullOut, err := findTrainingJobByName(ctx, conn, plan.TrainingJobName.String())
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, fullOut, &plan))
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTrainingJobUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
+		plan.AlgorithmSpecification = planAlgoSpec
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -1460,26 +1641,26 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitTrainingJobDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitTrainingJobDeleted(ctx, conn, state.TrainingJobName.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 		return
 	}
 }
 
 func (r *resourceTrainingJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("training_job_name"), req, resp)
 }
 
 func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.TrainingJobStatusInProgress)},
-		Target:                    []string{string(awstypes.TrainingJobStatusCompleted), string(awstypes.TrainingJobStatusStopped)},
+		Target:                    []string{string(awstypes.TrainingJobStatusCompleted), string(awstypes.TrainingJobStatusStopped), string(awstypes.TrainingJobStatusFailed)},
 		Refresh:                   statusTrainingJob(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -1550,7 +1731,7 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 
 	out, err := conn.DescribeTrainingJob(ctx, &input)
 	if err != nil {
-		if errs.Contains(err, "ResourceNotFound") {
+		if errs.Contains(err, "ResourceNotFound") || errs.Contains(err, "Requested resource not found") {
 			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
 			})
@@ -1569,7 +1750,7 @@ func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id strin
 type resourceTrainingJobModel struct {
 	framework.WithRegionModel
 	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
-	ARN                                   types.String                                                             `tfsdk:"arn"`
+	TrainingJobARN                        types.String                                                             `tfsdk:"arn"`
 	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[trainingJobCheckpointConfigModel]        `tfsdk:"checkpoint_config"`
 	DebugHookConfig                       fwtypes.ListNestedObjectValueOf[trainingJobDebugHookConfigModel]         `tfsdk:"debug_hook_config"`
 	DebugRuleConfigurations               fwtypes.ListNestedObjectValueOf[trainingJobDebugRuleConfigurationModel]  `tfsdk:"debug_rule_configurations"`
@@ -1579,7 +1760,6 @@ type resourceTrainingJobModel struct {
 	Environment                           fwtypes.MapOfString                                                      `tfsdk:"environment"`
 	ExperimentConfig                      fwtypes.ListNestedObjectValueOf[trainingJobExperimentConfigModel]        `tfsdk:"experiment_config"`
 	HyperParameters                       fwtypes.MapOfString                                                      `tfsdk:"hyper_parameters"`
-	ID                                    types.String                                                             `tfsdk:"id"`
 	InfraCheckConfig                      fwtypes.ListNestedObjectValueOf[trainingJobInfraCheckConfigModel]        `tfsdk:"infra_check_config"`
 	InputDataConfig                       fwtypes.ListNestedObjectValueOf[trainingJobInputDataConfigModel]         `tfsdk:"input_data_config"`
 	MlflowConfig                          fwtypes.ListNestedObjectValueOf[trainingJobMlflowConfigModel]            `tfsdk:"mlflow_config"`
