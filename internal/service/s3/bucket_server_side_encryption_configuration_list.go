@@ -25,7 +25,7 @@ import (
 
 // @SDKListResource("aws_s3_bucket_server_side_encryption_configuration")
 func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResourceBucketServerSideEncryptionConfiguration{}
+	l := listResourceBaseBucketProperty{}
 	l.SetResourceSchema(resourceBucketServerSideEncryptionConfiguration())
 	l.handler = bucketServerSideEncryptionConfigurationListHandler{
 		baseBucketPropertyListHandlerSDK{
@@ -33,54 +33,6 @@ func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes
 		},
 	}
 	return &l
-}
-
-var _ list.ListResource = &listResourceBucketServerSideEncryptionConfiguration{}
-
-type listResourceBucketServerSideEncryptionConfiguration struct {
-	framework.ListResourceWithSDKv2Resource
-	handler bucketPropertyListHandlerSDK
-}
-
-func (l *listResourceBucketServerSideEncryptionConfiguration) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	if diags := l.handler.parseQuery(ctx, request.Config); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	tflog.Info(ctx, "Listing Resources")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		tflog.Info(ctx, "Listing General Purpose Buckets")
-		gpConn := l.Meta().S3Client(ctx)
-		gpInput := s3.ListBucketsInput{
-			BucketRegion: aws.String(l.Meta().Region(ctx)),
-			MaxBuckets:   aws.Int32(int32(request.Limit)),
-		}
-		var count int64
-		for result := range l.handler.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
-			count++
-			if !yield(result) {
-				return
-			}
-		}
-
-		limit := request.Limit - count
-		if limit <= 0 {
-			tflog.Info(ctx, "Limit reached, skipping Directory Buckets")
-		}
-
-		tflog.Info(ctx, "Listing Directory Buckets")
-		dirConn := l.Meta().S3ExpressClient(ctx)
-		dirInput := s3.ListDirectoryBucketsInput{
-			MaxDirectoryBuckets: aws.Int32(int32(limit)),
-		}
-		for result := range l.handler.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
-			if !yield(result) {
-				return
-			}
-		}
-	}
 }
 
 type listBucketServerSideEncryptionConfigurationModel struct {
