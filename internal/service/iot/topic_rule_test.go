@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -2463,7 +2462,7 @@ func testAccCheckTopicRuleExists(ctx context.Context, t *testing.T, n string) re
 }
 
 func testAccTopicRuleName() string {
-	return fmt.Sprintf("tf_acc_test_%[1]s", sdkacctest.RandString(20))
+	return fmt.Sprintf("tf_acc_test_%[1]s", acctest.RandString(t, 20))
 }
 
 func testAccTopicRuleConfig_destinationRole(rName string) string {
