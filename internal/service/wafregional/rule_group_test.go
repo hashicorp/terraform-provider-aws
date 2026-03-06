@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,8 +25,8 @@ func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 	var group awstypes.RuleGroup
 	var idx int
 
-	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -67,8 +66,8 @@ func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 	var rule awstypes.Rule
 	var group awstypes.RuleGroup
 
-	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -118,9 +117,9 @@ func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after awstypes.RuleGroup
 
-	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	newGroupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	newGroupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -159,8 +158,8 @@ func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 func TestAccWAFRegionalRuleGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.RuleGroup
-	ruleName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
+	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -187,10 +186,10 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	var groupBefore, groupAfter awstypes.RuleGroup
 	var idx0, idx1, idx2, idx3 int
 
-	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	ruleName1 := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	ruleName2 := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
-	ruleName3 := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	ruleName1 := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	ruleName2 := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
+	ruleName3 := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -258,7 +257,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 func TestAccWAFRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.RuleGroup
-	groupName := fmt.Sprintf("tfacc%s", sdkacctest.RandString(5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(t, 5))
 	resourceName := "aws_wafregional_rule_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
