@@ -242,7 +242,7 @@ func resourceVPCEndpoint() *schema.Resource {
 			if diff.HasChange("private_dns_enabled") {
 				if v := diff.Get("vpc_endpoint_type").(string); v != string(awstypes.VpcEndpointTypeInterface) {
 					if err := diff.ForceNew("private_dns_enabled"); err != nil {
-						return fmt.Errorf("error setting ForceNew on private_dns_enabled when vpc_endpoint_type is not interface: %w", err)
+						return fmt.Errorf("setting ForceNew on private_dns_enabled when vpc_endpoint_type is not interface: %w", err)
 					}
 				}
 			}
