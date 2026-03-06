@@ -412,10 +412,12 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 	catalogID, dbName, name := cmp.Or(d.Get(names.AttrCatalogID).(string), c.AccountID(ctx)), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string)
 	id := catalogTableCreateResourceID(catalogID, dbName, name)
 	input := &glue.CreateTableInput{
-		CatalogId:            aws.String(catalogID),
-		DatabaseName:         aws.String(dbName),
-		OpenTableFormatInput: expandOpenTableFormat(d),
-		TableInput:           expandTableInput(d),
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		TableInput:   expandTableInput(d),
+	}
+	if v, ok := d.GetOk("open_table_format_input"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.OpenTableFormatInput = expandOpenTableFormatInput(v.([]any)[0].(map[string]any))
 	}
 	if v, ok := d.GetOk("partition_index"); ok && len(v.([]any)) > 0 {
 		input.PartitionIndexes = expandPartitionIndexes(v.([]any))
@@ -459,7 +461,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDescription, table.Description)
 	d.Set(names.AttrName, table.Name)
 	d.Set(names.AttrOwner, table.Owner)
-	if err := d.Set(names.AttrParameters, flattenNonManagedParameters(table)); err != nil {
+	if err := d.Set(names.AttrParameters, flattenNonManagedParameters(table.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
@@ -471,7 +473,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("table_type", table.TableType)
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []any{flattenTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []any{flattenTableIdentifier(table.TargetTable)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
@@ -507,19 +509,17 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &glue.UpdateTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		TableInput:   expandTableInput(d),
-	}
-
 	// Add back any managed parameters. See flattenNonManagedParameters.
 	table, err := findTableByThreePartKey(ctx, conn, catalogID, dbName, name)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
+	input := glue.UpdateTableInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		TableInput:   expandTableInput(d),
+	}
 	if allParameters := table.Parameters; allParameters["table_type"] == "ICEBERG" {
 		for _, k := range []string{"table_type", "metadata_location"} {
 			if v := allParameters[k]; v != "" {
@@ -531,7 +531,7 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	_, err = conn.UpdateTable(ctx, input)
+	_, err = conn.UpdateTable(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
@@ -618,74 +618,85 @@ func findTable(ctx context.Context, conn *glue.Client, input *glue.GetTableInput
 }
 
 func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
-	tableInput := &awstypes.TableInput{
+	apiObject := &awstypes.TableInput{
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
-		tableInput.Description = aws.String(v.(string))
+		apiObject.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrOwner); ok {
-		tableInput.Owner = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("retention"); ok {
-		tableInput.Retention = int32(v.(int))
-	}
-
-	if v, ok := d.GetOk("storage_descriptor"); ok {
-		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]any))
+		apiObject.Owner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("partition_keys"); ok {
-		tableInput.PartitionKeys = expandColumns(v.([]any))
+		apiObject.PartitionKeys = expandColumns(v.([]any))
 	} else if _, ok = d.GetOk("open_table_format_input"); !ok {
-		tableInput.PartitionKeys = []awstypes.Column{}
+		apiObject.PartitionKeys = []awstypes.Column{}
 	}
 
-	if v, ok := d.GetOk("view_original_text"); ok {
-		tableInput.ViewOriginalText = aws.String(v.(string))
+	if v, ok := d.GetOk("retention"); ok {
+		apiObject.Retention = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("view_expanded_text"); ok {
-		tableInput.ViewExpandedText = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("table_type"); ok {
-		tableInput.TableType = aws.String(v.(string))
+	if v, ok := d.GetOk("storage_descriptor"); ok {
+		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		tableInput.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+		apiObject.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
+	if v, ok := d.GetOk("table_type"); ok {
+		apiObject.TableType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("target_table"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		tableInput.TargetTable = expandTableTargetTable(v.([]any)[0].(map[string]any))
+		apiObject.TargetTable = expandTableIdentifier(v.([]any)[0].(map[string]any))
 	}
 
-	return tableInput
+	if v, ok := d.GetOk("view_original_text"); ok {
+		apiObject.ViewOriginalText = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("view_expanded_text"); ok {
+		apiObject.ViewExpandedText = aws.String(v.(string))
+	}
+
+	return apiObject
 }
 
-func expandOpenTableFormat(s *schema.ResourceData) *awstypes.OpenTableFormatInput {
-	if v, ok := s.GetOk("open_table_format_input"); ok {
-		openTableFormatInput := &awstypes.OpenTableFormatInput{
-			IcebergInput: expandIcebergInput(v.([]any)[0].(map[string]any)),
-		}
-		return openTableFormatInput
+func expandOpenTableFormatInput(tfMap map[string]any) *awstypes.OpenTableFormatInput {
+	if tfMap == nil {
+		return nil
 	}
-	return nil
+
+	apiObject := &awstypes.OpenTableFormatInput{}
+
+	if v, ok := tfMap["iceberg_input"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.IcebergInput = expandIcebergInput(v[0].(map[string]any))
+	}
+
+	return apiObject
 }
 
-func expandIcebergInput(s map[string]any) *awstypes.IcebergInput {
-	var iceberg = s["iceberg_input"].([]any)[0].(map[string]any)
-	icebergInput := &awstypes.IcebergInput{
-		MetadataOperation: awstypes.MetadataOperation(iceberg["metadata_operation"].(string)),
+func expandIcebergInput(tfMap map[string]any) *awstypes.IcebergInput {
+	if tfMap == nil {
+		return nil
 	}
-	if v, ok := iceberg[names.AttrVersion].(string); ok && v != "" {
-		icebergInput.Version = aws.String(v)
+
+	apiObject := &awstypes.IcebergInput{}
+
+	if v, ok := tfMap["metadata_operation"].(string); ok && v != "" {
+		apiObject.MetadataOperation = awstypes.MetadataOperation(v)
 	}
-	return icebergInput
+
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
+		apiObject.Version = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func expandPartitionIndexes(tfList []any) []awstypes.PartitionIndex {
@@ -713,277 +724,275 @@ func expandPartitionIndexes(tfList []any) []awstypes.PartitionIndex {
 	return apiObjects
 }
 
-func expandStorageDescriptor(l []any) *awstypes.StorageDescriptor {
-	if len(l) == 0 || l[0] == nil {
+func expandStorageDescriptor(tfList []any) *awstypes.StorageDescriptor {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	s := l[0].(map[string]any)
-	storageDescriptor := &awstypes.StorageDescriptor{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.StorageDescriptor{}
 
-	if v, ok := s["additional_locations"]; ok {
-		storageDescriptor.AdditionalLocations = flex.ExpandStringValueList(v.([]any))
+	if v, ok := tfMap["additional_locations"]; ok {
+		apiObject.AdditionalLocations = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := s["columns"]; ok {
-		storageDescriptor.Columns = expandColumns(v.([]any))
+	if v, ok := tfMap["columns"]; ok {
+		apiObject.Columns = expandColumns(v.([]any))
 	}
 
-	if v, ok := s[names.AttrLocation]; ok {
-		storageDescriptor.Location = aws.String(v.(string))
+	if v, ok := tfMap[names.AttrLocation]; ok {
+		apiObject.Location = aws.String(v.(string))
 	}
 
-	if v, ok := s["input_format"]; ok {
-		storageDescriptor.InputFormat = aws.String(v.(string))
+	if v, ok := tfMap["input_format"]; ok {
+		apiObject.InputFormat = aws.String(v.(string))
 	}
 
-	if v, ok := s["output_format"]; ok {
-		storageDescriptor.OutputFormat = aws.String(v.(string))
+	if v, ok := tfMap["output_format"]; ok {
+		apiObject.OutputFormat = aws.String(v.(string))
 	}
 
-	if v, ok := s["compressed"]; ok {
-		storageDescriptor.Compressed = v.(bool)
+	if v, ok := tfMap["compressed"]; ok {
+		apiObject.Compressed = v.(bool)
 	}
 
-	if v, ok := s["number_of_buckets"]; ok {
-		storageDescriptor.NumberOfBuckets = int32(v.(int))
+	if v, ok := tfMap["number_of_buckets"]; ok {
+		apiObject.NumberOfBuckets = int32(v.(int))
 	}
 
-	if v, ok := s["ser_de_info"]; ok {
-		storageDescriptor.SerdeInfo = expandSerDeInfo(v.([]any))
+	if v, ok := tfMap["ser_de_info"]; ok {
+		apiObject.SerdeInfo = expandSerDeInfo(v.([]any))
 	}
 
-	if v, ok := s["bucket_columns"]; ok {
-		storageDescriptor.BucketColumns = flex.ExpandStringValueList(v.([]any))
+	if v, ok := tfMap["bucket_columns"]; ok {
+		apiObject.BucketColumns = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := s["sort_columns"]; ok {
-		storageDescriptor.SortColumns = expandSortColumns(v.([]any))
+	if v, ok := tfMap["sort_columns"]; ok {
+		apiObject.SortColumns = expandOrders(v.([]any))
 	}
 
-	if v, ok := s["skewed_info"]; ok {
-		storageDescriptor.SkewedInfo = expandSkewedInfo(v.([]any))
+	if v, ok := tfMap["skewed_info"]; ok {
+		apiObject.SkewedInfo = expandSkewedInfo(v.([]any))
 	}
 
-	if v, ok := s[names.AttrParameters]; ok {
-		storageDescriptor.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+	if v, ok := tfMap[names.AttrParameters]; ok {
+		apiObject.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := s["stored_as_sub_directories"]; ok {
-		storageDescriptor.StoredAsSubDirectories = v.(bool)
+	if v, ok := tfMap["stored_as_sub_directories"]; ok {
+		apiObject.StoredAsSubDirectories = v.(bool)
 	}
 
-	if v, ok := s["schema_reference"]; ok && len(v.([]any)) > 0 {
-		storageDescriptor.Columns = nil
-		storageDescriptor.SchemaReference = expandTableSchemaReference(v.([]any))
+	if v, ok := tfMap["schema_reference"]; ok && len(v.([]any)) > 0 {
+		apiObject.Columns = nil
+		apiObject.SchemaReference = expandSchemaReference(v.([]any))
 	}
 
-	return storageDescriptor
+	return apiObject
 }
 
-func expandColumns(columns []any) []awstypes.Column {
-	columnSlice := []awstypes.Column{}
-	for _, element := range columns {
-		elementMap := element.(map[string]any)
+func expandColumns(tfList []any) []awstypes.Column {
+	apiObjects := []awstypes.Column{}
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
 
 		column := awstypes.Column{
-			Name: aws.String(elementMap[names.AttrName].(string)),
+			Name: aws.String(tfMap[names.AttrName].(string)),
 		}
 
-		if v, ok := elementMap[names.AttrComment]; ok {
+		if v, ok := tfMap[names.AttrComment]; ok {
 			column.Comment = aws.String(v.(string))
 		}
 
-		if v, ok := elementMap[names.AttrParameters]; ok {
+		if v, ok := tfMap[names.AttrParameters]; ok {
 			column.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 		}
 
-		if v, ok := elementMap[names.AttrType]; ok {
+		if v, ok := tfMap[names.AttrType]; ok {
 			column.Type = aws.String(v.(string))
 		}
 
-		columnSlice = append(columnSlice, column)
+		apiObjects = append(apiObjects, column)
 	}
 
-	return columnSlice
+	return apiObjects
 }
 
-func expandSerDeInfo(l []any) *awstypes.SerDeInfo {
-	if len(l) == 0 || l[0] == nil {
+func expandSerDeInfo(tfList []any) *awstypes.SerDeInfo {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	s := l[0].(map[string]any)
-	serDeInfo := &awstypes.SerDeInfo{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.SerDeInfo{}
 
-	if v := s[names.AttrName]; len(v.(string)) > 0 {
-		serDeInfo.Name = aws.String(v.(string))
+	if v := tfMap[names.AttrName]; len(v.(string)) > 0 {
+		apiObject.Name = aws.String(v.(string))
 	}
 
-	if v := s[names.AttrParameters]; len(v.(map[string]any)) > 0 {
-		serDeInfo.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+	if v := tfMap[names.AttrParameters]; len(v.(map[string]any)) > 0 {
+		apiObject.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v := s["serialization_library"]; len(v.(string)) > 0 {
-		serDeInfo.SerializationLibrary = aws.String(v.(string))
+	if v := tfMap["serialization_library"]; len(v.(string)) > 0 {
+		apiObject.SerializationLibrary = aws.String(v.(string))
 	}
 
-	return serDeInfo
+	return apiObject
 }
 
-func expandSortColumns(columns []any) []awstypes.Order {
-	orderSlice := make([]awstypes.Order, len(columns))
+func expandOrders(tfList []any) []awstypes.Order {
+	apiObjects := make([]awstypes.Order, len(tfList))
 
-	for i, element := range columns {
-		elementMap := element.(map[string]any)
+	for i, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
 
-		order := awstypes.Order{
-			Column: aws.String(elementMap["column"].(string)),
+		apiObject := awstypes.Order{
+			Column: aws.String(tfMap["column"].(string)),
 		}
 
-		if v, ok := elementMap["sort_order"]; ok {
-			order.SortOrder = int32(v.(int))
+		if v, ok := tfMap["sort_order"]; ok {
+			apiObject.SortOrder = int32(v.(int))
 		}
 
-		orderSlice[i] = order
+		apiObjects[i] = apiObject
 	}
 
-	return orderSlice
+	return apiObjects
 }
 
-func expandSkewedInfo(l []any) *awstypes.SkewedInfo {
-	if len(l) == 0 || l[0] == nil {
+func expandSkewedInfo(tfList []any) *awstypes.SkewedInfo {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	s := l[0].(map[string]any)
-	skewedInfo := &awstypes.SkewedInfo{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.SkewedInfo{}
 
-	if v, ok := s["skewed_column_names"]; ok {
-		skewedInfo.SkewedColumnNames = flex.ExpandStringValueList(v.([]any))
+	if v, ok := tfMap["skewed_column_names"]; ok {
+		apiObject.SkewedColumnNames = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := s["skewed_column_value_location_maps"]; ok {
-		skewedInfo.SkewedColumnValueLocationMaps = flex.ExpandStringValueMap(v.(map[string]any))
+	if v, ok := tfMap["skewed_column_value_location_maps"]; ok {
+		apiObject.SkewedColumnValueLocationMaps = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := s["skewed_column_values"]; ok {
-		skewedInfo.SkewedColumnValues = flex.ExpandStringValueList(v.([]any))
+	if v, ok := tfMap["skewed_column_values"]; ok {
+		apiObject.SkewedColumnValues = flex.ExpandStringValueList(v.([]any))
 	}
 
-	return skewedInfo
+	return apiObject
 }
 
-func expandTableSchemaReference(l []any) *awstypes.SchemaReference {
-	if len(l) == 0 || l[0] == nil {
+func expandSchemaReference(tfList []any) *awstypes.SchemaReference {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	s := l[0].(map[string]any)
-	schemaRef := &awstypes.SchemaReference{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.SchemaReference{}
 
-	if v, ok := s["schema_version_id"].(string); ok && v != "" {
-		schemaRef.SchemaVersionId = aws.String(v)
+	if v, ok := tfMap["schema_version_id"].(string); ok && v != "" {
+		apiObject.SchemaVersionId = aws.String(v)
 	}
 
-	if v, ok := s["schema_id"]; ok {
-		schemaRef.SchemaId = expandTableSchemaReferenceSchemaID(v.([]any))
+	if v, ok := tfMap["schema_id"]; ok {
+		apiObject.SchemaId = expandSchemaId(v.([]any))
 	}
 
-	if v, ok := s["schema_version_number"].(int); ok {
-		schemaRef.SchemaVersionNumber = aws.Int64(int64(v))
+	if v, ok := tfMap["schema_version_number"].(int); ok {
+		apiObject.SchemaVersionNumber = aws.Int64(int64(v))
 	}
 
-	return schemaRef
+	return apiObject
 }
 
-func expandTableSchemaReferenceSchemaID(l []any) *awstypes.SchemaId {
-	if len(l) == 0 || l[0] == nil {
+func expandSchemaId(tfList []any) *awstypes.SchemaId {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	s := l[0].(map[string]any)
-	schemaID := &awstypes.SchemaId{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.SchemaId{}
 
-	if v, ok := s["registry_name"].(string); ok && v != "" {
-		schemaID.RegistryName = aws.String(v)
+	if v, ok := tfMap["registry_name"].(string); ok && v != "" {
+		apiObject.RegistryName = aws.String(v)
 	}
 
-	if v, ok := s["schema_name"].(string); ok && v != "" {
-		schemaID.SchemaName = aws.String(v)
+	if v, ok := tfMap["schema_name"].(string); ok && v != "" {
+		apiObject.SchemaName = aws.String(v)
 	}
 
-	if v, ok := s["schema_arn"].(string); ok && v != "" {
-		schemaID.SchemaArn = aws.String(v)
+	if v, ok := tfMap["schema_arn"].(string); ok && v != "" {
+		apiObject.SchemaArn = aws.String(v)
 	}
 
-	return schemaID
+	return apiObject
 }
 
-func flattenStorageDescriptor(s *awstypes.StorageDescriptor) []map[string]any {
-	if s == nil {
-		storageDescriptors := make([]map[string]any, 0)
-		return storageDescriptors
+func flattenStorageDescriptor(apiObject *awstypes.StorageDescriptor) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	storageDescriptors := make([]map[string]any, 1)
+	tfList := make([]any, 1)
+	tfMap := make(map[string]any)
 
-	storageDescriptor := make(map[string]any)
+	tfMap["additional_locations"] = apiObject.AdditionalLocations
+	tfMap["columns"] = flattenColumns(apiObject.Columns)
+	tfMap[names.AttrLocation] = aws.ToString(apiObject.Location)
+	tfMap["input_format"] = aws.ToString(apiObject.InputFormat)
+	tfMap["output_format"] = aws.ToString(apiObject.OutputFormat)
+	tfMap["compressed"] = apiObject.Compressed
+	tfMap["number_of_buckets"] = apiObject.NumberOfBuckets
+	tfMap["ser_de_info"] = flattenSerDeInfo(apiObject.SerdeInfo)
+	tfMap["bucket_columns"] = apiObject.BucketColumns
+	tfMap["sort_columns"] = flattenOrders(apiObject.SortColumns)
+	tfMap[names.AttrParameters] = apiObject.Parameters
+	tfMap["skewed_info"] = flattenSkewedInfo(apiObject.SkewedInfo)
+	tfMap["stored_as_sub_directories"] = apiObject.StoredAsSubDirectories
 
-	storageDescriptor["additional_locations"] = flex.FlattenStringValueList(s.AdditionalLocations)
-	storageDescriptor["columns"] = flattenColumns(s.Columns)
-	storageDescriptor[names.AttrLocation] = aws.ToString(s.Location)
-	storageDescriptor["input_format"] = aws.ToString(s.InputFormat)
-	storageDescriptor["output_format"] = aws.ToString(s.OutputFormat)
-	storageDescriptor["compressed"] = s.Compressed
-	storageDescriptor["number_of_buckets"] = s.NumberOfBuckets
-	storageDescriptor["ser_de_info"] = flattenSerDeInfo(s.SerdeInfo)
-	storageDescriptor["bucket_columns"] = flex.FlattenStringValueList(s.BucketColumns)
-	storageDescriptor["sort_columns"] = flattenOrders(s.SortColumns)
-	storageDescriptor[names.AttrParameters] = s.Parameters
-	storageDescriptor["skewed_info"] = flattenSkewedInfo(s.SkewedInfo)
-	storageDescriptor["stored_as_sub_directories"] = s.StoredAsSubDirectories
-
-	if s.SchemaReference != nil {
-		storageDescriptor["schema_reference"] = flattenTableSchemaReference(s.SchemaReference)
+	if apiObject.SchemaReference != nil {
+		tfMap["schema_reference"] = flattenSchemaReference(apiObject.SchemaReference)
 	}
 
-	storageDescriptors[0] = storageDescriptor
+	tfList[0] = tfMap
 
-	return storageDescriptors
+	return tfList
 }
 
-func flattenColumns(cs []awstypes.Column) []map[string]any {
-	columnsSlice := make([]map[string]any, len(cs))
-	if len(cs) > 0 {
-		for i, v := range cs {
-			columnsSlice[i] = flattenColumn(v)
+func flattenColumns(apiObjects []awstypes.Column) []any {
+	tfList := make([]any, len(apiObjects))
+	if len(apiObjects) > 0 {
+		for i, apiObject := range apiObjects {
+			tfList[i] = flattenColumn(apiObject)
 		}
 	}
 
-	return columnsSlice
+	return tfList
 }
 
-func flattenColumn(c awstypes.Column) map[string]any {
-	column := make(map[string]any)
+func flattenColumn(apiObject awstypes.Column) map[string]any {
+	tfMap := make(map[string]any)
 
-	if v := aws.ToString(c.Comment); v != "" {
-		column[names.AttrComment] = v
+	if v := aws.ToString(apiObject.Comment); v != "" {
+		tfMap[names.AttrComment] = v
 	}
 
-	if v := aws.ToString(c.Name); v != "" {
-		column[names.AttrName] = v
+	if v := aws.ToString(apiObject.Name); v != "" {
+		tfMap[names.AttrName] = v
 	}
 
-	if v := c.Parameters; v != nil {
-		column[names.AttrParameters] = v
+	if v := apiObject.Parameters; v != nil {
+		tfMap[names.AttrParameters] = v
 	}
 
-	if v := aws.ToString(c.Type); v != "" {
-		column[names.AttrType] = v
+	if v := aws.ToString(apiObject.Type); v != "" {
+		tfMap[names.AttrType] = v
 	}
 
-	return column
+	return tfMap
 }
 
 func flattenPartitionIndexDescriptors(apiObjects []awstypes.PartitionIndexDescriptor) []any {
@@ -1000,111 +1009,105 @@ func flattenPartitionIndexDescriptors(apiObjects []awstypes.PartitionIndexDescri
 	return tfList
 }
 
-func flattenSerDeInfo(s *awstypes.SerDeInfo) []map[string]any {
-	if s == nil {
-		serDeInfos := make([]map[string]any, 0)
-		return serDeInfos
+func flattenSerDeInfo(apiObject *awstypes.SerDeInfo) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	serDeInfos := make([]map[string]any, 1)
-	serDeInfo := make(map[string]any)
+	tfList := make([]any, 1)
+	tfMap := make(map[string]any)
 
-	if v := aws.ToString(s.Name); v != "" {
-		serDeInfo[names.AttrName] = v
+	if v := aws.ToString(apiObject.Name); v != "" {
+		tfMap[names.AttrName] = v
 	}
-	serDeInfo[names.AttrParameters] = s.Parameters
-	if v := aws.ToString(s.SerializationLibrary); v != "" {
-		serDeInfo["serialization_library"] = v
+	tfMap[names.AttrParameters] = apiObject.Parameters
+	if v := aws.ToString(apiObject.SerializationLibrary); v != "" {
+		tfMap["serialization_library"] = v
 	}
 
-	serDeInfos[0] = serDeInfo
-	return serDeInfos
+	tfList[0] = tfMap
+	return tfList
 }
 
-func flattenOrders(os []awstypes.Order) []map[string]any {
-	orders := make([]map[string]any, len(os))
-	for i, v := range os {
-		order := make(map[string]any)
-		order["column"] = aws.ToString(v.Column)
-		order["sort_order"] = int(v.SortOrder)
-		orders[i] = order
+func flattenOrders(apiObjects []awstypes.Order) []any {
+	tfList := make([]any, len(apiObjects))
+	for i, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+		tfMap["column"] = aws.ToString(apiObject.Column)
+		tfMap["sort_order"] = apiObject.SortOrder
+		tfList[i] = tfMap
 	}
 
-	return orders
+	return tfList
 }
 
-func flattenSkewedInfo(s *awstypes.SkewedInfo) []map[string]any {
-	if s == nil {
-		skewedInfoSlice := make([]map[string]any, 0)
-		return skewedInfoSlice
+func flattenSkewedInfo(apiObject *awstypes.SkewedInfo) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	skewedInfoSlice := make([]map[string]any, 1)
+	tfList := make([]any, 1)
+	tfMap := make(map[string]any)
 
-	skewedInfo := make(map[string]any)
-	skewedInfo["skewed_column_names"] = flex.FlattenStringValueList(s.SkewedColumnNames)
-	skewedInfo["skewed_column_value_location_maps"] = s.SkewedColumnValueLocationMaps
-	skewedInfo["skewed_column_values"] = flex.FlattenStringValueList(s.SkewedColumnValues)
-	skewedInfoSlice[0] = skewedInfo
+	tfMap["skewed_column_names"] = apiObject.SkewedColumnNames
+	tfMap["skewed_column_value_location_maps"] = apiObject.SkewedColumnValueLocationMaps
+	tfMap["skewed_column_values"] = apiObject.SkewedColumnValues
+	tfList[0] = tfMap
 
-	return skewedInfoSlice
+	return tfList
 }
 
-func flattenTableSchemaReference(s *awstypes.SchemaReference) []map[string]any {
-	if s == nil {
-		schemaReferenceInfoSlice := make([]map[string]any, 0)
-		return schemaReferenceInfoSlice
+func flattenSchemaReference(apiObject *awstypes.SchemaReference) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	schemaReferenceInfoSlice := make([]map[string]any, 1)
+	tfList := make([]any, 1)
+	tfMap := make(map[string]any)
 
-	schemaReferenceInfo := make(map[string]any)
-
-	if s.SchemaVersionId != nil {
-		schemaReferenceInfo["schema_version_id"] = aws.ToString(s.SchemaVersionId)
+	if apiObject.SchemaVersionId != nil {
+		tfMap["schema_version_id"] = aws.ToString(apiObject.SchemaVersionId)
 	}
 
-	if s.SchemaVersionNumber != nil {
-		schemaReferenceInfo["schema_version_number"] = aws.ToInt64(s.SchemaVersionNumber)
+	if apiObject.SchemaVersionNumber != nil {
+		tfMap["schema_version_number"] = aws.ToInt64(apiObject.SchemaVersionNumber)
 	}
 
-	if s.SchemaId != nil {
-		schemaReferenceInfo["schema_id"] = flattenTableSchemaReferenceSchemaID(s.SchemaId)
+	if apiObject.SchemaId != nil {
+		tfMap["schema_id"] = flattenSchemaId(apiObject.SchemaId)
 	}
 
-	schemaReferenceInfoSlice[0] = schemaReferenceInfo
+	tfList[0] = tfMap
 
-	return schemaReferenceInfoSlice
+	return tfList
 }
 
-func flattenTableSchemaReferenceSchemaID(s *awstypes.SchemaId) []map[string]any {
-	if s == nil {
-		schemaIDInfoSlice := make([]map[string]any, 0)
-		return schemaIDInfoSlice
+func flattenSchemaId(apiObject *awstypes.SchemaId) []any {
+	if apiObject == nil {
+		return make([]any, 0)
 	}
 
-	schemaIDInfoSlice := make([]map[string]any, 1)
+	tfList := make([]any, 1)
+	tfMap := make(map[string]any)
 
-	schemaIDInfo := make(map[string]any)
-
-	if s.RegistryName != nil {
-		schemaIDInfo["registry_name"] = aws.ToString(s.RegistryName)
+	if apiObject.RegistryName != nil {
+		tfMap["registry_name"] = aws.ToString(apiObject.RegistryName)
 	}
 
-	if s.SchemaArn != nil {
-		schemaIDInfo["schema_arn"] = aws.ToString(s.SchemaArn)
+	if apiObject.SchemaArn != nil {
+		tfMap["schema_arn"] = aws.ToString(apiObject.SchemaArn)
 	}
 
-	if s.SchemaName != nil {
-		schemaIDInfo["schema_name"] = aws.ToString(s.SchemaName)
+	if apiObject.SchemaName != nil {
+		tfMap["schema_name"] = aws.ToString(apiObject.SchemaName)
 	}
 
-	schemaIDInfoSlice[0] = schemaIDInfo
+	tfList[0] = tfMap
 
-	return schemaIDInfoSlice
+	return tfList
 }
 
-func expandTableTargetTable(tfMap map[string]any) *awstypes.TableIdentifier {
+func expandTableIdentifier(tfMap map[string]any) *awstypes.TableIdentifier {
 	if tfMap == nil {
 		return nil
 	}
@@ -1130,7 +1133,7 @@ func expandTableTargetTable(tfMap map[string]any) *awstypes.TableIdentifier {
 	return apiObject
 }
 
-func flattenTableTargetTable(apiObject *awstypes.TableIdentifier) map[string]any {
+func flattenTableIdentifier(apiObject *awstypes.TableIdentifier) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -1156,8 +1159,7 @@ func flattenTableTargetTable(apiObject *awstypes.TableIdentifier) map[string]any
 	return tfMap
 }
 
-func flattenNonManagedParameters(table *awstypes.Table) map[string]string {
-	allParameters := table.Parameters
+func flattenNonManagedParameters(allParameters map[string]string) map[string]string {
 	if allParameters["table_type"] == "ICEBERG" {
 		delete(allParameters, "table_type")
 		delete(allParameters, "metadata_location")

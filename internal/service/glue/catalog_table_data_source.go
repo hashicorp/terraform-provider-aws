@@ -379,7 +379,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("table_type", table.TableType)
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []any{flattenTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []any{flattenTableIdentifier(table.TargetTable)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting target_table: %s", err)
 		}
 	} else {
