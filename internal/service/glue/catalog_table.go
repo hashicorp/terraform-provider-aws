@@ -557,8 +557,15 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	} else {
 		d.Set("target_table", nil)
 	}
-	d.Set("view_original_text", table.ViewOriginalText)
+	if table.ViewDefinition != nil {
+		if err := d.Set("view_definition", []any{flattenViewDefinition(table.ViewDefinition)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting view_definition: %s", err)
+		}
+	} else {
+		d.Set("view_definition", nil)
+	}
 	d.Set("view_expanded_text", table.ViewExpandedText)
+	d.Set("view_original_text", table.ViewOriginalText)
 
 	input := glue.GetPartitionIndexesInput{
 		CatalogId:    table.CatalogId,
@@ -1334,6 +1341,80 @@ func expandViewRepresentationInputs(tfList []any) []awstypes.ViewRepresentationI
 	}
 
 	return apiObjects
+}
+
+func flattenViewDefinition(apiObject *awstypes.ViewDefinition) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := aws.ToString(apiObject.Definer); v != "" {
+		tfMap["definer"] = v
+	}
+
+	if v := apiObject.IsProtected; v != nil {
+		tfMap["is_protected"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.LastRefreshType; v != "" {
+		tfMap["last_refresh_type"] = v
+	}
+
+	if v := apiObject.RefreshSeconds; v != nil {
+		tfMap["refresh_seconds"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.Representations; len(v) > 0 {
+		tfMap["representations"] = flattenViewRepresentations(v)
+	}
+
+	tfMap["view_version_id"] = apiObject.ViewVersionId
+
+	if v := aws.ToString(apiObject.ViewVersionToken); v != "" {
+		tfMap["view_version_token"] = v
+	}
+
+	return tfMap
+}
+
+func flattenViewRepresentations(apiObjects []awstypes.ViewRepresentation) []any {
+	tfList := make([]any, len(apiObjects))
+	for i, v := range apiObjects {
+		tfList[i] = flattenViewRepresentation(v)
+	}
+	return tfList
+}
+
+func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string]any {
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Dialect; v != "" {
+		tfMap["dialect"] = v
+	}
+
+	if v := aws.ToString(apiObject.DialectVersion); v != "" {
+		tfMap["dialect_version"] = v
+	}
+
+	if v := apiObject.IsStale; v != nil {
+		tfMap["is_stale"] = aws.ToBool(v)
+	}
+
+	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
+		tfMap["validation_connection"] = v
+	}
+
+	if v := aws.ToString(apiObject.ViewExpandedText); v != "" {
+		tfMap["view_expanded_text"] = v
+	}
+
+	if v := aws.ToString(apiObject.ViewOriginalText); v != "" {
+		tfMap["view_original_text"] = v
+	}
+
+	return tfMap
 }
 
 func tableARN(ctx context.Context, c *conns.AWSClient, dbName, name string) string {

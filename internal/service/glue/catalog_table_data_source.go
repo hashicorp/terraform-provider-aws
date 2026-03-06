@@ -385,8 +385,8 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		d.Set("target_table", nil)
 	}
-	d.Set("view_original_text", table.ViewOriginalText)
 	d.Set("view_expanded_text", table.ViewExpandedText)
+	d.Set("view_original_text", table.ViewOriginalText)
 
 	inputGPI := glue.GetPartitionIndexesInput{
 		CatalogId:    table.CatalogId,

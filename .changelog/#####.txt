@@ -5,3 +5,7 @@ resource/aws_glue_catalog_table: Use the table's catalog ID when reading partiti
 ```release-note:bug
 data-source/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors
 ```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `view_definition` argument
+```
