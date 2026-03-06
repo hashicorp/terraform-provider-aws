@@ -1,5 +1,9 @@
 ## 6.36.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_s3_bucket_versioning` ([#46802](https://github.com/hashicorp/terraform-provider-aws/issues/46802))
+
 ENHANCEMENTS:
 
 * resource/aws_guardduty_ipset: Add `ip_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
