@@ -10,7 +10,6 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -32,7 +31,7 @@ const (
 )
 
 func randomOpenSearchDomainName() string {
-	return fmt.Sprintf(openSearchDomainPrefix+"%s", sdkacctest.RandString(openSearchDomainRemainderLen))
+	return fmt.Sprintf(openSearchDomainPrefix+"%s", acctest.RandString(t, openSearchDomainRemainderLen))
 }
 
 func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
