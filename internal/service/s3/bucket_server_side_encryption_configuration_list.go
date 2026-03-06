@@ -25,7 +25,7 @@ import (
 
 // @SDKListResource("aws_s3_bucket_server_side_encryption_configuration")
 func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes.ListResourceForSDK {
-	return newListResourceBaseBucketProperty(
+	return newListResourceBaseBucketPropertySDK(
 		resourceBucketServerSideEncryptionConfiguration(),
 		newBucketServerSideEncryptionConfigurationListHandler,
 	)

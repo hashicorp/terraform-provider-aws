@@ -25,7 +25,7 @@ import (
 
 // @SDKListResource("aws_s3_bucket_versioning")
 func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
-	return newListResourceBaseBucketProperty(
+	return newListResourceBaseBucketPropertySDK(
 		resourceBucketVersioning(),
 		newBucketVersioningListHandler,
 	)

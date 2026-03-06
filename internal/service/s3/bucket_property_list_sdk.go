@@ -25,21 +25,21 @@ type bucketPropertyListHandlerSDK interface {
 	list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult]
 }
 
-var _ list.ListResource = &listResourceBaseBucketProperty{}
+var _ list.ListResource = &listResourceBaseBucketPropertySDK{}
 
-func newListResourceBaseBucketProperty(resource *schema.Resource, f func(listResourceSDK) bucketPropertyListHandlerSDK) inttypes.ListResourceForSDK {
-	l := listResourceBaseBucketProperty{}
+func newListResourceBaseBucketPropertySDK(resource *schema.Resource, f func(listResourceSDK) bucketPropertyListHandlerSDK) inttypes.ListResourceForSDK {
+	l := listResourceBaseBucketPropertySDK{}
 	l.SetResourceSchema(resource)
 	l.handler = f(&l)
 	return &l
 }
 
-type listResourceBaseBucketProperty struct {
+type listResourceBaseBucketPropertySDK struct {
 	framework.ListResourceWithSDKv2Resource
 	handler bucketPropertyListHandlerSDK
 }
 
-func (l *listResourceBaseBucketProperty) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+func (l *listResourceBaseBucketPropertySDK) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	if diags := l.handler.parseQuery(ctx, request.Config); diags.HasError() {
 		stream.Results = list.ListResultsStreamDiagnostics(diags)
 		return

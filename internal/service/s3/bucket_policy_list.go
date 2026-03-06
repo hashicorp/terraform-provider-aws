@@ -26,7 +26,7 @@ import (
 // Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
 // @SDKListResource("aws_s3_bucket_policy")
 func newBucketPolicyResourceAsListResource() inttypes.ListResourceForSDK {
-	return newListResourceBaseBucketProperty(
+	return newListResourceBaseBucketPropertySDK(
 		resourceBucketPolicy(),
 		newBucketPolicyListHandler,
 	)
