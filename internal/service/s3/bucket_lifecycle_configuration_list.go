@@ -11,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -23,7 +25,9 @@ import (
 
 // @FrameworkListResource("aws_s3_bucket_lifecycle_configuration")
 func newBucketLifecycleConfigurationResourceAsListResource() list.ListResourceWithConfigure {
-	return &bucketLifecycleConfigurationListResource{}
+	l := &bucketLifecycleConfigurationListResource{}
+	l.handler = newBucketLifecycleConfigurationListHandler(l)
+	return l
 }
 
 var _ list.ListResource = &bucketLifecycleConfigurationListResource{}
@@ -31,15 +35,13 @@ var _ list.ListResource = &bucketLifecycleConfigurationListResource{}
 type bucketLifecycleConfigurationListResource struct {
 	bucketLifecycleConfigurationResource
 	framework.WithList
+	handler bucketPropertyListHandlerFramework
 }
 
 func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listBucketLifecycleConfigurationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
+	if diags := l.handler.parseQuery(ctx, request.Config); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
 	}
 
 	tflog.Info(ctx, "Listing Resources")
@@ -52,7 +54,7 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 			MaxBuckets:   aws.Int32(int32(request.Limit)),
 		}
 		var count int64
-		for result := range l.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
+		for result := range l.handler.list(ctx, request, gpConn, listBuckets(ctx, gpConn, &gpInput)) {
 			count++
 			if !yield(result) {
 				return
@@ -69,7 +71,7 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 		dirInput := s3.ListDirectoryBucketsInput{
 			MaxDirectoryBuckets: aws.Int32(int32(limit)),
 		}
-		for result := range l.list(ctx, request, gpConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
+		for result := range l.handler.list(ctx, request, gpConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
 			if !yield(result) {
 				return
 			}
@@ -77,7 +79,23 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 	}
 }
 
-func (l *bucketLifecycleConfigurationListResource) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[types.Bucket, error]) iter.Seq[list.ListResult] {
+var _ bucketPropertyListHandlerFramework = bucketLifecycleConfigurationListHandler{}
+
+func newBucketLifecycleConfigurationListHandler(lister listResourceFramework) bucketPropertyListHandlerFramework {
+	return bucketLifecycleConfigurationListHandler{
+		baseBucketPropertyListHandlerFramework: newBaseBucketPropertyListHandlerFramework(lister),
+	}
+}
+
+type bucketLifecycleConfigurationListHandler struct {
+	baseBucketPropertyListHandlerFramework
+}
+
+func (l bucketLifecycleConfigurationListHandler) parseQuery(ctx context.Context, config tfsdk.Config) (diags diag.Diagnostics) {
+	return parseQuery[listBucketLifecycleConfigurationModel](ctx, config)
+}
+
+func (l bucketLifecycleConfigurationListHandler) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[types.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
