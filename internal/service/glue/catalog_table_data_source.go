@@ -399,7 +399,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
+		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partOut.PartitionIndexDescriptorList)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 		}
 	}

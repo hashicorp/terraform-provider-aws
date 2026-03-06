@@ -26,19 +26,19 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogTableOptimizer    = findCatalogTableOptimizer
-	FindClassifierByName         = findClassifierByName
-	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
-	FindCrawlerByName            = findCrawlerByName
-	FindDatabaseByName           = findDatabaseByName
-	FindDataQualityRulesetByName = findDataQualityRulesetByName
-	FindDevEndpointByName        = findDevEndpointByName
-	FindJobByName                = findJobByName
-	FindPartitionByValues        = findPartitionByValues
-	FindPartitionIndexByName     = findPartitionIndexByName
-	FindRegistryByID             = findRegistryByID
-	FindResourcePolicy           = findResourcePolicy
-	FindSchemaByID               = findSchemaByID
-	FindTableByThreePartKey      = findTableByThreePartKey
-	FindTriggerByName            = findTriggerByName
+	FindCatalogTableOptimizer       = findCatalogTableOptimizer
+	FindClassifierByName            = findClassifierByName
+	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey
+	FindCrawlerByName               = findCrawlerByName
+	FindDatabaseByName              = findDatabaseByName
+	FindDataQualityRulesetByName    = findDataQualityRulesetByName
+	FindDevEndpointByName           = findDevEndpointByName
+	FindJobByName                   = findJobByName
+	FindPartitionByValues           = findPartitionByValues
+	FindPartitionIndexByFourPartKey = findPartitionIndexByFourPartKey
+	FindRegistryByID                = findRegistryByID
+	FindResourcePolicy              = findResourcePolicy
+	FindSchemaByID                  = findSchemaByID
+	FindTableByThreePartKey         = findTableByThreePartKey
+	FindTriggerByName               = findTriggerByName
 )

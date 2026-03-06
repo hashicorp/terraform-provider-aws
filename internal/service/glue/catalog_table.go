@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -416,7 +417,9 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 		DatabaseName:         aws.String(dbName),
 		OpenTableFormatInput: expandOpenTableFormat(d),
 		TableInput:           expandTableInput(d),
-		PartitionIndexes:     expandTablePartitionIndexes(d.Get("partition_index").([]any)),
+	}
+	if v, ok := d.GetOk("partition_index"); ok && len(v.([]any)) > 0 {
+		input.PartitionIndexes = expandPartitionIndexes(v.([]any))
 	}
 
 	_, err := conn.CreateTable(ctx, input)
@@ -478,22 +481,19 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("view_original_text", table.ViewOriginalText)
 	d.Set("view_expanded_text", table.ViewExpandedText)
 
-	input := &glue.GetPartitionIndexesInput{
+	input := glue.GetPartitionIndexesInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		TableName:    aws.String(name),
 	}
-
-	output, err := conn.GetPartitionIndexes(ctx, input)
+	partitionIndexes, err := findPartitionIndexes(ctx, conn, &input, tfslices.PredicateTrue[awstypes.PartitionIndexDescriptor]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
 	}
 
-	if output != nil && len(output.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenPartitionIndexes(output.PartitionIndexDescriptorList)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
-		}
+	if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 	}
 
 	return diags
@@ -689,23 +689,29 @@ func expandIcebergInput(s map[string]any) *awstypes.IcebergInput {
 	return icebergInput
 }
 
-func expandTablePartitionIndexes(a []any) []awstypes.PartitionIndex {
-	partitionIndexes := make([]awstypes.PartitionIndex, 0, len(a))
-
-	for _, m := range a {
-		partitionIndexes = append(partitionIndexes, expandTablePartitionIndex(m.(map[string]any)))
+func expandPartitionIndexes(tfList []any) []awstypes.PartitionIndex {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	return partitionIndexes
-}
+	var apiObjects []awstypes.PartitionIndex
 
-func expandTablePartitionIndex(m map[string]any) awstypes.PartitionIndex {
-	partitionIndex := awstypes.PartitionIndex{
-		IndexName: aws.String(m["index_name"].(string)),
-		Keys:      flex.ExpandStringValueList(m["keys"].([]any)),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := expandPartitionIndex(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return partitionIndex
+	return apiObjects
 }
 
 func expandStorageDescriptor(l []any) *awstypes.StorageDescriptor {
@@ -981,37 +987,18 @@ func flattenColumn(c awstypes.Column) map[string]any {
 	return column
 }
 
-func flattenPartitionIndexes(cs []awstypes.PartitionIndexDescriptor) []map[string]any {
-	partitionIndexSlice := make([]map[string]any, len(cs))
-	if len(cs) > 0 {
-		for i, v := range cs {
-			partitionIndexSlice[i] = flattenPartitionIndex(v)
-		}
+func flattenPartitionIndexDescriptors(apiObjects []awstypes.PartitionIndexDescriptor) []any {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return partitionIndexSlice
-}
+	var tfList []any
 
-func flattenPartitionIndex(c awstypes.PartitionIndexDescriptor) map[string]any {
-	partitionIndex := make(map[string]any)
-
-	if v := aws.ToString(c.IndexName); v != "" {
-		partitionIndex["index_name"] = v
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenPartitionIndexDescriptor(&apiObject))
 	}
 
-	if v := string(c.IndexStatus); v != "" {
-		partitionIndex["index_status"] = v
-	}
-
-	if c.Keys != nil {
-		names := make([]*string, 0, len(c.Keys))
-		for _, key := range c.Keys {
-			names = append(names, key.Name)
-		}
-		partitionIndex["keys"] = flex.FlattenStringList(names)
-	}
-
-	return partitionIndex
+	return tfList
 }
 
 func flattenSerDeInfo(s *awstypes.SerDeInfo) []map[string]any {
