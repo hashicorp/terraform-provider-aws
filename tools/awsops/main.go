@@ -7,16 +7,29 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/hashicorp/terraform-provider-aws/tools/awsops/awsops"
 )
+
+type output struct {
+	Resources []resourceBlock `hcl:"resource,block"`
+}
+
+type resourceBlock struct {
+	Type   string   `hcl:"type,label"`
+	Create []string `hcl:"create,optional"`
+	Read   []string `hcl:"read,optional"`
+	Update []string `hcl:"update,optional"`
+	Delete []string `hcl:"delete,optional"`
+}
 
 func main() {
 	log.SetFlags(0)
 
 	providerDir := flag.String("provider-dir", ".", "Root directory of the Terraform AWS provider")
-	output := flag.String("output", "", "Output file path (default: stdout)")
+	outputPath := flag.String("output", "", "Output file path (default: stdout)")
 	flag.Parse()
 
 	serviceDir := filepath.Join(*providerDir, "internal", "service")
@@ -28,50 +41,42 @@ func main() {
 
 	hcl := formatHCL(results)
 
-	if *output != "" {
-		if err := os.WriteFile(*output, []byte(hcl), 0644); err != nil {
+	if *outputPath != "" {
+		if err := os.WriteFile(*outputPath, hcl, 0644); err != nil {
 			log.Fatalf("writing output: %s", err)
 		}
 	} else {
-		fmt.Print(hcl)
+		fmt.Print(string(hcl))
 	}
 }
 
-func formatHCL(results map[string]awsops.ResourceOps) string {
-	var b strings.Builder
-
+func formatHCL(results map[string]awsops.ResourceOps) []byte {
 	names := make([]string, 0, len(results))
 	for name := range results {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
+	out := output{
+		Resources: make([]resourceBlock, 0, len(names)),
+	}
 	for _, name := range names {
 		ops := results[name]
-		b.WriteString(fmt.Sprintf("resource %q {\n", name))
-		for _, method := range []string{"create", "read", "update", "delete"} {
-			var methodOps []string
-			switch method {
-			case "create":
-				methodOps = ops.Create
-			case "read":
-				methodOps = ops.Read
-			case "update":
-				methodOps = ops.Update
-			case "delete":
-				methodOps = ops.Delete
-			}
-			if len(methodOps) > 0 {
-				sort.Strings(methodOps)
-				b.WriteString(fmt.Sprintf("  %s = [\n", method))
-				for _, op := range methodOps {
-					b.WriteString(fmt.Sprintf("    %q,\n", op))
-				}
-				b.WriteString("  ]\n")
-			}
-		}
-		b.WriteString("}\n\n")
+		sort.Strings(ops.Create)
+		sort.Strings(ops.Read)
+		sort.Strings(ops.Update)
+		sort.Strings(ops.Delete)
+
+		out.Resources = append(out.Resources, resourceBlock{
+			Type:   name,
+			Create: ops.Create,
+			Read:   ops.Read,
+			Update: ops.Update,
+			Delete: ops.Delete,
+		})
 	}
 
-	return b.String()
+	f := hclwrite.NewEmptyFile()
+	gohcl.EncodeIntoBody(&out, f.Body())
+	return f.Bytes()
 }
