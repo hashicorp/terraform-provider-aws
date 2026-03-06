@@ -21,6 +21,7 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -199,6 +200,10 @@ func main() {
 		break
 	}
 }
+
+var (
+	v5_100_0 = version.Must(version.NewVersion("5.100.0"))
+)
 
 type arnFormatState uint
 
@@ -475,6 +480,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if len(d.IdentityAttributes) < 2 {
 				v.errs = append(v.errs, fmt.Errorf("%s.%s: \"@ImportIDHandler\" should only be specified for Resource Identities with multiple attributes", v.packageName, v.functionName))
 			}
+		}
+		if d.HasV6_0NullValuesError {
+			d.PreIdentityVersion = v5_100_0
 		}
 	} else {
 		if d.HasNoPreExistingResource {
