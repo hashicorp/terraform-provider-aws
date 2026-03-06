@@ -2,23 +2,32 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_s3_bucket_versioning" "test" {
+  count  = var.resource_count
   region = var.region
 
-  bucket = aws_s3_bucket.test.bucket
+  bucket = aws_s3_bucket.test[count.index].bucket
+
   versioning_configuration {
     status = "Enabled"
   }
 }
 
 resource "aws_s3_bucket" "test" {
+  count  = var.resource_count
   region = var.region
 
-  bucket = var.rName
+  bucket = "${var.rName}-${count.index}"
 }
 
 variable "rName" {
   description = "Name for resource"
   type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
   nullable    = false
 }
 

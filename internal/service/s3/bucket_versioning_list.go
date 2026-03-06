@@ -21,22 +21,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for list resource registration to the Provider. DO NOT EDIT.
-// @SDKListResource("aws_s3_bucket_policy")
-func newBucketPolicyResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResourceBucketPolicy{}
-	l.SetResourceSchema(resourceBucketPolicy())
+// @SDKListResource("aws_s3_bucket_versioning")
+func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
+	l := bucketVersioningListResource{}
+	l.SetResourceSchema(resourceBucketVersioning())
 	return &l
 }
 
-var _ list.ListResource = &listResourceBucketPolicy{}
+var _ list.ListResource = &bucketVersioningListResource{}
 
-type listResourceBucketPolicy struct {
+type bucketVersioningListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	var query listBucketPolicyModel
+func (l *bucketVersioningListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	var query listBucketVersioningModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
@@ -44,7 +43,8 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 Bucket Policy")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		tflog.Info(ctx, "Listing General Purpose Buckets")
 		gpConn := l.Meta().S3Client(ctx)
@@ -78,11 +78,11 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 	}
 }
 
-func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
+func (l *bucketVersioningListResource) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing S3 Bucket Policy resources: %w", err))
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing S3 Bucket Versioning resources: %w", err))
 				yield(result)
 				return
 			}
@@ -95,26 +95,28 @@ func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRe
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1:0..1)
-			// So always try to read it to see if it is present.
-			tflog.Info(ctx, "Reading S3 Bucket Policy")
-			policy, err := findBucketPolicy(ctx, conn, bucketName)
-			if retry.NotFound(err) {
-				tflog.Debug(ctx, "Bucket has no policy, skipping")
-				continue
-			}
-			if err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
-					"error": err.Error(),
-				})
-				continue
-			}
+			// There is always a Bucket Versioning Configuration associated with a Bucket (1:1)
+			// So only read it if resource data is requested.
+			if request.IncludeResource {
+				tflog.Info(ctx, "Reading S3 Bucket Versioning")
+				versioning, err := findBucketVersioning(ctx, conn, bucketName, l.Meta().AccountID(ctx))
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					tflog.Error(ctx, "Reading S3 Bucket Versioning", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
 
-			if err := resourceBucketPolicyFlatten(ctx, policy, rd); err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
-					"error": err.Error(),
-				})
-				continue
+				if err := resourceBucketVersioningFlatten(ctx, versioning, rd); err != nil {
+					tflog.Error(ctx, "Reading S3 Bucket Versioning", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = bucketName
@@ -132,6 +134,6 @@ func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRe
 	}
 }
 
-type listBucketPolicyModel struct {
+type listBucketVersioningModel struct {
 	framework.WithRegionModel
 }
