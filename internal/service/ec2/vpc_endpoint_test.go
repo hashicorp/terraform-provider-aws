@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -936,7 +937,7 @@ func TestAccVPCEndpoint_resourceConfigurationPrivateDNSOptions(t *testing.T) {
 				},
 				Config: testAccVPCEndpointConfig_resourceConfigurationPrivateDNSDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Resource"),
@@ -952,7 +953,7 @@ func TestAccVPCEndpoint_resourceConfigurationPrivateDNSOptions(t *testing.T) {
 				},
 				Config: testAccVPCEndpointConfig_resourceConfigurationPrivateDNS(rName, "SPECIFIED_DOMAINS_ONLY", []string{"example1.com", "example2.com"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
@@ -1153,7 +1154,7 @@ func TestAccVPCEndpoint_serviceNetworkPrivateDNSOptions(t *testing.T) {
 				},
 				Config: testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptionsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "ServiceNetwork"),
@@ -1169,7 +1170,7 @@ func TestAccVPCEndpoint_serviceNetworkPrivateDNSOptions(t *testing.T) {
 				},
 				Config: testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptions(rName, "SPECIFIED_DOMAINS_ONLY", []string{"example1.com", "example2.com"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
@@ -1632,7 +1633,7 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1641,7 +1642,7 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 				),
@@ -1654,7 +1655,7 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 				),
@@ -1667,7 +1668,7 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 			{
 				Config: testAccVPCEndpointConfig_interfacePrivateDNS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 				),
