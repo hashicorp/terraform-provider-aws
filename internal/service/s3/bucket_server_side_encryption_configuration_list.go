@@ -43,7 +43,8 @@ func (l *listResourceBucketServerSideEncryptionConfiguration) List(ctx context.C
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 Bucket Server Side Encryption Configuration")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		tflog.Info(ctx, "Listing General Purpose Buckets")
 		gpConn := l.Meta().S3Client(ctx)

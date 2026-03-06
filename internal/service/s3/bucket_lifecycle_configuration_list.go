@@ -42,6 +42,8 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 		}
 	}
 
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		tflog.Info(ctx, "Listing General Purpose Buckets")
 		gpConn := l.Meta().S3Client(ctx)

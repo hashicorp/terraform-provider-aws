@@ -44,7 +44,8 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 		}
 	}
 
-	tflog.Info(ctx, "Listing S3 Bucket Policy")
+	tflog.Info(ctx, "Listing Resources")
+
 	stream.Results = func(yield func(list.ListResult) bool) {
 		tflog.Info(ctx, "Listing General Purpose Buckets")
 		gpConn := l.Meta().S3Client(ctx)
