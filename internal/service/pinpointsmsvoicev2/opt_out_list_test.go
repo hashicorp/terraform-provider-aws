@@ -68,8 +68,9 @@ func TestAccPinpointSMSVoiceV2OptOutList_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckOptOutList(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy: testAccCheckOptOutListDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptOutListConfig_basic(rName),
@@ -94,8 +95,9 @@ func TestAccPinpointSMSVoiceV2OptOutList_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckOptOutList(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
-		CheckDestroy: testAccCheckOptOutListDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptOutListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOptOutListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
