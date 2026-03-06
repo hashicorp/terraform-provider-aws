@@ -389,7 +389,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("view_expanded_text", table.ViewExpandedText)
 
 	inputGPI := glue.GetPartitionIndexesInput{
-		CatalogId:    aws.String(catalogID),
+		CatalogId:    table.CatalogId,
 		DatabaseName: aws.String(dbName),
 		TableName:    aws.String(name),
 	}

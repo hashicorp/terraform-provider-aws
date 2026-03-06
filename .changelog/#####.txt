@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors
+```
+
+```release-note:bug
+data-source/aws_glue_catalog_table: Use the table's catalog ID when reading partition indexes, fixing `EntityNotFoundException` errors
+```

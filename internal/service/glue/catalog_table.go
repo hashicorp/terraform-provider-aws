@@ -483,7 +483,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("view_expanded_text", table.ViewExpandedText)
 
 	input := glue.GetPartitionIndexesInput{
-		CatalogId:    aws.String(catalogID),
+		CatalogId:    table.CatalogId,
 		DatabaseName: aws.String(dbName),
 		TableName:    aws.String(name),
 	}
