@@ -316,6 +316,6 @@ resource "aws_bedrockagentcore_memory" "test" {
 `, rName))
 }
 
-func randomMemoryName() string {
+func randomMemoryName(t *testing.T) string {
 	return strings.ReplaceAll(fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10)), "-", "_")
 }
