@@ -198,10 +198,15 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### view_definition
 
-* `representations` - (Optional) A list of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations) below.
-* `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
 * `definer` - (Optional) The definer of a view in SQL.
+* `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
+* `last_refresh_type` - (Optional) Type of the materialized view's last refresh. Valid values: `Full`, `Incremental`.
+* `refresh_seconds` - (Optional) Auto refresh interval in seconds for the materialized view.
+* `representations` - (Optional) A list of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations) below.
+* `sub_object_version_ids` - (Optional) List of the Apache Iceberg table versions referenced by the materialized view.
 * `sub_objects` - (Optional) A list of base table ARNs that make up the view.
+* `view_version_id` - (Optional) ID value that identifies this view's version. For materialized views, the version ID is the Apache Iceberg table's snapshot ID.
+* `view_version_token` - (Optional) Version ID of the Apache Iceberg table.
 
 #### representations
 

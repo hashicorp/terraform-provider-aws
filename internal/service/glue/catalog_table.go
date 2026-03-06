@@ -391,16 +391,6 @@ func resourceCatalogTable() *schema.Resource {
 					},
 				},
 			},
-			"view_expanded_text": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 409600),
-			},
-			"view_original_text": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 409600),
-			},
 			"view_definition": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -477,6 +467,16 @@ func resourceCatalogTable() *schema.Resource {
 						},
 					},
 				},
+			},
+			"view_expanded_text": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 409600),
+			},
+			"view_original_text": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 409600),
 			},
 		},
 	}
@@ -1264,15 +1264,33 @@ func expandViewDefinitionInput(tfMap map[string]any) *awstypes.ViewDefinitionInp
 		apiObject.IsProtected = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["last_refresh_type"].(string); ok && v != "" {
+		apiObject.LastRefreshType = awstypes.LastRefreshType(v)
+	}
+
+	if v, ok := tfMap["refresh_seconds"].(int); ok && v != 0 {
+		apiObject.RefreshSeconds = aws.Int64(int64(v))
+	}
+
 	if v, ok := tfMap["representations"].([]any); ok && len(v) > 0 {
 		apiObject.Representations = expandViewRepresentationInputs(v)
+	}
+
+	if v, ok := tfMap["sub_object_version_ids"].([]any); ok && len(v) > 0 {
+		apiObject.SubObjectVersionIds = flex.ExpandInt64ValueList(v)
 	}
 
 	if v, ok := tfMap["sub_objects"].([]any); ok && len(v) > 0 {
 		apiObject.SubObjects = flex.ExpandStringValueList(v)
 	}
 
-	// TODO
+	if v, ok := tfMap["view_version_id"].(int); ok && v != 0 {
+		apiObject.ViewVersionId = int64(v)
+	}
+
+	if v, ok := tfMap["view_version_token"].(string); ok && v != "" {
+		apiObject.ViewVersionToken = aws.String(v)
+	}
 
 	return apiObject
 }
