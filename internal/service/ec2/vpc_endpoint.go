@@ -148,7 +148,6 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
@@ -239,7 +238,16 @@ func resourceVPCEndpoint() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
+		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+			if diff.HasChange("private_dns_enabled") {
+				if v := diff.Get("vpc_endpoint_type").(string); v != string(awstypes.VpcEndpointTypeInterface) {
+					if err := diff.ForceNew("private_dns_enabled"); err != nil {
+						return fmt.Errorf("error setting ForceNew on private_dns_enabled when vpc_endpoint_type is not interface: %w", err)
+					}
+				}
+			}
+			return nil
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
