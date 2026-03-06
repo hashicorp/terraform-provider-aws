@@ -35,7 +35,7 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTableName, "aws_glue_catalog_table.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_glue_catalog_database.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName+"i"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", "2"),
 				),
 			},
@@ -126,11 +126,11 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 func testAccPartitionIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %[1]q
+  name = "%[1]sd"
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name               = %[1]q
+  name               = "%[1]st"
   database_name      = aws_glue_catalog_database.test.name
   owner              = "my_owner"
   retention          = 1
@@ -215,7 +215,7 @@ resource "aws_glue_partition_index" "test" {
   table_name    = aws_glue_catalog_table.test.name
 
   partition_index {
-    index_name = %[1]q
+    index_name = "%[1]si"
     keys       = ["my_column_1", "my_column_2"]
   }
 }

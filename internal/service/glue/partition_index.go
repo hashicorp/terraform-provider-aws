@@ -196,7 +196,7 @@ func partitionIndexCreateResourceID(catalogID, dbName, tableName, indexName stri
 func partitionIndexParseResourceID(id string) (string, string, string, string, error) {
 	parts := strings.SplitN(id, partitionIndexResourceIDSeparator, 4)
 
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
 		return "", "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog-id%[2]sdatabase-name%[2]stable-name%[2]sindex-name", id, partitionIndexResourceIDSeparator)
 	}
 
