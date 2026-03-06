@@ -198,11 +198,20 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting versioning_configuration: %s", err)
+
+	if err := resourceBucketVersioningFlatten(ctx, output, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func resourceBucketVersioningFlatten(_ context.Context, bucketVersioning *s3.GetBucketVersioningOutput, d *schema.ResourceData) error {
+	if err := d.Set("versioning_configuration", flattenVersioning(bucketVersioning)); err != nil {
+		return fmt.Errorf("setting versioning_configuration: %w", err)
+	}
+
+	return nil
 }
 
 func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
