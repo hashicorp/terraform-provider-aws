@@ -727,6 +727,34 @@ func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogTable_viewDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_glue_catalog_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCatalogTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogTableConfig_viewDefinition(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "view_definition.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCatalogTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
@@ -1478,4 +1506,48 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 `, rName, columnComment)
+}
+
+func testAccCatalogTableConfig_viewDefinition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+  table_type    = "VIRTUAL_VIEW"
+
+  storage_descriptor {
+    parameters = {
+      param = "param_val"
+    }
+
+    columns {
+      name    = "my_column_1"
+      type    = "date"
+      comment = "my_column1_comment"
+    }
+
+    columns {
+      name    = "my_column_2"
+      type    = "timestamp"
+      comment = "my_column2_comment"
+    }
+  }
+
+  view_definition {
+    last_refresh_type = "INCREMENTAL"
+    refresh_seconds   = 600
+
+    representations {
+      dialect            = "SPARK"
+      dialect_version    = "1.0"
+      view_original_text = "view_original_text"
+      view_expanded_text = "view_expanded_text"
+    }
+  }
+}
+`, rName)
 }

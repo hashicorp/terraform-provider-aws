@@ -13,10 +13,12 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -394,13 +396,16 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		TableName:    aws.String(name),
 	}
 	partitionIndexes, err := findPartitionIndexes(ctx, conn, &inputGPI)
-
-	if err != nil {
+	switch {
+	// e.g. "InvalidInputException: Operation not supported on Multi Dialect Views".
+	case errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Operation not supported"):
+		d.Set("partition_index", nil)
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
-	}
-
-	if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
+	default:
+		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
+		}
 	}
 
 	return diags

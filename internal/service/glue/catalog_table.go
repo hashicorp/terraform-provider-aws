@@ -400,10 +400,12 @@ func resourceCatalogTable() *schema.Resource {
 						"definer": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"is_protected": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"last_refresh_type": {
 							Type:             schema.TypeString,
@@ -573,13 +575,16 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		TableName:    aws.String(name),
 	}
 	partitionIndexes, err := findPartitionIndexes(ctx, conn, &input)
-
-	if err != nil {
+	switch {
+	// e.g. "InvalidInputException: Operation not supported on Multi Dialect Views".
+	case errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Operation not supported"):
+		d.Set("partition_index", nil)
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
-	}
-
-	if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
+	default:
+		if err := d.Set("partition_index", flattenPartitionIndexDescriptors(partitionIndexes)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
+		}
 	}
 
 	return diags
@@ -1267,7 +1272,7 @@ func expandViewDefinitionInput(tfMap map[string]any) *awstypes.ViewDefinitionInp
 		apiObject.Definer = aws.String(v)
 	}
 
-	if v, ok := tfMap["is_protected"].(bool); ok {
+	if v, ok := tfMap["is_protected"].(bool); ok && v {
 		apiObject.IsProtected = aws.Bool(v)
 	}
 
@@ -1396,10 +1401,6 @@ func flattenViewRepresentation(apiObject awstypes.ViewRepresentation) map[string
 
 	if v := aws.ToString(apiObject.DialectVersion); v != "" {
 		tfMap["dialect_version"] = v
-	}
-
-	if v := apiObject.IsStale; v != nil {
-		tfMap["is_stale"] = aws.ToBool(v)
 	}
 
 	if v := aws.ToString(apiObject.ValidationConnection); v != "" {
