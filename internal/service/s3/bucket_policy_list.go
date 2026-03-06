@@ -95,7 +95,7 @@ func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRe
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
+			// A Bucket Policy is optionally associated with a Bucket (1:0..1)
 			// So always try to read it to see if it is present.
 			tflog.Info(ctx, "Reading S3 Bucket Policy")
 			policy, err := findBucketPolicy(ctx, conn, bucketName)
