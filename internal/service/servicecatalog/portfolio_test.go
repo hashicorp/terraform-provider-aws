@@ -135,3 +135,7 @@ resource "aws_servicecatalog_portfolio" "test" {
 }
 `, name)
 }
+
+func randomPortfolioName(t *testing.T) string {
+	return acctest.RandString(t, 5)
+}
