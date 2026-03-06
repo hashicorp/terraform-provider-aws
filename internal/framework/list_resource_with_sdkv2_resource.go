@@ -141,7 +141,7 @@ func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
 
 // TODO modify to accept func() as parameter
 // will allow to use before interceptors as well
-func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, rd *schema.ResourceData, result *list.ListResult) {
 	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, includeResource, rd); err.HasError() {
 		result.Diagnostics.Append(err...)
 		return

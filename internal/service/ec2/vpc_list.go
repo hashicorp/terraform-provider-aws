@@ -177,7 +177,7 @@ func (l *vpcListResource) List(ctx context.Context, request list.ListRequest, st
 				result.DisplayName = aws.ToString(vpc.VpcId)
 			}
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
