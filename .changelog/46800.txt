@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc_endpoint: Allow in-place update of `private_dns_enabled` when `vpc_endpoint_type` is `Interface`
+```
