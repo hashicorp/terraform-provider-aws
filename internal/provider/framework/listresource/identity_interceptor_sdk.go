@@ -26,7 +26,7 @@ func (r identityInterceptorSDK) Read(ctx context.Context, params InterceptorPara
 
 	switch params.When {
 	case After:
-		if err := r.readAfter(ctx, params); err != nil {
+		if err := r.populateSDKIdentity(ctx, params); err != nil {
 			diags.Append(diag.NewErrorDiagnostic(
 				"Error Listing Remote Resources",
 				"An unexpected error occurred setting resource identity. "+
@@ -36,12 +36,29 @@ func (r identityInterceptorSDK) Read(ctx context.Context, params InterceptorPara
 			))
 			return diags
 		}
+
+		tfTypeIdentity, err := params.ResourceData.TfTypeIdentityState()
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Error Listing Remote Resources",
+				"An unexpected error occurred converting identity state. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					"Error: "+err.Error(),
+			))
+			return diags
+		}
+
+		diags.Append(params.Result.Identity.Set(ctx, *tfTypeIdentity)...)
+		if diags.HasError() {
+			return diags
+		}
 	}
 
 	return diags
 }
 
-func (r identityInterceptorSDK) readAfter(ctx context.Context, params InterceptorParamsSDK) error {
+func (r identityInterceptorSDK) populateSDKIdentity(ctx context.Context, params InterceptorParamsSDK) error {
 	identity, err := params.ResourceData.Identity()
 	if err != nil {
 		return err

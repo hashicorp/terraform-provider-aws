@@ -148,23 +148,6 @@ func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient
 		return
 	}
 
-	tfTypeIdentity, err := rd.TfTypeIdentityState()
-	if err != nil {
-		result.Diagnostics.Append(diag.NewErrorDiagnostic(
-			"Error Listing Remote Resources",
-			"An unexpected error occurred converting identity state. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				"Error: "+err.Error(),
-		))
-		return
-	}
-
-	result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
-	if result.Diagnostics.HasError() {
-		return
-	}
-
 	if includeResource {
 		if !tfunique.IsHandleNil(l.regionSpec) && l.regionSpec.Value().IsOverrideEnabled {
 			if err := rd.Set(names.AttrRegion, awsClient.Region(ctx)); err != nil {
