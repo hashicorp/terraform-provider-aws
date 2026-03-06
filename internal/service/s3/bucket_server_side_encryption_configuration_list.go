@@ -25,14 +25,10 @@ import (
 
 // @SDKListResource("aws_s3_bucket_server_side_encryption_configuration")
 func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResourceBaseBucketProperty{}
-	l.SetResourceSchema(resourceBucketServerSideEncryptionConfiguration())
-	l.handler = bucketServerSideEncryptionConfigurationListHandler{
-		baseBucketPropertyListHandlerSDK{
-			lister: &l,
-		},
-	}
-	return &l
+	return newListResourceBaseBucketProperty(
+		resourceBucketServerSideEncryptionConfiguration(),
+		newBucketServerSideEncryptionConfigurationListHandler,
+	)
 }
 
 type listBucketServerSideEncryptionConfigurationModel struct {
@@ -40,6 +36,12 @@ type listBucketServerSideEncryptionConfigurationModel struct {
 }
 
 var _ bucketPropertyListHandlerSDK = bucketServerSideEncryptionConfigurationListHandler{}
+
+func newBucketServerSideEncryptionConfigurationListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+	return bucketServerSideEncryptionConfigurationListHandler{
+		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
+	}
+}
 
 type bucketServerSideEncryptionConfigurationListHandler struct {
 	baseBucketPropertyListHandlerSDK

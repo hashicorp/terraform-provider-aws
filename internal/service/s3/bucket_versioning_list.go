@@ -25,14 +25,10 @@ import (
 
 // @SDKListResource("aws_s3_bucket_versioning")
 func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
-	l := listResourceBaseBucketProperty{}
-	l.SetResourceSchema(resourceBucketVersioning())
-	l.handler = bucketVersioningListHandler{
-		baseBucketPropertyListHandlerSDK{
-			lister: &l,
-		},
-	}
-	return &l
+	return newListResourceBaseBucketProperty(
+		resourceBucketVersioning(),
+		newBucketVersioningListHandler,
+	)
 }
 
 type listBucketVersioningModel struct {
@@ -40,6 +36,12 @@ type listBucketVersioningModel struct {
 }
 
 var _ bucketPropertyListHandlerSDK = bucketVersioningListHandler{}
+
+func newBucketVersioningListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
+	return bucketVersioningListHandler{
+		baseBucketPropertyListHandlerSDK: newBaseBucketPropertyListHandlerSDK(lister),
+	}
+}
 
 type bucketVersioningListHandler struct {
 	baseBucketPropertyListHandlerSDK

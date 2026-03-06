@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type bucketPropertyListHandlerSDK interface {
@@ -25,6 +26,14 @@ type bucketPropertyListHandlerSDK interface {
 }
 
 var _ list.ListResource = &listResourceBaseBucketProperty{}
+
+func newListResourceBaseBucketProperty(resource *schema.Resource, f func(listResourceSDK) bucketPropertyListHandlerSDK) inttypes.ListResourceForSDK {
+	l := listResourceBaseBucketProperty{}
+	l.SetResourceSchema(resource)
+	l.handler = f(&l)
+	return &l
+
+}
 
 type listResourceBaseBucketProperty struct {
 	framework.ListResourceWithSDKv2Resource
@@ -88,6 +97,12 @@ func parseQuery[T any](ctx context.Context, config tfsdk.Config) (diags diag.Dia
 
 type baseBucketPropertyListHandlerSDK struct {
 	lister listResourceSDK
+}
+
+func newBaseBucketPropertyListHandlerSDK(lister listResourceSDK) baseBucketPropertyListHandlerSDK {
+	return baseBucketPropertyListHandlerSDK{
+		lister: lister,
+	}
 }
 
 func (l baseBucketPropertyListHandlerSDK) Meta() *conns.AWSClient {
