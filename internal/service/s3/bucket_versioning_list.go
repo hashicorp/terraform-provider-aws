@@ -31,10 +31,6 @@ func newBucketVersioningResourceAsListResource() inttypes.ListResourceForSDK {
 	)
 }
 
-type listBucketVersioningModel struct {
-	framework.WithRegionModel
-}
-
 var _ bucketPropertyListHandlerSDK = bucketVersioningListHandler{}
 
 func newBucketVersioningListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
@@ -105,4 +101,8 @@ func (l bucketVersioningListHandler) list(ctx context.Context, request list.List
 			}
 		}
 	}
+}
+
+type listBucketVersioningModel struct {
+	framework.WithRegionModel
 }

@@ -31,10 +31,6 @@ func newBucketServerSideEncryptionConfigurationResourceAsListResource() inttypes
 	)
 }
 
-type listBucketServerSideEncryptionConfigurationModel struct {
-	framework.WithRegionModel
-}
-
 var _ bucketPropertyListHandlerSDK = bucketServerSideEncryptionConfigurationListHandler{}
 
 func newBucketServerSideEncryptionConfigurationListHandler(lister listResourceSDK) bucketPropertyListHandlerSDK {
@@ -105,4 +101,8 @@ func (l bucketServerSideEncryptionConfigurationListHandler) list(ctx context.Con
 			}
 		}
 	}
+}
+
+type listBucketServerSideEncryptionConfigurationModel struct {
+	framework.WithRegionModel
 }
