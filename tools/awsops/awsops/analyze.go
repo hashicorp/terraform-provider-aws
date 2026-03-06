@@ -4,6 +4,7 @@ package awsops
 
 import (
 	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
@@ -72,48 +73,67 @@ func listServiceDirs(serviceDir string) ([]string, error) {
 	return dirs, nil
 }
 
+// parsePackageFiles parses all non-test .go files in a directory and returns
+// them as a map of filename to AST file.
+func parsePackageFiles(fset *token.FileSet, dir string) (map[string]*ast.File, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	files := make(map[string]*ast.File)
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		fullPath := filepath.Join(dir, name)
+		f, err := parser.ParseFile(fset, fullPath, nil, parser.ParseComments)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %s: %w", fullPath, err)
+		}
+		files[fullPath] = f
+	}
+
+	return files, nil
+}
+
 func analyzePackage(dir string) (map[string]ResourceOps, error) {
 	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, dir, func(fi os.FileInfo) bool {
-		return !strings.HasSuffix(fi.Name(), "_test.go")
-	}, parser.ParseComments)
+	files, err := parsePackageFiles(fset, dir)
 	if err != nil {
 		return nil, fmt.Errorf("parsing directory %s: %w", dir, err)
 	}
 
 	results := make(map[string]ResourceOps)
 
-	for _, pkg := range pkgs {
-		resources := discoverResources(pkg, dir)
-		if len(resources) == 0 {
-			continue
-		}
+	resources := discoverResources(files, dir)
+	if len(resources) == 0 {
+		return results, nil
+	}
 
-		// Build function/method index for the package.
-		funcIndex := buildFuncIndex(pkg)
+	funcIndex := buildFuncIndex(files)
+	importIndex := buildImportIndex(files)
+	funcFileIndex := buildFuncFileIndex(files)
 
-		// Build import index to identify AWS SDK packages.
-		importIndex := buildImportIndex(pkg)
+	for _, res := range resources {
+		ops := ResourceOps{}
+		crudFuncs := resolveCRUDFunctions(res, files, funcIndex)
 
-		for _, res := range resources {
-			ops := ResourceOps{}
-			crudFuncs := resolveCRUDFunctions(res, pkg, funcIndex)
-
-			for method, funcNode := range crudFuncs {
-				awsOps := extractAWSOperations(funcNode, funcIndex, importIndex, make(map[string]bool))
-				switch method {
-				case "create":
-					ops.Create = awsOps
-				case "read":
-					ops.Read = awsOps
-				case "update":
-					ops.Update = awsOps
-				case "delete":
-					ops.Delete = awsOps
-				}
+		for method, funcNode := range crudFuncs {
+			awsOps := extractAWSOperations(funcNode, funcIndex, importIndex, funcFileIndex, make(map[string]bool))
+			switch method {
+			case "create":
+				ops.Create = awsOps
+			case "read":
+				ops.Read = awsOps
+			case "update":
+				ops.Update = awsOps
+			case "delete":
+				ops.Delete = awsOps
 			}
-			results[res.Name] = ops
 		}
+		results[res.Name] = ops
 	}
 
 	return results, nil

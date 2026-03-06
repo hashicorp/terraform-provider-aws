@@ -4,19 +4,13 @@ import (
 	"go/ast"
 )
 
-// funcEntry represents a function or method in the package index.
-type funcEntry struct {
-	Node     *ast.FuncDecl
-	Receiver string // empty for standalone functions
-}
-
 // buildFuncIndex creates a map of function/method names to their AST nodes.
 // For methods, the key is "ReceiverType.MethodName".
 // For standalone functions, the key is the function name.
-func buildFuncIndex(pkg *ast.Package) map[string]*ast.FuncDecl {
+func buildFuncIndex(files map[string]*ast.File) map[string]*ast.FuncDecl {
 	index := make(map[string]*ast.FuncDecl)
 
-	for _, file := range pkg.Files {
+	for _, file := range files {
 		for _, decl := range file.Decls {
 			fn, ok := decl.(*ast.FuncDecl)
 			if !ok {
@@ -30,6 +24,23 @@ func buildFuncIndex(pkg *ast.Package) map[string]*ast.FuncDecl {
 			} else {
 				index[fn.Name.Name] = fn
 			}
+		}
+	}
+
+	return index
+}
+
+// buildFuncFileIndex creates a map from function key to the filename it was declared in.
+func buildFuncFileIndex(files map[string]*ast.File) map[string]string {
+	index := make(map[string]string)
+
+	for filename, file := range files {
+		for _, decl := range file.Decls {
+			fn, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			index[funcKey(fn)] = filename
 		}
 	}
 
@@ -54,10 +65,10 @@ func receiverTypeName(expr ast.Expr) string {
 
 // buildImportIndex maps import aliases to import paths for all files in the package.
 // The key is the local name (alias or last path component), the value is the import path.
-func buildImportIndex(pkg *ast.Package) map[string]map[string]string {
+func buildImportIndex(files map[string]*ast.File) map[string]map[string]string {
 	index := make(map[string]map[string]string)
 
-	for filename, file := range pkg.Files {
+	for filename, file := range files {
 		fileImports := make(map[string]string)
 		for _, imp := range file.Imports {
 			path := imp.Path.Value

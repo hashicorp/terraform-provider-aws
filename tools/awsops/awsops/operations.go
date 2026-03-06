@@ -9,7 +9,7 @@ const awsSDKv2Prefix = "github.com/aws/aws-sdk-go-v2/service/"
 
 // extractAWSOperations walks a function's AST, following intra-package calls,
 // and collects all AWS SDK v2 API operation names.
-func extractAWSOperations(fn *ast.FuncDecl, funcIndex map[string]*ast.FuncDecl, importIndex map[string]map[string]string, visited map[string]bool) []string {
+func extractAWSOperations(fn *ast.FuncDecl, funcIndex map[string]*ast.FuncDecl, importIndex map[string]map[string]string, funcFileIndex map[string]string, visited map[string]bool) []string {
 	if fn == nil || fn.Body == nil {
 		return nil
 	}
@@ -21,7 +21,7 @@ func extractAWSOperations(fn *ast.FuncDecl, funcIndex map[string]*ast.FuncDecl, 
 	visited[key] = true
 
 	// Determine which file this function lives in for import resolution.
-	filename := findFuncFile(fn, importIndex)
+	filename := funcFileIndex[key]
 	fileImports := importIndex[filename]
 
 	var ops []string
@@ -62,7 +62,7 @@ func extractAWSOperations(fn *ast.FuncDecl, funcIndex map[string]*ast.FuncDecl, 
 				// Follow method calls on package-local types.
 				for fname, f := range funcIndex {
 					if strings.HasSuffix(fname, "."+methodName) && f != fn {
-						childOps := extractAWSOperations(f, funcIndex, importIndex, visited)
+						childOps := extractAWSOperations(f, funcIndex, importIndex, funcFileIndex, visited)
 						for _, op := range childOps {
 							if !seen[op] {
 								seen[op] = true
@@ -78,7 +78,7 @@ func extractAWSOperations(fn *ast.FuncDecl, funcIndex map[string]*ast.FuncDecl, 
 		// Check for standalone function calls: funcName(args...)
 		if ident, ok := call.Fun.(*ast.Ident); ok {
 			if f, ok := funcIndex[ident.Name]; ok {
-				childOps := extractAWSOperations(f, funcIndex, importIndex, visited)
+				childOps := extractAWSOperations(f, funcIndex, importIndex, funcFileIndex, visited)
 				for _, op := range childOps {
 					if !seen[op] {
 						seen[op] = true
@@ -245,17 +245,4 @@ func funcKey(fn *ast.FuncDecl) string {
 		return recvType + "." + fn.Name.Name
 	}
 	return fn.Name.Name
-}
-
-// findFuncFile determines which file a function belongs to using token positions.
-func findFuncFile(fn *ast.FuncDecl, importIndex map[string]map[string]string) string {
-	// The import index is keyed by filename. We need to match the function's
-	// position to a file. Since we don't have the fset here, we use the
-	// fact that each file in a package has a unique set of declarations.
-	// For simplicity, return the first file — in single-file test fixtures this works,
-	// and for real packages we pass the fset through analyze.
-	for filename := range importIndex {
-		return filename
-	}
-	return ""
 }

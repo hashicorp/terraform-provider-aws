@@ -6,10 +6,10 @@ import (
 )
 
 // discoverResources scans package comments for @SDKResource and @FrameworkResource annotations.
-func discoverResources(pkg *ast.Package, dir string) []resourceInfo {
+func discoverResources(files map[string]*ast.File, dir string) []resourceInfo {
 	var resources []resourceInfo
 
-	for filename, file := range pkg.Files {
+	for filename, file := range files {
 		for _, cg := range file.Comments {
 			text := cg.Text()
 			for _, line := range strings.Split(text, "\n") {
@@ -19,7 +19,7 @@ func discoverResources(pkg *ast.Package, dir string) []resourceInfo {
 						Name:      m[1],
 						Type:      "sdk",
 						File:      filename,
-						Package:   pkg.Name,
+						Package:   file.Name.Name,
 						Directory: dir,
 					})
 				}
@@ -28,7 +28,7 @@ func discoverResources(pkg *ast.Package, dir string) []resourceInfo {
 						Name:      m[1],
 						Type:      "framework",
 						File:      filename,
-						Package:   pkg.Name,
+						Package:   file.Name.Name,
 						Directory: dir,
 					})
 				}

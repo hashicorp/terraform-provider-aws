@@ -5,18 +5,18 @@ import (
 )
 
 // resolveCRUDFunctions returns a map of CRUD method names to their AST function nodes.
-func resolveCRUDFunctions(res resourceInfo, pkg *ast.Package, funcIndex map[string]*ast.FuncDecl) map[string]*ast.FuncDecl {
+func resolveCRUDFunctions(res resourceInfo, files map[string]*ast.File, funcIndex map[string]*ast.FuncDecl) map[string]*ast.FuncDecl {
 	if res.Type == "sdk" {
-		return resolveSDKCRUD(res, pkg, funcIndex)
+		return resolveSDKCRUD(res, files, funcIndex)
 	}
-	return resolveFrameworkCRUD(res, pkg, funcIndex)
+	return resolveFrameworkCRUD(res, files, funcIndex)
 }
 
 // resolveSDKCRUD finds CRUD functions for SDK-based resources by looking at
 // the schema.Resource struct literal in the same file as the annotation.
-func resolveSDKCRUD(res resourceInfo, pkg *ast.Package, funcIndex map[string]*ast.FuncDecl) map[string]*ast.FuncDecl {
+func resolveSDKCRUD(res resourceInfo, files map[string]*ast.File, funcIndex map[string]*ast.FuncDecl) map[string]*ast.FuncDecl {
 	result := make(map[string]*ast.FuncDecl)
-	file := pkg.Files[res.File]
+	file := files[res.File]
 	if file == nil {
 		return result
 	}
@@ -70,9 +70,9 @@ func resolveSDKCRUD(res resourceInfo, pkg *ast.Package, funcIndex map[string]*as
 // resolveFrameworkCRUD finds CRUD methods for Framework-based resources.
 // It identifies the resource struct type from the constructor function that
 // appears near the annotation, then looks for Create/Read/Update/Delete methods.
-func resolveFrameworkCRUD(res resourceInfo, pkg *ast.Package, funcIndex map[string]*ast.FuncDecl) map[string]*ast.FuncDecl {
+func resolveFrameworkCRUD(res resourceInfo, files map[string]*ast.File, funcIndex map[string]*ast.FuncDecl) map[string]*ast.FuncDecl {
 	result := make(map[string]*ast.FuncDecl)
-	file := pkg.Files[res.File]
+	file := files[res.File]
 	if file == nil {
 		return result
 	}
