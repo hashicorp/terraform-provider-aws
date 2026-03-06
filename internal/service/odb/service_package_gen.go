@@ -142,6 +142,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newResourceAssociateDisassociateIAMRole,
+			TypeName: "aws_odb_associate_disassociate_iam_role",
+			Name:     "Associate Disassociate IAM Role",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceCloudAutonomousVmCluster,
 			TypeName: "aws_odb_cloud_autonomous_vm_cluster",
 			Name:     "Cloud Autonomous Vm Cluster",
