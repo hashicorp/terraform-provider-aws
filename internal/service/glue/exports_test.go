@@ -14,6 +14,7 @@ var (
 	ResourceDataCatalogEncryptionSettings = resourceDataCatalogEncryptionSettings
 	ResourceDataQualityRuleset            = resourceDataQualityRuleset
 	ResourceDevEndpoint                   = resourceDevEndpoint
+	ResourceIntegrationTableProperties    = newIntegrationTablePropertiesResource
 	ResourceJob                           = resourceJob
 	ResourceMLTransform                   = resourceMLTransform
 	ResourcePartition                     = resourcePartition
@@ -26,19 +27,20 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
-	FindCatalogTableOptimizer    = findCatalogTableOptimizer
-	FindClassifierByName         = findClassifierByName
-	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
-	FindCrawlerByName            = findCrawlerByName
-	FindDatabaseByName           = findDatabaseByName
-	FindDataQualityRulesetByName = findDataQualityRulesetByName
-	FindDevEndpointByName        = findDevEndpointByName
-	FindJobByName                = findJobByName
-	FindPartitionByValues        = findPartitionByValues
-	FindPartitionIndexByName     = findPartitionIndexByName
-	FindRegistryByID             = findRegistryByID
-	FindResourcePolicy           = findResourcePolicy
-	FindSchemaByID               = findSchemaByID
-	FindTableByName              = findTableByName
-	FindTriggerByName            = findTriggerByName
+	FindCatalogTableOptimizer      = findCatalogTableOptimizer
+	FindClassifierByName           = findClassifierByName
+	FindConnectionByTwoPartKey     = findConnectionByTwoPartKey
+	FindCrawlerByName              = findCrawlerByName
+	FindDatabaseByName             = findDatabaseByName
+	FindDataQualityRulesetByName   = findDataQualityRulesetByName
+	FindDevEndpointByName          = findDevEndpointByName
+	FindJobByName                  = findJobByName
+	FindPartitionByValues          = findPartitionByValues
+	FindPartitionIndexByName       = findPartitionIndexByName
+	FindRegistryByID               = findRegistryByID
+	FindResourcePolicy             = findResourcePolicy
+	FindSchemaByID                 = findSchemaByID
+	FindTableByName                = findTableByName
+	FindTriggerByName              = findTriggerByName
+	FindIntegrationTableProperties = findIntegrationTableProperties
 )
