@@ -225,8 +225,8 @@ func TestAccS3Bucket_List_regionOverride(t *testing.T) {
 					"region":         config.StringVariable(acctest.AlternateRegion()),
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
-					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_policy.test", identity1.Checks()),
-					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket_policy.test", identity2.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket.test", identity1.Checks()),
+					tfquerycheck.ExpectIdentityFunc("aws_s3_bucket.test", identity2.Checks()),
 				},
 			},
 		},
