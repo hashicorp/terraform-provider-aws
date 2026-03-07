@@ -25,6 +25,7 @@ import (
 
 // @SDKDataSource("aws_ram_resource_share", name="Resource Share")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,
