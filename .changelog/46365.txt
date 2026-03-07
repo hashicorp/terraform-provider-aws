@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_gamelift_container_group_definition
+```
+
+```release-note:new-resource
+aws_gamelift_container_fleet
+```

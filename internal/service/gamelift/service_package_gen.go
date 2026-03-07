@@ -53,6 +53,24 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  resourceContainerFleet,
+			TypeName: "aws_gamelift_container_fleet",
+			Name:     "Container Fleet",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  resourceContainerGroupDefinition,
+			TypeName: "aws_gamelift_container_group_definition",
+			Name:     "Container Group Definition",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceFleet,
 			TypeName: "aws_gamelift_fleet",
 			Name:     "Fleet",
