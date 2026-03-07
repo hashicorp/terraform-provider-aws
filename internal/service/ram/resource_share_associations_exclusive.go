@@ -33,6 +33,7 @@ import (
 
 // @FrameworkResource("aws_ram_resource_share_associations_exclusive", name="Resource Share Associations Exclusive")
 // @ArnIdentity("resource_share_arn")
+// @Testing(identityTest=false)
 func newResourceShareAssociationsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceShareAssociationsExclusiveResource{}, nil
 }

@@ -40,6 +40,7 @@ import (
 // @Tags(identifierAttribute="arn", resourceType="Permission")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="policy_template")
+// @Testing(identityTest=false)
 func newPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &permissionResource{}
 
