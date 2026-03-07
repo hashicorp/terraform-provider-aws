@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -100,9 +101,6 @@ func (r *topicResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"configs_actual": schema.StringAttribute{
 				// configs_actual is only for display purposes of all config on the topic, also outside 'configs'
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -157,16 +155,9 @@ func (r *topicResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	// Configs is base64encoded in the AWS API
-	if outFull.Configs != nil {
-		decodedConfigs, err := base64.StdEncoding.DecodeString(*outFull.Configs)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("failed to decode configs: %w", err), smerr.ID, plan.Name.String())
-			return
-		}
-
-		configsActual, _ := structure.NormalizeJsonString(string(decodedConfigs))
-		plan.ConfigsActual = types.StringValue(configsActual)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(outFull, &plan))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, outFull, &plan, flex.WithFieldNamePrefix("Topic")))
@@ -202,16 +193,9 @@ func (r *topicResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	// Configs is base64encoded in the AWS API
-	if out.Configs != nil {
-		decodedConfigs, err := base64.StdEncoding.DecodeString(*out.Configs)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("failed to decode configs: %w", err), smerr.ID, state.Name.String())
-			return
-		}
-
-		configsActual, _ := structure.NormalizeJsonString(string(decodedConfigs))
-		state.ConfigsActual = types.StringValue(configsActual)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(out, &state))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
@@ -235,7 +219,6 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	if diff.HasChanges() {
 		var input kafka.UpdateTopicInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Topic")))
@@ -250,9 +233,14 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
+		out, err := waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
+			return
+		}
+
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(out, &plan))
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -262,7 +250,6 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	if diff.HasChanges() {
 		var input kafka.UpdateTopicInput
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Topic"), flex.WithIgnoredFieldNamesAppend("PartitionCount")))
@@ -284,28 +271,16 @@ func (r *topicResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		_, err = waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
+		out, err := waitTopicUpdated(ctx, conn, plan.Name.ValueString(), plan.ClusterARN.ValueString(), updateTimeout)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 			return
 		}
-	}
 
-	out, err := findTopicByTwoPartKey(ctx, conn, state.Name.ValueString(), state.ClusterARN.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-
-	// Configs is base64encoded in the AWS API
-	if out.Configs != nil {
-		decodedConfigs, err := base64.StdEncoding.DecodeString(*out.Configs)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, fmt.Errorf("failed to decode configs: %w", err), smerr.ID, state.Name.String())
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flattenConfigsActual(out, &plan))
+		if resp.Diagnostics.HasError() {
 			return
 		}
-
-		plan.ConfigsActual = types.StringValue(string(decodedConfigs))
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -432,6 +407,28 @@ func findTopicByTwoPartKey(ctx context.Context, conn *kafka.Client, name string,
 	}
 
 	return out, nil
+}
+
+func flattenConfigsActual(out *kafka.DescribeTopicOutput, model *topicResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Configs is base64encoded in the AWS API
+	if out.Configs != nil {
+		decodedConfigs, err := base64.StdEncoding.DecodeString(*out.Configs)
+		if err != nil {
+			diags.AddError("failed to decode configs", err.Error())
+			return diags
+		}
+
+		configsActual, err := structure.NormalizeJsonString(string(decodedConfigs))
+		if err != nil {
+			diags.AddError("failed to normalize configs", err.Error())
+			return diags
+		}
+		model.ConfigsActual = types.StringValue(configsActual)
+	}
+
+	return diags
 }
 
 type topicResourceModel struct {

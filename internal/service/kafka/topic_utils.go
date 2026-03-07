@@ -73,7 +73,7 @@ func (m *topicConfigsDiffSuppress) PlanModifyString(ctx context.Context, req pla
 
 // removeComputedKeys removes keys from the old map that are not present in the new map.
 // This is used to filter out computed attributes that are not defined in the new configuration.
-func removeComputedKeys(old, new map[string]interface{}) map[string]interface{} {
+func removeComputedKeys(old, new map[string]any) map[string]any {
 	for k := range old {
 		if _, exists := new[k]; !exists {
 			delete(old, k)
@@ -207,7 +207,7 @@ func normalizeJSONString(jsonStr string) (string, error) {
 	// of StringSemanticEquals for examples.
 	dec.UseNumber()
 
-	var temp interface{}
+	var temp any
 	if err := dec.Decode(&temp); err != nil {
 		return "", err
 	}

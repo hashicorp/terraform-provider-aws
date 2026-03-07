@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,8 +24,8 @@ func TestAccKafkaTopic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var topic kafka.DescribeTopicOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_topic.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -69,8 +68,8 @@ func TestAccKafkaTopic_configs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var topic kafka.DescribeTopicOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	clusterName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clusterName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_topic.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
