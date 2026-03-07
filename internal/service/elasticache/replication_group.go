@@ -83,12 +83,28 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional:      true,
 				Sensitive:     true,
 				ValidateFunc:  validReplicationGroupAuthToken,
-				ConflictsWith: []string{"user_group_ids"},
+				ConflictsWith: []string{"user_group_ids", "auth_token_wo"},
+			},
+			"auth_token_wo": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				WriteOnly:     true,
+				Sensitive:     true,
+				ValidateFunc:  validReplicationGroupAuthToken,
+				ConflictsWith: []string{"user_group_ids", "auth_token"},
+				RequiredWith:  []string{"auth_token_wo_version"},
+			},
+			"auth_token_wo_version": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"auth_token_wo"},
 			},
 			"auth_token_update_strategy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
+				// FIXME: actually required with auth_token OR auth_token_wo but cannot handle mutually exclusive values
+				// RequiredWith:     []string{"auth_token", "auth_token_wo"},
 			},
 			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
@@ -436,7 +452,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"auth_token"},
+				ConflictsWith: []string{"auth_token", "auth_token_wo"},
 			},
 		},
 
@@ -527,6 +543,13 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:               getTagsIn(ctx),
 	}
 
+	// get write-only value from configuration
+	authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
 	if v, ok := d.GetOk("at_rest_encryption_enabled"); ok {
 		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 			input.AtRestEncryptionEnabled = aws.Bool(v)
@@ -535,6 +558,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("auth_token"); ok {
 		input.AuthToken = aws.String(v.(string))
+	}
+
+	if authTokenWO != "" {
+		input.AuthToken = aws.String(authTokenWO)
 	}
 
 	if v, ok := d.GetOk(names.AttrAutoMinorVersionUpgrade); ok {
@@ -1106,14 +1133,36 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			})
 		}
 
-		if d.HasChanges("auth_token", "auth_token_update_strategy") {
-			// AuthTokenUpdateStrategyTypeDelete only supported while transitioning to RBAC.
-			if awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)) != awstypes.AuthTokenUpdateStrategyTypeDelete {
-				authInput := elasticache.ModifyReplicationGroupInput{
+		if d.HasChanges("auth_token", "auth_token_wo_version", "auth_token_update_strategy") {
+			authTokenWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("auth_token_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+
+			var authInput elasticache.ModifyReplicationGroupInput
+
+			if authTokenWO != "" {
+				authInput = elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:        aws.Bool(true),
+					AuthToken:               aws.String(authTokenWO),
+					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
+					ReplicationGroupId:      aws.String(d.Id()),
+				}
+			} else {
+				authInput = elasticache.ModifyReplicationGroupInput{
 					ApplyImmediately:        aws.Bool(true),
 					AuthToken:               aws.String(d.Get("auth_token").(string)),
 					AuthTokenUpdateStrategy: awstypes.AuthTokenUpdateStrategyType(d.Get("auth_token_update_strategy").(string)),
 					ReplicationGroupId:      aws.String(d.Id()),
+				}
+			}
+
+			updateFuncs = append(updateFuncs, func() error {
+				_, err := conn.ModifyReplicationGroup(ctx, &authInput)
+				// modifying to match out of band operations may result in this error
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+					return nil
 				}
 
 				updateFuncs = append(updateFuncs, func() error {
