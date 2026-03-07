@@ -5225,6 +5225,122 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 	return output.Routes, err
 }
 
+func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) ([]awstypes.TransitGatewayMeteringPolicy, error) {
+	var output []awstypes.TransitGatewayMeteringPolicy
+
+	for {
+		page, err := conn.DescribeTransitGatewayMeteringPolicies(ctx, input)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayMeteringPolicies...)
+
+		if aws.ToString(page.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = page.NextToken
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMeteringPolicy(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) (*awstypes.TransitGatewayMeteringPolicy, error) {
+	output, err := findTransitGatewayMeteringPolicies(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayMeteringPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayMeteringPolicy, error) {
+	input := ec2.DescribeTransitGatewayMeteringPoliciesInput{
+		TransitGatewayMeteringPolicyIds: []string{id},
+	}
+
+	output, err := findTransitGatewayMeteringPolicy(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayMeteringPolicyStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(state),
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayMeteringPolicyId) != id {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMeteringPolicyEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayMeteringPolicyEntriesInput) ([]awstypes.TransitGatewayMeteringPolicyEntry, error) {
+	var output []awstypes.TransitGatewayMeteringPolicyEntry
+
+	for {
+		page, err := conn.GetTransitGatewayMeteringPolicyEntries(ctx, input)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayMeteringPolicyEntries...)
+
+		if aws.ToString(page.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = page.NextToken
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx context.Context, conn *ec2.Client, policyID, ruleNumber string) (*awstypes.TransitGatewayMeteringPolicyEntry, error) {
+	input := ec2.GetTransitGatewayMeteringPolicyEntriesInput{
+		TransitGatewayMeteringPolicyId: aws.String(policyID),
+	}
+
+	output, err := findTransitGatewayMeteringPolicyEntries(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range output {
+		if aws.ToString(entry.PolicyRuleNumber) == ruleNumber {
+			if state := entry.State; state == awstypes.TransitGatewayMeteringPolicyEntryStateDeleted {
+				return nil, &retry.NotFoundError{
+					Message: string(state),
+				}
+			}
+			return &entry, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
 func findTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*awstypes.TransitGatewayPolicyTable, error) {
 	output, err := findTransitGatewayPolicyTables(ctx, conn, input)
 

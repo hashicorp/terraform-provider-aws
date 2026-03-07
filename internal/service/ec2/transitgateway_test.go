@@ -112,6 +112,17 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"tags":             testAccTransitGatewayPeeringAttachmentAccepter_tags,
 			"differentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
 		},
+		"MeteringPolicy": {
+			acctest.CtBasic:        testAccTransitGatewayMeteringPolicy_basic,
+			acctest.CtDisappears:   testAccTransitGatewayMeteringPolicy_disappears,
+			"tags":                 testAccTransitGatewayMeteringPolicy_tags,
+			"middleboxAttachments": testAccTransitGatewayMeteringPolicy_middleboxAttachments,
+		},
+		"MeteringPolicyEntry": {
+			acctest.CtBasic:      testAccTransitGatewayMeteringPolicyEntry_basic,
+			acctest.CtDisappears: testAccTransitGatewayMeteringPolicyEntry_disappears,
+			"fullRule":           testAccTransitGatewayMeteringPolicyEntry_fullRule,
+		},
 		"PolicyTable": {
 			acctest.CtBasic:            testAccTransitGatewayPolicyTable_basic,
 			acctest.CtDisappears:       testAccTransitGatewayPolicyTable_disappears,
