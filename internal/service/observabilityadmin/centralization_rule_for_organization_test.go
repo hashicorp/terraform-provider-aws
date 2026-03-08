@@ -206,6 +206,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 								"logs_encryption_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
 								})}),
+								"log_group_name_configuration": knownvalue.ListSizeExact(0),
 							})}),
 							names.AttrRegion: knownvalue.StringExact(endpoints.EuWest1RegionID),
 						})}),
