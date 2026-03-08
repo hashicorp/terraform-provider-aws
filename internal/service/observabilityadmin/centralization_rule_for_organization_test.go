@@ -268,7 +268,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_destinationLogGr
 						tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
 					statecheck.ExpectKnownValue(resourceName,
 						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
-							AtMapKey("destination").AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
 							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
 							AtMapKey("log_group_name_configuration").AtSliceIndex(0).
 							AtMapKey("log_group_name_pattern"),
@@ -304,7 +304,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_destinationLogGr
 						tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
 					statecheck.ExpectKnownValue(resourceName,
 						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
-							AtMapKey("destination").AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
 							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
 							AtMapKey("log_group_name_configuration").AtSliceIndex(0).
 							AtMapKey("log_group_name_pattern"),
@@ -333,7 +333,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_destinationLogGr
 						tfknownvalue.RegionalARNExact("observabilityadmin", `organization-centralization-rule/`+rName)),
 					statecheck.ExpectKnownValue(resourceName,
 						tfjsonpath.New(names.AttrRule).AtSliceIndex(0).
-							AtMapKey("destination").AtSliceIndex(0).
+							AtMapKey(names.AttrDestination).AtSliceIndex(0).
 							AtMapKey("destination_logs_configuration").AtSliceIndex(0).
 							AtMapKey("log_group_name_configuration"),
 						knownvalue.ListSizeExact(0)),
