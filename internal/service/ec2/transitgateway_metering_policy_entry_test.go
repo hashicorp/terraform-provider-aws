@@ -125,7 +125,7 @@ func testAccTransitGatewayMeteringPolicyEntry_fullRule(t *testing.T, semaphore t
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metered_account"), knownvalue.StringExact(string(awstypes.TransitGatewayMeteringPayerTypeDestinationAttachmentOwner))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_cidr_block"), knownvalue.StringExact("10.0.0.0/8")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.StringExact("172.16.0.0/12")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol"), knownvalue.StringExact("6")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrProtocol), knownvalue.StringExact("6")),
 				},
 			},
 			{
@@ -164,7 +164,7 @@ func testAccTransitGatewayMeteringPolicyEntry_portRanges(t *testing.T, semaphore
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol"), knownvalue.StringExact("6")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrProtocol), knownvalue.StringExact("6")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_port_range"), knownvalue.StringExact("1024-65535")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_port_range"), knownvalue.StringExact("443-8443")),
 				},

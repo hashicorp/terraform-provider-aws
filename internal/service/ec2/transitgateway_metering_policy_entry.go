@@ -88,7 +88,7 @@ func (r *transitGatewayMeteringPolicyEntryResource) Schema(ctx context.Context, 
 					int64planmodifier.RequiresReplace(),
 				},
 			},
-			"protocol": schema.StringAttribute{
+			names.AttrProtocol: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -276,7 +276,7 @@ func (r *transitGatewayMeteringPolicyEntryResource) ImportState(ctx context.Cont
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("transit_gateway_metering_policy_id"), policyID)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("policy_rule_number"), ruleNumber)...)
 }
