@@ -331,7 +331,7 @@ data "aws_iam_policy_document" "test1" {
 
     resources = [
       aws_cloudwatch_log_group.%[2]s.arn,
-     ]
+    ]
 
     principals {
       identifiers = ["rds.${data.aws_partition.current.dns_suffix}"]
@@ -350,7 +350,7 @@ data "aws_iam_policy_document" "test2" {
 
     resources = [
       aws_cloudwatch_log_group.%[2]s.arn,
-     ]
+    ]
 
     principals {
       identifiers = ["rds.${data.aws_partition.current.dns_suffix}"]
@@ -361,7 +361,7 @@ data "aws_iam_policy_document" "test2" {
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
   policy_document = data.aws_iam_policy_document.%[3]s.json
-  resource_arn     = aws_cloudwatch_log_group.%[2]s.arn
+  resource_arn    = aws_cloudwatch_log_group.%[2]s.arn
 }
 `, rName, logGroupIdentifier, policyIdentifier)
 }
