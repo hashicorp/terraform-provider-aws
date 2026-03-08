@@ -37,6 +37,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/*\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeAccount)),
 				),
 			},
 			{
@@ -50,6 +51,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"Statement\":[{\"Action\":[\"logs:PutLogEvents\",\"logs:CreateLogStream\"],\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"rds.%s\"},\"Resource\":\"arn:%s:logs:*:*:log-group:/aws/rds/example.com\"}],\"Version\":\"2012-10-17\"}", acctest.PartitionDNSSuffix(), acctest.Partition())),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeAccount)),
 				),
 			},
 		},
@@ -105,6 +107,7 @@ func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_group.test1", names.AttrARN, resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -123,6 +126,7 @@ func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_group.test1", names.AttrARN, resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -136,6 +140,7 @@ func TestAccLogsResourcePolicy_resourceARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &resourcePolicy),
 					resource.TestCheckResourceAttrPair("aws_cloudwatch_log_group.test2", names.AttrARN, resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttr(resourceName, "policy_scope", string(types.PolicyScopeResource)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
