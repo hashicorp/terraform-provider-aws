@@ -38,7 +38,7 @@ func resourceResourcePolicy() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				if arn.IsARN(d.Id()) {
-					d.Set("resource_arn", d.Id())
+					d.Set(names.AttrResourceARN, d.Id())
 				} else {
 					d.Set("policy_name", d.Id())
 				}
@@ -152,7 +152,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("policy_document", policyToSet)
-	d.Set("resource_arn", resourcePolicy.ResourceArn)
+	d.Set(names.AttrResourceARN, resourcePolicy.ResourceArn)
 	d.Set("revision_id", resourcePolicy.RevisionId)
 
 	return diags
