@@ -39,8 +39,10 @@ func resourceResourcePolicy() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				if arn.IsARN(d.Id()) {
 					d.Set(names.AttrResourceARN, d.Id())
+					d.Set("policy_scope", awstypes.PolicyScopeResource)
 				} else {
 					d.Set("policy_name", d.Id())
+					d.Set("policy_scope", awstypes.PolicyScopeAccount)
 				}
 				return []*schema.ResourceData{d}, nil
 			},
@@ -56,6 +58,10 @@ func resourceResourcePolicy() *schema.Resource {
 					names.AttrResourceARN,
 				},
 				ExactlyOneOf: []string{"policy_name", names.AttrResourceARN},
+			},
+			"policy_scope": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrResourceARN: {
 				Type:         schema.TypeString,
@@ -109,10 +115,14 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.IsNewResource() {
+		// For account-scoped policies, use the policy name as the ID.
+		// For resource-scoped policies, use the resource ARN as the ID.
 		if input.PolicyName != nil {
 			d.SetId(name)
+			d.Set("policy_scope", awstypes.PolicyScopeAccount)
 		} else if input.ResourceArn != nil {
 			d.SetId(aws.ToString(input.ResourceArn))
+			d.Set("policy_scope", awstypes.PolicyScopeResource)
 		}
 	}
 
@@ -125,7 +135,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	var resourcePolicy *awstypes.ResourcePolicy
 	var err error
-	if arn.IsARN(d.Id()) {
+	if v, ok := d.GetOk("policy_scope"); ok && v.(string) == string(awstypes.PolicyScopeResource) {
 		resourcePolicy, err = findResourcePolicyByResourceARN(ctx, conn, d.Id())
 	} else {
 		resourcePolicy, err = findResourcePolicyByName(ctx, conn, d.Id())
@@ -152,6 +162,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("policy_document", policyToSet)
+	d.Set("policy_scope", resourcePolicy.PolicyScope)
 	d.Set(names.AttrResourceARN, resourcePolicy.ResourceArn)
 	d.Set("revision_id", resourcePolicy.RevisionId)
 
@@ -163,7 +174,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	input := cloudwatchlogs.DeleteResourcePolicyInput{}
-	if arn.IsARN(d.Id()) {
+	if v, ok := d.GetOk("policy_scope"); ok && v.(string) == string(awstypes.PolicyScopeResource) {
 		log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy by ARN: %s", d.Id())
 		revisionID := d.Get("revision_id").(string)
 		if revisionID == "" {
