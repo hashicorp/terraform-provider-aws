@@ -152,12 +152,17 @@ The following arguments are optional:
 #### destination_logs_configuration
 
 * `backup_configuration` - (Optional) Configuration block for backup settings. See [`backup_configuration`](#backup_configuration) below.
+* `log_group_name_configuration` - (Optional) Configuration block for a naming pattern for destination log groups created during centralization. See [`log_group_name_configuration`](#log_group_name_configuration) below.
 * `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration`](#logs_encryption_configuration) below.
 
 ##### backup_configuration
 
 * `region` - (Required) AWS region for backup storage.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for backup encryption.
+
+##### log_group_name_configuration
+
+* `log_group_name_pattern` - (Required) Pattern used for generating destination log group names during centralization. The pattern can contain static text and dynamic variables that are replaced with source attributes. For supported dynamic variables, see the [AWS documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/API_LogGroupNameConfiguration.html). Note that `$` used in dynamic variables must be escaped as `$$` in Terraform configuration.
 
 ##### logs_encryption_configuration
 
