@@ -49,7 +49,7 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "example"
 }
 ```
 
-### Advanced Configuration with Encryption and Backup
+### Advanced Configuration with Encryption, Backup and Log Group Name Configuration
 
 ```terraform
 data "aws_caller_identity" "current" {}
@@ -70,6 +70,10 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "advanced
 
         backup_configuration {
           region = "us-west-1"
+        }
+
+        log_group_name_configuration {
+          log_group_name_pattern = "/centralized-logs/$${source.accountId}/$${source.region}/$${source.logGroup}"
         }
       }
     }
