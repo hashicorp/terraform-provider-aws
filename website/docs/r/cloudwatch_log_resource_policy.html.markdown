@@ -81,6 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs resource policies using the policy name for policies that do not specify a CloudWatch Logs resource ARN, or the ARN of the CloudWatch Logs resource to which the policy is attached for policies that do. For example:
+
 ```terraform
 import {
   to = aws_cloudwatch_log_resource_policy.my_policy_without_resource_arn
