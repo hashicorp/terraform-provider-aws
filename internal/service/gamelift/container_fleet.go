@@ -235,6 +235,13 @@ func resourceContainerFleet() *schema.Resource {
 				Default:          awstypes.ProtectionPolicyNoProtection,
 				ValidateDiagFunc: enum.Validate[awstypes.ProtectionPolicy](),
 			},
+			"player_gateway_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PlayerGatewayMode](),
+			},
 			"per_instance_container_group_definition_name": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -313,6 +320,10 @@ func resourceContainerFleet() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"player_gateway_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -364,6 +375,9 @@ func resourceContainerFleetCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	if v, ok := d.GetOk("new_game_session_protection_policy"); ok {
 		input.NewGameSessionProtectionPolicy = awstypes.ProtectionPolicy(v.(string))
+	}
+	if v, ok := d.GetOk("player_gateway_mode"); ok {
+		input.PlayerGatewayMode = awstypes.PlayerGatewayMode(v.(string))
 	}
 	if v, ok := d.GetOk("per_instance_container_group_definition_name"); ok {
 		input.PerInstanceContainerGroupDefinitionName = aws.String(normalizeContainerGroupDefinitionName(v.(string)))
@@ -417,6 +431,7 @@ func resourceContainerFleetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrInstanceType, fleet.InstanceType)
 	d.Set("metric_groups", flex.FlattenStringValueList(fleet.MetricGroups))
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
+	d.Set("player_gateway_mode", fleet.PlayerGatewayMode)
 	d.Set("per_instance_container_group_definition_name", fleet.PerInstanceContainerGroupDefinitionName)
 	d.Set(names.AttrStatus, fleet.Status)
 	d.Set("game_server_container_group_definition_arn", fleet.GameServerContainerGroupDefinitionArn)
@@ -971,6 +986,9 @@ func flattenContainerFleetLocationAttributes(apiObjects []awstypes.ContainerFlee
 		m := map[string]any{
 			names.AttrLocation: aws.ToString(apiObject.Location),
 			names.AttrStatus:   apiObject.Status,
+		}
+		if apiObject.PlayerGatewayStatus != "" {
+			m["player_gateway_status"] = apiObject.PlayerGatewayStatus
 		}
 		tfList = append(tfList, m)
 	}

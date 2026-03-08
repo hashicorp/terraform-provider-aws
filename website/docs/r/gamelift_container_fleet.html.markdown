@@ -70,6 +70,7 @@ resource "aws_gamelift_container_fleet" "example" {
   metric_groups = ["example"]
 
   new_game_session_protection_policy = "NoProtection"
+  player_gateway_mode                = "ENABLED"
 
   tags = {
     Name = "example"
@@ -96,6 +97,7 @@ This resource supports the following arguments:
 - `log_configuration` - (Optional) Log configuration.
 - `metric_groups` - (Optional) CloudWatch metric group names.
 - `new_game_session_protection_policy` - (Optional) Game session protection policy for new sessions. Defaults to `NoProtection`.
+- `player_gateway_mode` - (Optional) Player gateway mode for the fleet. Valid values: `DISABLED`, `ENABLED`, `REQUIRED`.
 - `per_instance_container_group_definition_name` - (Optional) Name or ARN of the per-instance container group definition to deploy.
 - `remove_per_instance_container_group_definition` - (Optional) When `true`, removes the per-instance container group definition.
 - `deployment_configuration` - (Optional) Deployment configuration settings.
@@ -142,6 +144,12 @@ This resource supports the following arguments:
 - `impairment_strategy` - (Optional) Deployment impairment strategy (`MAINTAIN`, `ROLLBACK`).
 - `minimum_healthy_percentage` - (Optional) Minimum healthy percentage (0-100).
 - `protection_strategy` - (Optional) Deployment protection strategy (`WITH_PROTECTION`, `IGNORE_PROTECTION`).
+
+### location_attributes
+
+- `location` - Fleet location.
+- `status` - Fleet status for the location.
+- `player_gateway_status` - Player gateway availability for the location (`ENABLED`, `DISABLED`).
 
 ## Attribute Reference
 
