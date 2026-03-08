@@ -122,6 +122,9 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			acctest.CtBasic:      testAccTransitGatewayMeteringPolicyEntry_basic,
 			acctest.CtDisappears: testAccTransitGatewayMeteringPolicyEntry_disappears,
 			"fullRule":           testAccTransitGatewayMeteringPolicyEntry_fullRule,
+			"portRanges":         testAccTransitGatewayMeteringPolicyEntry_portRanges,
+			"attachmentTypes":    testAccTransitGatewayMeteringPolicyEntry_attachmentTypes,
+			"attachmentIDs":      testAccTransitGatewayMeteringPolicyEntry_attachmentIDs,
 		},
 		"PolicyTable": {
 			acctest.CtBasic:            testAccTransitGatewayPolicyTable_basic,

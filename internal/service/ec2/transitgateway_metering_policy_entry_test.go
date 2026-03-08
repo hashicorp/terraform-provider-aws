@@ -137,6 +137,130 @@ func testAccTransitGatewayMeteringPolicyEntry_fullRule(t *testing.T, semaphore t
 	})
 }
 
+func testAccTransitGatewayMeteringPolicyEntry_portRanges(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayMeteringPolicyEntry
+	resourceName := "aws_ec2_transit_gateway_metering_policy_entry.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayMeteringPolicyEntryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayMeteringPolicyEntryConfig_portRanges(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayMeteringPolicyEntryExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("protocol"), knownvalue.StringExact("6")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_port_range"), knownvalue.StringExact("1024-65535")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_port_range"), knownvalue.StringExact("443-8443")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayMeteringPolicyEntry_attachmentTypes(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayMeteringPolicyEntry
+	resourceName := "aws_ec2_transit_gateway_metering_policy_entry.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayMeteringPolicyEntryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayMeteringPolicyEntryConfig_attachmentTypes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayMeteringPolicyEntryExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_transit_gateway_attachment_type"), knownvalue.StringExact(string(awstypes.TransitGatewayAttachmentResourceTypeVpc))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_transit_gateway_attachment_type"), knownvalue.StringExact(string(awstypes.TransitGatewayAttachmentResourceTypeVpc))),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayMeteringPolicyEntry_attachmentIDs(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var v awstypes.TransitGatewayMeteringPolicyEntry
+	resourceName := "aws_ec2_transit_gateway_metering_policy_entry.test"
+	attachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayMeteringPolicyEntryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayMeteringPolicyEntryConfig_attachmentIDs(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayMeteringPolicyEntryExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "source_transit_gateway_attachment_id", attachmentResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_transit_gateway_attachment_id", attachmentResourceName, names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_transit_gateway_attachment_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_transit_gateway_attachment_id"), knownvalue.NotNull()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTransitGatewayMeteringPolicyEntryDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -237,5 +361,80 @@ resource "aws_ec2_transit_gateway_metering_policy_entry" "test" {
   protocol                           = "6"
 }
 `,
+	)
+}
+
+func testAccTransitGatewayMeteringPolicyEntryConfig_portRanges(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTransitGatewayMeteringPolicyEntryConfig_base(rName),
+		`
+resource "aws_ec2_transit_gateway_metering_policy_entry" "test" {
+  transit_gateway_metering_policy_id = aws_ec2_transit_gateway_metering_policy.test.transit_gateway_metering_policy_id
+  policy_rule_number                 = 300
+  metered_account                    = "source-attachment-owner"
+  protocol                           = "6"
+  source_port_range                  = "1024-65535"
+  destination_port_range             = "443-8443"
+}
+`,
+	)
+}
+
+func testAccTransitGatewayMeteringPolicyEntryConfig_attachmentTypes(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTransitGatewayMeteringPolicyEntryConfig_base(rName),
+		`
+resource "aws_ec2_transit_gateway_metering_policy_entry" "test" {
+  transit_gateway_metering_policy_id          = aws_ec2_transit_gateway_metering_policy.test.transit_gateway_metering_policy_id
+  policy_rule_number                          = 400
+  metered_account                             = "source-attachment-owner"
+  source_transit_gateway_attachment_type      = "vpc"
+  destination_transit_gateway_attachment_type = "vpc"
+}
+`,
+	)
+}
+
+func testAccTransitGatewayMeteringPolicyEntryConfig_attachmentIDs(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		testAccTransitGatewayMeteringPolicyEntryConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_metering_policy_entry" "test" {
+  transit_gateway_metering_policy_id        = aws_ec2_transit_gateway_metering_policy.test.transit_gateway_metering_policy_id
+  policy_rule_number                        = 500
+  metered_account                           = "source-attachment-owner"
+  source_transit_gateway_attachment_id      = aws_ec2_transit_gateway_vpc_attachment.test.id
+  destination_transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
+}
+`, rName),
 	)
 }
