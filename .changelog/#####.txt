@@ -9,3 +9,7 @@ data-source/aws_glue_catalog_table: Use the table's catalog ID when reading part
 ```release-note:enhancement
 resource/aws_glue_catalog_table: Add `view_definition` argument
 ```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `open_table_format_input.iceberg_input.iceberg_table_input` argument
+```

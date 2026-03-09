@@ -117,8 +117,58 @@ This will destroy and recreate the table, possibly resulting in data loss.
 ~> **NOTE:** A `iceberg_input` cannot be added to an existing `open_table_format_input`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
+* `iceberg_table_input` - (Optional) Configuration parameters, including table properties and metadata specifications. See [`iceberg_table_input`](#iceberg_table_input) below.
 * `metadata_operation` - (Required) A required metadata operation. Can only be set to CREATE.
 * `version` - (Optional) The table version for the Iceberg table. Defaults to 2.
+
+### iceberg_table_input
+
+* `location` - (Required) The S3 location where the Iceberg table data will be stored. Maximum length of 2056 characters.
+* `partition_spec` - (Optional) The partitioning specification that defines how the Iceberg table data will be organized and partitioned for optimal query performance. See [`partition_spec`](#partition_spec) below.
+* `properties` - (Optional) Key-value pairs of additional table properties and configuration settings for the Iceberg table.
+* `schema` - (Required) The schema definition that specifies the structure, field types, and metadata for the Iceberg table. See [`schema`](#schema) below.
+* `write_order` - (Optional) The sort order specification that defines how data should be ordered within each partition to optimize query performance. See [`write_order`](#write_order) below.
+
+### partition_spec
+
+* `fields` - (Required) The list of partition fields that define how the table data should be partitioned. See [`fields`](#partition-fields) below.
+* `spec_id` - (Optional) The unique identifier for this partition specification within the Iceberg table's metadata history.
+
+#### partition fields
+
+* `field_id` - (Optional) The unique identifier assigned to this partition field within the Iceberg table's partition specification.
+* `name` - (Required) The name of the partition field as it will appear in the partitioned table structure. Length between 1 and 1024 characters.
+* `source_id` - (Required) The identifier of the source field from the table schema that this partition field is based on.
+* `transform` - (Required) The transformation function applied to the source field to create the partition. Common values: `identity`, `bucket`, `truncate`, `year`, `month`, `day`, `hour`.
+
+### schema
+
+* `fields` - (Required) The list of field definitions that make up the table schema. See [`fields`](#schema-fields) below.
+* `identifier_field_ids` - (Optional) The list of field identifiers that uniquely identify records in the table, used for row-level operations and deduplication.
+* `schema_id` - (Optional) The unique identifier for this schema version within the Iceberg table's schema evolution history.
+* `type` - (Optional) The root type of the schema structure. Valid value: `struct`.
+
+#### schema fields
+
+* `doc` - (Optional) Optional documentation or description text that provides additional context about the purpose and usage of this field. Length between 0 and 255 characters.
+* `id` - (Required) The unique identifier assigned to this field within the Iceberg table schema, used for schema evolution and field tracking.
+* `initial_default` - (Optional) Default value as JSON used to populate the field's value for all records that were written before the field was added to the schema.
+* `name` - (Required) The name of the field as it appears in the table schema and query operations. Length between 1 and 1024 characters.
+* `required` - (Required) Indicates whether this field is required (non-nullable) or optional (nullable) in the table schema.
+* `type` - (Required) The data type definition for this field as a JSON string, specifying the structure and format of the data it contains. Examples: `"long"`, `"string"`, `"timestamp"`, `"decimal(10,2)"`.
+* `write_default` - (Optional) Default value as JSON used to populate the field's value for any records written after the field was added to the schema, if the writer does not supply the field's value.
+
+### write_order
+
+* `fields` - (Required) The list of fields and their sort directions that define the ordering criteria for the Iceberg table data. See [`fields`](#sort-fields) below.
+* `order_id` - (Required) The unique identifier for this sort order specification within the Iceberg table's metadata.
+
+#### sort fields
+
+* `direction` - (Required) The sort direction for this field. Valid values: `asc`, `desc`.
+* `null_order` - (Required) The ordering behavior for null values in this field. Valid values: `nulls-first`, `nulls-last`.
+* `source_id` - (Required) The identifier of the source field from the table schema that this sort field is based on.
+* `transform` - (Required) The transformation function applied to the source field before sorting. Common values: `identity`, `bucket`, `truncate`.
 
 ### partition_index
 

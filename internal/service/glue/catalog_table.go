@@ -15,6 +15,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
+	"github.com/aws/aws-sdk-go-v2/service/glue/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -84,7 +87,7 @@ func resourceCatalogTable() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"create_iceberg_table_input": {
+									"iceberg_table_input": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -158,33 +161,18 @@ func resourceCatalogTable() *schema.Resource {
 																			Type:     schema.TypeInt,
 																			Required: true,
 																		},
-																		"initial_default": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateFunc:     validation.StringIsJSON,
-																			DiffSuppressFunc: flex.SuppressEquivalentJSONDiffs,
-																		},
+																		"initial_default": sdkv2.JSONDocumentSchemaOptional(),
 																		names.AttrName: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: validation.StringLenBetween(1, 1024),
 																		},
-																		names.AttrRequired: {
+																		"required": {
 																			Type:     schema.TypeBool,
 																			Required: true,
 																		},
-																		names.AttrType: {
-																			Type:             schema.TypeString,
-																			Required:         true,
-																			ValidateFunc:     validation.StringIsJSON,
-																			DiffSuppressFunc: flex.SuppressEquivalentJSONDiffs,
-																		},
-																		"write_default": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateFunc:     validation.StringIsJSON,
-																			DiffSuppressFunc: flex.SuppressEquivalentJSONDiffs,
-																		},
+																		names.AttrType:  sdkv2.JSONDocumentSchemaOptional(),
+																		"write_default": sdkv2.JSONDocumentSchemaOptional(),
 																	},
 																},
 															},
@@ -198,9 +186,9 @@ func resourceCatalogTable() *schema.Resource {
 																Optional: true,
 															},
 															names.AttrType: {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ValidateFunc: validation.StringInSlice([]string{"struct"}, false),
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.IcebergStructTypeEnum](),
 															},
 														},
 													},
@@ -217,14 +205,14 @@ func resourceCatalogTable() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"direction": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice([]string{"asc", "desc"}, false),
+																			Type:             schema.TypeString,
+																			Required:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.IcebergSortDirection](),
 																		},
 																		"null_order": {
-																			Type:         schema.TypeString,
-																			Required:     true,
-																			ValidateFunc: validation.StringInSlice([]string{"nulls-first", "nulls-last"}, false),
+																			Type:             schema.TypeString,
+																			Required:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.IcebergNullOrder](),
 																		},
 																		"source_id": {
 																			Type:     schema.TypeInt,
@@ -945,7 +933,7 @@ func expandIcebergInput(tfMap map[string]any) *awstypes.IcebergInput {
 
 	apiObject := &awstypes.IcebergInput{}
 
-	if v, ok := tfMap["create_iceberg_table_input"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["iceberg_table_input"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CreateIcebergTableInput = expandCreateIcebergTableInput(v[0].(map[string]any))
 	}
 
@@ -958,6 +946,221 @@ func expandIcebergInput(tfMap map[string]any) *awstypes.IcebergInput {
 	}
 
 	return apiObject
+}
+
+func expandCreateIcebergTableInput(tfMap map[string]any) *awstypes.CreateIcebergTableInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CreateIcebergTableInput{}
+
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
+		apiObject.Location = aws.String(v)
+	}
+
+	if v, ok := tfMap["partition_spec"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PartitionSpec = expandIcebergPartitionSpec(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap[names.AttrProperties].(map[string]any); ok && len(v) > 0 {
+		apiObject.Properties = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap["schema"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Schema = expandIcebergSchema(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["write_order"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.WriteOrder = expandIcebergSortOrder(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandIcebergPartitionSpec(tfMap map[string]any) *awstypes.IcebergPartitionSpec {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.IcebergPartitionSpec{}
+
+	if v, ok := tfMap["fields"].([]any); ok && len(v) > 0 {
+		apiObject.Fields = expandIcebergPartitionFields(v)
+	}
+
+	if v, ok := tfMap["spec_id"].(int); ok {
+		apiObject.SpecId = int32(v)
+	}
+
+	return apiObject
+}
+
+func expandIcebergPartitionFields(tfList []any) []awstypes.IcebergPartitionField {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.IcebergPartitionField
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.IcebergPartitionField{}
+
+		if v, ok := tfMap["field_id"].(int); ok {
+			apiObject.FieldId = int32(v)
+		}
+
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
+		}
+
+		if v, ok := tfMap["source_id"].(int); ok {
+			apiObject.SourceId = int32(v)
+		}
+
+		if v, ok := tfMap["transform"].(string); ok && v != "" {
+			apiObject.Transform = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandIcebergSchema(tfMap map[string]any) *awstypes.IcebergSchema {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.IcebergSchema{}
+
+	if v, ok := tfMap["fields"].([]any); ok && len(v) > 0 {
+		apiObject.Fields = expandIcebergStructFields(v)
+	}
+
+	if v, ok := tfMap["identifier_field_ids"].([]any); ok && len(v) > 0 {
+		apiObject.IdentifierFieldIds = flex.ExpandInt32ValueList(v)
+	}
+
+	if v, ok := tfMap["schema_id"].(int); ok {
+		apiObject.SchemaId = int32(v)
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.IcebergStructTypeEnum(v)
+	}
+
+	return apiObject
+}
+
+func expandIcebergStructFields(tfList []any) []awstypes.IcebergStructField {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.IcebergStructField
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.IcebergStructField{}
+
+		if v, ok := tfMap["doc"].(string); ok && v != "" {
+			apiObject.Doc = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrID].(int); ok {
+			apiObject.Id = int32(v)
+		}
+
+		if v, ok := tfMap["initial_default"].(string); ok && v != "" {
+			apiObject.InitialDefault, _ = tfsmithy.DocumentFromJSONString(v, document.NewLazyDocument)
+		}
+
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+			apiObject.Name = aws.String(v)
+		}
+
+		if v, ok := tfMap["required"].(bool); ok {
+			apiObject.Required = v
+		}
+
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+			apiObject.Type, _ = tfsmithy.DocumentFromJSONString(v, document.NewLazyDocument)
+		}
+
+		if v, ok := tfMap["write_default"].(string); ok && v != "" {
+			apiObject.WriteDefault, _ = tfsmithy.DocumentFromJSONString(v, document.NewLazyDocument)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandIcebergSortOrder(tfMap map[string]any) *awstypes.IcebergSortOrder {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.IcebergSortOrder{}
+
+	if v, ok := tfMap["fields"].([]any); ok && len(v) > 0 {
+		apiObject.Fields = expandIcebergSortFields(v)
+	}
+
+	if v, ok := tfMap["order_id"].(int); ok {
+		apiObject.OrderId = int32(v)
+	}
+
+	return apiObject
+}
+
+func expandIcebergSortFields(tfList []any) []awstypes.IcebergSortField {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.IcebergSortField
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.IcebergSortField{}
+
+		if v, ok := tfMap["direction"].(string); ok && v != "" {
+			apiObject.Direction = awstypes.IcebergSortDirection(v)
+		}
+
+		if v, ok := tfMap["null_order"].(string); ok && v != "" {
+			apiObject.NullOrder = awstypes.IcebergNullOrder(v)
+		}
+
+		if v, ok := tfMap["source_id"].(int); ok {
+			apiObject.SourceId = int32(v)
+		}
+
+		if v, ok := tfMap["transform"].(string); ok && v != "" {
+			apiObject.Transform = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandPartitionIndexes(tfList []any) []awstypes.PartitionIndex {
