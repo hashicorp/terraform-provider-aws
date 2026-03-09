@@ -55,10 +55,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.61.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.55.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.20.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.19 // indirect
@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.164.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.165.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.11 // indirect
@@ -261,7 +261,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.24 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.34.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.20 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.59.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signer v1.32.3 // indirect
@@ -367,10 +367,10 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.17.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.66.0 // indirect
-	go.opentelemetry.io/otel v1.41.0 // indirect
-	go.opentelemetry.io/otel/metric v1.41.0 // indirect
-	go.opentelemetry.io/otel/trace v1.41.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.67.0 // indirect
+	go.opentelemetry.io/otel v1.42.0 // indirect
+	go.opentelemetry.io/otel/metric v1.42.0 // indirect
+	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.3 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
