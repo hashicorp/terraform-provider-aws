@@ -146,6 +146,18 @@ func TestAccSageMakerTrainingJob_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_vpcUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -182,7 +194,20 @@ func TestAccSageMakerTrainingJob_debugConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.0.s3_output_path", fmt.Sprintf("s3://%s/debug/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.0.s3_output_path", fmt.Sprintf("s3://%s/debug-rules/", rName)),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_debugUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "debug_hook_config.0.s3_output_path", fmt.Sprintf("s3://%s/debug-updated/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "debug_rule_configurations.0.s3_output_path", fmt.Sprintf("s3://%s/debug-rules-updated/", rName)),
 				),
 			},
 			{
@@ -219,6 +244,19 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "500"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_rule_configurations.#", "1"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_profilerUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "true"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_rule_configurations.#", "1"),
 				),
 			},
@@ -298,6 +336,21 @@ func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.TEST_ENV", "test_value"),
 					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.epochs", "10"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_environmentAndHyperParametersUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "environment.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment.TEST_ENV", "updated_value"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "hyper_parameters.epochs", "20"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -334,6 +387,18 @@ func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_checkpointUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -370,6 +435,18 @@ func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_tensorBoardUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -406,6 +483,18 @@ func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_inputDataUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -442,6 +531,20 @@ func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.compression_type", "GZIP"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_outputDataUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -478,6 +581,18 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_algorithmMetricsUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -515,6 +630,19 @@ func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.maximum_retry_attempts", "3"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_retryStrategyUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.maximum_retry_attempts", "3"),
+					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
 				),
 			},
 			{
@@ -552,6 +680,16 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
+				),
+			},
+			{
+				Config: testAccTrainingJobConfig_serverlessUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.kms_key_id"),
 				),
 			},
 			{
@@ -821,6 +959,84 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_vpcUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.2.0/24"
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
+  }
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnets           = [aws_subnet.test.id, aws_subnet.test2.id]
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_debug(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -841,6 +1057,27 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*",
+        ]
+      },
+    ]
+  })
 }
 
 resource "aws_s3_bucket" "test" {
@@ -892,6 +1129,98 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_debugUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket",
+        ]
+        Resource = [
+          aws_s3_bucket.test.arn,
+          "${aws_s3_bucket.test.arn}/*",
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 3600
+  }
+
+  debug_hook_config {
+    local_path = "/opt/ml/output/tensors"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-updated/"
+  }
+
+  debug_rule_configurations {
+    instance_type         = "ml.m4.xlarge"
+    local_path           = "/opt/ml/processing/test1"
+    rule_configuration_name = "LossNotDecreasing"
+    rule_evaluator_image  = "503895931503.dkr.ecr.us-west-2.amazonaws.com/sagemaker-debugger-rules:latest"
+    rule_parameters = {
+      "rule_to_invoke" = "LossNotDecreasing"
+    }
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/debug-rules-updated/"
+    volume_size_in_gb = 10
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_profiler(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -912,6 +1241,25 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3.json
 }
 
 resource "aws_s3_bucket" "test" {
@@ -962,7 +1310,7 @@ resource "aws_sagemaker_training_job" "test" {
     volume_size_in_gb = 10
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
 `, rName)
 }
@@ -987,6 +1335,25 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:ListBucket",
+    ]
+    resources = [
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3.json
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1018,11 +1385,6 @@ resource "aws_sagemaker_training_job" "test" {
 
   profiler_config {
     disable_profiler = true
-    profiling_interval_in_milliseconds = 1000
-    profiling_parameters = {
-      "profile_cpu" = "false"
-    }
-    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/profiler/"
   }
 
   profiler_rule_configurations {
@@ -1037,7 +1399,7 @@ resource "aws_sagemaker_training_job" "test" {
     volume_size_in_gb = 10
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
 `, rName)
 }
@@ -1110,6 +1472,74 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_environmentAndHyperParametersUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = false
+  enable_managed_spot_training             = true
+  enable_network_isolation                 = false
+
+  environment = {
+    "TEST_ENV" = "updated_value"
+    "ANOTHER_ENV" = "another_value"
+  }
+
+  hyper_parameters = {
+    "epochs"     = "20"
+    "batch_size" = "32"
+  }
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_checkpoint(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -1169,6 +1599,67 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_checkpointUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+  checkpoint_config {
+    local_path = "/opt/ml/checkpoints"
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/checkpoints/"
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_tensorBoard(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -1216,6 +1707,67 @@ resource "aws_sagemaker_training_job" "test" {
 
   stopping_condition {
     max_runtime_in_seconds = 3600
+  }
+
+  tensor_board_output_config {
+    local_path     = "/opt/ml/output/tensorboard"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/tensorboard/"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccTrainingJobConfig_tensorBoardUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
   }
 
   tensor_board_output_config {
@@ -1298,6 +1850,78 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_inputDataUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+  input_data_config {
+    channel_name = "training"
+    compression_type = "None"
+    content_type   = "text/csv"
+    input_mode     = "File"
+    record_wrapper_type = "None"
+
+    data_source {
+      s3_data_source {
+        s3_data_distribution_type = "FullyReplicated"
+        s3_data_type = "S3Prefix"
+        s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+      }
+    }
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_outputData(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -1351,6 +1975,68 @@ resource "aws_sagemaker_training_job" "test" {
 
   stopping_condition {
     max_runtime_in_seconds = 3600
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccTrainingJobConfig_outputDataUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_kms_key" "test" {
+  description = "KMS key for SageMaker training job"
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+  output_data_config {
+    compression_type = "NONE"
+    kms_key_id       = aws_kms_key.test.arn
+    s3_output_path   = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1417,6 +2103,67 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_algorithmMetricsUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+
+    metric_definitions {
+      name  = "validation:accuracy"
+      regex = "validation: accuracy = ([0-9\\.]+)"
+    }
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_retryStrategy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -1475,6 +2222,66 @@ resource "aws_sagemaker_training_job" "test" {
 `, rName)
 }
 
+func testAccTrainingJobConfig_retryStrategyUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  enable_inter_container_traffic_encryption = true
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  resource_config {
+		instance_type      = "ml.m5.large"
+		instance_count     = 1
+		volume_size_in_gb  = 30
+  }
+
+  retry_strategy {
+    maximum_retry_attempts = 3
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 7200
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
 func testAccTrainingJobConfig_serverless(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
@@ -1507,6 +2314,56 @@ resource "aws_sagemaker_training_job" "test" {
 
 	output_data_config {
 		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+	}
+
+  serverless_job_config {
+    accept_eula = false
+    base_model_arn = "arn:aws:sagemaker:us-west-2:aws:hub-content/HuggingFace/llm-models/huggingface-llm-falcon-7b-instruct-bf16/1.1.0"
+    job_type = "FineTuning"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccTrainingJobConfig_serverlessUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_kms_key" "test" {
+  description = "KMS key for SageMaker training job"
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+	output_data_config {
+		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+		kms_key_id     = aws_kms_key.test.arn
 	}
 
   serverless_job_config {
