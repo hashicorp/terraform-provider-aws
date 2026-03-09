@@ -14,19 +14,7 @@ import (
 
 // Custom RAM tag functions using the same format as generated code. Used only in testing.
 
-// listTags lists datapipeline service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func listPermissionTags(ctx context.Context, conn *ram.Client, identifier string) (tftags.KeyValueTags, error) {
-	output, err := findPermissionByARN(ctx, conn, identifier)
-	if err != nil {
-		return tftags.New(ctx, nil), err
-	}
-
-	return keyValueTags(ctx, output.Tags), nil
-}
-
-// ListTags lists datapipeline service tags and set them in Context.
+// ListTags lists RAM service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
 	var (
@@ -50,4 +38,13 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	}
 
 	return nil
+}
+
+func listPermissionTags(ctx context.Context, conn *ram.Client, identifier string) (tftags.KeyValueTags, error) {
+	output, err := findPermissionByARN(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return keyValueTags(ctx, output.Tags), nil
 }
