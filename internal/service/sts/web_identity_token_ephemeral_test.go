@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,7 +24,7 @@ func TestAccSTSWebIdentityTokenEphemeral_basic(t *testing.T) {
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccWebIdentityTokenPreCheck(ctx, t)
@@ -54,7 +53,7 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccWebIdentityTokenPreCheck(ctx, t)
@@ -79,12 +78,13 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 }
 
 func testAccWebIdentityTokenPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).STSClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).STSClient(ctx)
 
-	_, err := conn.GetWebIdentityToken(ctx, &sts.GetWebIdentityTokenInput{
+	input := sts.GetWebIdentityTokenInput{
 		Audience:         []string{"test"},
 		SigningAlgorithm: aws.String("RS256"),
-	})
+	}
+	_, err := conn.GetWebIdentityToken(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance test: %s", err)
