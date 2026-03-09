@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,7 +52,7 @@ func resourceBucketOwnershipControls() *schema.Resource {
 						"object_ownership": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.ObjectOwnership](),
+							ValidateDiagFunc: enum.Validate[awstypes.ObjectOwnership](),
 						},
 					},
 				},
@@ -71,7 +71,7 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 	}
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
-		OwnershipControls: &types.OwnershipControls{
+		OwnershipControls: &awstypes.OwnershipControls{
 			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]any)),
 		},
 	}
@@ -139,7 +139,7 @@ func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.Resour
 
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
-		OwnershipControls: &types.OwnershipControls{
+		OwnershipControls: &awstypes.OwnershipControls{
 			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]any)),
 		},
 	}
@@ -188,7 +188,7 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func findBucketOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) (*types.OwnershipControls, error) {
+func findBucketOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) (*awstypes.OwnershipControls, error) {
 	input := &s3.GetBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
 	}
@@ -212,12 +212,12 @@ func findBucketOwnershipControls(ctx context.Context, conn *s3.Client, bucket st
 	return output.OwnershipControls, nil
 }
 
-func expandOwnershipControlsRules(tfList []any) []types.OwnershipControlsRule {
+func expandOwnershipControlsRules(tfList []any) []awstypes.OwnershipControlsRule {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	var apiObjects []types.OwnershipControlsRule
+	var apiObjects []awstypes.OwnershipControlsRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -232,17 +232,17 @@ func expandOwnershipControlsRules(tfList []any) []types.OwnershipControlsRule {
 	return apiObjects
 }
 
-func expandOwnershipControlsRule(tfMap map[string]any) types.OwnershipControlsRule {
-	apiObject := types.OwnershipControlsRule{}
+func expandOwnershipControlsRule(tfMap map[string]any) awstypes.OwnershipControlsRule {
+	apiObject := awstypes.OwnershipControlsRule{}
 
 	if v, ok := tfMap["object_ownership"].(string); ok && v != "" {
-		apiObject.ObjectOwnership = types.ObjectOwnership(v)
+		apiObject.ObjectOwnership = awstypes.ObjectOwnership(v)
 	}
 
 	return apiObject
 }
 
-func flattenBucketOwnershipControlsRules(apiObjects []types.OwnershipControlsRule) []any {
+func flattenBucketOwnershipControlsRules(apiObjects []awstypes.OwnershipControlsRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -256,7 +256,7 @@ func flattenBucketOwnershipControlsRules(apiObjects []types.OwnershipControlsRul
 	return tfList
 }
 
-func flattenOwnershipControlsRule(apiObject types.OwnershipControlsRule) map[string]any {
+func flattenOwnershipControlsRule(apiObject awstypes.OwnershipControlsRule) map[string]any {
 	tfMap := map[string]any{
 		"object_ownership": apiObject.ObjectOwnership,
 	}
