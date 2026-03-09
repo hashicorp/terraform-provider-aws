@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_observabilityadmin_centralization_rule_for_organization: Add `log_group_name_configuration` argument
+```
