@@ -13,4 +13,5 @@ resource "aws_ram_permission" "test" {
 }
 EOF
   resource_type   = "backup:BackupVault"
+{{- template "tags" . }}
 }

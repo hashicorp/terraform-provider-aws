@@ -43,7 +43,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceSharePermissionDetail")
-// @Testing(tagsTest=false)
 func newPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &permissionResource{}
 
