@@ -504,6 +504,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if d.HasV6_0NullValuesError {
 			d.PreIdentityVersion = v5_100_0
 		}
+		if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
+			v.errs = append(v.errs, fmt.Errorf("%s.%s: one of \"preIdentityVersion\" or \"hasNoPreExistingResource\" is required", v.packageName, v.functionName))
+		}
 	} else {
 		if d.HasNoPreExistingResource {
 			v.errs = append(v.errs, fmt.Errorf("hasNoPreExistingResource specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
