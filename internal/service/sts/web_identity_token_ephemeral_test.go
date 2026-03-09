@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -87,7 +86,7 @@ func testAccWebIdentityTokenPreCheck(ctx context.Context, t *testing.T) {
 		SigningAlgorithm: aws.String("RS256"),
 	})
 
-	if tfawserr.ErrCodeEquals(err, "OutboundWebIdentityFederationDisabledException") {
+	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance test: %s", err)
 	}
 

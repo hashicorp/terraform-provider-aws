@@ -1855,6 +1855,10 @@ func PreCheckSkipError(err error) bool {
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
+	// sts
+	if tfawserr.ErrCodeEquals(err, "OutboundWebIdentityFederationDisabledException") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if errs.IsA[*net.DNSError](err) {
 		return true
