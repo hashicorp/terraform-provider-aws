@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/workmail"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -228,15 +226,6 @@ func testAccCheckOrganizationExists(ctx context.Context, t *testing.T, name stri
 			return create.Error(names.WorkMail, create.ErrActionCheckingExistence, tfworkmail.ResNameOrganization, rs.Primary.ID, err)
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckOrganizationNotRecreated(before, after *workmail.DescribeOrganizationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.ToString(before.OrganizationId) != aws.ToString(after.OrganizationId) {
-			return create.Error(names.WorkMail, create.ErrActionCheckingNotRecreated, tfworkmail.ResNameOrganization, aws.ToString(before.OrganizationId), errors.New("recreated"))
-		}
 		return nil
 	}
 }
