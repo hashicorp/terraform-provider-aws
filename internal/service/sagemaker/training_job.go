@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -44,6 +45,12 @@ import (
 )
 
 // @FrameworkResource("aws_sagemaker_training_job", name="Training Job")
+// @IdentityAttribute("training_job_name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeTrainingJobOutput")
+// @Testing(importIgnore="algorithm_specification.0.metric_definitions")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(importStateIdAttribute="training_job_name")
+// @Testing(hasNoPreExistingResource=true)
 func newResourceTrainingJob(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTrainingJob{}
 
@@ -60,6 +67,7 @@ const (
 
 type resourceTrainingJob struct {
 	framework.ResourceWithModel[resourceTrainingJobModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -67,6 +75,7 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -176,7 +185,7 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobAlgorithmSpecificationModel](ctx),
 		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
+			listvalidator.SizeBetween(1, 1),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -214,7 +223,9 @@ func trainingJobAlgorithmSpecificationBlock(ctx context.Context) schema.Block {
 				},
 				"enable_sagemaker_metrics_time_series": schema.BoolAttribute{
 					Optional: true,
+					Computed: true,
 					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.UseStateForUnknown(),
 						boolplanmodifier.RequiresReplace(),
 					},
 				},
@@ -882,6 +893,7 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 				},
 				"kms_key_id": schema.StringAttribute{
 					Optional: true,
+					Computed: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(0, 2048),
 						stringvalidator.RegexMatches(regexp.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
@@ -1275,7 +1287,7 @@ func stoppingConditionBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobStoppingConditionModel](ctx),
 		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
+			listvalidator.SizeBetween(1, 1),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -1430,8 +1442,17 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// Restore MetricDefinitions from the plan to avoid drift from API defaults.
-	plan.AlgorithmSpecification = planAlgoSpec
+	// Restore only MetricDefinitions from the plan to avoid drift from API defaults.
+	// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are kept from the API response.
+	restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.ID = plan.TrainingJobName
+	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 	if resp.Diagnostics.HasError() {
@@ -1450,8 +1471,16 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// Restore MetricDefinitions again after the waiter flatten.
-	plan.AlgorithmSpecification = planAlgoSpec
+	// Restore only MetricDefinitions again after the waiter flatten.
+	restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.ID = plan.TrainingJobName
+	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -1489,8 +1518,18 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	// Restore MetricDefinitions from state to avoid drift from API defaults.
-	state.AlgorithmSpecification = stateAlgoSpec
+	// Restore only MetricDefinitions from state to avoid drift from API defaults.
+	// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are kept from the API response.
+	// On fresh import (stateAlgoSpec is null), clears API-injected metrics so plan is NoOp.
+	restoreAlgoSpecMetricDefinitions(ctx, stateAlgoSpec, &state.AlgorithmSpecification, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.ID = state.TrainingJobName
+	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &state))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -1606,7 +1645,8 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		// Preserve AlgorithmSpecification to avoid metric_definitions drift.
+		// Preserve only MetricDefinitions in AlgorithmSpecification to avoid drift from API defaults.
+		// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are kept from the API response.
 		planAlgoSpec := plan.AlgorithmSpecification
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
@@ -1614,8 +1654,18 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		plan.AlgorithmSpecification = planAlgoSpec
+		restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.ID = plan.TrainingJobName
+		smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
+
+	plan.ID = plan.TrainingJobName
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -1653,8 +1703,63 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceTrainingJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("training_job_name"), req, resp)
+// restoreAlgoSpecMetricDefinitions manages MetricDefinitions after an API flatten to prevent
+// drift caused by SageMaker auto-populating MetricDefinitions for built-in algorithms.
+// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are always kept from the API response.
+//
+// Behaviour:
+//   - saved is null (fresh import, no prior state): clears API-injected metrics so a
+//     subsequent plan is NoOp when the user didn't configure any metric_definitions.
+//   - saved is known (normal refresh): restores the user's metric_definitions from the
+//     prior state, overwriting whatever the API returned.
+func restoreAlgoSpecMetricDefinitions(
+	ctx context.Context,
+	saved fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel],
+	target *fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel],
+	diags *diag.Diagnostics,
+) {
+	if saved.IsUnknown() {
+		return
+	}
+	flatSpecs, d := target.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() || len(flatSpecs) == 0 {
+		return
+	}
+	if saved.IsNull() || len(saved.Elements()) == 0 {
+		// Fresh import or no prior state: clear API-injected metric_definitions.
+		flatSpecs[0].MetricDefinitions = fwtypes.NewListNestedObjectValueOfNull[trainingJobMetricDefinitionModel](ctx)
+	} else {
+		savedSpecs, d := saved.ToSlice(ctx)
+		diags.Append(d...)
+		if diags.HasError() || len(savedSpecs) == 0 {
+			return
+		}
+		flatSpecs[0].MetricDefinitions = savedSpecs[0].MetricDefinitions
+	}
+	*target = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, flatSpecs)
+}
+
+func normalizeOutputDataConfigKMSKeyID(ctx context.Context, model *resourceTrainingJobModel) diag.Diagnostics {
+	if model.OutputDataConfig.IsNull() || model.OutputDataConfig.IsUnknown() {
+		return nil
+	}
+
+	var outputDataConfig []trainingJobOutputDataConfigModel
+	diags := model.OutputDataConfig.ElementsAs(ctx, &outputDataConfig, false)
+	if diags.HasError() {
+		return diags
+	}
+
+	for i := range outputDataConfig {
+		if !outputDataConfig[i].KMSKeyID.IsNull() && !outputDataConfig[i].KMSKeyID.IsUnknown() && outputDataConfig[i].KMSKeyID.ValueString() == "" {
+			outputDataConfig[i].KMSKeyID = types.StringNull()
+		}
+	}
+
+	model.OutputDataConfig, diags = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, outputDataConfig)
+
+	return diags
 }
 
 func waitTrainingJobCreated(ctx context.Context, conn *sagemaker.Client, id string, timeout time.Duration) (*sagemaker.DescribeTrainingJobOutput, error) {
@@ -1760,6 +1865,7 @@ type resourceTrainingJobModel struct {
 	Environment                           fwtypes.MapOfString                                                      `tfsdk:"environment"`
 	ExperimentConfig                      fwtypes.ListNestedObjectValueOf[trainingJobExperimentConfigModel]        `tfsdk:"experiment_config"`
 	HyperParameters                       fwtypes.MapOfString                                                      `tfsdk:"hyper_parameters"`
+	ID                                    types.String                                                             `tfsdk:"id"`
 	InfraCheckConfig                      fwtypes.ListNestedObjectValueOf[trainingJobInfraCheckConfigModel]        `tfsdk:"infra_check_config"`
 	InputDataConfig                       fwtypes.ListNestedObjectValueOf[trainingJobInputDataConfigModel]         `tfsdk:"input_data_config"`
 	MlflowConfig                          fwtypes.ListNestedObjectValueOf[trainingJobMlflowConfigModel]            `tfsdk:"mlflow_config"`
