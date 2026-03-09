@@ -25,6 +25,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	case "Permission":
 		tags, err = listPermissionTags(ctx, meta.(*conns.AWSClient).RAMClient(ctx), identifier)
 
+	case "ResourceShare":
+		tags, err = listResourceShareTags(ctx, meta.(*conns.AWSClient).RAMClient(ctx), identifier)
+
 	default:
 		return nil
 	}
@@ -42,6 +45,15 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 func listPermissionTags(ctx context.Context, conn *ram.Client, identifier string) (tftags.KeyValueTags, error) {
 	output, err := findPermissionByARN(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return keyValueTags(ctx, output.Tags), nil
+}
+
+func listResourceShareTags(ctx context.Context, conn *ram.Client, identifier string) (tftags.KeyValueTags, error) {
+	output, err := findResourceShareOwnerSelfByARN(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
