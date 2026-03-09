@@ -28,7 +28,6 @@ func TestAccWorkMailOrganization_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var organization workmail.DescribeOrganizationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
@@ -44,7 +43,7 @@ func TestAccWorkMailOrganization_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, t, resourceName, &organization),
+					testAccCheckOrganizationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "organization_alias", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_mail_domain"),
@@ -72,7 +71,6 @@ func TestAccWorkMailOrganization_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var organization workmail.DescribeOrganizationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
@@ -88,7 +86,7 @@ func TestAccWorkMailOrganization_disappears(t *testing.T) {
 			{
 				Config: testAccOrganizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, t, resourceName, &organization),
+					testAccCheckOrganizationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkmail.ResourceOrganization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,7 +106,6 @@ func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var before, after workmail.DescribeOrganizationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
@@ -125,7 +122,7 @@ func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 				// Step 1: create without delete_directory
 				Config: testAccOrganizationConfig_noDeleteDirectory(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, t, resourceName, &before),
+					testAccCheckOrganizationExists(ctx, t, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "delete_directory"),
 				),
 			},
@@ -133,8 +130,7 @@ func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 				// Step 2: add delete_directory = true — must NOT recreate
 				Config: testAccOrganizationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, t, resourceName, &after),
-					testAccCheckOrganizationNotRecreated(&before, &after),
+					testAccCheckOrganizationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delete_directory", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -153,7 +149,6 @@ func TestAccWorkMailOrganization_kmsKey(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var organization workmail.DescribeOrganizationOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
 
@@ -169,7 +164,7 @@ func TestAccWorkMailOrganization_kmsKey(t *testing.T) {
 			{
 				Config: testAccOrganizationConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckOrganizationExists(ctx, t, resourceName, &organization),
+					testAccCheckOrganizationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Active"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "workmail", regexache.MustCompile(`organization/.+$`)),
@@ -196,7 +191,7 @@ func testAccCheckOrganizationDestroy(ctx context.Context, t *testing.T) resource
 				continue
 			}
 
-			out, err := tfworkmail.FindOrganizationByID(ctx, conn, rs.Primary.Attributes["organization_id"])
+			_, err := tfworkmail.FindOrganizationByID(ctx, conn, rs.Primary.Attributes["organization_id"])
 
 			if retry.NotFound(err) {
 				continue
@@ -206,11 +201,6 @@ func testAccCheckOrganizationDestroy(ctx context.Context, t *testing.T) resource
 				return err
 			}
 
-			// Workmail returns the organization with State "Deleted" instead of 404
-			if aws.ToString(out.State) == "Deleted" {
-				continue
-			}
-
 			return fmt.Errorf("Workmail Organization %s still exists", rs.Primary.Attributes["organization_id"])
 		}
 
@@ -218,7 +208,7 @@ func testAccCheckOrganizationDestroy(ctx context.Context, t *testing.T) resource
 	}
 }
 
-func testAccCheckOrganizationExists(ctx context.Context, t *testing.T, name string, organization *workmail.DescribeOrganizationOutput) resource.TestCheckFunc {
+func testAccCheckOrganizationExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -233,12 +223,10 @@ func testAccCheckOrganizationExists(ctx context.Context, t *testing.T, name stri
 
 		conn := acctest.ProviderMeta(ctx, t).WorkMailClient(ctx)
 
-		resp, err := tfworkmail.FindOrganizationByID(ctx, conn, id)
+		_, err := tfworkmail.FindOrganizationByID(ctx, conn, id)
 		if err != nil {
 			return create.Error(names.WorkMail, create.ErrActionCheckingExistence, tfworkmail.ResNameOrganization, rs.Primary.ID, err)
 		}
-
-		*organization = *resp
 
 		return nil
 	}

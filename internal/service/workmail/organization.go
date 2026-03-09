@@ -38,15 +38,14 @@ import (
 // @FrameworkResource("aws_workmail_organization", name="Organization")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("organization_id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workmail;workmail.DescribeOrganizationOutput")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="delete_directory")
 // @Testing(importStateIdAttribute="organization_id")
 func newOrganizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &organizationResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -175,29 +174,18 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	plan.OrganizationId = flex.StringToFramework(ctx, out.OrganizationId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitOrganizationCreated(ctx, conn, plan.OrganizationId.ValueString(), createTimeout)
+	createOutput, err := waitOrganizationCreated(ctx, conn, plan.OrganizationId.ValueString(), createTimeout)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.OrganizationId.String())
 		return
 	}
 
-	findOutput, err := findOrganizationByID(ctx, conn, plan.OrganizationId.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.OrganizationId.String())
-		return
-	}
-
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, findOutput, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, createOutput, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if err := createTags(ctx, conn, *findOutput.ARN, getTagsIn(ctx)); err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, *findOutput.ARN)
-		return
-	}
-
-	plan.OrganizationAlias = types.StringPointerValue(findOutput.Alias)
+	plan.OrganizationAlias = types.StringPointerValue(createOutput.Alias)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -218,12 +206,6 @@ func (r *organizationResource) Read(ctx context.Context, req resource.ReadReques
 	}
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.OrganizationId.String())
-		return
-	}
-
-	if aws.ToString(out.State) == "Deleted" {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(&retry.NotFoundError{Message: fmt.Sprintf("WorkMail Organization %s is in Deleted state", state.OrganizationId.ValueString())}))
-		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -312,7 +294,7 @@ func waitOrganizationCreated(ctx context.Context, conn *workmail.Client, id stri
 func waitOrganizationDeleted(ctx context.Context, conn *workmail.Client, id string, timeout time.Duration) (*workmail.DescribeOrganizationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusActive, statusDeleting},
-		Target:  []string{statusDeleted},
+		Target:  []string{},
 		Refresh: statusOrganization(conn, id),
 		Timeout: timeout,
 	}
@@ -358,6 +340,10 @@ func findOrganizationByID(ctx context.Context, conn *workmail.Client, id string)
 
 	if out == nil || out.OrganizationId == nil {
 		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+
+	if aws.ToString(out.State) == "Deleted" {
+		return nil, smarterr.NewError(&retry.NotFoundError{Message: fmt.Sprintf("WorkMail Organization %s is in Deleted state", id)})
 	}
 
 	return out, nil

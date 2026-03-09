@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_workmail_organization" "test" {
-  organization_alias = var.rName
+  count = var.resource_count
+
+  organization_alias = "${var.rName}-${count.index}"
   delete_directory   = true
 }
 
@@ -11,13 +13,9 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.32.1"
-    }
-  }
-}
 
-provider "aws" {}
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
