@@ -4,15 +4,20 @@
 package sts_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,7 +27,10 @@ func TestAccSTSWebIdentityTokenEphemeral_basic(t *testing.T) {
 	dataPath := tfjsonpath.New("data")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccWebIdentityTokenPreCheck(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.STSServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_10_0),
@@ -48,7 +56,10 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 	dataPath := tfjsonpath.New("data")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccWebIdentityTokenPreCheck(ctx, t)
+		},
 		ErrorCheck: acctest.ErrorCheck(t, names.STSServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_10_0),
@@ -66,6 +77,23 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccWebIdentityTokenPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).STSClient(ctx)
+
+	_, err := conn.GetWebIdentityToken(ctx, &sts.GetWebIdentityTokenInput{
+		Audience:         []string{"test"},
+		SigningAlgorithm: aws.String("RS256"),
+	})
+
+	if tfawserr.ErrCodeEquals(err, "OutboundWebIdentityFederationDisabledException") {
+		t.Skipf("skipping acceptance test: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccWebIdentityTokenEphemeralConfig_basic() string {
