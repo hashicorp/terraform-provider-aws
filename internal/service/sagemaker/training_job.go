@@ -6,11 +6,14 @@ package sagemaker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
 	"time"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -37,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -1701,17 +1705,58 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.TrainingJobName.ValueString())
 		return
 	}
+
+	// Clean up ENIs created by SageMaker in the VPC.
+	if !state.VPCConfig.IsNull() && !state.VPCConfig.IsUnknown() {
+		vpcConfigs, diags := state.VPCConfig.ToSlice(ctx)
+		resp.Diagnostics.Append(diags...)
+		if !resp.Diagnostics.HasError() && len(vpcConfigs) > 0 {
+			var securityGroupIDs []string
+			resp.Diagnostics.Append(vpcConfigs[0].SecurityGroupIDs.ElementsAs(ctx, &securityGroupIDs, false)...)
+
+			var subnetIDs []string
+			resp.Diagnostics.Append(vpcConfigs[0].Subnets.ElementsAs(ctx, &subnetIDs, false)...)
+
+			if !resp.Diagnostics.HasError() && len(securityGroupIDs) > 0 && len(subnetIDs) > 0 {
+				if err := deleteTrainingJobVPCENIs(ctx, r.Meta().EC2Client(ctx), securityGroupIDs, subnetIDs, deleteTimeout); err != nil {
+					resp.Diagnostics.AddWarning(
+						"Error cleaning up VPC ENIs",
+						fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up VPC network interfaces: %s", state.TrainingJobName.ValueString(), err),
+					)
+				}
+			}
+		}
+	}
 }
 
-// restoreAlgoSpecMetricDefinitions manages MetricDefinitions after an API flatten to prevent
-// drift caused by SageMaker auto-populating MetricDefinitions for built-in algorithms.
-// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are always kept from the API response.
-//
-// Behaviour:
-//   - saved is null (fresh import, no prior state): clears API-injected metrics so a
-//     subsequent plan is NoOp when the user didn't configure any metric_definitions.
-//   - saved is known (normal refresh): restores the user's metric_definitions from the
-//     prior state, overwriting whatever the API returned.
+func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, securityGroupIDs, subnetIDs []string, timeout time.Duration) error {
+	networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
+		Filters: []ec2types.Filter{
+			tfec2.NewFilter("group-id", securityGroupIDs),
+			tfec2.NewFilter("subnet-id", subnetIDs),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("finding ENIs: %w", err)
+	}
+
+	for _, ni := range networkInterfaces {
+		networkInterfaceID := aws.ToString(ni.NetworkInterfaceId)
+
+		if ni.Attachment != nil {
+			if err := tfec2.DetachNetworkInterface(ctx, ec2Conn, networkInterfaceID, aws.ToString(ni.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := tfec2.DeleteNetworkInterface(ctx, ec2Conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err)
+		}
+	}
+
+	return nil
+}
+
 func restoreAlgoSpecMetricDefinitions(
 	ctx context.Context,
 	saved fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel],
