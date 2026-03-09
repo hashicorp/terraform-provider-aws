@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +22,19 @@ import (
 func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var maint awstypes.MaintenanceWindowTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -62,18 +61,18 @@ func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 	var maint awstypes.MaintenanceWindowTarget
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetConfig_noNameOrDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -97,11 +96,11 @@ func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandString(10)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMaintenanceWindowTargetConfig_basic2(name, "Bäd Name!@#$%^", "good description"),
@@ -122,19 +121,19 @@ func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var maint awstypes.MaintenanceWindowTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
@@ -155,7 +154,7 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 			{
 				Config: testAccMaintenanceWindowTargetConfig_basicUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "owner_information", "something"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
@@ -180,19 +179,19 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var maint awstypes.MaintenanceWindowTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetConfig_basicResourceGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "resource-groups:ResourceTypeFilters"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::Instance"),
@@ -217,19 +216,19 @@ func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var maint awstypes.MaintenanceWindowTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -241,19 +240,19 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 	ctx := acctest.Context(t)
 	var maint awstypes.MaintenanceWindowTarget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_maintenance_window_target.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
+		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
+					testAccCheckMaintenanceWindowTargetExists(ctx, t, resourceName, &maint),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -262,14 +261,14 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 	})
 }
 
-func testAccCheckMaintenanceWindowTargetExists(ctx context.Context, n string, v *awstypes.MaintenanceWindowTarget) resource.TestCheckFunc {
+func testAccCheckMaintenanceWindowTargetExists(ctx context.Context, t *testing.T, n string, v *awstypes.MaintenanceWindowTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		output, err := tfssm.FindMaintenanceWindowTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["window_id"], rs.Primary.ID)
 
@@ -283,9 +282,9 @@ func testAccCheckMaintenanceWindowTargetExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccCheckMaintenanceWindowTargetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMaintenanceWindowTargetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_maintenance_window_target" {

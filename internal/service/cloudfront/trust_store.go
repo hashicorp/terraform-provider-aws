@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -277,10 +276,10 @@ func (r *trustStoreResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetTrustStoreOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.TrustStoreStatusActive),
-		Refresh:                   statusTrustStore(ctx, conn, id),
+		Refresh:                   statusTrustStore(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -295,10 +294,10 @@ func waitTrustStoreActive(ctx context.Context, conn *cloudfront.Client, id strin
 }
 
 func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetTrustStoreOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TrustStoreStatusActive),
 		Target:  []string{},
-		Refresh: statusTrustStore(ctx, conn, id),
+		Refresh: statusTrustStore(conn, id),
 		Timeout: timeout,
 	}
 
@@ -311,8 +310,8 @@ func waitTrustStoreDeleted(ctx context.Context, conn *cloudfront.Client, id stri
 	return nil, err
 }
 
-func statusTrustStore(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTrustStore(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findTrustStoreByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -338,9 +337,8 @@ func findTrustStore(ctx context.Context, conn *cloudfront.Client, input *cloudfr
 	out, err := conn.GetTrustStore(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

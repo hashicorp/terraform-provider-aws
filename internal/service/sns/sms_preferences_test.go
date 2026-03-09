@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,11 +34,11 @@ func testAccSMSPreferences_defaultSMSType(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sns_sms_preferences.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx),
+		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_defType,
@@ -61,11 +59,11 @@ func testAccSMSPreferences_almostAll(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sns_sms_preferences.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx),
+		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_almostAll,
@@ -83,13 +81,13 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_sns_sms_preferences.test"
 	iamRoleName := "aws_iam_role.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx),
+		CheckDestroy:             testAccCheckSMSPreferencesDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_deliveryRole(rName),
@@ -102,14 +100,14 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 	})
 }
 
-func testAccCheckSMSPreferencesDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSMSPreferencesDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_sms_preferences" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).SNSClient(ctx)
 
 			attrs, err := conn.GetSMSAttributes(ctx, &sns.GetSMSAttributesInput{})
 

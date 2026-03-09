@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,10 +26,10 @@ import (
 func TestAccBedrockAgentCoreWorkloadIdentity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var w bedrockagentcorecontrol.GetWorkloadIdentityOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_workload_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -39,12 +37,12 @@ func TestAccBedrockAgentCoreWorkloadIdentity_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkloadIdentityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
+					testAccCheckWorkloadIdentityExists(ctx, t, resourceName, &w),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -70,10 +68,10 @@ func TestAccBedrockAgentCoreWorkloadIdentity_basic(t *testing.T) {
 func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var w bedrockagentcorecontrol.GetWorkloadIdentityOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_workload_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -81,12 +79,12 @@ func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkloadIdentityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
+					testAccCheckWorkloadIdentityExists(ctx, t, resourceName, &w),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceWorkloadIdentity, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -106,10 +104,10 @@ func TestAccBedrockAgentCoreWorkloadIdentity_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreWorkloadIdentity_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var w bedrockagentcorecontrol.GetWorkloadIdentityOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagentcore_workload_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -117,12 +115,12 @@ func TestAccBedrockAgentCoreWorkloadIdentity_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkloadIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkloadIdentityConfig_urls(rName, `"https://example.com/callback"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
+					testAccCheckWorkloadIdentityExists(ctx, t, resourceName, &w),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -143,7 +141,7 @@ func TestAccBedrockAgentCoreWorkloadIdentity_update(t *testing.T) {
 			{
 				Config: testAccWorkloadIdentityConfig_urls(rName, `"https://app.example.com/auth","https://example.com/callback"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkloadIdentityExists(ctx, resourceName, &w),
+					testAccCheckWorkloadIdentityExists(ctx, t, resourceName, &w),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -158,9 +156,9 @@ func TestAccBedrockAgentCoreWorkloadIdentity_update(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkloadIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkloadIdentityDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_workload_identity" {
@@ -183,14 +181,14 @@ func testAccCheckWorkloadIdentityDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckWorkloadIdentityExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetWorkloadIdentityOutput) resource.TestCheckFunc {
+func testAccCheckWorkloadIdentityExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetWorkloadIdentityOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindWorkloadIdentityByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 		if err != nil {
@@ -204,7 +202,7 @@ func testAccCheckWorkloadIdentityExists(ctx context.Context, n string, v *bedroc
 }
 
 func testAccPreCheckWorkloadIdentities(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	input := bedrockagentcorecontrol.ListWorkloadIdentitiesInput{}
 

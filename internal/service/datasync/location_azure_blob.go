@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -37,7 +36,6 @@ import (
 // @Testing(importIgnore="sas_configuration")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(name="LocationAzureBlob")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,
@@ -269,9 +267,8 @@ func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.Client, arn 
 	output, err := conn.DescribeLocationAzureBlob(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

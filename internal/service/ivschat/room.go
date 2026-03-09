@@ -33,7 +33,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetRoomOutput")
 // @Testing(preIdentityVersion="v6.5.0")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceRoom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoomCreate,

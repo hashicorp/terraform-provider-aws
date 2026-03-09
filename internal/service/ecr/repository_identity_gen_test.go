@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccECRRepository_Identity_Basic(t *testing.T) {
+func TestAccECRRepository_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Repository
@@ -36,7 +36,7 @@ func TestAccECRRepository_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccECRRepository_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					testAccCheckRepositoryExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
@@ -111,7 +111,7 @@ func TestAccECRRepository_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccECRRepository_Identity_RegionOverride(t *testing.T) {
+func TestAccECRRepository_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ecr_repository.test"
@@ -200,7 +200,7 @@ func TestAccECRRepository_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccECRRepository_Identity_ExistingResource(t *testing.T) {
+func TestAccECRRepository_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Repository
@@ -213,7 +213,7 @@ func TestAccECRRepository_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy: testAccCheckRepositoryDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -222,7 +222,7 @@ func TestAccECRRepository_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					testAccCheckRepositoryExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -258,7 +258,7 @@ func TestAccECRRepository_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.10.0
-func TestAccECRRepository_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccECRRepository_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.Repository
@@ -271,7 +271,7 @@ func TestAccECRRepository_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ECRServiceID),
-		CheckDestroy: testAccCheckRepositoryDestroy(ctx),
+		CheckDestroy: testAccCheckRepositoryDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -285,7 +285,7 @@ func TestAccECRRepository_Identity_ExistingResource_NoRefresh_NoChange(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					testAccCheckRepositoryExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

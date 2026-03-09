@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrockagentcore "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,11 +28,11 @@ import (
 func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -42,12 +40,12 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -77,11 +75,11 @@ func TestAccBedrockAgentCoreAgentRuntime_basic(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -89,12 +87,12 @@ func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUri),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAgentRuntime, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,11 +112,11 @@ func TestAccBedrockAgentCoreAgentRuntime_disappears(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -126,12 +124,12 @@ func TestAccBedrockAgentCoreAgentRuntime_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_tags1(rName, rImageUri, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -154,7 +152,7 @@ func TestAccBedrockAgentCoreAgentRuntime_tags(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_tags2(rName, rImageUri, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -171,7 +169,7 @@ func TestAccBedrockAgentCoreAgentRuntime_tags(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_tags1(rName, rImageUri, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -191,11 +189,11 @@ func TestAccBedrockAgentCoreAgentRuntime_tags(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -203,12 +201,12 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Initial description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -230,7 +228,7 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_description(rName, rImageUri, "Updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -248,11 +246,11 @@ func TestAccBedrockAgentCoreAgentRuntime_description(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -260,12 +258,12 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, "ENV_KEY_1", "env_value_1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -288,7 +286,7 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_environmentVariables(rName, rImageUri, "ENV_KEY_2", "env_value_2_updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -308,11 +306,11 @@ func TestAccBedrockAgentCoreAgentRuntime_environmentVariables(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -320,12 +318,12 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://accounts.google.com/.well-known/openid-configuration", "weather", "sports", "client-999", "client-888"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -362,7 +360,7 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_authorizerConfiguration(rName, rImageUri, "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration", "finance", "technology", "client-111", "client-222"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -396,11 +394,11 @@ func TestAccBedrockAgentCoreAgentRuntime_authorizerConfiguration(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUri := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -408,12 +406,12 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "HTTP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "protocol_configuration.0.server_protocol", "HTTP"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -439,7 +437,7 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_protocolConfiguration(rName, rImageUri, "MCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -461,12 +459,12 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	rImageUriV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V2_URI")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -474,12 +472,12 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -510,7 +508,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -540,14 +538,14 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rCodeS3BucketV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V1_S3_BUCKET")
 	rCodeS3KeyV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V1_S3_KEY")
 	rCodeS3BucketV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V2_S3_BUCKET")
 	rCodeS3KeyV2 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V2_S3_KEY")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -555,12 +553,12 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rCodeS3BucketV1, rCodeS3KeyV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -604,7 +602,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 			{
 				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rCodeS3BucketV2, rCodeS3KeyV2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -646,13 +644,13 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactCode(t *testing.T) {
 func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 	resourceName := "aws_bedrockagentcore_agent_runtime.test"
 	rImageUriV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	rCodeS3BucketV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V1_S3_BUCKET")
 	rCodeS3KeyV1 := acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_CODE_V1_S3_KEY")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
@@ -660,12 +658,12 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -690,7 +688,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 				// Switch to code artifact, expect destroy/create
 				Config: testAccAgentRuntimeConfig_codeConfiguration(rName, rCodeS3BucketV1, rCodeS3KeyV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -728,7 +726,7 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 				// Switch back to container artifact, expect destroy/create
 				Config: testAccAgentRuntimeConfig_basic(rName, rImageUriV1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAgentRuntimeExists(ctx, resourceName, &agentRuntime),
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
 					resource.TestCheckResourceAttr(resourceName, "agent_runtime_artifact.0.container_configuration.0.container_uri", rImageUriV1),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -753,9 +751,9 @@ func TestAccBedrockAgentCoreAgentRuntime_artifactTypeChanged(t *testing.T) {
 	})
 }
 
-func testAccCheckAgentRuntimeDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentRuntimeDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_bedrockagentcore_agent_runtime" {
@@ -778,14 +776,14 @@ func testAccCheckAgentRuntimeDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckAgentRuntimeExists(ctx context.Context, n string, v *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
+func testAccCheckAgentRuntimeExists(ctx context.Context, t *testing.T, n string, v *bedrockagentcorecontrol.GetAgentRuntimeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 		resp, err := tfbedrockagentcore.FindAgentRuntimeByID(ctx, conn, rs.Primary.Attributes["agent_runtime_id"])
 		if err != nil {
@@ -799,7 +797,7 @@ func testAccCheckAgentRuntimeExists(ctx context.Context, n string, v *bedrockage
 }
 
 func testAccPreCheckAgentRuntimes(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentCoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
 	var input bedrockagentcorecontrol.ListAgentRuntimesInput
 

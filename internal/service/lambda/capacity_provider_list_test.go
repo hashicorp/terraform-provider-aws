@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -19,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaCapacityProvider_List_Basic(t *testing.T) {
+func TestAccLambdaCapacityProvider_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_lambda_capacity_provider.test[0]"
 	resourceName2 := "aws_lambda_capacity_provider.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -35,7 +34,7 @@ func TestAccLambdaCapacityProvider_List_Basic(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -77,12 +76,12 @@ func TestAccLambdaCapacityProvider_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_List_RegionOverride(t *testing.T) {
+func TestAccLambdaCapacityProvider_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_lambda_capacity_provider.test[0]"
 	resourceName2 := "aws_lambda_capacity_provider.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -93,7 +92,7 @@ func TestAccLambdaCapacityProvider_List_RegionOverride(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

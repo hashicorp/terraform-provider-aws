@@ -21,19 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSSMContactsRotation_IdentitySerial(t *testing.T) {
+func testAccSSMContactsRotation_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSMContactsRotation_Identity_Basic,
-		"ExistingResource":          testAccSSMContactsRotation_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange,
+		acctest.CtBasic:             testAccSSMContactsRotation_Identity_basic,
+		"ExistingResource":          testAccSSMContactsRotation_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccSSMContactsRotation_Identity_ExistingResource_noRefreshNoChange,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccSSMContactsRotation_Identity_Basic(t *testing.T) {
+func testAccSSMContactsRotation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -45,7 +45,7 @@ func testAccSSMContactsRotation_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy:             testAccCheckRotationDestroy(ctx),
+		CheckDestroy:             testAccCheckRotationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -55,7 +55,7 @@ func testAccSSMContactsRotation_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
+					testAccCheckRotationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -118,7 +118,7 @@ func testAccSSMContactsRotation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -130,7 +130,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckRotationDestroy(ctx),
+		CheckDestroy: testAccCheckRotationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -139,7 +139,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
+					testAccCheckRotationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -153,7 +153,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
+					testAccCheckRotationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -197,7 +197,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccSSMContactsRotation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ssmcontacts_rotation.test"
@@ -209,7 +209,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		CheckDestroy: testAccCheckRotationDestroy(ctx),
+		CheckDestroy: testAccCheckRotationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -223,7 +223,7 @@ func testAccSSMContactsRotation_Identity_ExistingResource_NoRefresh_NoChange(t *
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
+					testAccCheckRotationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

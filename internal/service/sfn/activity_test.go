@@ -11,11 +11,9 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,19 +22,19 @@ import (
 
 func TestAccSFNActivity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		CheckDestroy:             testAccCheckActivityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -53,19 +51,19 @@ func TestAccSFNActivity_basic(t *testing.T) {
 
 func TestAccSFNActivity_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		CheckDestroy:             testAccCheckActivityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsfn.ResourceActivity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,19 +74,19 @@ func TestAccSFNActivity_disappears(t *testing.T) {
 
 func TestAccSFNActivity_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		CheckDestroy:             testAccCheckActivityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basicTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -101,7 +99,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 			{
 				Config: testAccActivityConfig_basicTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -110,7 +108,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 			{
 				Config: testAccActivityConfig_basicTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -121,21 +119,21 @@ func TestAccSFNActivity_tags(t *testing.T) {
 
 func TestAccSFNActivity_encryptionConfigurationCustomerManagedKMSKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 	reusePeriodSeconds := 900
 	kmsKeyResource := "aws_kms_key.kms_key_for_sfn"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		CheckDestroy:             testAccCheckActivityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_encryptionConfigurationCustomerManagedKMSKey(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds)),
@@ -154,19 +152,19 @@ func TestAccSFNActivity_encryptionConfigurationCustomerManagedKMSKey(t *testing.
 
 func TestAccSFNActivity_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckActivityDestroy(ctx),
+		CheckDestroy:             testAccCheckActivityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckActivityExists(ctx, resourceName),
+					testAccCheckActivityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
 				),
@@ -180,14 +178,14 @@ func TestAccSFNActivity_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 	})
 }
 
-func testAccCheckActivityExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckActivityExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SFNClient(ctx)
 
 		_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)
 
@@ -195,9 +193,9 @@ func testAccCheckActivityExists(ctx context.Context, n string) resource.TestChec
 	}
 }
 
-func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckActivityDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SFNClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sfn_activity" {

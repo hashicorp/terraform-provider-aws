@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.T) {
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
@@ -37,7 +37,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
-		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -49,7 +49,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.
 					"common_name":        config.StringVariable(common_name.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "network-firewall", "tls-configuration/{name}"),
@@ -122,7 +122,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.
 	})
 }
 
-func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t *testing.T) {
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
@@ -263,7 +263,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t 
 	})
 }
 
-func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(t *testing.T) {
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
@@ -278,7 +278,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
-		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -289,7 +289,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(
 					"common_name":        config.StringVariable(common_name.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -305,7 +305,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(
 					"common_name":        config.StringVariable(common_name.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -351,7 +351,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(
 	})
 }
 
-func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
@@ -366,7 +366,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
-		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		CheckDestroy: testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -382,7 +382,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource_
 					"common_name":        config.StringVariable(common_name.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,18 +21,18 @@ import (
 func TestAccServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "budgets") },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogEndpointID, "budgets"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetResourceAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetResourceAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBudgetResourceAssociationExists(ctx, resourceName),
+					testAccCheckBudgetResourceAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, "aws_servicecatalog_portfolio.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
 				),
@@ -51,18 +49,18 @@ func TestAccServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 func TestAccServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_budget_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "budgets") },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogEndpointID, "budgets"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBudgetResourceAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckBudgetResourceAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBudgetResourceAssociationExists(ctx, resourceName),
+					testAccCheckBudgetResourceAssociationExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,9 +69,9 @@ func TestAccServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBudgetResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBudgetResourceAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_budget_resource_association" {
@@ -101,7 +99,7 @@ func testAccCheckBudgetResourceAssociationDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckBudgetResourceAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckBudgetResourceAssociationExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -115,7 +113,7 @@ func testAccCheckBudgetResourceAssociationExists(ctx context.Context, resourceNa
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ServiceCatalogClient(ctx)
 
 		_, err = tfservicecatalog.WaitBudgetResourceAssociationReady(ctx, conn, budgetName, resourceID, tfservicecatalog.BudgetResourceAssociationReadyTimeout)
 

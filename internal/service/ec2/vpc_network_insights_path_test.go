@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,18 +20,18 @@ import (
 func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
@@ -58,18 +56,18 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "udp"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInsightsPath(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -81,18 +79,18 @@ func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -105,7 +103,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -114,7 +112,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -126,18 +124,18 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_sourceAndDestinationARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_sourceAndDestinationARN(rName, "tcp"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_network_interface.test.0", names.AttrID),
@@ -156,18 +154,18 @@ func TestAccVPCNetworkInsightsPath_sourceAndDestinationARN(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_sourceIP(rName, "1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "1.1.1.1"),
 				),
 			},
@@ -179,7 +177,7 @@ func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_sourceIP(rName, "8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", "8.8.8.8"),
 				),
 			},
@@ -190,18 +188,18 @@ func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_destinationIP(rName, "1.1.1.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "1.1.1.1"),
 				),
 			},
@@ -213,7 +211,7 @@ func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_destinationIP(rName, "8.8.8.8"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", "8.8.8.8"),
 				),
 			},
@@ -224,18 +222,18 @@ func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_destinationPort(rName, 80),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "80"),
 				),
 			},
@@ -247,7 +245,7 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_destinationPort(rName, 443),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "443"),
 				),
 			},
@@ -258,18 +256,18 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_filterAtSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_filterAtSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "filter_at_source.0.destination_address", "aws_network_interface.test.1", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.to_port", "80"),
@@ -290,18 +288,18 @@ func TestAccVPCNetworkInsightsPath_filterAtSource(t *testing.T) {
 func TestAccVPCNetworkInsightsPath_filterAtSourceWithoutSourceInfo(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_filterAtSourceWithoutSourceInfo(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "filter_at_source.0.destination_address", "aws_network_interface.test.1", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "filter_at_source.0.destination_port_range.0.to_port", "80"),
@@ -321,18 +319,18 @@ func TestAccVPCNetworkInsightsPath_filterAtSourceWithoutSourceInfo(t *testing.T)
 func TestAccVPCNetworkInsightsPath_filterAtDestination(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_network_insights_path.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
+		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInsightsPathConfig_filterAtDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
+					testAccCheckNetworkInsightsPathExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "filter_at_destination.0.destination_address", "aws_network_interface.test.1", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "filter_at_destination.0.destination_port_range.0.from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "filter_at_destination.0.destination_port_range.0.to_port", "80"),
@@ -350,14 +348,14 @@ func TestAccVPCNetworkInsightsPath_filterAtDestination(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkInsightsPathExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckNetworkInsightsPathExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		_, err := tfec2.FindNetworkInsightsPathByID(ctx, conn, rs.Primary.ID)
 
@@ -365,9 +363,9 @@ func testAccCheckNetworkInsightsPathExists(ctx context.Context, n string) resour
 	}
 }
 
-func testAccCheckNetworkInsightsPathDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckNetworkInsightsPathDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_network_insights_path" {

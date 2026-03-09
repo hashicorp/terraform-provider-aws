@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,18 +21,18 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
+					testAccCheckBackupPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
@@ -53,18 +51,18 @@ func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 	var v awstypes.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	fsResourceName := "aws_efs_file_system.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
+					testAccCheckBackupPolicyExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfefs.ResourceFileSystem(), fsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,18 +75,18 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
+					testAccCheckBackupPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
@@ -101,7 +99,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 			{
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
+					testAccCheckBackupPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
@@ -109,7 +107,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 			{
 				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
+					testAccCheckBackupPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
@@ -118,14 +116,14 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupPolicyExists(ctx context.Context, n string, v *awstypes.BackupPolicy) resource.TestCheckFunc {
+func testAccCheckBackupPolicyExists(ctx context.Context, t *testing.T, n string, v *awstypes.BackupPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
 
 		output, err := tfefs.FindBackupPolicyByID(ctx, conn, rs.Primary.ID)
 
@@ -139,9 +137,9 @@ func testAccCheckBackupPolicyExists(ctx context.Context, n string, v *awstypes.B
 	}
 }
 
-func testAccCheckBackupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckBackupPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EFSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_backup_policy" {

@@ -5,15 +5,42 @@
 
 Generally, dependency updates are handled by maintainers.
 
+## Changelog Entries for Dependency Updates
+
+**Inlcude a changelog entry for dependency updates that address:**
+
+1. Security vulnerabilities
+2. Significant changes (e.g., AWS SDK authentication changes)
+
+### Go Updates
+
+Go is transparent about disclosing security fixes and significant changes in updates. To find specifics, see the version milestone. For example, the [Go 1.25.7 milestone](https://github.com/golang/go/issues?q=milestone%3AGo1.25.7) lists four security updates. NOTE: Security updates don't always include the "Security" label. Highlights and links to milestones can also be found in the [Release History](https://go.dev/doc/devel/release).
+
+### AWS SDK for Go V2 and Other Dependency Updates
+
+Other teams aren't as transparent as Go about security fixes. But, a quick way to find disclosed fixes is reviewing the Release Notes and commits in dependabot PRs. For the AWS SDK, you can also review the [CHANGELOG](https://raw.githubusercontent.com/aws/aws-sdk-go-v2/refs/heads/main/CHANGELOG.md).
+
+### Changelog Format
+
+``````
+```release-note:note
+provider: Updated Go version to v1.25.7 (addresses GO-2026-4337, Unexpected session resumption)
+```
+``````
+
 ## Go Version Update
 
 The Terraform AWS provider is written in Go and is compiled into an executable binary that communicates with [Terraform Core over a local RPC interface](https://developer.hashicorp.com/terraform/plugin).
 
 A new version of Go is [released every 6 months](https://go.dev/wiki/Go-Release-Cycle#overview). [Minor releases](https://go.dev/wiki/MinorReleases), fixing serious problems and security issues, are done [regularly](https://go.dev/doc/devel/release) for the current and previous versions.
 
+<!-- markdownlint-disable MD046 -->
+
 !!! note
 
     Go versions differ from [semver](https://semver.org/spec/v2.0.0.html). Major versions of Go differ in the second component (upgrading from 1.24.11 to 1.25.5 is a major version upgrade), while minor versions of Go differ just in the third component (upgrading from 1.24.10 to 1.24.11 is a minor version upgrade).
+
+<!-- markdownlint-enable MD046 -->
 
 ### When To Upgrade Major Version
 

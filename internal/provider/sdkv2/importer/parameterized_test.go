@@ -1036,7 +1036,7 @@ func (t testImportID) Create(d *schema.ResourceData) string {
 	return result
 }
 
-func (t testImportID) Parse(id string) (string, map[string]string, error) {
+func (t testImportID) Parse(id string) (string, map[string]any, error) {
 	t.t.Helper()
 
 	parts, err := flex.ExpandResourceId(id, 2, false)
@@ -1044,7 +1044,7 @@ func (t testImportID) Parse(id string) (string, map[string]string, error) {
 		t.t.Fatalf("Parsing test Import ID: %s", err)
 	}
 
-	return id, map[string]string{
+	return id, map[string]any{
 		"name": parts[0],
 		"type": parts[1],
 	}, nil

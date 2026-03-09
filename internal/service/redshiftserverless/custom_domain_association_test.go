@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshiftserverless "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,12 +20,12 @@ import (
 func TestAccRedshiftServerlessCustomDomainAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var customDomainAssociation redshiftserverless.GetCustomDomainAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshiftserverless_custom_domain_association.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftServerlessEndpointID)
@@ -35,12 +33,12 @@ func TestAccRedshiftServerlessCustomDomainAssociation_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomDomainAssociationExists(ctx, resourceName, &customDomainAssociation),
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName, &customDomainAssociation),
 					resource.TestCheckResourceAttrSet(resourceName, "custom_domain_certificate_expiry_time"),
 				),
 			},
@@ -56,12 +54,12 @@ func TestAccRedshiftServerlessCustomDomainAssociation_basic(t *testing.T) {
 func TestAccRedshiftServerlessCustomDomainAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var customDomainAssociation redshiftserverless.GetCustomDomainAssociationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshiftserverless_custom_domain_association.test"
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftServerlessEndpointID)
@@ -69,12 +67,12 @@ func TestAccRedshiftServerlessCustomDomainAssociation_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDomainAssociationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomDomainAssociationExists(ctx, resourceName, &customDomainAssociation),
+					testAccCheckCustomDomainAssociationExists(ctx, t, resourceName, &customDomainAssociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshiftserverless.ResourceCustomDomainAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,9 +81,9 @@ func TestAccRedshiftServerlessCustomDomainAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomDomainAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshiftserverless_custom_domain_association" {
@@ -109,14 +107,14 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckCustomDomainAssociationExists(ctx context.Context, n string, v *redshiftserverless.GetCustomDomainAssociationOutput) resource.TestCheckFunc {
+func testAccCheckCustomDomainAssociationExists(ctx context.Context, t *testing.T, n string, v *redshiftserverless.GetCustomDomainAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 		output, err := tfredshiftserverless.FindCustomDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup_name"], rs.Primary.Attributes["custom_domain_name"])
 
@@ -131,7 +129,7 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, n string, v 
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).RedshiftServerlessClient(ctx)
 
 	input := &redshiftserverless.ListCustomDomainAssociationsInput{}
 	_, err := conn.ListCustomDomainAssociations(ctx, input)

@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -40,8 +39,11 @@ import (
 // @FrameworkResource("aws_arcregionswitch_plan", name="Plan")
 // @Tags(identifierAttribute="arn")
 // @Region(overrideDeprecated=true)
-// Generating tags tests does not work because alternate region isn't working and tests require 2 regions
-// @Testing(tagsTest=false)
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types;awstypes;awstypes.Plan")
+// @Testing(altRegionTfVars=true)
+// @Testing(preIdentityVersion="6.30.0")
+// @Testing(preCheck="testAccPreCheck")
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
 
@@ -53,8 +55,8 @@ func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type resourcePlan struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByARN
+	framework.ResourceWithModel[resourcePlanModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -536,9 +538,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.OneOf("activeActive", "activePassive"),
-				},
 			},
 			"regions": fwschema.ListAttribute{
 				Required:   true,
@@ -570,9 +569,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"alarm_type": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AlarmType](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("applicationHealth", "trigger"),
-							},
 						},
 						"resource_identifier": fwschema.StringAttribute{
 							Required: true,
@@ -593,9 +589,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						names.AttrAction: fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
 						},
 						names.AttrDescription: fwschema.StringAttribute{
 							Optional: true,
@@ -618,9 +611,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									names.AttrCondition: fwschema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
 										Required:   true,
-										Validators: []validator.String{
-											stringvalidator.OneOf("red", "green"),
-										},
 									},
 								},
 							},
@@ -638,9 +628,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"workflow_target_action": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
 						},
 						"workflow_target_region": fwschema.StringAttribute{
 							Optional: true,
@@ -917,12 +904,6 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
-}
-
-func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schema) fwdiag.Diagnostics {
-	var diags fwdiag.Diagnostics
-	// Basic validation is handled by the schema validators
-	return diags
 }
 
 func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string) (*awstypes.Plan, error) {
@@ -1829,15 +1810,11 @@ type conditionModel struct {
 	Condition           fwtypes.StringEnum[awstypes.AlarmCondition] `tfsdk:"condition"`
 }
 
-func (r *resourcePlan) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	// Basic validation is handled by the schema validators
-}
-
 func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn string, timeout time.Duration) (*awstypes.Plan, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{"exists"},
-		Refresh: statusPlan(ctx, conn, arn),
+		Refresh: statusPlan(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1868,7 +1845,7 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 		healthCheckConf := &retry.StateChangeConf{
 			Pending: []string{"pending"},
 			Target:  []string{"allocated"},
-			Refresh: statusRoute53HealthChecks(ctx, conn, arn, expectedCount),
+			Refresh: statusRoute53HealthChecks(conn, arn, expectedCount),
 			Timeout: timeout,
 		}
 
@@ -1881,8 +1858,8 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 	return plan, nil
 }
 
-func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusRoute53HealthChecks(conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		healthChecks, err := findRoute53HealthChecksByARN(ctx, conn, arn)
 		if err != nil {
 			return nil, "", smarterr.NewError(err)
@@ -1905,8 +1882,8 @@ func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client
 	}
 }
 
-func statusPlan(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusPlan(conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		plan, err := findPlanByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -1923,7 +1900,7 @@ func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn st
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"health_check_allocation_in_progress"},
 		Target:  []string{"deletable"},
-		Refresh: statusPlanDeletable(ctx, conn, arn),
+		Refresh: statusPlanDeletable(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -1936,8 +1913,8 @@ func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn st
 	return nil, smarterr.NewError(err)
 }
 
-func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
-	return func(_ context.Context) (any, string, error) {
+func statusPlanDeletable(conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		plan, err := findPlanByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil

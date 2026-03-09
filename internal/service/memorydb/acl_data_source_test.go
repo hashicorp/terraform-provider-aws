@@ -21,7 +21,7 @@ func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
 	userName1 := "tf-" + sdkacctest.RandString(8)
 	userName2 := "tf-" + sdkacctest.RandString(8)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

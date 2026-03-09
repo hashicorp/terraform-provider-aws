@@ -23,7 +23,6 @@ import (
 
 // @SDKDataSource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
 // @Tags(identifierAttribute="replication_subnet_group_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSubnetGroupRead,

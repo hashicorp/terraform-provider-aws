@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCloudWatchMetricAlarm_Identity_Basic(t *testing.T) {
+func TestAccCloudWatchMetricAlarm_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.MetricAlarm
@@ -36,7 +36,7 @@ func TestAccCloudWatchMetricAlarm_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -46,7 +46,7 @@ func TestAccCloudWatchMetricAlarm_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &v),
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New("alarm_name"), compare.ValuesSame()),
@@ -111,7 +111,7 @@ func TestAccCloudWatchMetricAlarm_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchMetricAlarm_Identity_RegionOverride(t *testing.T) {
+func TestAccCloudWatchMetricAlarm_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_cloudwatch_metric_alarm.test"
@@ -200,7 +200,7 @@ func TestAccCloudWatchMetricAlarm_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccCloudWatchMetricAlarm_Identity_ExistingResource(t *testing.T) {
+func TestAccCloudWatchMetricAlarm_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.MetricAlarm
@@ -213,7 +213,7 @@ func TestAccCloudWatchMetricAlarm_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckMetricAlarmDestroy(ctx),
+		CheckDestroy: testAccCheckMetricAlarmDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -222,7 +222,7 @@ func TestAccCloudWatchMetricAlarm_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &v),
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -258,7 +258,7 @@ func TestAccCloudWatchMetricAlarm_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.7.0
-func TestAccCloudWatchMetricAlarm_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCloudWatchMetricAlarm_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.MetricAlarm
@@ -271,7 +271,7 @@ func TestAccCloudWatchMetricAlarm_Identity_ExistingResource_NoRefresh_NoChange(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudWatchServiceID),
-		CheckDestroy: testAccCheckMetricAlarmDestroy(ctx),
+		CheckDestroy: testAccCheckMetricAlarmDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -285,7 +285,7 @@ func TestAccCloudWatchMetricAlarm_Identity_ExistingResource_NoRefresh_NoChange(t
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMetricAlarmExists(ctx, resourceName, &v),
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

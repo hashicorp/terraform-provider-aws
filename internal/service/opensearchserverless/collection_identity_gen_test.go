@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOpenSearchServerlessCollection_Identity_Basic(t *testing.T) {
+func TestAccOpenSearchServerlessCollection_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CollectionDetail
@@ -35,7 +35,7 @@ func TestAccOpenSearchServerlessCollection_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -45,7 +45,7 @@ func TestAccOpenSearchServerlessCollection_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName, &v),
+					testAccCheckCollectionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -107,7 +107,7 @@ func TestAccOpenSearchServerlessCollection_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchServerlessCollection_Identity_RegionOverride(t *testing.T) {
+func TestAccOpenSearchServerlessCollection_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_opensearchserverless_collection.test"
@@ -195,7 +195,7 @@ func TestAccOpenSearchServerlessCollection_Identity_RegionOverride(t *testing.T)
 }
 
 // Resource Identity was added after v6.28.0
-func TestAccOpenSearchServerlessCollection_Identity_ExistingResource(t *testing.T) {
+func TestAccOpenSearchServerlessCollection_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CollectionDetail
@@ -208,7 +208,7 @@ func TestAccOpenSearchServerlessCollection_Identity_ExistingResource(t *testing.
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		CheckDestroy: testAccCheckCollectionDestroy(ctx),
+		CheckDestroy: testAccCheckCollectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -217,7 +217,7 @@ func TestAccOpenSearchServerlessCollection_Identity_ExistingResource(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName, &v),
+					testAccCheckCollectionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -253,7 +253,7 @@ func TestAccOpenSearchServerlessCollection_Identity_ExistingResource(t *testing.
 }
 
 // Resource Identity was added after v6.28.0
-func TestAccOpenSearchServerlessCollection_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccOpenSearchServerlessCollection_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CollectionDetail
@@ -266,7 +266,7 @@ func TestAccOpenSearchServerlessCollection_Identity_ExistingResource_NoRefresh_N
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
-		CheckDestroy: testAccCheckCollectionDestroy(ctx),
+		CheckDestroy: testAccCheckCollectionDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -280,7 +280,7 @@ func TestAccOpenSearchServerlessCollection_Identity_ExistingResource_NoRefresh_N
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCollectionExists(ctx, resourceName, &v),
+					testAccCheckCollectionExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

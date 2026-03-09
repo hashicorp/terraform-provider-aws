@@ -65,16 +65,15 @@ func (l *listResourceFlow) List(ctx context.Context, request list.ListRequest, s
 			rd.Set(names.AttrName, flowName)
 
 			tflog.Info(ctx, "Reading AppFlow Flow")
-			diags := resourceFlowRead(ctx, rd, awsClient)
-			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
+			output, err := findFlowByName(ctx, conn, flowName)
+			if err != nil {
+				tflog.Error(ctx, "Reading AppFlow Flow", map[string]any{
+					"error": err.Error(),
+				})
 				continue
 			}
+
+			resourceFlowFlatten(ctx, output, rd)
 
 			result.DisplayName = flowName
 

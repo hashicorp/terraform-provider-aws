@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -282,7 +281,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
 	input := &ecs.CreateTaskSetInput{
-		ClientToken:    aws.String(id.UniqueId()),
+		ClientToken:    aws.String(sdkid.UniqueId()),
 		Cluster:        aws.String(cluster),
 		Service:        aws.String(service),
 		Tags:           getTagsIn(ctx),
@@ -537,9 +536,8 @@ func findTaskSets(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTask
 	output, err := conn.DescribeTaskSets(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -588,8 +586,8 @@ func findTaskSetNoTagsByThreePartKey(ctx context.Context, conn *ecs.Client, task
 	return findTaskSet(ctx, conn, input)
 }
 
-func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTaskSetStability(conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
 		if retry.NotFound(err) {
@@ -604,8 +602,8 @@ func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, se
 	}
 }
 
-func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTaskSet(conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
 		if retry.NotFound(err) {
@@ -628,10 +626,10 @@ const (
 
 // Does not return tags.
 func waitTaskSetStable(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string, timeout time.Duration) (*awstypes.TaskSet, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StabilityStatusStabilizing),
 		Target:  enum.Slice(awstypes.StabilityStatusSteadyState),
-		Refresh: statusTaskSetStability(ctx, conn, taskSetID, service, cluster),
+		Refresh: statusTaskSetStability(conn, taskSetID, service, cluster),
 		Timeout: timeout,
 	}
 
@@ -649,10 +647,10 @@ func waitTaskSetDeleted(ctx context.Context, conn *ecs.Client, taskSetID, servic
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{taskSetStatusActive, taskSetStatusPrimary, taskSetStatusDraining},
 		Target:  []string{},
-		Refresh: statusTaskSet(ctx, conn, taskSetID, service, cluster),
+		Refresh: statusTaskSet(conn, taskSetID, service, cluster),
 		Timeout: timeout,
 	}
 

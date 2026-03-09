@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,16 +34,16 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
@@ -57,7 +56,7 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 			{
 				Config: testAccRegistryPolicyConfig_updated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:CreateRepository".+`)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
@@ -72,16 +71,16 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
+					testAccCheckRegistryPolicyExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,9 +89,9 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_registry_policy" {
@@ -116,14 +115,14 @@ func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckRegistryPolicyExists(ctx context.Context, n string, v *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyExists(ctx context.Context, t *testing.T, n string, v *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECRClient(ctx)
 
 		output, err := tfecr.FindRegistryPolicy(ctx, conn)
 

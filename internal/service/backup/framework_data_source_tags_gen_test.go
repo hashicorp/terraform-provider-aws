@@ -23,11 +23,11 @@ func testAccBackupFrameworkDataSource_tagsSerial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                  testAccBackupFrameworkDataSource_tags,
-		"NullMap":                        testAccBackupFrameworkDataSource_tags_NullMap,
-		"EmptyMap":                       testAccBackupFrameworkDataSource_tags_EmptyMap,
-		"DefaultTags_nonOverlapping":     testAccBackupFrameworkDataSource_tags_DefaultTags_nonOverlapping,
-		"IgnoreTags_Overlap_DefaultTag":  testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_DefaultTag,
-		"IgnoreTags_Overlap_ResourceTag": testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_ResourceTag,
+		"NullMap":                        testAccBackupFrameworkDataSource_Tags_nullMap,
+		"EmptyMap":                       testAccBackupFrameworkDataSource_Tags_emptyMap,
+		"DefaultTags_nonOverlapping":     testAccBackupFrameworkDataSource_Tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  testAccBackupFrameworkDataSource_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag": testAccBackupFrameworkDataSource_Tags_IgnoreTags_Overlap_resourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -65,7 +65,7 @@ func testAccBackupFrameworkDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccBackupFrameworkDataSource_tags_NullMap(t *testing.T) {
+func testAccBackupFrameworkDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
@@ -93,7 +93,7 @@ func testAccBackupFrameworkDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func testAccBackupFrameworkDataSource_tags_EmptyMap(t *testing.T) {
+func testAccBackupFrameworkDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
@@ -121,7 +121,7 @@ func testAccBackupFrameworkDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func testAccBackupFrameworkDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccBackupFrameworkDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
@@ -157,7 +157,7 @@ func testAccBackupFrameworkDataSource_tags_DefaultTags_nonOverlapping(t *testing
 	})
 }
 
-func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func testAccBackupFrameworkDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
@@ -199,7 +199,7 @@ func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *test
 	})
 }
 
-func testAccBackupFrameworkDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func testAccBackupFrameworkDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"

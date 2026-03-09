@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +26,16 @@ func TestAccBackupPlan_basic(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -66,16 +65,16 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourcePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,16 +92,16 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 	rule2Name := fmt.Sprintf("%s_2", rName)
 	rule3Name := fmt.Sprintf("%s_3", rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_twoRules(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -128,7 +127,7 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 			{
 				Config: testAccPlanConfig_threeRules(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -155,7 +154,7 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -177,16 +176,16 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_lifecycleColdStorageAfterOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -204,7 +203,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 			{
 				Config: testAccPlanConfig_lifecycleDeleteAfterOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -217,7 +216,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 			{
 				Config: testAccPlanConfig_lifecycleColdStorageAfterAndDeleteAfter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -231,7 +230,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 			{
 				Config: testAccPlanConfig_optInToArchiveForSupportedResources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -246,7 +245,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -265,16 +264,16 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_recoveryPointTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -298,7 +297,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 			{
 				Config: testAccPlanConfig_recoveryPointTagsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -317,7 +316,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -337,18 +336,18 @@ func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_ruleCopyAction(rName, 30, 180),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -368,7 +367,7 @@ func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 			{
 				Config: testAccPlanConfig_ruleCopyAction(rName, 60, 365),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -383,7 +382,7 @@ func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -401,18 +400,18 @@ func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_ruleCopyActionNoLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -430,7 +429,7 @@ func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 			{
 				Config: testAccPlanConfig_ruleCopyAction(rName, 60, 365),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -445,7 +444,7 @@ func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 			{
 				Config: testAccPlanConfig_ruleCopyActionNoLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -463,18 +462,18 @@ func TestAccBackupPlan_RuleCopyAction_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_ruleCopyActionMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -499,9 +498,9 @@ func TestAccBackupPlan_RuleCopyAction_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -509,12 +508,12 @@ func TestAccBackupPlan_RuleCopyAction_crossRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_ruleCopyActionCrossRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -540,18 +539,18 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_advancedSetting(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
@@ -569,7 +568,7 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 			{
 				Config: testAccPlanConfig_advancedSettingUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
@@ -589,16 +588,16 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_enableContinuous(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -629,10 +628,10 @@ func TestAccBackupPlan_upgradeScheduleExpressionTimezone(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.BackupServiceID),
-		CheckDestroy: testAccCheckPlanDestroy(ctx),
+		CheckDestroy: testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -643,14 +642,14 @@ func TestAccBackupPlan_upgradeScheduleExpressionTimezone(t *testing.T) {
 				},
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 				),
 			},
 		},
@@ -663,16 +662,16 @@ func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_scheduleExpressionTimezone(rName, "Pacific/Tahiti"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"lifecycle.#":                  "0",
@@ -691,7 +690,7 @@ func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
 			{
 				Config: testAccPlanConfig_scheduleExpressionTimezone(rName, "Africa/Abidjan"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"lifecycle.#":                  "0",
@@ -712,16 +711,16 @@ func TestAccBackupPlan_targetLogicallyAirGappedVaultARN(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_targetLogicallyAirGappedVaultARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.target_logically_air_gapped_backup_vault_arn", "aws_backup_logically_air_gapped_vault.test", names.AttrARN),
 				),
@@ -741,16 +740,16 @@ func TestAccBackupPlan_malwareScan(t *testing.T) {
 	resourceName := "aws_backup_plan.test"
 	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_malwareScan(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -774,7 +773,7 @@ func TestAccBackupPlan_malwareScan(t *testing.T) {
 			{
 				Config: testAccPlanConfig_malwareScanUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -791,7 +790,7 @@ func TestAccBackupPlan_malwareScan(t *testing.T) {
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
@@ -805,9 +804,9 @@ func TestAccBackupPlan_malwareScan(t *testing.T) {
 	})
 }
 
-func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPlanDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_plan" {
 				continue
@@ -830,14 +829,14 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPlanExists(ctx context.Context, n string, v *backup.GetBackupPlanOutput) resource.TestCheckFunc {
+func testAccCheckPlanExists(ctx context.Context, t *testing.T, n string, v *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindPlanByID(ctx, conn, rs.Primary.ID)
 

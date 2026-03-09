@@ -13,11 +13,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
@@ -51,11 +49,11 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 
 func testAccDistribution_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -64,12 +62,12 @@ func testAccDistribution_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", "0"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`Distribution/*`)),
@@ -119,10 +117,10 @@ func testAccDistribution_basic(t *testing.T) {
 func testAccDistribution_isEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_distribution.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -131,12 +129,12 @@ func testAccDistribution_isEnabled(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 				),
 			},
@@ -148,7 +146,7 @@ func testAccDistribution_isEnabled(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
@@ -159,13 +157,13 @@ func testAccDistribution_isEnabled(t *testing.T) {
 func testAccDistribution_cacheBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_distribution.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	path1 := "/path1"
 	behaviorCache := "cache"
 	path2 := "/path2"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -174,12 +172,12 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_cacheBehavior1(rName, bucketName, path1, behaviorCache),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						names.AttrPath: path1,
@@ -197,7 +195,7 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_cacheBehavior2(rName, bucketName, path1, behaviorCache, path2, behaviorCache),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						names.AttrPath: path1,
@@ -220,11 +218,11 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_distribution.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	instanceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	ipName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	instanceName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ipName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -233,12 +231,12 @@ func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorDontCache(rName, instanceName, ipName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_cache_behavior.*", map[string]string{
 						"behavior": "dont-cache",
@@ -253,7 +251,7 @@ func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_defaultCacheBehaviorCache(rName, instanceName, ipName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_cache_behavior.*", map[string]string{
 						"behavior": "cache",
@@ -267,10 +265,10 @@ func testAccDistribution_defaultCacheBehavior(t *testing.T) {
 func testAccDistribution_ipAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_distribution.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -279,12 +277,12 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, string(types.IpAddressTypeIpv4)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(types.IpAddressTypeIpv4)),
 				),
 			},
@@ -296,7 +294,7 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, string(types.IpAddressTypeDualstack)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(types.IpAddressTypeDualstack)),
 				),
 			},
@@ -307,13 +305,13 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_distribution.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	allow2 := "special"
 	header1 := "Host"
 	header2 := "Origin"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -322,12 +320,12 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_cacheBehaviorSettings(rName, bucketName, "test", allow2, header1, header2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
@@ -356,7 +354,7 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.#", "1"),
@@ -383,11 +381,11 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 
 func testAccDistribution_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -396,12 +394,12 @@ func testAccDistribution_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -414,7 +412,7 @@ func testAccDistribution_tags(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_tags2(rName, bucketName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -423,7 +421,7 @@ func testAccDistribution_tags(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -434,11 +432,11 @@ func testAccDistribution_tags(t *testing.T) {
 
 func testAccDistribution_keyOnlyTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -447,13 +445,13 @@ func testAccDistribution_keyOnlyTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Test key-only tag if/when the CreateDistribution validation bug is fixed
 			{
 				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -466,7 +464,7 @@ func testAccDistribution_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_tags2(rName, bucketName, acctest.CtKey1, "", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -475,7 +473,7 @@ func testAccDistribution_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
@@ -486,11 +484,11 @@ func testAccDistribution_keyOnlyTags(t *testing.T) {
 
 func testAccDistribution_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_distribution.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -499,12 +497,12 @@ func testAccDistribution_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDistributionConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDistributionExists(ctx, resourceName),
+					testAccCheckDistributionExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceDistribution(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -513,9 +511,9 @@ func testAccDistribution_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDistributionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_distribution" {
@@ -539,7 +537,7 @@ func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckDistributionExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckDistributionExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -550,7 +548,7 @@ func testAccCheckDistributionExists(ctx context.Context, name string) resource.T
 			return create.Error(names.Lightsail, create.ErrActionCheckingExistence, tflightsail.ResNameDistribution, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 		resp, err := tflightsail.FindDistributionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

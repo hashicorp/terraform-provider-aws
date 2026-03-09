@@ -8,14 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ import (
 func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmonitor_monitor.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "monitor/{monitor_name}"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "monitor_name"),
@@ -54,7 +52,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_aggregationPeriod(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
 				),
 			},
@@ -65,18 +63,18 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 func TestAccNetworkMonitorMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmonitor_monitor.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkmonitor.ResourceMonitor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -88,18 +86,18 @@ func TestAccNetworkMonitorMonitor_disappears(t *testing.T) {
 func TestAccNetworkMonitorMonitor_aggregationPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmonitor_monitor.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitorConfig_aggregationPeriod(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
 				),
 			},
@@ -111,7 +109,7 @@ func TestAccNetworkMonitorMonitor_aggregationPeriod(t *testing.T) {
 			{
 				Config: testAccMonitorConfig_aggregationPeriod(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
+					testAccCheckMonitorExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
 				),
 			},
@@ -119,9 +117,9 @@ func TestAccNetworkMonitorMonitor_aggregationPeriod(t *testing.T) {
 	})
 }
 
-func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMonitorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkMonitorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmonitor_monitor" {
@@ -145,14 +143,14 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckMonitorExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckMonitorExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkMonitorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NetworkMonitorClient(ctx)
 
 		_, err := tfnetworkmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -343,9 +342,8 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 	output, err := conn.GetTargetGroup(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -360,8 +358,8 @@ func findTargetGroup(ctx context.Context, conn *vpclattice.Client, input *vpclat
 	return output, nil
 }
 
-func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTargetGroup(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTargetGroupByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -377,10 +375,10 @@ func statusTargetGroup(ctx context.Context, conn *vpclattice.Client, id string) 
 }
 
 func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetTargetGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.TargetGroupStatusCreateInProgress),
 		Target:                    enum.Slice(types.TargetGroupStatusActive),
-		Refresh:                   statusTargetGroup(ctx, conn, id),
+		Refresh:                   statusTargetGroup(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -399,10 +397,10 @@ func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id str
 }
 
 func waitTargetGroupDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetTargetGroupOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TargetGroupStatusDeleteInProgress, types.TargetGroupStatusActive),
 		Target:  []string{},
-		Refresh: statusTargetGroup(ctx, conn, id),
+		Refresh: statusTargetGroup(conn, id),
 		Timeout: timeout,
 	}
 

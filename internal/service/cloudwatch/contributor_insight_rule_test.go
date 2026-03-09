@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,22 +21,22 @@ func TestAccCloudWatchContributorInsightRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorInsightRuleConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "rule_definition", "{\"Schema\":{\"Name\":\"CloudWatchLogRule\",\"Version\":1},\"AggregateOn\":\"Count\",\"Contribution\":{\"Filters\":[{\"In\":[\"some-keyword\"],\"Match\":\"$.message\"}],\"Keys\":[\"$.country\"]},\"LogFormat\":\"JSON\",\"LogGroupNames\":[\"/aws/lambda/api-prod\"]}"),
@@ -63,22 +61,22 @@ func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.InsightRule
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_contributor_insight_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckContributorInsightRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContributorInsightRuleConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContributorInsightRuleExists(ctx, resourceName, &v),
+					testAccCheckContributorInsightRuleExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorInsightRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,9 +85,9 @@ func TestAccCloudWatchContributorInsightRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckContributorInsightRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContributorInsightRuleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_contributor_insight_rule" {
@@ -113,7 +111,7 @@ func testAccCheckContributorInsightRuleDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckContributorInsightRuleExists(ctx context.Context, name string, contributorinsightrule *types.InsightRule) resource.TestCheckFunc {
+func testAccCheckContributorInsightRuleExists(ctx context.Context, t *testing.T, name string, contributorinsightrule *types.InsightRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -124,7 +122,7 @@ func testAccCheckContributorInsightRuleExists(ctx context.Context, name string, 
 			return fmt.Errorf("No Contributor Insight Rule Rule Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudWatchClient(ctx)
 
 		output, err := tfcloudwatch.FindContributorInsightRuleByName(ctx, conn, rs.Primary.Attributes["rule_name"])
 

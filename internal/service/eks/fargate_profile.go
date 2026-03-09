@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -118,7 +117,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	fargateProfileName := d.Get("fargate_profile_name").(string)
 	profileID := FargateProfileCreateResourceID(clusterName, fargateProfileName)
 	input := &eks.CreateFargateProfileInput{
-		ClientRequestToken:  aws.String(id.UniqueId()),
+		ClientRequestToken:  aws.String(sdkid.UniqueId()),
 		ClusterName:         aws.String(clusterName),
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
@@ -237,9 +236,8 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 	output, err := conn.DescribeFargateProfile(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -254,8 +252,8 @@ func findFargateProfileByTwoPartKey(ctx context.Context, conn *eks.Client, clust
 	return output.FargateProfile, nil
 }
 
-func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusFargateProfile(conn *eks.Client, clusterName, fargateProfileName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findFargateProfileByTwoPartKey(ctx, conn, clusterName, fargateProfileName)
 
 		if retry.NotFound(err) {
@@ -271,10 +269,10 @@ func statusFargateProfile(ctx context.Context, conn *eks.Client, clusterName, fa
 }
 
 func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string, timeout time.Duration) (*types.FargateProfile, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.FargateProfileStatusCreating),
 		Target:  enum.Slice(types.FargateProfileStatusActive),
-		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
+		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
 		Timeout: timeout,
 	}
 
@@ -288,10 +286,10 @@ func waitFargateProfileCreated(ctx context.Context, conn *eks.Client, clusterNam
 }
 
 func waitFargateProfileDeleted(ctx context.Context, conn *eks.Client, clusterName, fargateProfileName string, timeout time.Duration) (*types.FargateProfile, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.FargateProfileStatusActive, types.FargateProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
+		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
 		Timeout: timeout,
 	}
 

@@ -17,7 +17,7 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,11 +38,11 @@ func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testi
 	repositoryPrefix := "tf-test/" + sdkacctest.RandString(22)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_repositoryPrefixWithSlash(repositoryPrefix),
@@ -60,7 +60,7 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -82,11 +82,11 @@ func TestAccECRPullThroughCacheRuleDataSource_privateRepositorySelfAccount(t *te
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_privateRepositorySelfAccount(repositoryPrefix, "ROOT", acctest.AlternateRegion()),
@@ -106,14 +106,14 @@ func TestAccECRPullThroughCacheRuleDataSource_privateRepositoryCrossAccount(t *t
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
+		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_privateRepositoryCrossAccount(repositoryPrefix, "ROOT", acctest.Region()),

@@ -19,7 +19,7 @@ func TestAccECSTaskDefinitionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ecs_task_definition.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -46,7 +46,7 @@ func TestAccECSTaskDefinitionDataSource_ec2(t *testing.T) {
 	dataSourceName := "data.aws_ecs_task_definition.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,7 +87,7 @@ func TestAccECSTaskDefinitionDataSource_fargate(t *testing.T) {
 	dataSourceName := "data.aws_ecs_task_definition.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -122,7 +122,7 @@ func TestAccECSTaskDefinitionDataSource_proxyConfiguration(t *testing.T) {
 	dataSourceName := "data.aws_ecs_task_definition.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

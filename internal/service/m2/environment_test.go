@@ -10,14 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,10 +27,10 @@ func TestAccM2Environment_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var environment m2.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -40,12 +38,12 @@ func TestAccM2Environment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -83,10 +81,10 @@ func TestAccM2Environment_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var environment m2.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2)
@@ -94,12 +92,12 @@ func TestAccM2Environment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,20 +111,20 @@ func TestAccM2Environment_full(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 	var environment m2.GetEnvironmentOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test-1"),
@@ -165,10 +163,10 @@ func TestAccM2Environment_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var environment m2.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -176,12 +174,12 @@ func TestAccM2Environment_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_update(rName, "M2.m5.large", 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
@@ -191,7 +189,7 @@ func TestAccM2Environment_update(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_update(rName, "M2.m6i.large", 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m6i.large"),
@@ -208,10 +206,10 @@ func TestAccM2Environment_efs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 	var environment m2.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -219,12 +217,12 @@ func TestAccM2Environment_efs(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_efsComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -256,9 +254,9 @@ func TestAccM2Environment_fsx(t *testing.T) {
 	}
 
 	var environment m2.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
@@ -266,12 +264,12 @@ func TestAccM2Environment_fsx(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_fsxComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
@@ -296,9 +294,9 @@ func TestAccM2Environment_fsx(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEnvironmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_m2_environment" {
@@ -322,14 +320,14 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckEnvironmentExists(ctx context.Context, n string, v *m2.GetEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(ctx context.Context, t *testing.T, n string, v *m2.GetEnvironmentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 		output, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
@@ -344,7 +342,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *m2.GetEnvir
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).M2Client(ctx)
 
 	input := &m2.ListEnvironmentsInput{}
 	_, err := conn.ListEnvironments(ctx, input)

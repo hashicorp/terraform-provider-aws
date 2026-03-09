@@ -25,14 +25,14 @@ func TestAccEventsPutEventsAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckBusDestroy(ctx),
+		CheckDestroy: testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPutEventsActionConfig_basic(rName),
@@ -48,14 +48,14 @@ func TestAccEventsPutEventsAction_multipleEntries(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckBusDestroy(ctx),
+		CheckDestroy: testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPutEventsActionConfig_multipleEntries(rName),
@@ -71,14 +71,14 @@ func TestAccEventsPutEventsAction_customBus(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_14_0),
 		},
-		CheckDestroy: testAccCheckBusDestroy(ctx),
+		CheckDestroy: testAccCheckBusDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPutEventsActionConfig_customBus(rName),

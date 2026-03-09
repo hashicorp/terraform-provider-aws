@@ -38,7 +38,6 @@ import (
 // @IdentityAttribute("key")
 // @ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=true, destroyTakesT=true)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -341,13 +340,13 @@ var (
 
 type securityGroupVPCAssociationImportID struct{}
 
-func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]any, error) {
 	kvsARN, key, found := strings.Cut(id, intflex.ResourceIdSeparator)
 	if !found {
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <key-value-store-arn>"+intflex.ResourceIdSeparator+"<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		"key_value_store_arn": kvsARN,
 		names.AttrKey:         key,
 	}

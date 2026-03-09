@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,11 +24,11 @@ import (
 
 func TestAccLightsailKeyPair_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_lightsail_key_pair.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -37,12 +36,12 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`KeyPair/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -57,7 +56,7 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 
 func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_lightsail_key_pair.test"
 
@@ -66,7 +65,7 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 		t.Fatalf("error generating random SSH key: %s", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -74,12 +73,12 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_imported(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`KeyPair/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
@@ -94,11 +93,11 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 
 func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_lightsail_key_pair.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -106,12 +105,12 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_encrypted(rName, testKeyPairPubKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`KeyPair/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_fingerprint"),
@@ -127,7 +126,7 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 
 func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -135,13 +134,13 @@ func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_prefixed(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, "aws_lightsail_key_pair.lightsail_key_pair_test_omit"),
-					testAccCheckKeyPairExists(ctx, "aws_lightsail_key_pair.lightsail_key_pair_test_prefixed"),
+					testAccCheckKeyPairExists(ctx, t, "aws_lightsail_key_pair.lightsail_key_pair_test_omit"),
+					testAccCheckKeyPairExists(ctx, t, "aws_lightsail_key_pair.lightsail_key_pair_test_prefixed"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_omit", names.AttrName),
 					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_prefixed", names.AttrName),
 				),
@@ -152,11 +151,11 @@ func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 
 func TestAccLightsailKeyPair_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_lightsail_key_pair.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -164,12 +163,12 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -177,7 +176,7 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 			{
 				Config: testAccKeyPairConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -186,7 +185,7 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 			{
 				Config: testAccKeyPairConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -197,11 +196,11 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 
 func TestAccLightsailKeyPair_keyOnlyTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_lightsail_key_pair.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -209,12 +208,12 @@ func TestAccLightsailKeyPair_keyOnlyTags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_tags1(rName, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
@@ -222,7 +221,7 @@ func TestAccLightsailKeyPair_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccKeyPairConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
@@ -231,7 +230,7 @@ func TestAccLightsailKeyPair_keyOnlyTags(t *testing.T) {
 			{
 				Config: testAccKeyPairConfig_tags1(rName, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
@@ -242,11 +241,11 @@ func TestAccLightsailKeyPair_keyOnlyTags(t *testing.T) {
 
 func TestAccLightsailKeyPair_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_lightsail_key_pair.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
@@ -254,12 +253,12 @@ func TestAccLightsailKeyPair_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyPairConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyPairExists(ctx, resourceName),
+					testAccCheckKeyPairExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -268,7 +267,7 @@ func TestAccLightsailKeyPair_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckKeyPairExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -279,7 +278,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheck
 			return errors.New("No LightsailKeyPair set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 		respKeyPair, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes[names.AttrName]),
@@ -296,14 +295,14 @@ func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheck
 	}
 }
 
-func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyPairDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lightsail_key_pair" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).LightsailClient(ctx)
 
 			respKeyPair, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
 				KeyPairName: aws.String(rs.Primary.Attributes[names.AttrName]),

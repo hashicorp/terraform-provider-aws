@@ -8,7 +8,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -21,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPC_List_Basic(t *testing.T) {
+func TestAccVPC_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc.test[0]"
@@ -85,7 +84,7 @@ func TestAccVPC_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_RegionOverride(t *testing.T) {
+func TestAccVPC_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc.test[0]"
@@ -155,7 +154,7 @@ func TestAccVPC_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_Filtered(t *testing.T) {
+func TestAccVPC_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_vpc.expected[0]"
@@ -163,7 +162,7 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 	resourceNameNotExpected1 := "aws_vpc.not_expected[0]"
 	resourceNameNotExpected2 := "aws_vpc.not_expected[1]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	expected1 := tfstatecheck.StateValue()
 	expected2 := tfstatecheck.StateValue()
@@ -238,7 +237,7 @@ func TestAccVPC_List_Filtered(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
+func TestAccVPC_List_DefaultVPC_exclude(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	id := tfstatecheck.StateValue()
@@ -288,7 +287,7 @@ func TestAccVPC_List_DefaultVPC_Exclude(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_VPCIDs(t *testing.T) {
+func TestAccVPC_List_vpcIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_vpc.test[0]"
@@ -354,7 +353,7 @@ func TestAccVPC_List_VPCIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
+func TestAccVPC_List_filteredVPCIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_vpc.expected[0]"
@@ -362,7 +361,7 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 	resourceNameNotExpected1 := "aws_vpc.not_expected[0]"
 	resourceNameNotExpected2 := "aws_vpc.not_expected[1]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	expected1 := tfstatecheck.StateValue()
 	expected2 := tfstatecheck.StateValue()
@@ -439,7 +438,7 @@ func TestAccVPC_List_FilteredVPCIDs(t *testing.T) {
 	})
 }
 
-func TestAccVPC_List_Filtered_IsDefault(t *testing.T) {
+func TestAccVPC_List_Filtered_isDefault(t *testing.T) {
 	t.Skip("Skipping because ExpectError is not currently supported for Query mode")
 
 	ctx := acctest.Context(t)

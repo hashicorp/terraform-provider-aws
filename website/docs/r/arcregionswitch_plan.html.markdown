@@ -155,7 +155,7 @@ resource "aws_arcregionswitch_plan" "complex" {
     }
   }
 
-  trigger {
+  triggers {
     action                               = "activate"
     target_region                        = "us-west-2"
     min_delay_minutes_between_executions = 30
@@ -190,7 +190,7 @@ The following arguments are optional:
 * `recovery_time_objective_minutes` - (Optional) Recovery time objective in minutes.
 * `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `triggers` - (Optional) Set of triggers that can initiate the plan execution. See [Trigger](#trigger) below.
+* `triggers` - (Optional) Set of triggers that can initiate the plan execution. See [Triggers](#triggers) below.
 
 ### Workflow
 
@@ -295,7 +295,7 @@ The following arguments are optional:
 * `map_block_key` - (Required) Name of the alarm.
 * `resource_identifier` - (Required) Resource identifier (ARN) of the CloudWatch alarm.
 
-### Trigger
+### Triggers
 
 * `action` - (Required) Action to trigger. Valid values: `activate`, `deactivate`.
 * `conditions` - (Required) List of conditions that must be met. See [Conditions](#conditions) below.

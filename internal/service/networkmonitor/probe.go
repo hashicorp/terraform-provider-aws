@@ -23,8 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -40,7 +39,6 @@ import (
 
 // @FrameworkResource("aws_networkmonitor_probe", name="Probe")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &probeResource{}, nil
 }
@@ -136,7 +134,7 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	input := &networkmonitor.CreateProbeInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		MonitorName: fwflex.StringFromFramework(ctx, data.MonitorName),
 		Probe:       probeInput,
 		Tags:        getTagsIn(ctx),
@@ -319,9 +317,8 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	output, err := conn.GetProbe(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -336,8 +333,8 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	return output, nil
 }
 
-func statusProbe(ctx context.Context, conn *networkmonitor.Client, monitorName, probeID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProbe(conn *networkmonitor.Client, monitorName, probeID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProbeByTwoPartKey(ctx, conn, monitorName, probeID)
 
 		if retry.NotFound(err) {
@@ -356,10 +353,10 @@ func waitProbeReady(ctx context.Context, conn *networkmonitor.Client, monitorNam
 	const (
 		timeout = time.Minute * 15
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ProbeStatePending),
 		Target:     enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive),
-		Refresh:    statusProbe(ctx, conn, monitorName, probeID),
+		Refresh:    statusProbe(conn, monitorName, probeID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -377,10 +374,10 @@ func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, monitorN
 	const (
 		timeout = time.Minute * 15
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive, awstypes.ProbeStateDeleting),
 		Target:     []string{},
-		Refresh:    statusProbe(ctx, conn, monitorName, probeID),
+		Refresh:    statusProbe(conn, monitorName, probeID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,16 +22,16 @@ func testAccRetentionConfiguration_basic(t *testing.T) {
 	var rc types.RetentionConfiguration
 	resourceName := "aws_config_retention_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRetentionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRetentionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRetentionConfigurationConfig_basic(90),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
+					testAccCheckRetentionConfigurationExists(ctx, t, resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "default"),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "90"),
 				),
@@ -45,7 +44,7 @@ func testAccRetentionConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccRetentionConfigurationConfig_basic(180),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
+					testAccCheckRetentionConfigurationExists(ctx, t, resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "default"),
 					resource.TestCheckResourceAttr(resourceName, "retention_period_in_days", "180"),
 				),
@@ -59,16 +58,16 @@ func testAccRetentionConfiguration_disappears(t *testing.T) {
 	var rc types.RetentionConfiguration
 	resourceName := "aws_config_retention_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRetentionConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckRetentionConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRetentionConfigurationConfig_basic(90),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetentionConfigurationExists(ctx, resourceName, &rc),
+					testAccCheckRetentionConfigurationExists(ctx, t, resourceName, &rc),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfconfig.ResourceRetentionConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -77,14 +76,14 @@ func testAccRetentionConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRetentionConfigurationExists(ctx context.Context, n string, v *types.RetentionConfiguration) resource.TestCheckFunc {
+func testAccCheckRetentionConfigurationExists(ctx context.Context, t *testing.T, n string, v *types.RetentionConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		output, err := tfconfig.FindRetentionConfigurationByName(ctx, conn, rs.Primary.ID)
 
@@ -98,9 +97,9 @@ func testAccCheckRetentionConfigurationExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckRetentionConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRetentionConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_retention_configuration" {

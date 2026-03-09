@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,12 +32,12 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 	}
 
 	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -47,12 +45,12 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
@@ -85,12 +83,12 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 	}
 
 	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -98,12 +96,12 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
@@ -127,7 +125,7 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 			{
 				Config: testAccReplicatorConfig_update(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kafka", regexache.MustCompile(`replicator/`+rName+`/`+kafkaUUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
@@ -168,12 +166,12 @@ func TestAccKafkaReplicator_tags(t *testing.T) {
 	}
 
 	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -181,12 +179,12 @@ func TestAccKafkaReplicator_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicatorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -199,7 +197,7 @@ func TestAccKafkaReplicator_tags(t *testing.T) {
 			{
 				Config: testAccReplicatorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -208,7 +206,7 @@ func TestAccKafkaReplicator_tags(t *testing.T) {
 			{
 				Config: testAccReplicatorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -224,12 +222,12 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 	}
 
 	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	sourceCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetCluster := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Kafka)
@@ -237,12 +235,12 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					testAccCheckReplicatorExists(ctx, t, resourceName, &replicator),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceReplicator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -251,9 +249,9 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicatorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckReplicatorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_replicator" {
@@ -277,14 +275,14 @@ func testAccCheckReplicatorDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckReplicatorExists(ctx context.Context, n string, v *kafka.DescribeReplicatorOutput) resource.TestCheckFunc {
+func testAccCheckReplicatorExists(ctx context.Context, t *testing.T, n string, v *kafka.DescribeReplicatorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KafkaClient(ctx)
 
 		output, err := tfkafka.FindReplicatorByARN(ctx, conn, rs.Primary.ID)
 

@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	"github.com/aws/aws-sdk-go-v2/service/datazone/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatazone "github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
@@ -30,22 +28,22 @@ func TestAccDataZoneProject_basic(t *testing.T) {
 	}
 
 	var project datazone.GetProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_project.test"
 	domainName := "aws_datazone_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &project),
+					testAccCheckProjectExists(ctx, t, resourceName, &project),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "failure_reasons.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
@@ -77,19 +75,19 @@ func TestAccDataZoneProject_disappears(t *testing.T) {
 	}
 
 	var project datazone.GetProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataZoneEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &project),
+					testAccCheckProjectExists(ctx, t, resourceName, &project),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,22 +103,22 @@ func TestAccDataZoneProject_description(t *testing.T) {
 	}
 
 	var v1, v2 datazone.GetProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_datazone_project.test"
 	domainName := "aws_datazone_domain.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataZoneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_description(rName, "desc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v1),
+					testAccCheckProjectExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc"),
@@ -141,7 +139,7 @@ func TestAccDataZoneProject_description(t *testing.T) {
 			{
 				Config: testAccProjectConfig_description(rName, "updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &v2),
+					testAccCheckProjectExists(ctx, t, resourceName, &v2),
 					testAccCheckProjectNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "glossary_terms.#", "0"),
@@ -164,9 +162,9 @@ func TestAccDataZoneProject_description(t *testing.T) {
 	})
 }
 
-func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProjectDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datazone_project" {
 				continue
@@ -202,7 +200,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProjectExists(ctx context.Context, name string, project *datazone.GetProjectOutput) resource.TestCheckFunc {
+func testAccCheckProjectExists(ctx context.Context, t *testing.T, name string, project *datazone.GetProjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -215,10 +213,10 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *datazo
 		if rs.Primary.Attributes["domain_identifier"] == "" {
 			return create.Error(names.DataZone, create.ErrActionCheckingExistence, tfdatazone.ResNameProject, name, errors.New("domain identifier not set"))
 		}
-		t := rs.Primary.Attributes["domain_identifier"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
+		domainIdentifier := rs.Primary.Attributes["domain_identifier"]
+		conn := acctest.ProviderMeta(ctx, t).DataZoneClient(ctx)
 		input := datazone.GetProjectInput{
-			DomainIdentifier: &t,
+			DomainIdentifier: &domainIdentifier,
 			Identifier:       &rs.Primary.ID,
 		}
 		resp, err := conn.GetProject(ctx, &input)

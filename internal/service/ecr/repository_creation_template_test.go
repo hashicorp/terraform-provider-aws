@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +25,16 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "applied_for.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForCreateOnPush)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
@@ -68,16 +67,16 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfecr.ResourceRepositoryCreationTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,11 +89,11 @@ func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRepositoryCreationTemplateConfig_failWhenAlreadyExists(repositoryPrefix),
@@ -109,16 +108,16 @@ func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryCreationTemplateConfig_lifecycleOrder(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -146,16 +145,16 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryCreationTemplateConfig_repositoryInitial(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile(repositoryPrefix)),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
@@ -168,7 +167,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 			{
 				Config: testAccRepositoryCreationTemplateConfig_repositoryUpdated(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile(repositoryPrefix)),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile("ecr:DescribeImages")),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
@@ -182,16 +181,16 @@ func TestAccECRRepositoryCreationTemplate_root(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecr_repository_creation_template.root"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryCreationTemplateConfig_root(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 				),
 			},
 		},
@@ -203,16 +202,16 @@ func TestAccECRRepositoryCreationTemplate_mutabilityWithExclusion(t *testing.T) 
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_ecr_repository_creation_template.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
+		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRepositoryCreationTemplateConfig_mutabilityWithExclusion(repositoryPrefix, "latest*", "prod-*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "latest*"),
@@ -229,7 +228,7 @@ func TestAccECRRepositoryCreationTemplate_mutabilityWithExclusion(t *testing.T) 
 			{
 				Config: testAccRepositoryCreationTemplateConfig_mutabilityWithExclusion(repositoryPrefix, "prod-*", "latest*"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
+					testAccCheckRepositoryCreationTemplateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "prod-*"),
@@ -242,9 +241,9 @@ func TestAccECRRepositoryCreationTemplate_mutabilityWithExclusion(t *testing.T) 
 	})
 }
 
-func testAccCheckRepositoryCreationTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRepositoryCreationTemplateDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_repository_creation_template" {
@@ -268,14 +267,14 @@ func testAccCheckRepositoryCreationTemplateDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckRepositoryCreationTemplateExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckRepositoryCreationTemplateExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ECRClient(ctx)
 
 		_, _, err := tfecr.FindRepositoryCreationTemplateByRepositoryPrefix(ctx, conn, rs.Primary.ID)
 

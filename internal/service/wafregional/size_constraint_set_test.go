@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,16 +24,16 @@ func TestAccWAFRegionalSizeConstraintSet_basic(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &constraints),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(
@@ -67,16 +66,16 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sizeConstraintSet),
 					resource.TestCheckResourceAttr(
@@ -86,7 +85,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccSizeConstraintSetConfig_changeName(sizeConstraintSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sizeConstraintSetNewName),
 					resource.TestCheckResourceAttr(
@@ -108,16 +107,16 @@ func TestAccWAFRegionalSizeConstraintSet_disappears(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &constraints),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceSizeConstraintSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -132,16 +131,16 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_basic(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &before),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
@@ -161,7 +160,7 @@ func TestAccWAFRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 			{
 				Config: testAccSizeConstraintSetConfig_changes(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &after),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
@@ -193,16 +192,16 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("sizeConstraintSet-%s", sdkacctest.RandString(5))
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx),
+		CheckDestroy:             testAccCheckSizeConstraintSetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSizeConstraintSetConfig_nos(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSizeConstraintSetExists(ctx, resourceName, &constraints),
+					testAccCheckSizeConstraintSetExists(ctx, t, resourceName, &constraints),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
@@ -218,7 +217,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awstypes.SizeConstraintSet) resource.TestCheckFunc {
+func testAccCheckSizeConstraintSetExists(ctx context.Context, t *testing.T, n string, v *awstypes.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +228,7 @@ func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awsty
 			return fmt.Errorf("No WAF SizeConstraintSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WAFRegionalClient(ctx)
 
 		output, err := tfwafregional.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
 
@@ -243,14 +242,14 @@ func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awsty
 	}
 }
 
-func testAccCheckSizeConstraintSetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSizeConstraintSetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafregional_size_contraint_set" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).WAFRegionalClient(ctx)
 
 			_, err := tfwafregional.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
 

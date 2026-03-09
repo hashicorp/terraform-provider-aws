@@ -22,20 +22,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccIoTIndexingConfiguration_IdentitySerial(t *testing.T) {
+func testAccIoTIndexingConfiguration_identitySerial(t *testing.T) {
 	t.Helper()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccIoTIndexingConfiguration_Identity_Basic,
-		"ExistingResource":          testAccIoTIndexingConfiguration_Identity_ExistingResource,
-		"ExistingResourceNoRefresh": testAccIoTIndexingConfiguration_Identity_ExistingResource_NoRefresh_NoChange,
-		"RegionOverride":            testAccIoTIndexingConfiguration_Identity_RegionOverride,
+		acctest.CtBasic:             testAccIoTIndexingConfiguration_Identity_basic,
+		"ExistingResource":          testAccIoTIndexingConfiguration_Identity_ExistingResource_basic,
+		"ExistingResourceNoRefresh": testAccIoTIndexingConfiguration_Identity_ExistingResource_noRefreshNoChange,
+		"RegionOverride":            testAccIoTIndexingConfiguration_Identity_regionOverride,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccIoTIndexingConfiguration_Identity_Basic(t *testing.T) {
+func testAccIoTIndexingConfiguration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_indexing_configuration.test"
@@ -106,7 +106,7 @@ func testAccIoTIndexingConfiguration_Identity_Basic(t *testing.T) {
 	})
 }
 
-func testAccIoTIndexingConfiguration_Identity_RegionOverride(t *testing.T) {
+func testAccIoTIndexingConfiguration_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_indexing_configuration.test"
@@ -216,7 +216,7 @@ func testAccIoTIndexingConfiguration_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-func testAccIoTIndexingConfiguration_Identity_ExistingResource(t *testing.T) {
+func testAccIoTIndexingConfiguration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_indexing_configuration.test"
@@ -282,7 +282,7 @@ func testAccIoTIndexingConfiguration_Identity_ExistingResource(t *testing.T) {
 	})
 }
 
-func testAccIoTIndexingConfiguration_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func testAccIoTIndexingConfiguration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_iot_indexing_configuration.test"

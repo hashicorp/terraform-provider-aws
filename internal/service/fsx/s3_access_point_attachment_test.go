@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,18 +27,18 @@ func TestAccFSxS3AccessPointAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.S3AccessPointAttachment
 	resourceName := "aws_fsx_s3_access_point_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3AccessPointAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+					testAccCheckS3AccessPointAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -72,18 +70,18 @@ func TestAccFSxS3AccessPointAttachment_policy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.S3AccessPointAttachment
 	resourceName := "aws_fsx_s3_access_point_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3AccessPointAttachmentConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+					testAccCheckS3AccessPointAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -106,18 +104,18 @@ func TestAccFSxS3AccessPointAttachment_vpcConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.S3AccessPointAttachment
 	resourceName := "aws_fsx_s3_access_point_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3AccessPointAttachmentConfig_vpcConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+					testAccCheckS3AccessPointAttachmentExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -141,18 +139,18 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.S3AccessPointAttachment
 	resourceName := "aws_fsx_s3_access_point_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckS3AccessPointAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3AccessPointAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckS3AccessPointAttachmentExists(ctx, resourceName, &v),
+					testAccCheckS3AccessPointAttachmentExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tffsx.ResourceS3AccessPointAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -161,14 +159,14 @@ func TestAccFSxS3AccessPointAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckS3AccessPointAttachmentExists(ctx context.Context, n string, v *awstypes.S3AccessPointAttachment) resource.TestCheckFunc {
+func testAccCheckS3AccessPointAttachmentExists(ctx context.Context, t *testing.T, n string, v *awstypes.S3AccessPointAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FSxClient(ctx)
 
 		output, err := tffsx.FindS3AccessPointAttachmentByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
@@ -182,9 +180,9 @@ func testAccCheckS3AccessPointAttachmentExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccCheckS3AccessPointAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckS3AccessPointAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).FSxClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_s3_access_point_attachment" {

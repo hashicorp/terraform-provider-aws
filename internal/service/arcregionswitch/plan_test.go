@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfarcregionswitch "github.com/hashicorp/terraform-provider-aws/internal/service/arcregionswitch"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,19 +28,19 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
@@ -73,19 +72,19 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarcregionswitch.ResourcePlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,19 +99,19 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_update(rName, "Initial description", 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Initial description"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "30"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "1"),
@@ -124,7 +123,7 @@ func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 			{
 				Config: testAccPlanConfig_update(rName, "Updated description", 60),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated description"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "2"),
@@ -147,19 +146,19 @@ func TestAccARCRegionSwitchPlan_minimalRegions(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_minimalRegions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "primary_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -175,19 +174,19 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_multipleWorkflowsSameAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*", map[string]string{
 						"workflow_target_action": "activate",
@@ -195,50 +194,6 @@ func TestAccARCRegionSwitchPlan_multipleWorkflowsSameAction(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*", map[string]string{
 						"workflow_target_action": "deactivate",
 					}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccARCRegionSwitchPlan_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plan awstypes.Plan
-	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccPlanConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccPlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -257,19 +212,19 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	zoneName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
@@ -305,19 +260,19 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	zoneName := acctest.RandomDomain()
 	recordName := zoneName.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region(), zoneName.String(), recordName.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
@@ -462,7 +417,7 @@ func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -493,14 +448,14 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanConfig_regionOverride(rName, acctest.AlternateRegion()),
@@ -511,7 +466,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 				),
 			},
@@ -541,7 +496,7 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 					},
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
@@ -549,9 +504,9 @@ func TestAccARCRegionSwitchPlan_regionOverride(t *testing.T) {
 	})
 }
 
-func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPlanDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ARCRegionSwitchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_arcregionswitch_plan" {
@@ -569,7 +524,7 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPlanExists(ctx context.Context, n string, v *awstypes.Plan) resource.TestCheckFunc {
+func testAccCheckPlanExists(ctx context.Context, t *testing.T, n string, v *awstypes.Plan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -580,7 +535,7 @@ func testAccCheckPlanExists(ctx context.Context, n string, v *awstypes.Plan) res
 			return fmt.Errorf("No ARC Region Switch Plan ARN is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ARCRegionSwitchClient(ctx)
 
 		output, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
@@ -595,7 +550,7 @@ func testAccCheckPlanExists(ctx context.Context, n string, v *awstypes.Plan) res
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ARCRegionSwitchClient(ctx)
 
 	input := arcregionswitch.ListPlansInput{}
 	_, err := conn.ListPlans(ctx, &input)
@@ -1300,11 +1255,6 @@ resource "aws_arcregionswitch_plan" "test" {
   regions           = [%[3]q, %[2]q]
   primary_region    = %[3]q
 
-  tags = {
-    Name        = %[1]q
-    Environment = "test"
-  }
-
   workflow {
     workflow_target_action = "activate"
     workflow_target_region = %[2]q
@@ -1561,133 +1511,6 @@ resource "aws_arcregionswitch_plan" "test" {
 `, rName, acctest.AlternateRegion(), acctest.Region())
 }
 
-func testAccPlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  tags = {
-    %[4]q = %[5]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1)
-}
-
-func testAccPlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  regions           = [%[3]q, %[2]q]
-  primary_region    = %[3]q
-
-  tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[2]q
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = %[3]q
-
-    step {
-      name                 = "basic-step-primary"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName, acctest.AlternateRegion(), acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 func testAccPlanConfig_regionOverride(rName, regionOverride string) string {
 	return fmt.Sprintf(`
 resource "aws_arcregionswitch_plan" "test" {
@@ -1698,11 +1521,6 @@ resource "aws_arcregionswitch_plan" "test" {
   recovery_approach = "activePassive"
   regions           = [%[3]q, %[2]q]
   primary_region    = %[3]q
-
-  tags = {
-    Name        = %[1]q
-    Environment = "test"
-  }
 
   workflow {
     workflow_target_action = "activate"

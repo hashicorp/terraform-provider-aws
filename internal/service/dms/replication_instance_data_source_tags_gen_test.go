@@ -50,7 +50,7 @@ func TestAccDMSReplicationInstanceDataSource_tags(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationInstanceDataSource_tags_NullMap(t *testing.T) {
+func TestAccDMSReplicationInstanceDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_dms_replication_instance.test"
@@ -78,7 +78,7 @@ func TestAccDMSReplicationInstanceDataSource_tags_NullMap(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationInstanceDataSource_tags_EmptyMap(t *testing.T) {
+func TestAccDMSReplicationInstanceDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_dms_replication_instance.test"
@@ -106,7 +106,7 @@ func TestAccDMSReplicationInstanceDataSource_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationInstanceDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccDMSReplicationInstanceDataSource_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_dms_replication_instance.test"
@@ -142,7 +142,7 @@ func TestAccDMSReplicationInstanceDataSource_tags_DefaultTags_nonOverlapping(t *
 	})
 }
 
-func TestAccDMSReplicationInstanceDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccDMSReplicationInstanceDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_dms_replication_instance.test"
@@ -184,7 +184,7 @@ func TestAccDMSReplicationInstanceDataSource_tags_IgnoreTags_Overlap_DefaultTag(
 	})
 }
 
-func TestAccDMSReplicationInstanceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccDMSReplicationInstanceDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_dms_replication_instance.test"

@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +35,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;awstypes;awstypes.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Provisioned Product")
 // @Testing(tagsUpdateGetTagsIn=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
@@ -288,7 +286,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 	name := d.Get(names.AttrName).(string)
 	input := servicecatalog.ProvisionProductInput{
-		ProvisionToken:         aws.String(id.UniqueId()),
+		ProvisionToken:         aws.String(sdkid.UniqueId()),
 		ProvisionedProductName: aws.String(name),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -464,7 +462,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 	input := servicecatalog.UpdateProvisionedProductInput{
 		ProvisionedProductId: aws.String(d.Id()),
-		UpdateToken:          aws.String(id.UniqueId()),
+		UpdateToken:          aws.String(sdkid.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -554,7 +552,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := servicecatalog.TerminateProvisionedProductInput{
-		TerminateToken:       aws.String(id.UniqueId()),
+		TerminateToken:       aws.String(sdkid.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
@@ -622,9 +620,8 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 	output, err := conn.DescribeProvisionedProduct(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -657,9 +654,8 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 		page, err := conn.DescribeRecord(ctx, input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -691,8 +687,8 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 	return output, nil
 }
 
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProvisionedProduct(conn *servicecatalog.Client, id, acceptLanguage string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProvisionedProductByTwoPartKey(ctx, conn, id, acceptLanguage)
 
 		if retry.NotFound(err) {
@@ -708,10 +704,10 @@ func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 }
 
 func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
 		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
-		Refresh:                   statusProvisionedProduct(ctx, conn, id, acceptLanguage),
+		Refresh:                   statusProvisionedProduct(conn, id, acceptLanguage),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: continuousTargetOccurrence,
 		NotFoundChecks:            notFoundChecks,
@@ -722,7 +718,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			if errs.IsA[*sdkretry.UnexpectedStateError](err) {
+			if errs.IsA[*retry.UnexpectedStateError](err) {
 				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusError || status == awstypes.ProvisionedProductStatusTainted {
@@ -741,13 +737,13 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 }
 
 func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ProvisionedProductStatusAvailable,
 			awstypes.ProvisionedProductStatusUnderChange,
 		),
 		Target:  []string{},
-		Refresh: statusProvisionedProduct(ctx, conn, id, acceptLanguage),
+		Refresh: statusProvisionedProduct(conn, id, acceptLanguage),
 		Timeout: timeout,
 	}
 
@@ -755,7 +751,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			if errs.IsA[*sdkretry.UnexpectedStateError](err) {
+			if errs.IsA[*retry.UnexpectedStateError](err) {
 				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusTainted {
 					// Create a custom error type that signals state refresh is needed

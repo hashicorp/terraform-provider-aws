@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,18 +23,18 @@ func TestAccGlobalAcceleratorCustomRoutingListener_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.CustomRoutingListener
 	resourceName := "aws_globalaccelerator_custom_routing_listener.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomRoutingListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingListenerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "2"),
@@ -63,18 +61,18 @@ func TestAccGlobalAcceleratorCustomRoutingListener_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.CustomRoutingListener
 	resourceName := "aws_globalaccelerator_custom_routing_listener.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomRoutingListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckCustomRoutingListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomRoutingListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
+					testAccCheckCustomRoutingListenerExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCustomRoutingListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,14 +81,14 @@ func TestAccGlobalAcceleratorCustomRoutingListener_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomRoutingListenerExists(ctx context.Context, n string, v *awstypes.CustomRoutingListener) resource.TestCheckFunc {
+func testAccCheckCustomRoutingListenerExists(ctx context.Context, t *testing.T, n string, v *awstypes.CustomRoutingListener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		output, err := tfglobalaccelerator.FindCustomRoutingListenerByARN(ctx, conn, rs.Primary.ID)
 
@@ -104,9 +102,9 @@ func testAccCheckCustomRoutingListenerExists(ctx context.Context, n string, v *a
 	}
 }
 
-func testAccCheckCustomRoutingListenerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCustomRoutingListenerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_custom_routing_listener" {

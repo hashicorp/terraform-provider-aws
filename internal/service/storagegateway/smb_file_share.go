@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -218,7 +217,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &storagegateway.CreateSMBFileShareInput{
 		AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
-		ClientToken:            aws.String(id.UniqueId()),
+		ClientToken:            aws.String(sdkid.UniqueId()),
 		GatewayARN:             aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
@@ -490,9 +489,8 @@ func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *
 	output, err := conn.DescribeSMBFileShares(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -507,8 +505,8 @@ func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *
 	return output.SMBFileShareInfoList, nil
 }
 
-func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSMBFileShare(conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSMBFileShareByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -524,10 +522,10 @@ func statusSMBFileShare(ctx context.Context, conn *storagegateway.Client, arn st
 }
 
 func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusCreating},
 		Target:  []string{fileShareStatusAvailable},
-		Refresh: statusSMBFileShare(ctx, conn, arn),
+		Refresh: statusSMBFileShare(conn, arn),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -542,10 +540,10 @@ func waitSMBFileShareCreated(ctx context.Context, conn *storagegateway.Client, a
 }
 
 func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{fileShareStatusUpdating},
 		Target:  []string{fileShareStatusAvailable},
-		Refresh: statusSMBFileShare(ctx, conn, arn),
+		Refresh: statusSMBFileShare(conn, arn),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -560,10 +558,10 @@ func waitSMBFileShareUpdated(ctx context.Context, conn *storagegateway.Client, a
 }
 
 func waitSMBFileShareDeleted(ctx context.Context, conn *storagegateway.Client, arn string, timeout time.Duration) (*awstypes.SMBFileShareInfo, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        []string{fileShareStatusAvailable, fileShareStatusDeleting, fileShareStatusForceDeleting},
 		Target:         []string{},
-		Refresh:        statusSMBFileShare(ctx, conn, arn),
+		Refresh:        statusSMBFileShare(conn, arn),
 		Timeout:        timeout,
 		Delay:          5 * time.Second,
 		NotFoundChecks: 1,

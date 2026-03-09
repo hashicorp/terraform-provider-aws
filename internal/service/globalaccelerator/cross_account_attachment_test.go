@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,20 +23,20 @@ import (
 func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var v awstypes.Attachment
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrossAccountAttachmentConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`attachment/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -56,7 +55,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -67,21 +66,21 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rAccountID1 := sdkacctest.RandStringFromCharSet(12, "012346789")
 	rAccountID2 := sdkacctest.RandStringFromCharSet(12, "012346789")
 	var v awstypes.Attachment
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrossAccountAttachmentConfig_principals(rName, rAccountID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "principals.*", rAccountID1),
 				),
@@ -94,7 +93,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_principals(rName, rAccountID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "principals.*", rAccountID2),
 				),
@@ -106,13 +105,13 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrossAccountAttachmentConfig_resources(rName),
@@ -138,19 +137,19 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var v awstypes.Attachment
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrossAccountAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCrossAccountAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -162,19 +161,19 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var v awstypes.Attachment
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
+		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCrossAccountAttachmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -188,7 +187,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -197,7 +196,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
+					testAccCheckCrossAccountAttachmentExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -206,9 +205,9 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_cross_account_attachment" {
@@ -232,14 +231,14 @@ func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckCrossAccountAttachmentExists(ctx context.Context, n string, v *awstypes.Attachment) resource.TestCheckFunc {
+func testAccCheckCrossAccountAttachmentExists(ctx context.Context, t *testing.T, n string, v *awstypes.Attachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlobalAcceleratorClient(ctx)
 
 		output, err := tfglobalaccelerator.FindCrossAccountAttachmentByARN(ctx, conn, rs.Primary.ID)
 

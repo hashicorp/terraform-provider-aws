@@ -17,11 +17,11 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,11 +49,11 @@ func TestAccGlueConnectionDataSource_dynamoDB(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	bucketName := "tf-acc-test-" + sdkacctest.RandString(26)
 	region := acctest.Region()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -29,7 +29,9 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	semconv "go.opentelemetry.io/otel/semconv/v1.38.0"
 )
 
 // Implemented by (Config|Plan|State).GetAttribute().
@@ -100,6 +102,9 @@ func (w *wrappedDataSource) context(ctx context.Context, getAttribute getAttribu
 	if c != nil {
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
+		if s := c.RandomnessSource(); s != nil {
+			ctx = vcr.NewContext(ctx, s)
+		}
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
@@ -918,6 +923,10 @@ func (w *wrappedListResourceFramework) context(ctx context.Context, getAttribute
 		ctx = fwflex.RegisterLogger(ctx)
 	}
 
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
+	}
+
 	return ctx, diags
 }
 
@@ -1043,6 +1052,10 @@ func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAt
 		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	if overrideRegion != "" {
+		ctx = tflog.SetField(ctx, string(semconv.CloudRegionKey), overrideRegion)
 	}
 
 	return ctx, diags

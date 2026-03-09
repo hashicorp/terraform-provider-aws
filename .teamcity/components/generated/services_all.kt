@@ -115,7 +115,6 @@ val services = mapOf(
     "fms" to ServiceSpec("FMS (Firewall Manager)", regionOverride = "us-east-1"),
     "fsx" to ServiceSpec("FSx", vpcLock = true),
     "gamelift" to ServiceSpec("GameLift"),
-    "glacier" to ServiceSpec("S3 Glacier"),
     "globalaccelerator" to ServiceSpec("Global Accelerator"),
     "glue" to ServiceSpec("Glue"),
     "grafana" to ServiceSpec("Managed Grafana"),

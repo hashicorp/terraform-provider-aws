@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -25,9 +23,9 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T, semaphore tfsync.Semap
 	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
 	transitGatewayConnectResourceName := "aws_ec2_transit_gateway_connect.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -35,12 +33,12 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T, semaphore tfsync.Semap
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_peer_address"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "bgp_transit_gateway_addresses.#", 0),
@@ -64,9 +62,9 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T, semaphore tfsync.
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -74,12 +72,12 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T, semaphore tfsync.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -92,9 +90,9 @@ func testAccTransitGatewayConnectPeer_bgpASN(t *testing.T, semaphore tfsync.Sema
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -102,12 +100,12 @@ func testAccTransitGatewayConnectPeer_bgpASN(t *testing.T, semaphore tfsync.Sema
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_bgpASN2(rName, "4294967294"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "4294967294"),
 				),
 			},
@@ -119,9 +117,9 @@ func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T, semaphore t
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -129,12 +127,12 @@ func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T, semaphore t
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "inside_cidr_blocks.*", "169.254.200.0/29"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "inside_cidr_blocks.*", "fd00::/125"),
@@ -153,9 +151,9 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -163,12 +161,12 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -181,7 +179,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -190,7 +188,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -203,9 +201,9 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T, semaph
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayConnectPeer
 	resourceName := "aws_ec2_transit_gateway_connect_peer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -213,12 +211,12 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T, semaph
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayConnectPeerConfig_address(rName, "10.20.30.200"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
+					testAccCheckTransitGatewayConnectPeerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_address", "10.20.30.200"),
 				),
 			},
@@ -226,7 +224,7 @@ func testAccTransitGatewayConnectPeer_TransitGatewayAddress(t *testing.T, semaph
 	})
 }
 
-func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, v *awstypes.TransitGatewayConnectPeer) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, t *testing.T, n string, v *awstypes.TransitGatewayConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -237,7 +235,7 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 			return fmt.Errorf("No EC2 Transit Gateway Connect Peer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -251,9 +249,9 @@ func testAccCheckTransitGatewayConnectPeerExists(ctx context.Context, n string, 
 	}
 }
 
-func testAccCheckTransitGatewayConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTransitGatewayConnectPeerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_connect_peer" {

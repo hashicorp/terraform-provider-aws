@@ -11,11 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,16 +25,16 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidrBlock := "10.0.0.0/24"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, t, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 				),
@@ -56,16 +54,16 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) { // nosemgrep:ci.vpc-
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	netmaskLength := "24"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, t, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 					testAccCheckIPAMPoolCIDRPrefix(&cidr, netmaskLength),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.testchild", names.AttrID),
@@ -86,16 +84,16 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidrBlock := "10.0.0.0/24"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, t, resourceName, &cidr),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPoolCIDR(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -111,16 +109,16 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-
 	ipamResourceName := "aws_vpc_ipam.test"
 	cidrBlock := "10.0.0.0/24"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, t, resourceName, &cidr),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAM(), ipamResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -132,21 +130,21 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-
 func TestAccIPAMPoolCIDR_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var cidr awstypes.IpamPoolCidr
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	vpcResourceName := "aws_vpc.test"
 	cidrBlock := "10.0.0.0/16"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_VPCAllocation(rName, cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, t, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pool_cidr_id"),
@@ -166,24 +164,24 @@ func TestAccIPAMPoolCIDR_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-te
 func TestAccIPAMPoolCIDR_VPCAllocation_crossRegion(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	var cidr awstypes.IpamPoolCidr
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	poolResourceName := "aws_vpc_ipam_pool.test"
 	poolCidrBlock := "10.0.0.0/16"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_VPCAllocation_crossRegion(rName, poolCidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, t, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", poolCidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", poolResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_pool_cidr_id"),
@@ -198,14 +196,14 @@ func TestAccIPAMPoolCIDR_VPCAllocation_crossRegion(t *testing.T) { // nosemgrep:
 	})
 }
 
-func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *awstypes.IpamPoolCidr) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRExists(ctx context.Context, t *testing.T, n string, v *awstypes.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr"], rs.Primary.Attributes["ipam_pool_id"])
 
@@ -219,9 +217,9 @@ func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *awstypes.I
 	}
 }
 
-func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_pool_cidr" {

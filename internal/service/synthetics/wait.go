@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
@@ -24,10 +23,10 @@ const (
 )
 
 func waitCanaryReady(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CanaryStateUpdating, awstypes.CanaryStateCreating),
 		Target:  enum.Slice(awstypes.CanaryStateReady),
-		Refresh: statusCanaryState(ctx, conn, name),
+		Refresh: statusCanaryState(conn, name),
 		Timeout: canaryCreatedTimeout,
 	}
 
@@ -45,7 +44,7 @@ func waitCanaryReady(ctx context.Context, conn *synthetics.Client, name string) 
 }
 
 func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.CanaryStateStopping,
 			awstypes.CanaryStateUpdating,
@@ -53,7 +52,7 @@ func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string
 			awstypes.CanaryStateReady,
 			awstypes.CanaryStateStarting),
 		Target:  enum.Slice(awstypes.CanaryStateStopped),
-		Refresh: statusCanaryState(ctx, conn, name),
+		Refresh: statusCanaryState(conn, name),
 		Timeout: canaryStoppedTimeout,
 	}
 
@@ -71,13 +70,13 @@ func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string
 }
 
 func waitCanaryRunning(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.CanaryStateStarting,
 			awstypes.CanaryStateUpdating,
 			awstypes.CanaryStateReady),
 		Target:  enum.Slice(awstypes.CanaryStateRunning),
-		Refresh: statusCanaryState(ctx, conn, name),
+		Refresh: statusCanaryState(conn, name),
 		Timeout: canaryRunningTimeout,
 	}
 
@@ -95,10 +94,10 @@ func waitCanaryRunning(ctx context.Context, conn *synthetics.Client, name string
 }
 
 func waitCanaryDeleted(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CanaryStateDeleting, awstypes.CanaryStateStopped),
 		Target:  []string{},
-		Refresh: statusCanaryState(ctx, conn, name),
+		Refresh: statusCanaryState(conn, name),
 		Timeout: canaryDeletedTimeout,
 	}
 

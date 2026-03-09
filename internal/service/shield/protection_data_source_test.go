@@ -21,7 +21,7 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_shield_protection.test"
 	protectionResourceName := "aws_shield_protection.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
@@ -29,7 +29,7 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionDataSource_basicByARN(rName),

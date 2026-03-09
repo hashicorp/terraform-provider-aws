@@ -2145,6 +2145,65 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleHashKey(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -9022,6 +9081,42 @@ resource "aws_dynamodb_table" "test" {
     key_schema {
       attribute_name = "TestTableHashKey"
       key_type       = "HASH"
+    }
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_singleRangeKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestGSIRangeKey"
+      key_type       = "RANGE"
     }
     write_capacity  = 1
     read_capacity   = 1

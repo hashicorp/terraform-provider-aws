@@ -15,8 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.EndpointGroup")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointGroupCreate,
@@ -158,7 +156,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
-		IdempotencyToken:    aws.String(id.UniqueId()),
+		IdempotencyToken:    aws.String(sdkid.UniqueId()),
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 	}
 
@@ -362,9 +360,8 @@ func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client,
 	output, err := conn.DescribeEndpointGroup(ctx, input)
 
 	if errs.IsA[*awstypes.EndpointGroupNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
