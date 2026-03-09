@@ -1,3 +1,15 @@
 ```release-note:bug
 resource/aws_vpc_endpoint: Allow in-place update of `private_dns_enabled` when `vpc_endpoint_type` is `Interface`
 ```
+
+```release-note:bug
+resource/aws_vpc_endpoint: Set new computed value for `network_interface_ids` attribute when changing `subnet_configuration` or `subnet_ids`
+```
+
+```release-note:bug
+resource/aws_vpc_endpoint: Set new computed value for `subnet_configuration` attribute when changing `subnet_ids`
+```
+
+```release-note:bug
+resource/aws_vpc_endpoint: Set new computed value for `subnet_ids` attribute when changing `subnet_configuration`
+```

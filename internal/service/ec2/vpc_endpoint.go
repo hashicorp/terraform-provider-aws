@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -238,16 +239,39 @@ func resourceVPCEndpoint() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-		CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-			if diff.HasChange("private_dns_enabled") {
-				if v := diff.Get("vpc_endpoint_type").(string); v != string(awstypes.VpcEndpointTypeInterface) {
-					if err := diff.ForceNew("private_dns_enabled"); err != nil {
-						return fmt.Errorf("setting ForceNew on private_dns_enabled when vpc_endpoint_type is not interface: %w", err)
+
+		CustomizeDiff: customdiff.All(
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() != "" && diff.HasChange("private_dns_enabled") {
+					if v := awstypes.VpcEndpointType(diff.Get("vpc_endpoint_type").(string)); v != awstypes.VpcEndpointTypeInterface {
+						if err := diff.ForceNew("private_dns_enabled"); err != nil {
+							return err
+						}
 					}
 				}
-			}
-			return nil
-		},
+				return nil
+			},
+			customdiff.ComputedIf("network_interface_ids", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("subnet_configuration") || diff.HasChange(names.AttrSubnetIDs)
+			}),
+			customdiff.ComputedIf("subnet_configuration", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if diff.Id() != "" && diff.HasChange(names.AttrSubnetIDs) {
+					if v := diff.GetRawConfig().GetAttr(names.AttrSubnetIDs); v.IsKnown() && !v.IsNull() {
+						return true
+					}
+				}
+				return false
+			}),
+			customdiff.ComputedIf(names.AttrSubnetIDs, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if diff.Id() != "" && diff.HasChange("subnet_configuration") {
+					if v := diff.GetRawConfig().GetAttr("subnet_configuration"); v.IsKnown() && !v.IsNull() {
+						return true
+					}
+				}
+				return false
+			}),
+		),
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
