@@ -74,6 +74,8 @@ func (w *WithList) SetResult(ctx context.Context, awsClient *conns.AWSClient, in
 		return
 	}
 
+	// TODO: The Identity interceptor currently reads values from the resource, so it needs to be populated.
+	// Technically, only the Identity attributes need to be set, but calling `Set` with uninitialized typed collections causes a panic
 	diags.Append(result.Resource.Set(ctx, data)...)
 	if diags.HasError() {
 		return
