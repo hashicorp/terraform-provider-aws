@@ -199,7 +199,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Database (%s): %s", name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
+	d.SetId(catalogDatabaseCreateResourceID(catalogID, name))
 
 	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
@@ -315,12 +315,17 @@ func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
+	catalogID, name, err := catalogDatabaseParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	log.Printf("[DEBUG] Deleting Glue Catalog Database: %s", d.Id())
 	input := glue.DeleteDatabaseInput{
-		Name:      aws.String(d.Get(names.AttrName).(string)),
-		CatalogId: aws.String(d.Get(names.AttrCatalogID).(string)),
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
 	}
-	_, err := conn.DeleteDatabase(ctx, &input)
+	_, err = conn.DeleteDatabase(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
@@ -338,6 +343,25 @@ func ReadCatalogID(id string) (catalogID string, name string, err error) {
 		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected CATALOG-ID:DATABASE-NAME", id)
 	}
 	return idParts[0], idParts[1], nil
+}
+
+const catalogDatabaseResourceIDSeparator = ":"
+
+func catalogDatabaseCreateResourceID(catalogID, name string) string {
+	parts := []string{catalogID, name}
+	id := strings.Join(parts, catalogDatabaseResourceIDSeparator)
+
+	return id
+}
+
+func catalogDatabaseParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, catalogDatabaseResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected catalog-id%[2]sdatabase-name", id, catalogDatabaseResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
 }
 
 func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string) {
