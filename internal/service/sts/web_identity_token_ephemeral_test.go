@@ -4,6 +4,7 @@
 package sts_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -70,20 +71,20 @@ func TestAccSTSWebIdentityTokenEphemeral_full(t *testing.T) {
 func testAccWebIdentityTokenEphemeralConfig_basic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_sts_web_identity_token.test"),
-		`
+		fmt.Sprintf(`
 ephemeral "aws_sts_web_identity_token" "test" {
-  audience          = ["https://external-service.example.com"]
+  audience          = [%[1]q]
   signing_algorithm = "RS256"
 }
-`)
+`, acctest.RandomDomain().String()))
 }
 
 func testAccWebIdentityTokenEphemeralConfig_full() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_sts_web_identity_token.test"),
-		`
+		fmt.Sprintf(`
 ephemeral "aws_sts_web_identity_token" "test" {
-  audience          = ["https://external-service.example.com", "https://another-service.example.com"]
+  audience          = [%[1]q, %[2]q]
   signing_algorithm = "ES384"
   duration_seconds  = 600
 
@@ -92,5 +93,5 @@ ephemeral "aws_sts_web_identity_token" "test" {
     purpose     = "acceptance-testing"
   }
 }
-`)
+`, acctest.RandomDomain().String(), acctest.RandomDomain().String()))
 }
