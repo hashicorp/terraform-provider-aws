@@ -7,6 +7,7 @@ package s3
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -121,11 +122,18 @@ func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	if err := d.Set(names.AttrRule, flattenBucketOwnershipControlsRules(oc.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	if err := resourceBucketOwnershipControlsFlatten(ctx, oc, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func resourceBucketOwnershipControlsFlatten(_ context.Context, oc *awstypes.OwnershipControls, d *schema.ResourceData) error {
+	if err := d.Set(names.AttrRule, flattenBucketOwnershipControlsRules(oc.Rules)); err != nil {
+		return fmt.Errorf("setting rule: %w", err)
+	}
+	return nil
 }
 
 func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
