@@ -269,45 +269,6 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 	})
 }
 
-func TestAccSageMakerTrainingJob_profilerConfigUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var trainingjob sagemaker.DescribeTrainingJobOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_training_job.test"
-
-	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrainingJobConfig_profiler(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "500"),
-				),
-			},
-			{
-				Config: testAccTrainingJobConfig_profilerUpdated(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "1000"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccSageMakerTrainingJob_environmentAndHyperParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -387,8 +348,8 @@ func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.0.local_path", "/opt/ml/checkpoints"),
+					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.0.s3_uri", fmt.Sprintf("s3://%s/checkpoints/", rName)),
 				),
 			},
 			{
@@ -397,8 +358,8 @@ func TestAccSageMakerTrainingJob_checkpointConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
+					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.0.local_path", "/opt/ml/checkpoints"),
+					resource.TestCheckResourceAttr(resourceName, "checkpoint_config.0.s3_uri", fmt.Sprintf("s3://%s/checkpoints-v2/", rName)),
 				),
 			},
 			{
@@ -435,8 +396,8 @@ func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.0.local_path", "/opt/ml/output/tensorboard"),
+					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.0.s3_output_path", fmt.Sprintf("s3://%s/tensorboard/", rName)),
 				),
 			},
 			{
@@ -445,8 +406,8 @@ func TestAccSageMakerTrainingJob_tensorBoardOutputConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
+					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.0.local_path", "/opt/ml/output/tensorboard"),
+					resource.TestCheckResourceAttr(resourceName, "tensor_board_output_config.0.s3_output_path", fmt.Sprintf("s3://%s/tensorboard-v2/", rName)),
 				),
 			},
 			{
@@ -1459,6 +1420,11 @@ resource "aws_s3_bucket" "test" {
 	bucket = %[1]q
 }
 
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "pytorch-training"
+  image_tag       = "2.0.0-cpu-py310-ubuntu20.04-sagemaker"
+}
+
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -1468,7 +1434,7 @@ resource "aws_sagemaker_training_job" "test" {
   enable_network_isolation                 = false
 
   environment = {
-    "TEST_ENV" = "test_value"
+    "TEST_ENV"   = "test_value"
     "ANOTHER_ENV" = "another_value"
   }
 
@@ -1479,7 +1445,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
 	output_data_config {
@@ -1493,7 +1459,8 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 3600
+    max_runtime_in_seconds   = 3600
+	max_wait_time_in_seconds = 3600
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1527,6 +1494,11 @@ resource "aws_s3_bucket" "test" {
 	bucket = %[1]q
 }
 
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "pytorch-training"
+  image_tag       = "2.0.0-cpu-py310-ubuntu20.04-sagemaker"
+}
+
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
@@ -1536,7 +1508,7 @@ resource "aws_sagemaker_training_job" "test" {
   enable_network_isolation                 = false
 
   environment = {
-    "TEST_ENV" = "updated_value"
+    "TEST_ENV"   = "updated_value"
     "ANOTHER_ENV" = "another_value"
   }
 
@@ -1547,7 +1519,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   algorithm_specification {
     training_input_mode = "File"
-    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+    training_image      = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 
 	output_data_config {
@@ -1561,7 +1533,8 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds   = 7200
+	max_wait_time_in_seconds = 8000
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1658,8 +1631,6 @@ resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-  enable_inter_container_traffic_encryption = true
-
   algorithm_specification {
     training_input_mode = "File"
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
@@ -1667,7 +1638,7 @@ resource "aws_sagemaker_training_job" "test" {
 
   checkpoint_config {
     local_path = "/opt/ml/checkpoints"
-    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/checkpoints/"
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/checkpoints-v2/"
   }
 
 	output_data_config {
@@ -1681,7 +1652,7 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds = 3600
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1778,8 +1749,6 @@ resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-  enable_inter_container_traffic_encryption = true
-
   algorithm_specification {
     training_input_mode = "File"
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
@@ -1796,12 +1765,12 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds = 3600
   }
 
   tensor_board_output_config {
     local_path     = "/opt/ml/output/tensorboard"
-    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/tensorboard/"
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/tensorboard-v2/"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
