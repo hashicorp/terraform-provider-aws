@@ -203,6 +203,9 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 								"backup_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									names.AttrRegion: knownvalue.StringExact(endpoints.UsWest1RegionID),
 								})}),
+								"log_group_name_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"log_group_name_pattern": knownvalue.StringExact("${source.accountId}/${source.region}/${source.logGroup}"),
+								})}),
 								"logs_encryption_configuration": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 									"encryption_strategy": tfknownvalue.StringExact(awstypes.EncryptionStrategyAwsOwned),
 								})}),
@@ -414,6 +417,10 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "test" {
 
         backup_configuration {
           region = %[3]q
+        }
+
+        log_group_name_configuration {
+          log_group_name_pattern = "${source.accountId}/${source.region}/${source.logGroup}"
         }
       }
     }

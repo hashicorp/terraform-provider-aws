@@ -134,6 +134,22 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 														},
 													},
 												},
+												"log_group_name_configuration": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfigurationModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"log_group_name_pattern": schema.StringAttribute{
+																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 512),
+																},
+															},
+														},
+													},
+												},
 												"logs_encryption_configuration": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[logsEncryptionConfigurationModel](ctx),
 													Validators: []validator.List{
@@ -455,6 +471,7 @@ type centralizationRuleSourceModel struct {
 
 type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
+	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
 }
 
@@ -472,4 +489,8 @@ type logsEncryptionConfigurationModel struct {
 	EncryptionConflictResolutionStrategy fwtypes.StringEnum[awstypes.EncryptionConflictResolutionStrategy] `tfsdk:"encryption_conflict_resolution_strategy"`
 	EncryptionStrategy                   fwtypes.StringEnum[awstypes.EncryptionStrategy]                   `tfsdk:"encryption_strategy"`
 	KMSKeyARN                            fwtypes.ARN                                                       `tfsdk:"kms_key_arn"`
+}
+
+type logGroupNameConfigurationModel struct {
+	LogGroupNamePattern types.String `tfsdk:"log_group_name_pattern"`
 }
