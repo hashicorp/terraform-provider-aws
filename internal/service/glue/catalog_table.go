@@ -84,6 +84,169 @@ func resourceCatalogTable() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"create_iceberg_table_input": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrLocation: {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 2056),
+												},
+												"partition_spec": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"fields": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"field_id": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		names.AttrName: {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 1024),
+																		},
+																		"source_id": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																		"transform": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"spec_id": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+														},
+													},
+												},
+												names.AttrProperties: {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"schema": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"fields": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"doc": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(0, 255),
+																		},
+																		names.AttrID: {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																		"initial_default": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateFunc:     validation.StringIsJSON,
+																			DiffSuppressFunc: flex.SuppressEquivalentJSONDiffs,
+																		},
+																		names.AttrName: {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 1024),
+																		},
+																		names.AttrRequired: {
+																			Type:     schema.TypeBool,
+																			Required: true,
+																		},
+																		names.AttrType: {
+																			Type:             schema.TypeString,
+																			Required:         true,
+																			ValidateFunc:     validation.StringIsJSON,
+																			DiffSuppressFunc: flex.SuppressEquivalentJSONDiffs,
+																		},
+																		"write_default": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateFunc:     validation.StringIsJSON,
+																			DiffSuppressFunc: flex.SuppressEquivalentJSONDiffs,
+																		},
+																	},
+																},
+															},
+															"identifier_field_ids": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem:     &schema.Schema{Type: schema.TypeInt},
+															},
+															"schema_id": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															names.AttrType: {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice([]string{"struct"}, false),
+															},
+														},
+													},
+												},
+												"write_order": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"fields": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"direction": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice([]string{"asc", "desc"}, false),
+																		},
+																		"null_order": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice([]string{"nulls-first", "nulls-last"}, false),
+																		},
+																		"source_id": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																		"transform": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"order_id": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"metadata_operation": {
 										Type:         schema.TypeString,
 										Required:     true,
