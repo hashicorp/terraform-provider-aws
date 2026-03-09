@@ -43,7 +43,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 func testAccFramework_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework backup.DescribeFrameworkOutput
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_backup_framework.test"
@@ -102,7 +102,7 @@ func testAccFramework_basic(t *testing.T) {
 func testAccFramework_updateControlScope(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework backup.DescribeFrameworkOutput
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 	description := "example description"
 	originalControlScopeTagValue := "example"
 	updatedControlScopeTagValue := ""
@@ -213,7 +213,7 @@ func testAccFramework_updateControlScope(t *testing.T) {
 func testAccFramework_updateControlInputParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework backup.DescribeFrameworkOutput
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 	description := "example description"
 	originalRequiredRetentionDays := "35"
 	updatedRequiredRetentionDays := "34"
@@ -295,7 +295,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 func testAccFramework_updateControls(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework backup.DescribeFrameworkOutput
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 	description := "example description"
 	resourceName := "aws_backup_framework.test"
 
@@ -372,7 +372,7 @@ func testAccFramework_updateControls(t *testing.T) {
 func testAccFramework_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var framework backup.DescribeFrameworkOutput
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 	resourceName := "aws_backup_framework.test"
 
 	acctest.Test(ctx, t, resource.TestCase{

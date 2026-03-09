@@ -10,7 +10,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -200,7 +199,7 @@ func TestAccECSCluster_serviceConnectDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Cluster
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	ns := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha))
+	ns := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha))
 	resourceName := "aws_ecs_cluster.test"
 	namespace1ResourceName := "aws_service_discovery_http_namespace.test.0"
 	namespace2ResourceName := "aws_service_discovery_http_namespace.test.1"

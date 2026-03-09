@@ -93,4 +93,13 @@ var (
 	InstanceEngineSQLServerExpress     = instanceEngineSQLServerExpress
 	InstanceEngineSQLServerStandard    = instanceEngineSQLServerStandard
 	InstanceEngineSQLServerWeb         = instanceEngineSQLServerWeb
+
+	ValidEventSubscriptionName       = validEventSubscriptionName
+	ValidEventSubscriptionNamePrefix = validEventSubscriptionNamePrefix
+	ValidOptionGroupName             = validOptionGroupName
+	ValidOptionGroupNamePrefix       = validOptionGroupNamePrefix
+	ValidParamGroupName              = validParamGroupName
+	ValidParamGroupNamePrefix        = validParamGroupNamePrefix
+	ValidSubnetGroupName             = validSubnetGroupName
+	ValidSubnetGroupNamePrefix       = validSubnetGroupNamePrefix
 )
