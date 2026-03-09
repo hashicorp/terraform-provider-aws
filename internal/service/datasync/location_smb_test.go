@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/datasync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,18 +22,18 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					testAccCheckLocationSMBExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
@@ -54,7 +52,7 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test2/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					testAccCheckLocationSMBExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
@@ -72,18 +70,18 @@ func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					testAccCheckLocationSMBExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationSMB(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,18 +94,18 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationSmbOutput
 	resourceName := "aws_datasync_location_smb.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationSMBDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationSMBConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					testAccCheckLocationSMBExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -121,7 +119,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 			{
 				Config: testAccLocationSMBConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					testAccCheckLocationSMBExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -130,7 +128,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 			{
 				Config: testAccLocationSMBConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationSMBExists(ctx, resourceName, &v),
+					testAccCheckLocationSMBExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -139,9 +137,9 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationSMBDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationSMBDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_smb" {
@@ -165,14 +163,14 @@ func testAccCheckLocationSMBDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckLocationSMBExists(ctx context.Context, n string, v *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
+func testAccCheckLocationSMBExists(ctx context.Context, t *testing.T, n string, v *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationSMBByARN(ctx, conn, rs.Primary.ID)
 

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -388,8 +387,8 @@ func findWorkspaces(ctx context.Context, conn *workspaces.Client, input *workspa
 	return output, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *workspaces.Client, workspaceID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspace(conn *workspaces.Client, workspaceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, workspaceID)
 
 		if retry.NotFound(err) {
@@ -405,10 +404,10 @@ func statusWorkspace(ctx context.Context, conn *workspaces.Client, workspaceID s
 }
 
 func waitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatePending, types.WorkspaceStateStarting),
 		Target:  enum.Slice(types.WorkspaceStateAvailable),
-		Refresh: statusWorkspace(ctx, conn, workspaceID),
+		Refresh: statusWorkspace(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -422,10 +421,10 @@ func waitWorkspaceAvailable(ctx context.Context, conn *workspaces.Client, worksp
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStateUpdating),
 		Target:  enum.Slice(types.WorkspaceStateAvailable, types.WorkspaceStateStopped),
-		Refresh: statusWorkspace(ctx, conn, workspaceID),
+		Refresh: statusWorkspace(conn, workspaceID),
 		// "OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment".
 		// AWS Workspaces service doesn't change instance status to "Updating" during property modification.
 		// Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
@@ -444,12 +443,12 @@ func waitWorkspaceUpdated(ctx context.Context, conn *workspaces.Client, workspac
 
 func waitWorkspaceTerminated(ctx context.Context, conn *workspaces.Client, workspaceID string, timeout time.Duration) (*types.Workspace, error) {
 	// https://docs.aws.amazon.com/workspaces/latest/api/API_TerminateWorkspaces.html
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		// You can terminate a WorkSpace that is in any state except SUSPENDED.
 		// After a WorkSpace is terminated, the TERMINATED state is returned only briefly before the WorkSpace directory metadata is cleaned up.
 		Pending: enum.Slice(tfslices.RemoveAll(enum.EnumValues[types.WorkspaceState](), types.WorkspaceStateSuspended)...),
 		Target:  []string{},
-		Refresh: statusWorkspace(ctx, conn, workspaceID),
+		Refresh: statusWorkspace(conn, workspaceID),
 		Timeout: timeout,
 	}
 

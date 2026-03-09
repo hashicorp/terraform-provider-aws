@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,7 +32,6 @@ import (
 
 // @SDKResource("aws_dx_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	// Resource with v0 schema (provider v5.0.1).
 	resourceV0 := &schema.Resource{
@@ -381,9 +379,8 @@ func findConnectionByID(ctx context.Context, conn *directconnect.Client, id stri
 	}
 
 	if state := output.ConnectionState; state == awstypes.ConnectionStateDeleted || state == awstypes.ConnectionStateRejected {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
@@ -404,9 +401,8 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 	output, err := conn.DescribeConnections(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "Could not find Connection with ID") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -421,8 +417,8 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil
 }
 
-func statusConnection(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnection(conn *directconnect.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -441,10 +437,10 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatePending, awstypes.ConnectionStateOrdering, awstypes.ConnectionStateAvailable, awstypes.ConnectionStateRequested, awstypes.ConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusConnection(ctx, conn, id),
+		Refresh: statusConnection(conn, id),
 		Timeout: timeout,
 	}
 

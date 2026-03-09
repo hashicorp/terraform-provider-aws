@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,19 +18,19 @@ import (
 
 func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyGroupExists(ctx, resourceName),
+					testAccCheckKeyGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrComment, "test key group"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "etag"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", names.AttrID),
@@ -51,19 +49,19 @@ func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 
 func TestAccCloudFrontKeyGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyGroupExists(ctx, resourceName),
+					testAccCheckKeyGroupExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,22 +72,22 @@ func TestAccCloudFrontKeyGroup_disappears(t *testing.T) {
 
 func TestAccCloudFrontKeyGroup_comment(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
 	firstComment := "first comment"
 	secondComment := "second comment"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyGroupConfig_comment(rName, firstComment),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyGroupExists(ctx, resourceName),
+					testAccCheckKeyGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrComment, firstComment),
 				),
 			},
@@ -101,7 +99,7 @@ func TestAccCloudFrontKeyGroup_comment(t *testing.T) {
 			{
 				Config: testAccKeyGroupConfig_comment(rName, secondComment),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyGroupExists(ctx, resourceName),
+					testAccCheckKeyGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrComment, secondComment),
 				),
 			},
@@ -111,19 +109,19 @@ func TestAccCloudFrontKeyGroup_comment(t *testing.T) {
 
 func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyGroupExists(ctx, resourceName),
+					testAccCheckKeyGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
 				),
 			},
@@ -135,7 +133,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 			{
 				Config: testAccKeyGroupConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyGroupExists(ctx, resourceName),
+					testAccCheckKeyGroupExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "2"),
 				),
 			},
@@ -143,14 +141,14 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 	})
 }
 
-func testAccCheckKeyGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckKeyGroupExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		_, err := tfcloudfront.FindKeyGroupByID(ctx, conn, rs.Primary.ID)
 
@@ -158,9 +156,9 @@ func testAccCheckKeyGroupExists(ctx context.Context, n string) resource.TestChec
 	}
 }
 
-func testAccCheckKeyGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeyGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_key_group" {

@@ -156,6 +156,32 @@ resource "aws_lexv2models_intent" "example" {
 }
 ```
 
+### QnA Intent Example
+
+```terraform
+resource "aws_lexv2models_intent" "qna_example" {
+  bot_id                  = aws_lexv2models_bot.test.id
+  bot_version             = aws_lexv2models_bot_locale.test.bot_version
+  name                    = "qna_intent"
+  locale_id               = aws_lexv2models_bot_locale.test.locale_id
+  parent_intent_signature = "AMAZON.QnAIntent"
+
+  qna_intent_configuration {
+    data_source_configuration {
+      kendra_configuration {
+        kendra_index                = aws_kendra_index.example.arn
+        exact_response              = true
+        query_filter_string_enabled = false
+      }
+    }
+  }
+
+  sample_utterance {
+    utterance = "What is the answer?"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -175,7 +201,8 @@ The following arguments are optional:
 * `fulfillment_code_hook` - (Optional) Configuration block for invoking the alias Lambda function when the intent is ready for fulfillment. You can invoke this function to complete the bot's transaction with the user. See [`fulfillment_code_hook`](#fulfillment_code_hook).
 * `initial_response_setting` - (Optional) Configuration block for the response that is sent to the user at the beginning of a conversation, before eliciting slot values. See [`initial_response_setting`](#initial_response_setting).
 * `input_context` - (Optional) Configuration blocks for contexts that must be active for this intent to be considered by Amazon Lex. When an intent has an input context list, Amazon Lex only considers using the intent in an interaction with the user when the specified contexts are included in the active context list for the session. If the contexts are not active, then Amazon Lex will not use the intent. A context can be automatically activated using the outputContexts property or it can be set at runtime. See [`input_context`](#input_context).
-* `kendra_configuration` - (Optional) Configuration block for information required to use the AMAZON.KendraSearchIntent intent to connect to an Amazon Kendra index. The AMAZON.KendraSearchIntent intent is called when Amazon Lex can't determine another intent to invoke. See [`kendra_configuration`](#kendra_configuration).
+* `kendra_configuration` - (Optional) Configuration block for information required to use the AMAZON.KendraSearchIntent intent to connect to an Amazon Kendra index. The AMAZON.KendraSearchIntent intent is called when Amazon Lex can't determine another intent to invoke. Cannot be used with `qna_intent_configuration`. See [`kendra_configuration`](#kendra_configuration).
+* `qna_intent_configuration` - (Optional) Configuration block for QnA intent settings. This is used when `parent_intent_signature` is set to `AMAZON.QnAIntent`. Cannot be used with `kendra_configuration`. See [`qna_intent_configuration`](#qna_intent_configuration).
 * `output_context` - (Optional) Configuration blocks for contexts that the intent activates when it is fulfilled. You can use an output context to indicate the intents that Amazon Lex should consider for the next turn of the conversation with a customer. When you use the outputContextsList property, all of the contexts specified in the list are activated when the intent is fulfilled. You can set up to 10 output contexts. You can also set the number of conversation turns that the context should be active, or the length of time that the context should be active. See [`output_context`](#output_context).
 * `parent_intent_signature` - (Optional) Identifier for the built-in intent to base this intent on.
 * `sample_utterance` - (Optional) Configuration block for strings that a user might say to signal the intent. See [`sample_utterance`](#sample_utterance).
@@ -514,6 +541,59 @@ The following arguments are optional:
 * `kendra_index` - (Required) ARN of the Amazon Kendra index that you want the AMAZON.KendraSearchIntent intent to search. The index must be in the same account and Region as the Amazon Lex bot.
 * `query_filter_string` - (Optional) Query filter that Amazon Lex sends to Amazon Kendra to filter the response from a query. The filter is in the format defined by Amazon Kendra. For more information, see [Filtering queries](https://docs.aws.amazon.com/kendra/latest/dg/filtering.html).
 * `query_filter_string_enabled` - (Optional) Whether the AMAZON.KendraSearchIntent intent uses a custom query string to query the Amazon Kendra index.
+
+### `qna_intent_configuration`
+
+* `bedrock_model_configuration` - (Optional) Configuration block for the Amazon Bedrock model to use for generating responses. See [`bedrock_model_configuration`](#bedrock_model_configuration).
+* `data_source_configuration` - (Optional) Configuration block for the data sources to use for the QnA intent. Only one data source (Bedrock Knowledge Base, Kendra, or OpenSearch) can be specified. See [`data_source_configuration`](#data_source_configuration).
+
+#### `bedrock_model_configuration`
+
+* `custom_prompt` - (Optional) Custom prompt to use for the Bedrock model.
+* `guardrail` - (Optional) Configuration block for the guardrail to use with the Bedrock model. See [`guardrail`](#guardrail).
+* `model_arn` - (Required) ARN of the Bedrock model to use.
+* `trace_status` - (Optional) Whether to enable tracing for the Bedrock model. Valid values are `ENABLED` and `DISABLED`.
+
+##### `guardrail`
+
+* `identifier` - (Required) Identifier of the guardrail.
+* `version` - (Required) Version of the guardrail.
+
+#### `data_source_configuration`
+
+* `bedrock_knowledge_store_configuration` - (Optional) Configuration block for Amazon Bedrock Knowledge Base as a data source. See [`bedrock_knowledge_store_configuration`](#bedrock_knowledge_store_configuration).
+* `kendra_configuration` - (Optional) Configuration block for Amazon Kendra as a data source. See [`kendra_configuration`](#kendra_configuration).
+* `opensearch_configuration` - (Optional) Configuration block for OpenSearch as a data source. See [`opensearch_configuration`](#opensearch_configuration).
+
+##### `bedrock_knowledge_store_configuration`
+
+* `bedrock_knowledge_base_arn` - (Required) ARN of the Bedrock Knowledge Base.
+* `exact_response` - (Optional) Whether to return exact responses from the knowledge base. Defaults to `false`.
+* `exact_response_fields` - (Optional) Configuration block for exact response fields. See [`exact_response_fields`](#exact_response_fields-bedrock).
+
+###### `exact_response_fields` (Bedrock)
+
+* `answer_field` - (Optional) Field name for the answer.
+
+##### `kendra_configuration`
+
+* `exact_response` - (Optional) Whether to return exact responses from Kendra. Defaults to `false`.
+* `kendra_index` - (Required) ARN of the Kendra index.
+* `query_filter_string` - (Optional) Query filter string for Kendra.
+* `query_filter_string_enabled` - (Optional) Whether the query filter string is enabled.
+
+##### `opensearch_configuration`
+
+* `domain_endpoint` - (Required) Endpoint of the OpenSearch domain.
+* `exact_response` - (Optional) Whether to return exact responses from OpenSearch. Defaults to `false`.
+* `exact_response_fields` - (Optional) Configuration block for exact response fields. See [`exact_response_fields`](#exact_response_fields).
+* `include_fields` - (Optional) List of fields to include in the response.
+* `index_name` - (Required) Name of the OpenSearch index.
+
+###### `exact_response_fields`
+
+* `answer_field` - (Required) Field name for the answer.
+* `question_field` - (Required) Field name for the question.
 
 ### `output_context`
 

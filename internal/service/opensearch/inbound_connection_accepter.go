@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -167,9 +166,8 @@ func findInboundConnectionByID(ctx context.Context, conn *opensearch.Client, id 
 	}
 
 	if status := output.ConnectionStatus.StatusCode; status == awstypes.InboundConnectionStatusCodeDeleted || status == awstypes.InboundConnectionStatusCodeRejected {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -194,9 +192,8 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -210,8 +207,8 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 	return output, nil
 }
 
-func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInboundConnection(conn *opensearch.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findInboundConnectionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -227,10 +224,10 @@ func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id st
 }
 
 func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.InboundConnection, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeProvisioning, awstypes.InboundConnectionStatusCodeApproved),
 		Target:  enum.Slice(awstypes.InboundConnectionStatusCodeActive),
-		Refresh: statusInboundConnection(ctx, conn, id),
+		Refresh: statusInboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
@@ -246,10 +243,10 @@ func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.InboundConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeRejecting),
 		Target:  []string{},
-		Refresh: statusInboundConnection(ctx, conn, id),
+		Refresh: statusInboundConnection(conn, id),
 		Timeout: timeout,
 	}
 
@@ -265,10 +262,10 @@ func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitInboundConnectionDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.InboundConnection, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusInboundConnection(ctx, conn, id),
+		Refresh: statusInboundConnection(conn, id),
 		Timeout: timeout,
 	}
 

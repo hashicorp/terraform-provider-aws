@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,16 +22,16 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_domain(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(ctx, resourceName),
+					testAccCheckIdentityPolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -47,20 +45,20 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 
 func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 	ctx := acctest.Context(t)
-	emailPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	emailPrefix := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_email(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(ctx, resourceName),
+					testAccCheckIdentityPolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -77,22 +75,22 @@ func TestAccSESIdentityPolicy_policy(t *testing.T) {
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_1(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(ctx, resourceName),
+					testAccCheckIdentityPolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
 				Config: testAccIdentityPolicyConfig_2(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(ctx, resourceName),
+					testAccCheckIdentityPolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -107,19 +105,19 @@ func TestAccSESIdentityPolicy_policy(t *testing.T) {
 func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_equivalent(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(ctx, resourceName),
+					testAccCheckIdentityPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -142,9 +140,9 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_identity_policy" {
@@ -168,14 +166,14 @@ func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckIdentityPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		_, err := tfses.FindIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity"], rs.Primary.Attributes[names.AttrName])
 

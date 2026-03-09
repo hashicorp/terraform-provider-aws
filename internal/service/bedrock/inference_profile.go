@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -40,7 +39,6 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetInferenceProfileOutput")
 // @Testing(importIgnore="model_source.#;model_source.0.%;model_source.0.copy_from")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newInferenceProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &inferenceProfileResource{}
 
@@ -125,7 +123,20 @@ func (r *inferenceProfileResource) Schema(ctx context.Context, req resource.Sche
 			"model_source": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileModelModelSource](ctx),
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.RequiresReplaceIf(
+						func(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							// model_source is not returned from the AWS API.
+							// If state is null (such as after import), don't force replacement.
+							if req.StateValue.IsNull() {
+								resp.RequiresReplace = false
+								return
+							}
+							// When state is non-null, require replacement for any changes
+							resp.RequiresReplace = !req.PlanValue.Equal(req.StateValue)
+						},
+						"If the value of this attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+						"If the value of this attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+					),
 				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -279,10 +290,10 @@ func (r *inferenceProfileResource) Delete(ctx context.Context, req resource.Dele
 }
 
 func waitInferenceProfileCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetInferenceProfileOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(string(awstypes.InferenceProfileStatusActive)),
-		Refresh:                   statusInferenceProfile(ctx, conn, id),
+		Refresh:                   statusInferenceProfile(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -297,10 +308,10 @@ func waitInferenceProfileCreated(ctx context.Context, conn *bedrock.Client, id s
 }
 
 func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetInferenceProfileOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.InferenceProfileStatusActive)),
 		Target:  []string{},
-		Refresh: statusInferenceProfile(ctx, conn, id),
+		Refresh: statusInferenceProfile(conn, id),
 		Timeout: timeout,
 	}
 
@@ -312,8 +323,8 @@ func waitInferenceProfileDeleted(ctx context.Context, conn *bedrock.Client, id s
 	return nil, err
 }
 
-func statusInferenceProfile(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusInferenceProfile(conn *bedrock.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findInferenceProfileByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil

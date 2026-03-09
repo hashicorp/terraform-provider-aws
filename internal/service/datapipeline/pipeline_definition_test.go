@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datapipeline/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdatapipeline "github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,18 +23,18 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineOutput datapipeline.GetPipelineDefinitionOutput
 	resourceName := "aws_datapipeline_pipeline_definition.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, t, resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.id", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.name", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.field.0.key", "workerGroup"),
@@ -56,18 +54,18 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineOutput datapipeline.GetPipelineDefinitionOutput
 	resourceName := "aws_datapipeline_pipeline_definition.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, t, resourceName, &pipelineOutput),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfdatapipeline.ResourcePipelineDefinition(), resourceName),
 				),
 			},
@@ -79,25 +77,25 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipelineOutput datapipeline.GetPipelineDefinitionOutput
 	resourceName := "aws_datapipeline_pipeline_definition.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx, t),
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, t, resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd"),
 				),
 			},
 			{
 				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, t, resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd2"),
 				),
 			},
@@ -111,14 +109,14 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName string, datapipelineOutput *datapipeline.GetPipelineDefinitionOutput) resource.TestCheckFunc {
+func testAccCheckPipelineDefinitionExists(ctx context.Context, t *testing.T, resourceName string, datapipelineOutput *datapipeline.GetPipelineDefinitionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataPipelineClient(ctx)
 
 		input := datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)}
 		resp, err := conn.GetPipelineDefinition(ctx, &input)
@@ -136,9 +134,9 @@ func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName stri
 	}
 }
 
-func testAccCheckPipelineDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPipelineDefinitionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DataPipelineClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datapipeline_pipeline_definition" {

@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -106,7 +106,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	input := ec2.AllocateHostsInput{
 		AutoPlacement:     awstypes.AutoPlacement(d.Get("auto_placement").(string)),
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		HostRecovery:      awstypes.HostRecovery(d.Get("host_recovery").(string)),
 		Quantity:          aws.Int32(1),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeDedicatedHost),

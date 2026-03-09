@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -66,7 +65,7 @@ func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.Resource
 	accountID := d.Get(names.AttrAccountID).(string)
 	input := &inspector2.EnableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(accountID),
-		ClientToken:             aws.String(id.UniqueId()),
+		ClientToken:             aws.String(sdkid.UniqueId()),
 	}
 
 	_, err := conn.EnableDelegatedAdminAccount(ctx, input)
@@ -189,8 +188,8 @@ func findDelegatedAdminAccounts(ctx context.Context, conn *inspector2.Client, in
 	return output, nil
 }
 
-func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDelegatedAdminAccount(conn *inspector2.Client, accountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDelegatedAdminAccountByID(ctx, conn, accountID)
 
 		if retry.NotFound(err) {
@@ -216,10 +215,10 @@ const (
 )
 
 func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusEnableInProgress, delegatedAdminStatusEnabling),
 		Target:  enum.Slice(delegatedAdminStatusEnabled),
-		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
+		Refresh: statusDelegatedAdminAccount(conn, accountID),
 		Timeout: timeout,
 	}
 
@@ -233,10 +232,10 @@ func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Clie
 }
 
 func waitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusCreated, delegatedAdminStatusEnabled),
 		Target:  []string{},
-		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
+		Refresh: statusDelegatedAdminAccount(conn, accountID),
 		Timeout: timeout,
 	}
 

@@ -31,8 +31,6 @@ import (
 // @SDKResource("aws_apigatewayv2_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetVpcLinkOutput")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,

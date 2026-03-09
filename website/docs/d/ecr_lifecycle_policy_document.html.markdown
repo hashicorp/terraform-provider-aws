@@ -44,7 +44,7 @@ Each document configuration may have one or more `rule` blocks, which each accep
 
 * `action` (Optional) - Specifies the action to take.
     * `type` (Required) - Specify an action type. The supported values are `expire` (to delete images) and `transition` (to move images to archive storage).
-    * `targetStorageClass` (Required if `type` is `transition`) - The storage class you want the lifecycle policy to transition the image to. `archive` is the only supported value.
+    * `target_storage_class` (Required if `type` is `transition`) - The storage class you want the lifecycle policy to transition the image to. `archive` is the only supported value.
 * `description` (Optional) - Describes the purpose of a rule within a lifecycle policy.
 * `priority` (Required) - Sets the order in which rules are evaluated, lowest to highest. When you add rules to a lifecycle policy, you must give them each a unique value for `priority`. Values do not need to be sequential across rules in a policy. A rule with a `tag_status` value of `any` must have the highest value for `priority` and be evaluated last.
 * `selection` (Required) -  Collects parameters describing the selection criteria for the ECR lifecycle policy:

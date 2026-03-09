@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9"
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -120,7 +120,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
 		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),

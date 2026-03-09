@@ -10,12 +10,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
@@ -28,22 +26,22 @@ func TestAccAthenaCapacityReservation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_athena_capacity_reservation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityReservationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_dpus", "24"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", regexache.MustCompile(`capacity-reservation/.+$`)),
@@ -68,22 +66,22 @@ func TestAccAthenaCapacityReservation_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_athena_capacity_reservation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityReservationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfathena.ResourceCapacityReservation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,22 +96,22 @@ func TestAccAthenaCapacityReservation_targetDPUs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_athena_capacity_reservation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityReservationConfig_targetDPUs(rName, 24),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_dpus", "24"),
 				),
@@ -121,7 +119,7 @@ func TestAccAthenaCapacityReservation_targetDPUs(t *testing.T) {
 			{
 				Config: testAccCapacityReservationConfig_targetDPUs(rName, 32),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_dpus", "32"),
 				),
@@ -143,22 +141,22 @@ func TestAccAthenaCapacityReservation_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_athena_capacity_reservation.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AthenaEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCapacityReservationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -173,7 +171,7 @@ func TestAccAthenaCapacityReservation_tags(t *testing.T) {
 			{
 				Config: testAccCapacityReservationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -182,7 +180,7 @@ func TestAccAthenaCapacityReservation_tags(t *testing.T) {
 			{
 				Config: testAccCapacityReservationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCapacityReservationExists(ctx, resourceName),
+					testAccCheckCapacityReservationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -191,9 +189,9 @@ func TestAccAthenaCapacityReservation_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCapacityReservationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCapacityReservationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_capacity_reservation" {
@@ -216,7 +214,7 @@ func testAccCheckCapacityReservationDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckCapacityReservationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckCapacityReservationExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -228,7 +226,7 @@ func testAccCheckCapacityReservationExists(ctx context.Context, resourceName str
 			return create.Error(names.Athena, create.ErrActionCheckingExistence, tfathena.ResNameCapacityReservation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AthenaClient(ctx)
 		_, err := tfathena.FindCapacityReservationByName(ctx, conn, name)
 		if err != nil {
 			return create.Error(names.Athena, create.ErrActionCheckingExistence, tfathena.ResNameCapacityReservation, name, err)

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,7 +38,6 @@ const (
 // @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.GraphqlApi")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGraphQLAPI() *schema.Resource {
 	validateAuthorizerResultTTLInSeconds := validation.IntBetween(0, 3600)
 
@@ -581,7 +579,9 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	output, err := conn.GetGraphqlApi(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -603,7 +603,9 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	output, err := conn.GetSchemaCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
 	}
 
 	if err != nil {
@@ -617,8 +619,8 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	return output, nil
 }
 
-func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSchemaCreation(conn *appsync.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSchemaCreationStatusByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -634,10 +636,10 @@ func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) 
 }
 
 func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*appsync.GetSchemaCreationStatusOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusProcessing),
 		Target:  enum.Slice(awstypes.SchemaStatusActive, awstypes.SchemaStatusSuccess),
-		Refresh: statusSchemaCreation(ctx, conn, id),
+		Refresh: statusSchemaCreation(conn, id),
 		Timeout: timeout,
 	}
 

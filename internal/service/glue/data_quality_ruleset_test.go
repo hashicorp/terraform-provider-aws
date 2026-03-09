@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +20,20 @@ import (
 func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
@@ -58,21 +56,21 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 func TestAccGlueDataQualityRuleset_updateRuleset(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	originalRuleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	updatedRuleset := "Rules = [Completeness \"colA\" between 0.5 and 1.0]"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityRulesetConfig_basic(rName, originalRuleset),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ruleset", originalRuleset),
 				),
 			},
@@ -84,7 +82,7 @@ func TestAccGlueDataQualityRuleset_updateRuleset(t *testing.T) {
 			{
 				Config: testAccDataQualityRulesetConfig_basic(rName, updatedRuleset),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ruleset", updatedRuleset),
 				),
 			},
@@ -95,22 +93,22 @@ func TestAccGlueDataQualityRuleset_updateRuleset(t *testing.T) {
 func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	originalDescription := "original description"
 	updatedDescription := "updated description"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, originalDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
@@ -122,7 +120,7 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 			{
 				Config: testAccDataQualityRulesetConfig_description(rName, ruleset, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
@@ -133,23 +131,23 @@ func TestAccGlueDataQualityRuleset_updateDescription(t *testing.T) {
 func TestAccGlueDataQualityRuleset_targetTableRequired(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName3 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccDataQualityRulesetConfig_targetTable(rName, rName2, rName3, ruleset),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.0.catalog_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
@@ -168,23 +166,23 @@ func TestAccGlueDataQualityRuleset_targetTableRequired(t *testing.T) {
 func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName3 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccDataQualityRulesetConfig_targetTableFull(rName, rName2, rName3, ruleset),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
@@ -203,21 +201,21 @@ func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
 func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, acctest.CtKey1, acctest.CtValue1),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -231,7 +229,7 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 				Config:  testAccDataQualityRulesetConfig_tags2(rName, ruleset, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -241,7 +239,7 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 				Config:  testAccDataQualityRulesetConfig_tags1(rName, ruleset, acctest.CtKey2, acctest.CtValue2),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -253,20 +251,20 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 func TestAccGlueDataQualityRuleset_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	ruleset := "Rules = [Completeness \"colA\" between 0.4 and 0.8]"
 	resourceName := "aws_glue_data_quality_ruleset.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx),
+		CheckDestroy:             testAccCheckDataQualityRulesetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataQualityRulesetExists(ctx, resourceName),
+					testAccCheckDataQualityRulesetExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceDataQualityRuleset(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -275,7 +273,7 @@ func TestAccGlueDataQualityRuleset_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDataQualityRulesetExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -287,7 +285,7 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		resp, err := tfglue.FindDataQualityRulesetByName(ctx, conn, rs.Primary.ID)
 
@@ -308,9 +306,9 @@ func testAccCheckDataQualityRulesetExists(ctx context.Context, n string) resourc
 	}
 }
 
-func testAccCheckDataQualityRulesetDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataQualityRulesetDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_data_quality_ruleset" {

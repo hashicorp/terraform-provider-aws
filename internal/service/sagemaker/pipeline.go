@@ -14,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -130,7 +129,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get("pipeline_name").(string)
 	input := &sagemaker.CreatePipelineInput{
-		ClientRequestToken:  aws.String(id.UniqueId()),
+		ClientRequestToken:  aws.String(sdkid.UniqueId()),
 		PipelineDisplayName: aws.String(d.Get("pipeline_display_name").(string)),
 		PipelineName:        aws.String(name),
 		RoleArn:             aws.String(d.Get(names.AttrRoleARN).(string)),
@@ -242,7 +241,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	log.Printf("[DEBUG] Deleting SageMaker AI Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(ctx, &sagemaker.DeletePipelineInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		PipelineName:       aws.String(d.Id()),
 	})
 
@@ -265,9 +264,8 @@ func findPipelineByName(ctx context.Context, conn *sagemaker.Client, name string
 	output, err := conn.DescribePipeline(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

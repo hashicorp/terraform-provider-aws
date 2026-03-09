@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,12 +21,12 @@ import (
 func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -36,12 +34,12 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_fixedResponseHTTPS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
@@ -53,7 +51,7 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 			{
 				Config: testAccListenerConfig_forwardTargetGroupHTTPSServiceID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
@@ -75,11 +73,11 @@ func TestAccVPCLatticeListener_defaultActionUpdate(t *testing.T) {
 func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -87,12 +85,12 @@ func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_fixedResponseHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
@@ -113,11 +111,11 @@ func TestAccVPCLatticeListener_fixedResponseHTTP(t *testing.T) {
 func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -125,12 +123,12 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_fixedResponseHTTPS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
@@ -151,12 +149,12 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -164,12 +162,12 @@ func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardTLSPassthrough(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS_PASSTHROUGH"),
@@ -191,12 +189,12 @@ func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
 func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -204,12 +202,12 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
@@ -231,12 +229,12 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -244,12 +242,12 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceIDCustomPort(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8080"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
@@ -271,12 +269,12 @@ func TestAccVPCLatticeListener_forwardHTTPTargetGroupCustomPort(t *testing.T) {
 func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -284,12 +282,12 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
@@ -312,12 +310,12 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupARN(t *testing.T) {
 func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -325,12 +323,12 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardTargetGroupHTTPSServiceIDCustomPort(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
@@ -353,14 +351,14 @@ func TestAccVPCLatticeListener_forwardHTTPSTargetGroupCustomPort(t *testing.T) {
 func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(t, 10))
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
 	targetGroupResourceName := "aws_vpclattice_target_group.test"
 	targetGroup1ResourceName := "aws_vpclattice_target_group.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -368,12 +366,12 @@ func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardMultiTargetGroupHTTP(rName, targetGroupName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
@@ -397,10 +395,10 @@ func TestAccVPCLatticeListener_forwardHTTPMultipleTargetGroups(t *testing.T) {
 func TestAccVPCLatticeListener_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -408,12 +406,12 @@ func TestAccVPCLatticeListener_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_forwardTargetGroupHTTPServiceID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -425,10 +423,10 @@ func TestAccVPCLatticeListener_disappears(t *testing.T) {
 func TestAccVPCLatticeListener_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener vpclattice.GetListenerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -436,12 +434,12 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		CheckDestroy:             testAccCheckListenerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerConfig_tags1(rName, "key0", "value0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key0", "value0"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
@@ -455,7 +453,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 			{
 				Config: testAccListenerConfig_tags2(rName, "key0", "value0updated", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key0", "value0updated"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -464,7 +462,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 			{
 				Config: testAccListenerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &listener),
+					testAccCheckListenerExists(ctx, t, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -473,9 +471,9 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckListenerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_listener" {
@@ -499,14 +497,14 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckListenerExists(ctx context.Context, n string, v *vpclattice.GetListenerOutput) resource.TestCheckFunc {
+func testAccCheckListenerExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetListenerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindListenerByTwoPartKey(ctx, conn, rs.Primary.Attributes["service_identifier"], rs.Primary.Attributes["listener_id"])
 

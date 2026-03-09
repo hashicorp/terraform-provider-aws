@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,19 +20,19 @@ import (
 func TestAccSageMakerProject_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "service_catalog_provisioning_details.#", "1"),
@@ -58,20 +56,20 @@ func TestAccSageMakerProject_basic(t *testing.T) {
 func TestAccSageMakerProject_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "project_description", rName),
 				),
@@ -84,7 +82,7 @@ func TestAccSageMakerProject_description(t *testing.T) {
 			{
 				Config: testAccProjectConfig_description(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "project_description", rNameUpdated),
 				),
@@ -99,19 +97,19 @@ func TestAccSageMakerProject_description(t *testing.T) {
 func TestAccSageMakerProject_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -124,7 +122,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 			{
 				Config: testAccProjectConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -133,7 +131,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 			{
 				Config: testAccProjectConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -148,19 +146,19 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 func TestAccSageMakerProject_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mpg sagemaker.DescribeProjectOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_project.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(ctx, resourceName, &mpg),
+					testAccCheckProjectExists(ctx, t, resourceName, &mpg),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -169,9 +167,9 @@ func TestAccSageMakerProject_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckProjectDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_project" {
@@ -195,7 +193,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProjectExists(ctx context.Context, n string, mpg *sagemaker.DescribeProjectOutput) resource.TestCheckFunc {
+func testAccCheckProjectExists(ctx context.Context, t *testing.T, n string, mpg *sagemaker.DescribeProjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -206,7 +204,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, mpg *sagemaker.Des
 			return fmt.Errorf("No sagmaker Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindProjectByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

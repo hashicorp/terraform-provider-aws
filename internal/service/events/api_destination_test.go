@@ -12,11 +12,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,21 +25,21 @@ const uuidRegex = "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[
 func TestAccEventsAPIDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeApiDestinationOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationEndpoint := "https://example.com/"
 	httpMethod := "GET"
 
-	nameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	nameModified := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationEndpointModified := "https://example.com/modified"
 	httpMethodModified := "POST"
 
 	resourceName := "aws_cloudwatch_event_api_destination.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_basic(
@@ -50,7 +48,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 					httpMethod,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v1),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
@@ -69,7 +67,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 					httpMethodModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v2),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
 					testAccCheckAPIDestinationRecreated(&v1, &v2),
@@ -84,7 +82,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 					httpMethodModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v3),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v3),
 					testAccCheckAPIDestinationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -97,25 +95,25 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 func TestAccEventsAPIDestination_optional(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeApiDestinationOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationEndpoint := "https://example.com/"
 	httpMethod := "GET"
-	description := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	description := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationRateLimitPerSecond := 10
 
-	nameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	nameModified := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationEndpointModified := "https://example.com/modified"
 	httpMethodModified := "POST"
-	descriptionModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	descriptionModified := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationRateLimitPerSecondModified := 12
 
 	resourceName := "aws_cloudwatch_event_api_destination.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_optional(
@@ -126,7 +124,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecond),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v1),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
@@ -148,7 +146,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecondModified),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v2),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v2),
 					testAccCheckAPIDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
@@ -166,7 +164,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecond),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v3),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v3),
 					testAccCheckAPIDestinationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
@@ -182,17 +180,17 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeApiDestinationOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	invocationEndpoint := "https://example.com/"
 	httpMethod := "GET"
 
 	resourceName := "aws_cloudwatch_event_api_destination.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_basic(
@@ -201,7 +199,7 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 					httpMethod,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(ctx, resourceName, &v),
+					testAccCheckAPIDestinationExists(ctx, t, resourceName, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceAPIDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -210,9 +208,9 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPIDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_api_destination" {
@@ -236,14 +234,14 @@ func testAccCheckAPIDestinationDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckAPIDestinationExists(ctx context.Context, n string, v *eventbridge.DescribeApiDestinationOutput) resource.TestCheckFunc {
+func testAccCheckAPIDestinationExists(ctx context.Context, t *testing.T, n string, v *eventbridge.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EventsClient(ctx)
 
 		output, err := tfevents.FindAPIDestinationByName(ctx, conn, rs.Primary.ID)
 

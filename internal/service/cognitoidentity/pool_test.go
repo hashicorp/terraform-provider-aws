@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,20 +24,20 @@ import (
 func TestAccCognitoIdentityPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
-	updatedName := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
+	updatedName := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", acctest.CtFalse),
@@ -54,7 +52,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 			{
 				Config: testAccPoolConfig_basic(updatedName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", updatedName)),
 				),
@@ -66,21 +64,21 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
-	developerProviderName := sdkacctest.RandString(10)
-	developerProviderNameUpdated := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
+	developerProviderName := acctest.RandString(t, 10)
+	developerProviderNameUpdated := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_developerProviderName(name, developerProviderName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", developerProviderName),
 				),
@@ -93,7 +91,7 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 			{
 				Config: testAccPoolConfig_developerProviderName(name, developerProviderNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", developerProviderNameUpdated),
@@ -106,19 +104,19 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_supportedLoginProviders(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.graph.facebook.com", "7346241598935555"),
@@ -132,7 +130,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 			{
 				Config: testAccPoolConfig_supportedLoginProvidersModified(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", "2"),
@@ -143,7 +141,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v3),
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", "0"),
@@ -156,19 +154,19 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_openidConnectProviderARNs(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "1"),
 				),
@@ -181,7 +179,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 			{
 				Config: testAccPoolConfig_openidConnectProviderARNsModified(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "2"),
@@ -190,7 +188,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v3),
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "0"),
@@ -203,21 +201,21 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_samlProviderARNs(name, idpEntityId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.default", names.AttrARN),
@@ -231,7 +229,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 			{
 				Config: testAccPoolConfig_samlProviderARNsModified(name, idpEntityId, secondaryIdpEntityId),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "1"),
@@ -241,7 +239,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v3),
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "0"),
@@ -254,19 +252,19 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_identityProviders(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
@@ -289,7 +287,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 			{
 				Config: testAccPoolConfig_identityProvidersModified(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "1"),
@@ -303,7 +301,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v3),
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "0"),
@@ -316,19 +314,19 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_identityProviders(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
 				),
@@ -341,7 +339,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 			{
 				Config: testAccPoolConfig_identityProvidersAndOpenIDConnectProviderARNs(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
@@ -351,7 +349,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v3),
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "0"),
@@ -365,19 +363,19 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 func TestAccCognitoIdentityPool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -390,7 +388,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 			{
 				Config: testAccPoolConfig_tags2(name, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v2),
+					testAccCheckPoolExists(ctx, t, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -400,7 +398,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 			{
 				Config: testAccPoolConfig_tags1(name, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v3),
+					testAccCheckPoolExists(ctx, t, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -413,19 +411,19 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1 cognitoidentity.DescribeIdentityPoolOutput
-	name := sdkacctest.RandString(10)
+	name := acctest.RandString(t, 10)
 	resourceName := "aws_cognito_identity_pool.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		CheckDestroy:             testAccCheckPoolDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPoolExists(ctx, resourceName, &v1),
+					testAccCheckPoolExists(ctx, t, resourceName, &v1),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -434,7 +432,7 @@ func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognitoidentity.DescribeIdentityPoolOutput) resource.TestCheckFunc {
+func testAccCheckPoolExists(ctx context.Context, t *testing.T, n string, identityPool *cognitoidentity.DescribeIdentityPoolOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -445,7 +443,7 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 			return errors.New("No Cognito Identity Pool ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CognitoIdentityClient(ctx)
 
 		input := cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
@@ -465,9 +463,9 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 	}
 }
 
-func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPoolDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CognitoIdentityClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool" {
@@ -493,7 +491,7 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CognitoIdentityClient(ctx)
 
 	input := &cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int32(1),

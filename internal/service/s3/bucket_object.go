@@ -48,7 +48,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 // @Testing(importIgnore="acl;force_destroy")
 // @Testing(preIdentityVersion="6.0.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -523,7 +522,7 @@ func (bucketObjectImportID) Create(d *schema.ResourceData) string {
 	return createBucketObjectImportID(d)
 }
 
-func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) {
+func (bucketObjectImportID) Parse(id string) (string, map[string]any, error) {
 	id = strings.TrimPrefix(id, "s3://")
 
 	bucket, key, found := strings.Cut(id, "/")
@@ -531,7 +530,7 @@ func (bucketObjectImportID) Parse(id string) (string, map[string]string, error) 
 		return "", nil, fmt.Errorf("id \"%s\" should be in the format <bucket>/<key> or s3://<bucket>/<key>", id)
 	}
 
-	result := map[string]string{
+	result := map[string]any{
 		names.AttrBucket: bucket,
 		names.AttrKey:    key,
 	}

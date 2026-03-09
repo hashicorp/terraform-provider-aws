@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -20,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2Instance_List_Basic(t *testing.T) {
+func TestAccEC2Instance_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_instance.test[0]"
@@ -35,7 +34,7 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -82,7 +81,7 @@ func TestAccEC2Instance_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
+func TestAccEC2Instance_List_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_instance.test[0]"
@@ -97,7 +96,7 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -150,7 +149,7 @@ func TestAccEC2Instance_List_RegionOverride(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_Filtered(t *testing.T) {
+func TestAccEC2Instance_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_instance.expected[0]"
@@ -166,7 +165,7 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -207,12 +206,12 @@ func TestAccEC2Instance_List_Filtered(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
+func TestAccEC2Instance_List_excludeAutoScaled(t *testing.T) {
 	t.Skip("Skipping because zero-result queries cause a failure now")
 
 	ctx := acctest.Context(t)
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -220,7 +219,7 @@ func TestAccEC2Instance_List_ExcludeAutoScaled(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckInstanceDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLambdaCapacityProvider_Identity_Basic(t *testing.T) {
+func TestAccLambdaCapacityProvider_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -38,7 +38,7 @@ func TestAccLambdaCapacityProvider_Identity_Basic(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -48,7 +48,7 @@ func TestAccLambdaCapacityProvider_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -113,7 +113,7 @@ func TestAccLambdaCapacityProvider_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccLambdaCapacityProvider_Identity_RegionOverride(t *testing.T) {
+func TestAccLambdaCapacityProvider_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_lambda_capacity_provider.test"
@@ -205,7 +205,7 @@ func TestAccLambdaCapacityProvider_Identity_RegionOverride(t *testing.T) {
 }
 
 // Resource Identity was added after v6.25.0
-func TestAccLambdaCapacityProvider_Identity_ExistingResource(t *testing.T) {
+func TestAccLambdaCapacityProvider_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -221,7 +221,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource(t *testing.T) {
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -230,7 +230,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -266,7 +266,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource(t *testing.T) {
 }
 
 // Resource Identity was added after v6.25.0
-func TestAccLambdaCapacityProvider_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccLambdaCapacityProvider_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v types.CapacityProvider
@@ -282,7 +282,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource_NoRefresh_NoChange(
 			testAccCapacityProviderPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
-		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx),
+		CheckDestroy: testAccCheckCapacityProviderDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -296,7 +296,7 @@ func TestAccLambdaCapacityProvider_Identity_ExistingResource_NoRefresh_NoChange(
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCapacityProviderExists(ctx, resourceName, &v),
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

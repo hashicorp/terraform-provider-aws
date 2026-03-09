@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,19 +24,19 @@ func TestAccGlueWorkflow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workflow awstypes.Workflow
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWorkflow(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("workflow/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -57,19 +55,19 @@ func TestAccGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workflow awstypes.Workflow
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWorkflow(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_maxConcurrentRuns(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "1"),
 				),
 			},
@@ -81,14 +79,14 @@ func TestAccGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_maxConcurrentRuns(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "2"),
 				),
 			},
 			{
 				Config: testAccWorkflowConfig_maxConcurrentRuns(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "1"),
 				),
 			},
@@ -100,19 +98,19 @@ func TestAccGlueWorkflow_defaultRunProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workflow awstypes.Workflow
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWorkflow(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_defaultRunProperties(rName, "firstPropValue", "secondPropValue"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, "default_run_properties.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_run_properties.--run-prop1", "firstPropValue"),
 					resource.TestCheckResourceAttr(resourceName, "default_run_properties.--run-prop2", "secondPropValue"),
@@ -131,26 +129,26 @@ func TestAccGlueWorkflow_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workflow awstypes.Workflow
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWorkflow(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccWorkflowConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
@@ -166,19 +164,19 @@ func TestAccGlueWorkflow_description(t *testing.T) {
 func TestAccGlueWorkflow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workflow awstypes.Workflow
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWorkflow(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -191,7 +189,7 @@ func TestAccGlueWorkflow_tags(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -200,7 +198,7 @@ func TestAccGlueWorkflow_tags(t *testing.T) {
 			{
 				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -213,19 +211,19 @@ func TestAccGlueWorkflow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workflow awstypes.Workflow
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_glue_workflow.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWorkflow(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkflowDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkflowConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
+					testAccCheckWorkflowExists(ctx, t, resourceName, &workflow),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -235,7 +233,7 @@ func TestAccGlueWorkflow_disappears(t *testing.T) {
 }
 
 func testAccPreCheckWorkflow(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 	_, err := conn.ListWorkflows(ctx, &glue.ListWorkflowsInput{})
 
@@ -249,7 +247,7 @@ func testAccPreCheckWorkflow(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckWorkflowExists(ctx context.Context, resourceName string, workflow *awstypes.Workflow) resource.TestCheckFunc {
+func testAccCheckWorkflowExists(ctx context.Context, t *testing.T, resourceName string, workflow *awstypes.Workflow) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -260,7 +258,7 @@ func testAccCheckWorkflowExists(ctx context.Context, resourceName string, workfl
 			return fmt.Errorf("No Glue Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 		output, err := conn.GetWorkflow(ctx, &glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),
@@ -282,14 +280,14 @@ func testAccCheckWorkflowExists(ctx context.Context, resourceName string, workfl
 	}
 }
 
-func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWorkflowDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_workflow" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).GlueClient(ctx)
 
 			output, err := conn.GetWorkflow(ctx, &glue.GetWorkflowInput{
 				Name: aws.String(rs.Primary.ID),

@@ -16,8 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -166,7 +165,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	input := &fsx.CreateDataRepositoryAssociationInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
 		FileSystemId:       aws.String(d.Get(names.AttrFileSystemID).(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
@@ -238,7 +237,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
 			AssociationId:      aws.String(d.Id()),
-			ClientRequestToken: aws.String(id.UniqueId()),
+			ClientRequestToken: aws.String(sdkid.UniqueId()),
 		}
 
 		if d.HasChange("imported_file_chunk_size") {
@@ -269,7 +268,7 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
 		AssociationId:          aws.String(d.Id()),
-		ClientRequestToken:     aws.String(id.UniqueId()),
+		ClientRequestToken:     aws.String(sdkid.UniqueId()),
 		DeleteDataInFileSystem: aws.Bool(d.Get("delete_data_in_filesystem").(bool)),
 	}
 
@@ -317,9 +316,8 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.Client, input
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DataRepositoryAssociationNotFound](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -337,8 +335,8 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.Client, input
 	return output, nil
 }
 
-func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataRepositoryAssociation(conn *fsx.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataRepositoryAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -354,10 +352,10 @@ func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.Client, id s
 }
 
 func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.DataRepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataRepositoryLifecycleCreating),
 		Target:  enum.Slice(awstypes.DataRepositoryLifecycleAvailable),
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Refresh: statusDataRepositoryAssociation(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -376,10 +374,10 @@ func waitDataRepositoryAssociationCreated(ctx context.Context, conn *fsx.Client,
 }
 
 func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.DataRepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataRepositoryLifecycleUpdating),
 		Target:  enum.Slice(awstypes.DataRepositoryLifecycleAvailable),
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Refresh: statusDataRepositoryAssociation(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -398,10 +396,10 @@ func waitDataRepositoryAssociationUpdated(ctx context.Context, conn *fsx.Client,
 }
 
 func waitDataRepositoryAssociationDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.DataRepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataRepositoryLifecycleAvailable, awstypes.DataRepositoryLifecycleDeleting),
 		Target:  []string{},
-		Refresh: statusDataRepositoryAssociation(ctx, conn, id),
+		Refresh: statusDataRepositoryAssociation(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}

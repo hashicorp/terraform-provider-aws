@@ -890,6 +890,70 @@ func TestUpdateDiffGSI_OnDemand(t *testing.T) {
 		New             []any
 		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
 	}{
+		"plan omits warm_throughput - should not update": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  12000,
+							"write_units_per_second": 17194,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					// "warm_throughput" omitted
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+		"plan has empty warm_throughput - should not update": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  12000,
+							"write_units_per_second": 17194,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{}, // explicitly empty
+				},
+			},
+			ExpectedUpdates: nil,
+		},
 		"no changes": { // No-op => no changes
 			Old: []any{
 				map[string]any{
@@ -2070,6 +2134,65 @@ func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleHashKey(t *testing.T) {
 							"range_key":       knownvalue.StringExact(""),
 						}),
 					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
 				},
 			},
 			{
@@ -8330,6 +8453,60 @@ func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed_onUpdate(t *t
 	})
 }
 
+func TestAccDynamoDBTable_GSI_unknown(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_unknown(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetSizeExact(0)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_unknown(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_unknown(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"key_schema": knownvalue.SetSizeExact(1),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -8904,6 +9081,42 @@ resource "aws_dynamodb_table" "test" {
     key_schema {
       attribute_name = "TestTableHashKey"
       key_type       = "HASH"
+    }
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_singleRangeKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestGSIRangeKey"
+      key_type       = "RANGE"
     }
     write_capacity  = 1
     read_capacity   = 1
@@ -12516,6 +12729,74 @@ resource "aws_dynamodb_table" "test" {
     name = "unindexed"
     type = "N"
   }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_unknown(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+
+  dynamic "global_secondary_index" {
+    for_each = var.global_secondary_indexes
+
+    content {
+      name            = global_secondary_index.value.name
+      projection_type = global_secondary_index.value.projection_type
+    }
+  }
+}
+
+variable "global_secondary_indexes" {
+  default = []
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_unknown(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = %[1]q
+    projection_type = "KEYS_ONLY"
+    read_capacity   = 1
+    write_capacity  = 1
+
+    dynamic "key_schema" {
+      for_each = var.key_schemas
+
+      content {
+        attribute_name = key_schema.value.attribute_name
+        key_type       = key_schema.value.key_type
+      }
+    }
+  }
+}
+
+variable "key_schemas" {
+  default = [{
+    attribute_name = %[1]q
+    key_type       = "HASH"
+  }]
 }
 `, rName)
 }

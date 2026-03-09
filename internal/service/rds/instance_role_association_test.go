@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,24 +25,24 @@ func TestAccRDSInstanceRoleAssociation_basic(t *testing.T) {
 	}
 
 	var dbInstanceRole1 types.DBInstanceRole
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dbInstanceResourceName := "aws_db_instance.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_db_instance_role_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
+					testAccCheckInstanceRoleAssociationExists(ctx, t, resourceName, &dbInstanceRole1),
 					resource.TestCheckResourceAttrPair(resourceName, "db_instance_identifier", dbInstanceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "S3_INTEGRATION"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
@@ -66,22 +64,22 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 	}
 
 	var dbInstanceRole1 types.DBInstanceRole
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_db_instance_role_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_11_0),
 		},
-		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckInstanceRoleAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
+					testAccCheckInstanceRoleAssociationExists(ctx, t, resourceName, &dbInstanceRole1),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstanceRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,14 +88,14 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceRoleAssociationExists(ctx context.Context, n string, v *types.DBInstanceRole) resource.TestCheckFunc {
+func testAccCheckInstanceRoleAssociationExists(ctx context.Context, t *testing.T, n string, v *types.DBInstanceRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		output, err := tfrds.FindDBInstanceRoleByTwoPartKey(ctx, conn, rs.Primary.Attributes["db_instance_identifier"], rs.Primary.Attributes[names.AttrRoleARN])
 
@@ -111,9 +109,9 @@ func testAccCheckInstanceRoleAssociationExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccCheckInstanceRoleAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInstanceRoleAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_instance_role_association" {

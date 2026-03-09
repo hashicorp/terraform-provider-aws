@@ -22,8 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -113,7 +112,7 @@ func (r *provisionedModelThroughputResource) Create(ctx context.Context, request
 	}
 
 	// Additional fields.
-	input.ClientRequestToken = aws.String(id.UniqueId())
+	input.ClientRequestToken = aws.String(sdkid.UniqueId())
 	input.ModelId = fwflex.StringFromFramework(ctx, data.ModelARN) // Different field name on Create.
 	input.Tags = getTagsIn(ctx)
 
@@ -204,9 +203,8 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	output, err := conn.GetProvisionedModelThroughput(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -221,8 +219,8 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	return output, nil
 }
 
-func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProvisionedModelThroughput(conn *bedrock.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findProvisionedModelThroughputByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -238,10 +236,10 @@ func statusProvisionedModelThroughput(ctx context.Context, conn *bedrock.Client,
 }
 
 func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetProvisionedModelThroughputOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProvisionedModelStatusCreating),
 		Target:  enum.Slice(awstypes.ProvisionedModelStatusInService),
-		Refresh: statusProvisionedModelThroughput(ctx, conn, id),
+		Refresh: statusProvisionedModelThroughput(conn, id),
 		Timeout: timeout,
 	}
 

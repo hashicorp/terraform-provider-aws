@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,11 +79,8 @@ func (a *startExecutionAction) Invoke(ctx context.Context, req action.InvokeRequ
 
 	conn := a.Meta().SFNClient(ctx)
 
-	stateMachineArn := config.StateMachineArn.ValueString()
-	input := "{}"
-	if !config.Input.IsNull() {
-		input = config.Input.ValueString()
-	}
+	stateMachineArn := fwflex.StringValueFromFramework(ctx, config.StateMachineArn)
+	input := fwflex.StringValueOr(ctx, config.Input, "{}")
 
 	tflog.Info(ctx, "Starting Step Functions execution", map[string]any{
 		"state_machine_arn": stateMachineArn,
@@ -90,9 +89,8 @@ func (a *startExecutionAction) Invoke(ctx context.Context, req action.InvokeRequ
 		"has_trace_header":  !config.TraceHeader.IsNull(),
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Starting execution for state machine %s...", stateMachineArn),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting execution for state machine %s...", stateMachineArn)
 
 	startInput := &sfn.StartExecutionInput{
 		StateMachineArn: aws.String(stateMachineArn),
@@ -117,9 +115,7 @@ func (a *startExecutionAction) Invoke(ctx context.Context, req action.InvokeRequ
 	}
 
 	executionArn := aws.ToString(output.ExecutionArn)
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Execution started successfully with ARN %s", executionArn),
-	})
+	cb(ctx, "Execution started successfully with ARN %s", executionArn)
 
 	tflog.Info(ctx, "Step Functions execution started successfully", map[string]any{
 		"state_machine_arn": stateMachineArn,

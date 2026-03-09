@@ -14,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,7 +60,7 @@ func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	callerRef := id.UniqueId()
+	callerRef := sdkid.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = strings.Join([]string{
 			v.(string), "-", callerRef,
@@ -132,9 +131,8 @@ func findDelegationSetByID(ctx context.Context, conn *route53.Client, id string)
 	output, err := conn.GetReusableDelegationSet(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchDelegationSet](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

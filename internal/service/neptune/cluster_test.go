@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -49,14 +48,14 @@ func testAccClusterImportStep(n string) resource.TestStep {
 func TestAccNeptuneCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
@@ -108,14 +107,14 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 func TestAccNeptuneCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
@@ -134,11 +133,11 @@ func TestAccNeptuneCluster_identifierGenerated(t *testing.T) {
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_identifierGenerated(),
@@ -158,11 +157,11 @@ func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
@@ -180,14 +179,14 @@ func TestAccNeptuneCluster_identifierPrefix(t *testing.T) {
 func TestAccNeptuneCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
@@ -222,14 +221,14 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_copyTags(rName, true),
@@ -260,14 +259,14 @@ func TestAccNeptuneCluster_copyTagsToSnapshot(t *testing.T) {
 func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_serverlessConfiguration(rName),
@@ -286,14 +285,14 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_finalSnapshot(rName),
@@ -309,14 +308,14 @@ func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_includingIAMRoles(rName),
@@ -348,13 +347,13 @@ func TestAccNeptuneCluster_kmsKey(t *testing.T) {
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_kmsKey(rName),
@@ -372,13 +371,13 @@ func TestAccNeptuneCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encrypted(rName),
@@ -396,13 +395,13 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_backups(rName),
@@ -431,13 +430,13 @@ func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_iamAuth(rName),
@@ -454,14 +453,14 @@ func TestAccNeptuneCluster_iamAuth(t *testing.T) {
 func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
@@ -494,14 +493,14 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engineVersion(rName, "1.1.0.0", "default.neptune1"),
@@ -526,14 +525,14 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engineVersion(rName, "1.1.1.0", "default.neptune1"),
@@ -560,14 +559,14 @@ func TestAccNeptuneCluster_GlobalCluster_primarySecondaryClusters(t *testing.T) 
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster awstypes.DBCluster
 
-	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
-	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
-	rNameSecondary := sdkacctest.RandomWithPrefix("tf-acc-test-secondary")
+	rNameGlobal := acctest.RandomWithPrefix(t, "tf-acc-test-global")
+	rNamePrimary := acctest.RandomWithPrefix(t, "tf-acc-test-primary")
+	rNameSecondary := acctest.RandomWithPrefix(t, "tf-acc-test-secondary")
 
 	resourceNamePrimary := "aws_neptune_cluster.primary"
 	resourceNameSecondary := "aws_neptune_cluster.secondary"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -575,7 +574,7 @@ func TestAccNeptuneCluster_GlobalCluster_primarySecondaryClusters(t *testing.T) 
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_globalPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
@@ -592,12 +591,12 @@ func TestAccNeptuneCluster_GlobalUpgrade_major(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -638,17 +637,17 @@ func TestAccNeptuneCluster_GlobalUpgrade_majorSecondary(t *testing.T) {
 	var p, s awstypes.DBCluster
 	resourceNamePrimary := "aws_neptune_cluster.primary"
 	resourceNameSecondary := "aws_neptune_cluster.secondary"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameAlternate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameAlternate := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
@@ -698,12 +697,12 @@ func TestAccNeptuneCluster_GlobalUpgrade_minor(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -744,17 +743,17 @@ func TestAccNeptuneCluster_GlobalUpgrade_minorSecondary(t *testing.T) {
 	var p, s awstypes.DBCluster
 	resourceNamePrimary := "aws_neptune_cluster.primary"
 	resourceNameSecondary := "aws_neptune_cluster.secondary"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameAlternate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameAlternate := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
@@ -807,18 +806,18 @@ func TestAccNeptuneCluster_GlobalUpgrade_minorTertiary(t *testing.T) {
 	resourceNamePrimary := "aws_neptune_cluster.primary"
 	resourceNameSecondary := "aws_neptune_cluster.secondary"
 	resourceNameTertiary := "aws_neptune_cluster.tertiary"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameAlternate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameThird := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameAlternate := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameThird := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
-		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		CheckDestroy: testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersThird(ctx, t, &providers),
@@ -877,14 +876,14 @@ func TestAccNeptuneCluster_GlobalUpgrade_minorTertiary(t *testing.T) {
 func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_neptune_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
@@ -915,16 +914,16 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster awstypes.DBCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 	keyResourceName := "aws_kms_key.test2"
 	parameterGroupResourceName := "aws_neptune_cluster_parameter_group.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_restoreFromSnapshot(rName),
@@ -948,13 +947,13 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DBCluster
 	resourceName := "aws_neptune_cluster.test"
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_storageType(rName, "standard"),
@@ -975,9 +974,9 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).NeptuneClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
@@ -1026,14 +1025,14 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *aws
 	}
 }
 
-func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).NeptuneClient(ctx)
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)

@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -26,16 +24,16 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`identity/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
@@ -64,16 +62,16 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`identity/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
@@ -102,16 +100,16 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -125,16 +123,16 @@ func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailIdentityConfig_configurationSetName1(rName, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+				Config: testAccEmailIdentityConfig_configurationSetName1(rName, acctest.RandomWithPrefix(t, acctest.ResourcePrefix)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_set_name", "aws_sesv2_configuration_set.test1", "configuration_set_name"),
 				),
 			},
@@ -144,9 +142,9 @@ func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEmailIdentityConfig_configurationSetName2(rName, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+				Config: testAccEmailIdentityConfig_configurationSetName2(rName, acctest.RandomWithPrefix(t, acctest.ResourcePrefix)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_set_name", "aws_sesv2_configuration_set.test2", "configuration_set_name"),
 				),
 			},
@@ -159,16 +157,16 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa2048Bit)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
 				),
@@ -181,7 +179,7 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 			{
 				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa1024Bit)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
 				),
@@ -196,21 +194,21 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	resourceName := "aws_sesv2_email_identity.test"
 
 	key1 := inttypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
-	selector1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	selector1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	key2 := inttypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
-	selector2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	selector2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
+		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEmailIdentityConfig_domainSigning(rName, key1, selector1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_private_key", key1),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_selector", selector1),
@@ -225,7 +223,7 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 			{
 				Config: testAccEmailIdentityConfig_domainSigning(rName, key2, selector2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
+					testAccCheckEmailIdentityExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_private_key", key2),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_selector", selector2),
@@ -235,9 +233,9 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	})
 }
 
-func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckEmailIdentityDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_email_identity" {
@@ -261,14 +259,14 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEmailIdentityExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 

@@ -16,7 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -65,7 +65,7 @@ func resourceUserGroupMembershipCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.UniqueId())
+	d.SetId(sdkid.UniqueId())
 
 	return append(diags, resourceUserGroupMembershipRead(ctx, d, meta)...)
 }
@@ -230,7 +230,7 @@ func resourceUserGroupMembershipImport(ctx context.Context, d *schema.ResourceDa
 	d.Set("groups", groupList)
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(id.UniqueId())
+	d.SetId(sdkid.UniqueId())
 
 	return []*schema.ResourceData{d}, nil
 }

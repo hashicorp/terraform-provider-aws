@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -357,9 +356,8 @@ func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.D
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -543,8 +541,8 @@ func flattenDescribedConnectorVPCLatticeEgressConfig(apiObject *awstypes.Describ
 	return []any{tfMap}
 }
 
-func statusConnector(ctx context.Context, conn *transfer.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnector(conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectorByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -560,10 +558,10 @@ func statusConnector(ctx context.Context, conn *transfer.Client, id string) sdkr
 }
 
 func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusPending),
 		Target:  enum.Slice(awstypes.ConnectorStatusActive),
-		Refresh: statusConnector(ctx, conn, id),
+		Refresh: statusConnector(conn, id),
 		Timeout: timeout,
 	}
 
@@ -581,10 +579,10 @@ func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string,
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusPending),
 		Target:  enum.Slice(awstypes.ConnectorStatusActive),
-		Refresh: statusConnector(ctx, conn, id),
+		Refresh: statusConnector(conn, id),
 		Timeout: timeout,
 	}
 
@@ -602,10 +600,10 @@ func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string,
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusActive, awstypes.ConnectorStatusPending),
 		Target:  []string{},
-		Refresh: statusConnector(ctx, conn, id),
+		Refresh: statusConnector(conn, id),
 		Timeout: timeout,
 	}
 

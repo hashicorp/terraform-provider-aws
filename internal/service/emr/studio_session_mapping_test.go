@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,21 +21,21 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	updatedName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	uName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	gName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
 					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
@@ -47,7 +45,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 			{
 				Config: testAccStudioSessionMappingConfig_basic2(rName, gName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_name", gName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "GROUP"),
 					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
@@ -62,7 +60,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 			{
 				Config: testAccStudioSessionMappingConfig_updated(rName, uName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
 					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
@@ -72,7 +70,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 			{
 				Config: testAccStudioSessionMappingConfig_updated2(rName, gName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, t, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_name", gName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "GROUP"),
 					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", names.AttrID),
@@ -87,20 +85,20 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var studio awstypes.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	uName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_USER_ID")
 	gName := acctest.SkipIfEnvVarNotSet(t, "AWS_IDENTITY_STORE_GROUP_NAME")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
+		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, t, resourceName, &studio),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
@@ -109,7 +107,7 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 			{
 				Config: testAccStudioSessionMappingConfig_basic2(rName, gName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, t, resourceName, &studio),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
@@ -119,14 +117,14 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioSessionMappingExists(ctx context.Context, n string, v *awstypes.SessionMappingDetail) resource.TestCheckFunc {
+func testAccCheckStudioSessionMappingExists(ctx context.Context, t *testing.T, n string, v *awstypes.SessionMappingDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		output, err := tfemr.FindStudioSessionMappingByIDOrName(ctx, conn, rs.Primary.ID)
 
@@ -140,9 +138,9 @@ func testAccCheckStudioSessionMappingExists(ctx context.Context, n string, v *aw
 	}
 }
 
-func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckStudioSessionMappingDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio_session_mapping" {

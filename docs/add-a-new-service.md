@@ -37,19 +37,27 @@ To add an AWS SDK for Go service client:
         The Provider and generators depend on the file being correct.
         We strongly recommend using an editor with HCL support.
 
+    !!! tip
+        For global services, set the `is_global` argument to `true`.
+        Review the AWS service documentation and/or IAM resource type ARN formatting to determine whether the service is regional or global.
+
 Once the names data is ready, create a new service directory with the appropriate service name.
 
 ```console
 mkdir internal/service/<service>
 ```
 
-Add a new file `internal/service/<service>/generate.go` with the following content. This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider).
+Add a new file `internal/service/<service>/generate.go` with the following content.
+This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider)
+and enable [acceptance test generation](./acc-test-generation.md).
 
 ```go
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/tagstests/main.go
+//go:generate go run ../../generate/identitytests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package <service>

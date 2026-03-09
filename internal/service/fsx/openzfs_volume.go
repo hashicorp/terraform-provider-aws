@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -256,7 +256,7 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get(names.AttrName).(string)
 	input := &fsx.CreateVolumeInput{
-		ClientRequestToken:   aws.String(id.UniqueId()),
+		ClientRequestToken:   aws.String(sdkid.UniqueId()),
 		Name:                 aws.String(name),
 		OpenZFSConfiguration: openzfsConfig,
 		Tags:                 getTagsIn(ctx),
@@ -358,7 +358,7 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken:   aws.String(id.UniqueId()),
+			ClientRequestToken:   aws.String(sdkid.UniqueId()),
 			OpenZFSConfiguration: openzfsConfig,
 			VolumeId:             aws.String(d.Id()),
 		}

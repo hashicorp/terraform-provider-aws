@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,20 +19,20 @@ import (
 func TestAccDSConditionalForwarder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_conditional_forwarder.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConditionalForwarderDestroy(ctx),
+		CheckDestroy:             testAccCheckConditionalForwarderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConditionalForwarderExists(ctx, resourceName),
+					testAccCheckConditionalForwarderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.0", ip1),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.1", ip2),
@@ -43,7 +41,7 @@ func TestAccDSConditionalForwarder_basic(t *testing.T) {
 			{
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConditionalForwarderExists(ctx, resourceName),
+					testAccCheckConditionalForwarderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.0", ip1),
 					resource.TestCheckResourceAttr(resourceName, "dns_ips.1", ip3),
@@ -61,20 +59,20 @@ func TestAccDSConditionalForwarder_basic(t *testing.T) {
 func TestAccDSConditionalForwarder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_conditional_forwarder.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 	ip1, ip2 := "8.8.8.8", "1.1.1.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConditionalForwarderDestroy(ctx),
+		CheckDestroy:             testAccCheckConditionalForwarderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConditionalForwarderConfig_basic(rName, domainName, ip1, ip2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConditionalForwarderExists(ctx, resourceName),
+					testAccCheckConditionalForwarderExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfds.ResourceConditionalForwarder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,9 +81,9 @@ func TestAccDSConditionalForwarder_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConditionalForwarderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckConditionalForwarderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_conditional_forwarder" {
@@ -109,14 +107,14 @@ func testAccCheckConditionalForwarderDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckConditionalForwarderExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckConditionalForwarderExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DSClient(ctx)
 
 		_, err := tfds.FindConditionalForwarderByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["remote_domain_name"])
 

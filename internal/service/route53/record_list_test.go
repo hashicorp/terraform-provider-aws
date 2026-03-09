@@ -8,7 +8,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -19,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRoute53Record_List_Basic(t *testing.T) {
+func TestAccRoute53Record_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName1 := "aws_route53_record.test[0]"
 	resourceName2 := "aws_route53_record.test[1]"
@@ -35,7 +34,7 @@ func TestAccRoute53Record_List_Basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

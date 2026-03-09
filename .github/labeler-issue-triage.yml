@@ -251,7 +251,7 @@ service/dynamodbstreams:
 service/ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ebs_'
 service/ec2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ami|availability_zone|ec2_(allowed_images_settings|availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|secondary_network|secondary_subnet|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)'
 service/ec2ebs:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(ebs_|volume_attach|snapshot_create)'
 service/ec2instanceconnect:

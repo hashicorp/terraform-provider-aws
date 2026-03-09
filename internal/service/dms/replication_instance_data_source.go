@@ -21,7 +21,6 @@ import (
 
 // @SDKDataSource("aws_dms_replication_instance", name="Replication Instance")
 // @Tags(identifierAttribute="replication_instance_arn")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,

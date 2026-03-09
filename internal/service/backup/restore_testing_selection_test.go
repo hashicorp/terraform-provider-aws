@@ -10,11 +10,9 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,21 +22,21 @@ func TestAccBackupRestoreTestingSelection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingSelectionForGet
 	resourceName := "aws_backup_restore_testing_selection.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingSelectionExists(ctx, t, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
@@ -60,21 +58,21 @@ func TestAccBackupRestoreTestingSelection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingselection awstypes.RestoreTestingSelectionForGet
 	resourceName := "aws_backup_restore_testing_selection.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingselection),
+					testAccCheckRestoreTestingSelectionExists(ctx, t, resourceName, &restoretestingselection),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceRestoreTestingSelection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,21 +85,21 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 	ctx := acctest.Context(t)
 	var restoretestingplan awstypes.RestoreTestingSelectionForGet
 	resourceName := "aws_backup_restore_testing_selection.test"
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx),
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingSelectionExists(ctx, t, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
@@ -118,7 +116,7 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 			{
 				Config: testAccRestoreTestingSelectionConfig_updates(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingplan),
+					testAccCheckRestoreTestingSelectionExists(ctx, t, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
@@ -128,14 +126,14 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 	})
 }
 
-func testAccCheckRestoreTestingSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRestoreTestingSelectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_restore_testing_selection" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 			_, err := tfbackup.FindRestoreTestingSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["restore_testing_plan_name"], rs.Primary.Attributes[names.AttrName])
 
@@ -154,14 +152,14 @@ func testAccCheckRestoreTestingSelectionDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckRestoreTestingSelectionExists(ctx context.Context, n string, v *awstypes.RestoreTestingSelectionForGet) resource.TestCheckFunc {
+func testAccCheckRestoreTestingSelectionExists(ctx context.Context, t *testing.T, n string, v *awstypes.RestoreTestingSelectionForGet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).BackupClient(ctx)
 
 		output, err := tfbackup.FindRestoreTestingSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["restore_testing_plan_name"], rs.Primary.Attributes[names.AttrName])
 

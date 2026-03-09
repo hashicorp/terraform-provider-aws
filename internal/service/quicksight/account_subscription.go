@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -307,10 +306,10 @@ const (
 )
 
 func waitAccountSubscriptionCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.AccountInfo, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{accountSubscriptionStatusSignupAttemptInProgress},
 		Target:  []string{accountSubscriptionStatusCreated, accountSubscriptionStatusOK},
-		Refresh: statusAccountSubscription(ctx, conn, id),
+		Refresh: statusAccountSubscription(conn, id),
 		Timeout: timeout,
 	}
 
@@ -324,10 +323,10 @@ func waitAccountSubscriptionCreated(ctx context.Context, conn *quicksight.Client
 }
 
 func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.AccountInfo, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{accountSubscriptionStatusCreated, accountSubscriptionStatusOK, accountSubscriptionStatusUnsuscribeInProgress},
 		Target:  []string{},
-		Refresh: statusAccountSubscription(ctx, conn, id),
+		Refresh: statusAccountSubscription(conn, id),
 		Timeout: timeout,
 	}
 
@@ -340,8 +339,8 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client
 	return nil, err
 }
 
-func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccountSubscription(conn *quicksight.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccountSubscriptionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -368,9 +367,8 @@ func findAccountSubscriptionByID(ctx context.Context, conn *quicksight.Client, i
 	}
 
 	if status := aws.ToString(output.AccountSubscriptionStatus); status == accountSubscriptionStatusUnsuscribed {
-		return nil, &sdkretry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: status,
 		}
 	}
 
@@ -381,9 +379,8 @@ func findAccountSubscription(ctx context.Context, conn *quicksight.Client, input
 	output, err := conn.DescribeAccountSubscription(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -305,16 +304,14 @@ func findOrganizationConformancePacks(ctx context.Context, conn *configservice.C
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -340,9 +337,8 @@ func findOrganizationConformancePackStatusByName(ctx context.Context, conn *conf
 	}
 
 	if status := output.Status; status == types.OrganizationResourceStatusDeleteSuccessful {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -372,9 +368,8 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 		})
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -407,16 +402,14 @@ func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
 		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -430,8 +423,8 @@ func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *
 	return output, nil
 }
 
-func statusOrganizationConformancePack(ctx context.Context, conn *configservice.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusOrganizationConformancePack(conn *configservice.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findOrganizationConformancePackStatusByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -447,10 +440,10 @@ func statusOrganizationConformancePack(ctx context.Context, conn *configservice.
 }
 
 func waitOrganizationConformancePackCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationResourceStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationResourceStatusCreateSuccessful),
-		Refresh:        statusOrganizationConformancePack(ctx, conn, name),
+		Refresh:        statusOrganizationConformancePack(conn, name),
 		Timeout:        timeout,
 		Delay:          30 * time.Second,
 		NotFoundChecks: 10,
@@ -468,10 +461,10 @@ func waitOrganizationConformancePackCreated(ctx context.Context, conn *configser
 }
 
 func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationResourceStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationResourceStatusUpdateSuccessful),
-		Refresh: statusOrganizationConformancePack(ctx, conn, name),
+		Refresh: statusOrganizationConformancePack(conn, name),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -488,10 +481,10 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 }
 
 func waitOrganizationConformancePackDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationResourceStatusDeleteInProgress),
 		Target:                    []string{},
-		Refresh:                   statusOrganizationConformancePack(ctx, conn, name),
+		Refresh:                   statusOrganizationConformancePack(conn, name),
 		Timeout:                   timeout,
 		Delay:                     10 * time.Second,
 		ContinuousTargetOccurence: 2,

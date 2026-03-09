@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -17,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
+func TestAccIAMRolePolicyAttachment_List_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	customerManagedName1 := "aws_iam_role_policy_attachment.customer_managed[0]"
@@ -29,7 +29,7 @@ func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
 	awsManagedName1 := "aws_iam_role_policy_attachment.aws_managed[0]"
 	awsManagedName2 := "aws_iam_role_policy_attachment.aws_managed[1]"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	identity1 := tfstatecheck.Identity()
 	identity2 := tfstatecheck.Identity()
@@ -42,7 +42,7 @@ func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		CheckDestroy: testAccCheckRoleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -86,6 +86,57 @@ func TestAccIAMRolePolicyAttachment_List_Basic(t *testing.T) {
 					tfquerycheck.ExpectIdentityFunc("aws_iam_role_policy_attachment.test", identity3.Checks()),
 
 					tfquerycheck.ExpectIdentityFunc("aws_iam_role_policy_attachment.test", identity4.Checks()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMRolePolicyAttachment_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_iam_role_policy_attachment.test[0]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/RolePolicyAttachment/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrRole), knownvalue.StringExact(rName+"-0")),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/RolePolicyAttachment/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_iam_role_policy_attachment.test", identity1.Checks()),
+					querycheck.ExpectResourceKnownValues("aws_iam_role_policy_attachment.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRole), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("policy_arn"), knownvalue.NotNull()),
+					}),
 				},
 			},
 		},

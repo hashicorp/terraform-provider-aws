@@ -63,15 +63,20 @@ func (l *listResourceCollaboration) List(ctx context.Context, request list.ListR
 			rd.SetId(id)
 
 			tflog.Info(ctx, "Reading Clean Rooms Collaboration")
-			diags := resourceCollaborationRead(ctx, rd, l.Meta())
+			output, err := findCollaborationByID(ctx, conn, id)
+			if err != nil {
+				tflog.Error(ctx, "Reading Clean Rooms Collaboration", map[string]any{
+					names.AttrID: id,
+					"err":        err.Error(),
+				})
+				continue
+			}
+
+			diags := resourceCollaborationFlatten(ctx, conn, rd, output)
 			if diags.HasError() {
 				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
 				yield(result)
 				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
 			}
 
 			result.DisplayName = aws.ToString(item.Name)

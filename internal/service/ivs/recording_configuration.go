@@ -33,7 +33,6 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.RecordingConfiguration")
 // @Testing(preIdentityVersion="v6.7.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceRecordingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecordingConfigurationCreate,

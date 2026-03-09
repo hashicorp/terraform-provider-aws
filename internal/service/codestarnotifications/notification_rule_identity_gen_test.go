@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeStarNotificationsNotificationRule_Identity_Basic(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
@@ -106,7 +106,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeStarNotificationsNotificationRule_Identity_RegionOverride(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
@@ -226,7 +226,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_RegionOverride(t *tes
 	})
 }
 
-func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"
@@ -304,7 +304,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource(t *t
 	})
 }
 
-func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_codestarnotifications_notification_rule.test"

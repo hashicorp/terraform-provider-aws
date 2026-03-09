@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,7 +46,6 @@ import (
 // @Testing(plannableImportAction="NoOp")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
@@ -433,7 +431,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		create.WithConfiguredName(d.Get(names.AttrName).(string)),
 		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-"),
-	).Generate()
+	).Generate(ctx)
 	exist, err := findTargetGroupByName(ctx, conn, name)
 
 	if err != nil && !retry.NotFound(err) {
@@ -618,10 +616,18 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 		targetGroupRuntimeValidation(d, &diags)
 	}
 
+	if err := resourceTargetGroupFlatten(ctx, meta.(*conns.AWSClient), targetGroup, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceTargetGroupFlatten(ctx context.Context, awsClient *conns.AWSClient, targetGroup *awstypes.TargetGroup, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
+		return fmt.Errorf("setting health_check: %w", err)
 	}
 	d.Set(names.AttrIPAddressType, targetGroup.IpAddressType)
 	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
@@ -646,31 +652,31 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
 
-	attributes, err := findTargetGroupAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findTargetGroupAttributesByARN(ctx, awsClient.ELBV2Client(ctx), d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
+		return fmt.Errorf("reading ELBv2 Target Group (%s) attributes: %w", d.Id(), err)
 	}
 
 	if err := d.Set("stickiness", []any{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
+		return fmt.Errorf("setting stickiness: %w", err)
 	}
 
 	if err := d.Set("target_failover", []any{flattenTargetGroupTargetFailoverAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_failover: %s", err)
+		return fmt.Errorf("setting target_failover: %w", err)
 	}
 
 	if err := d.Set("target_group_health", []any{flattenTargetGroupHealthAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_group_health: %s", err)
+		return fmt.Errorf("setting target_group_health: %w", err)
 	}
 
 	if err := d.Set("target_health_state", []any{flattenTargetGroupTargetHealthStateAttributes(attributes, protocol)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting target_health_state: %s", err)
+		return fmt.Errorf("setting target_health_state: %w", err)
 	}
 
 	targetGroupAttributes.flatten(d, targetType, attributes)
 
-	return diags
+	return nil
 }
 
 func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -962,9 +968,7 @@ func findTargetGroupByARN(ctx context.Context, conn *elasticloadbalancingv2.Clie
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupArn) != arn {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -983,9 +987,7 @@ func findTargetGroupByName(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -1009,9 +1011,8 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -1033,9 +1034,8 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	output, err := conn.DescribeTargetGroupAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

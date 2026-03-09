@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAPIGatewayDomainNameAccessAssociation_Identity_Basic(t *testing.T) {
+func TestAccAPIGatewayDomainNameAccessAssociation_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DomainNameAccessAssociation
@@ -118,7 +118,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayDomainNameAccessAssociation_Identity_RegionOverride(t *testing.T) {
+func TestAccAPIGatewayDomainNameAccessAssociation_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
@@ -252,7 +252,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_RegionOverride(t *tes
 	})
 }
 
-func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource(t *testing.T) {
+func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DomainNameAccessAssociation
@@ -340,7 +340,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource(t *t
 	})
 }
 
-func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource_NoRefresh_NoChange(t *testing.T) {
+func TestAccAPIGatewayDomainNameAccessAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.DomainNameAccessAssociation

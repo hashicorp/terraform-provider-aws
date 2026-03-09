@@ -24,25 +24,23 @@ type WithRegionSpec interface {
 	SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion])
 }
 
-var _ Lister[listresource.InterceptorParamsSDK] = &listResourceWithSDKv2Resource[listresource.InterceptorParamsSDK]{}
+var _ Lister[listresource.InterceptorParamsSDK] = &ListResourceWithSDKv2Resource{}
 
-type ListResourceWithSDKv2Resource = listResourceWithSDKv2Resource[listresource.InterceptorParamsSDK]
-
-type listResourceWithSDKv2Resource[T listresource.InterceptorParamsSDK] struct {
+type ListResourceWithSDKv2Resource struct {
 	withListResourceConfigSchema
 	ResourceWithConfigure
 	resourceSchema *schema.Resource
 	identitySpec   inttypes.Identity
 	identitySchema *schema.ResourceIdentity
 	regionSpec     unique.Handle[inttypes.ServicePackageResourceRegion]
-	interceptors   []listresource.ListResultInterceptor[T]
+	interceptors   []listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]
 }
 
-func (l *listResourceWithSDKv2Resource[T]) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[T]) {
+func (l *ListResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]) {
 	l.interceptors = append(l.interceptors, interceptor)
 }
 
-func (l *listResourceWithSDKv2Resource[T]) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
+func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion]) {
 	l.regionSpec = regionSpec
 
 	var isRegionOverrideEnabled bool
@@ -62,11 +60,24 @@ func (l *listResourceWithSDKv2Resource[T]) SetRegionSpec(regionSpec unique.Handl
 	}
 }
 
-func (l *listResourceWithSDKv2Resource[T]) SetIdentitySpec(identitySpec inttypes.Identity) {
+func identityAttributeSchemaType(it inttypes.IdentityType) schema.ValueType {
+	switch it {
+	case inttypes.BoolIdentityType:
+		return schema.TypeBool
+	case inttypes.IntIdentityType, inttypes.Int64IdentityType:
+		return schema.TypeInt
+	case inttypes.FloatIdentityType, inttypes.Float64IdentityType:
+		return schema.TypeFloat
+	default:
+		return schema.TypeString
+	}
+}
+
+func (l *ListResourceWithSDKv2Resource) SetIdentitySpec(identitySpec inttypes.Identity) {
 	out := make(map[string]*schema.Schema)
 	for _, v := range identitySpec.Attributes {
 		out[v.Name()] = &schema.Schema{
-			Type: schema.TypeString,
+			Type: identityAttributeSchemaType(v.IdentityType()),
 		}
 		if v.Required() {
 			out[v.Name()].Required = true
@@ -86,13 +97,14 @@ func (l *listResourceWithSDKv2Resource[T]) SetIdentitySpec(identitySpec inttypes
 	l.identitySpec = identitySpec
 }
 
-func (l *listResourceWithSDKv2Resource[T]) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData) diag.Diagnostics {
+func (l *ListResourceWithSDKv2Resource) runResultInterceptors(ctx context.Context, when listresource.When, awsClient *conns.AWSClient, d *schema.ResourceData, includeResource bool) diag.Diagnostics {
 	var diags diag.Diagnostics
-	params := any(listresource.InterceptorParamsSDK{
-		C:            awsClient,
-		ResourceData: d,
-		When:         when,
-	}).(T)
+	params := listresource.InterceptorParamsSDK{
+		C:               awsClient,
+		IncludeResource: includeResource,
+		ResourceData:    d,
+		When:            when,
+	}
 
 	switch when {
 	case listresource.Before:
@@ -114,20 +126,20 @@ func (l *listResourceWithSDKv2Resource[T]) runResultInterceptors(ctx context.Con
 	return diags
 }
 
-func (l *listResourceWithSDKv2Resource[T]) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
 	response.ProtoV5Schema = l.resourceSchema.ProtoSchema(ctx)()
 	response.ProtoV5IdentitySchema = l.resourceSchema.ProtoIdentitySchema(ctx)()
 }
 
-func (l *listResourceWithSDKv2Resource[T]) SetResourceSchema(resource *schema.Resource) {
+func (l *ListResourceWithSDKv2Resource) SetResourceSchema(resource *schema.Resource) {
 	l.resourceSchema = resource
 }
 
-func (l *listResourceWithSDKv2Resource[T]) ResourceData() *schema.ResourceData {
+func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
 	return l.resourceSchema.Data(&terraform.InstanceState{})
 }
 
-func (l *listResourceWithSDKv2Resource[T]) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
+func (l *ListResourceWithSDKv2Resource) setResourceIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
 	identity, err := d.Identity()
 	if err != nil {
 		return err
@@ -164,21 +176,21 @@ type resourceData interface {
 	GetOk(string) (any, bool)
 }
 
-func getAttributeOk(d resourceData, name string) (string, bool) {
+func getAttributeOk(d resourceData, name string) (any, bool) {
 	if name == "id" {
 		return d.Id(), true
 	}
 	if v, ok := d.GetOk(name); !ok {
-		return "", false
+		return nil, false
 	} else {
-		return v.(string), true
+		return v, true
 	}
 }
 
 // TODO modify to accept func() as parameter
 // will allow to use before interceptors as well
-func (l *listResourceWithSDKv2Resource[T]) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
-	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd); err.HasError() {
+func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, result *list.ListResult, rd *schema.ResourceData) {
+	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, rd, includeResource); err.HasError() {
 		result.Diagnostics.Append(err...)
 		return
 	}
