@@ -254,22 +254,6 @@ func resourceVPCEndpoint() *schema.Resource {
 			customdiff.ComputedIf("network_interface_ids", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("subnet_configuration") || diff.HasChange(names.AttrSubnetIDs)
 			}),
-			customdiff.ComputedIf("subnet_configuration", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				if diff.Id() != "" && diff.HasChange(names.AttrSubnetIDs) {
-					if v := diff.GetRawConfig().GetAttr(names.AttrSubnetIDs); v.IsKnown() && !v.IsNull() {
-						return true
-					}
-				}
-				return false
-			}),
-			customdiff.ComputedIf(names.AttrSubnetIDs, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				if diff.Id() != "" && diff.HasChange("subnet_configuration") {
-					if v := diff.GetRawConfig().GetAttr("subnet_configuration"); v.IsKnown() && !v.IsNull() {
-						return true
-					}
-				}
-				return false
-			}),
 		),
 
 		Timeouts: &schema.ResourceTimeout{
