@@ -462,6 +462,26 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				}
+				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
+					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0NullValuesError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
+				if attr, ok := args.Keyword["v60RefreshError"]; ok {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
+					} else {
+						d.HasV6_0RefreshError = b
+						if b {
+							d.PreIdentityVersion = v5_100_0
+						}
+					}
+				}
 
 			default:
 				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
