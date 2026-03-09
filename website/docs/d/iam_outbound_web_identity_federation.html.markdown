@@ -24,5 +24,4 @@ This data source does not support any arguments.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The issuer identifier URL.
 * `issuer_identifier` - A unique issuer URL for your AWS account that hosts the OpenID Connect (OIDC) discovery endpoints.

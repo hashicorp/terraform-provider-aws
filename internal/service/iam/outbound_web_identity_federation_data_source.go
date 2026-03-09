@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_iam_outbound_web_identity_federation", name="Outbound Web Identity Federation")
@@ -30,9 +29,6 @@ type outboundWebIdentityFederationDataSource struct {
 func (d *outboundWebIdentityFederationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-			},
 			"issuer_identifier": schema.StringAttribute{
 				Computed: true,
 			},
@@ -50,21 +46,15 @@ func (d *outboundWebIdentityFederationDataSource) Read(ctx context.Context, requ
 	conn := d.Meta().IAMClient(ctx)
 
 	output, err := findOutboundWebIdentityFederation(ctx, conn)
-
 	if err != nil {
 		response.Diagnostics.AddError("reading IAM Outbound Web Identity Federation", err.Error())
 		return
 	}
 
-	// Use issuer identifier as ID
-	issuerIdentifier := fwflex.StringToFramework(ctx, output.IssuerIdentifier)
-	data.ID = issuerIdentifier
-	data.IssuerIdentifier = issuerIdentifier
-
+	data.IssuerIdentifier = fwflex.StringToFramework(ctx, output.IssuerIdentifier)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type outboundWebIdentityFederationDataSourceModel struct {
-	ID               types.String `tfsdk:"id"`
 	IssuerIdentifier types.String `tfsdk:"issuer_identifier"`
 }
