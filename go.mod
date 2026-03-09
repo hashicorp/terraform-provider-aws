@@ -43,10 +43,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.12
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.8
 	github.com/aws/aws-sdk-go-v2/service/batch v1.61.1
-	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.12.12
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.55.1
+	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.52.5
-	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.20.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.19
@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.19
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.6
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.61.2
-	github.com/aws/aws-sdk-go-v2/service/connect v1.164.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.165.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.11
@@ -244,7 +244,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.24
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.34.3
 	github.com/aws/aws-sdk-go-v2/service/ses v1.34.20
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.59.4
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.40.8
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/signer v1.32.3
