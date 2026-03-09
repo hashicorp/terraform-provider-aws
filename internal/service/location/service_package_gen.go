@@ -78,6 +78,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
+			Factory:  ResourceAPIKey,
+			TypeName: "aws_location_api_key",
+			Name:     "API Key",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "key_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  ResourceGeofenceCollection,
 			TypeName: "aws_location_geofence_collection",
 			Name:     "Geofence Collection",

@@ -15,6 +15,11 @@ import (
 )
 
 func RegisterSweepers() {
+	resource.AddTestSweepers("aws_location_api_key", &resource.Sweeper{
+		Name: "aws_location_api_key",
+		F:    sweepAPIKeys,
+	})
+
 	resource.AddTestSweepers("aws_location_geofence_collection", &resource.Sweeper{
 		Name: "aws_location_geofence_collection",
 		F:    sweepGeofenceCollections,
@@ -44,6 +49,47 @@ func RegisterSweepers() {
 		Name: "aws_location_tracker_association",
 		F:    sweepTrackerAssociations,
 	})
+}
+
+func sweepAPIKeys(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.LocationClient(ctx)
+	input := &location.ListKeysInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := location.NewListKeysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Location Service API Key sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Location Service API Keys for %s: %w", region, err)
+		}
+
+		for _, entry := range page.Entries {
+			r := ResourceAPIKey()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(entry.KeyName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Location Service API Keys for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepGeofenceCollections(region string) error {
