@@ -16,6 +16,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -1423,9 +1424,17 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	out, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
+	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
-	}, ErrCodeValidationException, "Could not assume role")
+	}, func(err error) (bool, error) {
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not assume role") {
+			return true, err
+		}
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Unauthorized to List objects under S3 URL") {
+			return true, err
+		}
+		return false, err
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.TrainingJobName.String())
 		return

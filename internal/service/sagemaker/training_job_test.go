@@ -255,7 +255,7 @@ func TestAccSageMakerTrainingJob_profilerConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "true"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_rule_configurations.#", "1"),
 				),
@@ -300,7 +300,7 @@ func TestAccSageMakerTrainingJob_profilerConfigUpdate(t *testing.T) {
 				Config: testAccTrainingJobConfig_profilerUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
-					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "true"),
+					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.disable_profiler", "false"),
 					resource.TestCheckResourceAttr(resourceName, "profiler_config.0.profiling_interval_in_milliseconds", "1000"),
 				),
 			},
@@ -1059,29 +1059,34 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
-resource "aws_iam_role_policy" "test" {
-  role = aws_iam_role.test.name
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-        ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*",
-        ]
-      },
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject"
     ]
-  })
+    resources = [
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.test.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3.json
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1093,14 +1098,14 @@ resource "aws_sagemaker_training_job" "test" {
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type      = "ml.m5.large"
+    instance_count     = 1
+    volume_size_in_gb  = 30
   }
 
   stopping_condition {
@@ -1124,7 +1129,7 @@ resource "aws_sagemaker_training_job" "test" {
     volume_size_in_gb = 10
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.test]
 }
 `, rName)
 }
@@ -1151,29 +1156,34 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
-resource "aws_iam_role_policy" "test" {
-  role = aws_iam_role.test.name
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-        ]
-        Resource = [
-          aws_s3_bucket.test.arn,
-          "${aws_s3_bucket.test.arn}/*",
-        ]
-      },
+data "aws_iam_policy_document" "s3" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject"
     ]
-  })
+    resources = [
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.test.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.s3.json
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1185,14 +1195,14 @@ resource "aws_sagemaker_training_job" "test" {
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type      = "ml.m5.large"
+    instance_count     = 1
+    volume_size_in_gb  = 30
   }
 
   stopping_condition {
@@ -1247,12 +1257,18 @@ data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
       "s3:GetObject",
-      "s3:PutObject",
-      "s3:ListBucket",
+      "s3:PutObject"
     ]
     resources = [
-      aws_s3_bucket.test.arn,
-      "${aws_s3_bucket.test.arn}/*",
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.test.arn
     ]
   }
 }
@@ -1264,6 +1280,7 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+  force_destroy = true
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1341,12 +1358,18 @@ data "aws_iam_policy_document" "s3" {
   statement {
     actions = [
       "s3:GetObject",
-      "s3:PutObject",
-      "s3:ListBucket",
+      "s3:PutObject"
     ]
     resources = [
-      aws_s3_bucket.test.arn,
-      "${aws_s3_bucket.test.arn}/*",
+      "${aws_s3_bucket.test.arn}/*"
+    ]
+  }
+  statement {
+    actions = [
+      "s3:ListBucket"
+    ]
+    resources = [
+      aws_s3_bucket.test.arn
     ]
   }
 }
@@ -1358,6 +1381,7 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+  force_destroy = true
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1369,14 +1393,14 @@ resource "aws_sagemaker_training_job" "test" {
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type      = "ml.m5.large"
+    instance_count     = 1
+    volume_size_in_gb  = 30
   }
 
   stopping_condition {
@@ -1384,7 +1408,12 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   profiler_config {
-    disable_profiler = true
+    disable_profiler = false
+    profiling_interval_in_milliseconds = 1000
+    profiling_parameters = {
+      "profile_cpu" = "false"
+    }
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/profiler/"
   }
 
   profiler_rule_configurations {
