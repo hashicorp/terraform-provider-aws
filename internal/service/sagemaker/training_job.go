@@ -1687,7 +1687,7 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 	_, err := conn.DeleteTrainingJob(ctx, &input)
 
 	if err != nil {
-		if errs.Contains(err, "ResourceNotFound") {
+		if errs.Contains(err, "ResourceNotFound") || errs.Contains(err, "Requested resource not found") {
 			return
 		}
 
