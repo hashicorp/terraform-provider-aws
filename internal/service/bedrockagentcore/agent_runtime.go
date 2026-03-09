@@ -240,6 +240,10 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
 									},
+									"allowed_scopes": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
+									},
 									"discovery_url": schema.StringAttribute{
 										Required: true,
 									},
@@ -796,6 +800,7 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 type customJWTAuthorizerConfigurationModel struct {
 	AllowedAudience fwtypes.SetOfString `tfsdk:"allowed_audience"`
 	AllowedClients  fwtypes.SetOfString `tfsdk:"allowed_clients"`
+	AllowedScopes   fwtypes.SetOfString `tfsdk:"allowed_scopes"`
 	DiscoveryURL    types.String        `tfsdk:"discovery_url"`
 }
 
