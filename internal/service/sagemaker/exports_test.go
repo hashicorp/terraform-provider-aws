@@ -34,6 +34,7 @@ var (
 	ResourceProject                                = resourceProject
 	ResourceSpace                                  = resourceSpace
 	ResourceStudioLifecycleConfig                  = resourceStudioLifecycleConfig
+	ResourceTrainingJob                            = newResourceTrainingJob
 	ResourceUserProfile                            = resourceUserProfile
 	ResourceWorkforce                              = resourceWorkforce
 	ResourceWorkteam                               = resourceWorkteam
@@ -69,6 +70,7 @@ var (
 	FindServicecatalogPortfolioStatus         = findServicecatalogPortfolioStatus
 	FindSpaceByName                           = findSpaceByName
 	FindStudioLifecycleConfigByName           = findStudioLifecycleConfigByName
+	FindTrainingJobByName                     = findTrainingJobByName
 	FindUserProfileByName                     = findUserProfileByName
 	FindWorkforceByName                       = findWorkforceByName
 	FindWorkteamByName                        = findWorkteamByName
