@@ -147,23 +147,4 @@ func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient
 		result.Diagnostics.Append(err...)
 		return
 	}
-
-	if includeResource {
-		tfTypeResource, err := rd.TfTypeResourceState()
-		if err != nil {
-			result.Diagnostics.Append(diag.NewErrorDiagnostic(
-				"Error Listing Remote Resources",
-				"An unexpected error occurred converting resource state. "+
-					"This is always an error in the provider. "+
-					"Please report the following to the provider developer:\n\n"+
-					"Error: "+err.Error(),
-			))
-			return
-		}
-
-		result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
-		if result.Diagnostics.HasError() {
-			return
-		}
-	}
 }

@@ -1010,6 +1010,8 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	}
 
 	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
+		v.AppendResultInterceptor(listresource.SetResourceStateSDK())
+
 		if isRegionOverrideEnabled {
 			v.AppendResultInterceptor(listresource.SetRegionInterceptorSDK())
 		}
