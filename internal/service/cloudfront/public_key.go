@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -95,7 +95,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(sdkid.UniqueId())
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -156,7 +156,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	if v, ok := d.GetOk("caller_reference"); ok {
 		input.PublicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		input.PublicKeyConfig.CallerReference = aws.String(id.UniqueId())
+		input.PublicKeyConfig.CallerReference = aws.String(sdkid.UniqueId())
 	}
 
 	if v, ok := d.GetOk(names.AttrComment); ok {
@@ -237,7 +237,7 @@ func validPublicKeyNamePrefix(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 128 - id.UniqueIDSuffixLength
+	prefixMaxLength := 128 - sdkid.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))

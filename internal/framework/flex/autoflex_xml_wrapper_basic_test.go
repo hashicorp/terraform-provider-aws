@@ -60,7 +60,7 @@ func TestExpandXMLWrapperRule1SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Rule 1 + Complex Type: Fruits/Apples/Apple example from context
@@ -97,12 +97,12 @@ func TestExpandXMLWrapperRule1ComplexType(t *testing.T) {
 			WantTarget: &Fruits{Apples: nil},
 		},
 		"empty": {
-			Source:     &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust[appleModel](ctx, []appleModel{})},
+			Source:     &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []appleModel{})},
 			Target:     &Fruits{},
 			WantTarget: &Fruits{Apples: &Apples{Items: []Apple{}, Quantity: aws.Int32(0)}},
 		},
 		"single": {
-			Source: &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust[appleModel](ctx, []appleModel{
+			Source: &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []appleModel{
 				{Name: types.StringValue("Fuji"), Color: types.StringValue("red")},
 			})},
 			Target: &Fruits{},
@@ -113,7 +113,7 @@ func TestExpandXMLWrapperRule1ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Rule 2 + Simple Type: Birds/Parrots example from context
@@ -147,7 +147,7 @@ func TestExpandXMLWrapperRule2SimpleType(t *testing.T) {
 			WantTarget: &Birds{Parrots: nil},
 		},
 		"empty_items": {
-			Source: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust[parrotModel](ctx, []parrotModel{
+			Source: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []parrotModel{
 				{
 					Flying: types.BoolValue(false),
 					Items:  fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
@@ -161,7 +161,7 @@ func TestExpandXMLWrapperRule2SimpleType(t *testing.T) {
 			}},
 		},
 		"with_flying": {
-			Source: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust[parrotModel](ctx, []parrotModel{
+			Source: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []parrotModel{
 				{
 					Flying: types.BoolValue(true),
 					Items: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
@@ -178,7 +178,7 @@ func TestExpandXMLWrapperRule2SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 func TestExpandXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
@@ -214,7 +214,7 @@ func TestExpandXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Rule 2 + Complex Type: Trees/Oaks/Oak example from context
@@ -256,10 +256,10 @@ func TestExpandXMLWrapperRule2ComplexType(t *testing.T) {
 			WantTarget: &Trees{Oaks: nil},
 		},
 		"empty_items": {
-			Source: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust[oakModel](ctx, []oakModel{
+			Source: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakModel{
 				{
 					Diseased: types.BoolValue(false),
-					Item:     fwtypes.NewListNestedObjectValueOfValueSliceMust[oakItemModel](ctx, []oakItemModel{}),
+					Item:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakItemModel{}),
 				},
 			})},
 			Target: &Trees{},
@@ -270,10 +270,10 @@ func TestExpandXMLWrapperRule2ComplexType(t *testing.T) {
 			}},
 		},
 		"with_diseased": {
-			Source: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust[oakModel](ctx, []oakModel{
+			Source: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakModel{
 				{
 					Diseased: types.BoolValue(false),
-					Item: fwtypes.NewListNestedObjectValueOfValueSliceMust[oakItemModel](ctx, []oakItemModel{
+					Item: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakItemModel{
 						{Species: types.StringValue("white oak"), Age: types.Int64Value(100)},
 					}),
 				},
@@ -287,7 +287,7 @@ func TestExpandXMLWrapperRule2ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoExpandTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Flatten tests for Rule 1 + Simple Type
@@ -335,7 +335,7 @@ func TestFlattenXMLWrapperRule1SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Flatten tests for Rule 1 + Complex Type
@@ -374,7 +374,7 @@ func TestFlattenXMLWrapperRule1ComplexType(t *testing.T) {
 		"empty": {
 			Source:     &Fruits{Apples: &Apples{Items: []Apple{}, Quantity: aws.Int32(0)}},
 			Target:     &fruitModel{},
-			WantTarget: &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust[appleModel](ctx, []appleModel{})},
+			WantTarget: &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []appleModel{})},
 		},
 		"single": {
 			Source: &Fruits{Apples: &Apples{
@@ -382,13 +382,13 @@ func TestFlattenXMLWrapperRule1ComplexType(t *testing.T) {
 				Quantity: aws.Int32(1),
 			}},
 			Target: &fruitModel{},
-			WantTarget: &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust[appleModel](ctx, []appleModel{
+			WantTarget: &fruitModel{Apple: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []appleModel{
 				{Name: types.StringValue("Fuji"), Color: types.StringValue("red")},
 			})},
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, PrintLogs: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: false, CompareTarget: true, SkipGoldenLogs: true, PrintLogs: true})
 }
 
 // Flatten tests for Rule 2 + Simple Type
@@ -439,7 +439,7 @@ func TestFlattenXMLWrapperRule2SimpleType(t *testing.T) {
 			}},
 			Target: &birdModel{},
 			// Empty Items but Flying=true is meaningful, so create block
-			WantTarget: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust[parrotModel](ctx, []parrotModel{
+			WantTarget: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []parrotModel{
 				{
 					Flying: types.BoolValue(true),
 					Items:  fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
@@ -453,7 +453,7 @@ func TestFlattenXMLWrapperRule2SimpleType(t *testing.T) {
 				Quantity: aws.Int32(1),
 			}},
 			Target: &birdModel{},
-			WantTarget: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust[parrotModel](ctx, []parrotModel{
+			WantTarget: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []parrotModel{
 				{
 					Flying: types.BoolValue(true),
 					Items: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
@@ -464,7 +464,7 @@ func TestFlattenXMLWrapperRule2SimpleType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
@@ -499,7 +499,7 @@ func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 			}},
 			Target: &birdModel{},
 			// Without omitempty, zero values should create a block
-			WantTarget: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust[parrotModel](ctx, []parrotModel{
+			WantTarget: &birdModel{Parrot: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []parrotModel{
 				{
 					Flying: types.BoolValue(false),
 					Items:  fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{}),
@@ -508,7 +508,7 @@ func TestFlattenXMLWrapperRule2SimpleTypeNoOmitEmpty(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }
 
 // Flatten tests for Rule 2 + Complex Type
@@ -567,10 +567,10 @@ func TestFlattenXMLWrapperRule2ComplexType(t *testing.T) {
 			}},
 			Target: &treeModel{},
 			// Empty Items but Diseased=true is meaningful, so create block
-			WantTarget: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust[oakModel](ctx, []oakModel{
+			WantTarget: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakModel{
 				{
 					Diseased: types.BoolValue(true),
-					Item:     fwtypes.NewListNestedObjectValueOfValueSliceMust[oakItemModel](ctx, []oakItemModel{}),
+					Item:     fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakItemModel{}),
 				},
 			})},
 		},
@@ -581,10 +581,10 @@ func TestFlattenXMLWrapperRule2ComplexType(t *testing.T) {
 				Quantity: aws.Int32(1),
 			}},
 			Target: &treeModel{},
-			WantTarget: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust[oakModel](ctx, []oakModel{
+			WantTarget: &treeModel{Oak: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakModel{
 				{
 					Diseased: types.BoolValue(false),
-					Item: fwtypes.NewListNestedObjectValueOfValueSliceMust[oakItemModel](ctx, []oakItemModel{
+					Item: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []oakItemModel{
 						{Species: types.StringValue("white oak"), Age: types.Int64Value(100)},
 					}),
 				},
@@ -592,5 +592,5 @@ func TestFlattenXMLWrapperRule2ComplexType(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true})
+	runAutoFlattenTestCases(t, testCases, runChecks{CompareDiags: true, CompareTarget: true, SkipGoldenLogs: true})
 }

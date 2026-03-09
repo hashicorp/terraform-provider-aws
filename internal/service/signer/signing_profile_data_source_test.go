@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,7 +17,7 @@ func TestAccSignerSigningProfileDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_signer_signing_profile.test"
 	resourceName := "aws_signer_signing_profile.test"
-	rString := sdkacctest.RandString(48)
+	rString := acctest.RandString(t, 48)
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

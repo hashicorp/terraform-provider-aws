@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -91,19 +90,7 @@ func (l *listResourceTarget) List(ctx context.Context, request list.ListRequest,
 			rd.Set(names.AttrRule, ruleName)
 			rd.Set("target_id", targetID)
 
-			tflog.Info(ctx, "Reading EventBridge Target")
-			diags := resourceTargetRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading EventBridge Target", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
-			}
+			resourceTargetFlatten(ctx, eventBusName, rd, &item)
 
 			result.DisplayName = targetID
 

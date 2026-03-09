@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -18,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,22 +24,22 @@ import (
 
 func TestAccS3VectorsVectorBucketPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketPolicyExists(ctx, resourceName),
+					testAccCheckVectorBucketPolicyExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -70,22 +68,22 @@ func TestAccS3VectorsVectorBucketPolicy_basic(t *testing.T) {
 
 func TestAccS3VectorsVectorBucketPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_s3vectors_vector_bucket_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3VectorsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVectorBucketPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckVectorBucketPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVectorBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVectorBucketPolicyExists(ctx, resourceName),
+					testAccCheckVectorBucketPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceVectorBucketPolicy, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -99,9 +97,9 @@ func TestAccS3VectorsVectorBucketPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVectorBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVectorBucketPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3vectors_vector_bucket_policy" {
@@ -125,14 +123,14 @@ func testAccCheckVectorBucketPolicyDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckVectorBucketPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVectorBucketPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3VectorsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3VectorsClient(ctx)
 
 		_, err := tfs3vectors.FindVectorBucketPolicyByARN(ctx, conn, rs.Primary.Attributes["vector_bucket_arn"])
 

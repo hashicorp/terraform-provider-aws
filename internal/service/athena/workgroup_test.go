@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1224,8 +1223,8 @@ func TestAccAthenaWorkGroup_description(t *testing.T) {
 	var workgroup1, workgroup2 types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_athena_workgroup.test"
-	rDescription := sdkacctest.RandString(20)
-	rDescriptionUpdate := sdkacctest.RandString(20)
+	rDescription := acctest.RandString(t, 20)
+	rDescriptionUpdate := acctest.RandString(t, 20)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1304,7 +1303,7 @@ func TestAccAthenaWorkGroup_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var workgroup types.WorkGroup
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dbName := sdkacctest.RandString(5)
+	dbName := acctest.RandString(t, 5)
 	queryName1 := acctest.RandomWithPrefix(t, "tf-athena-named-query-")
 	queryName2 := acctest.RandomWithPrefix(t, "tf-athena-named-query-")
 	resourceName := "aws_athena_workgroup.test"
@@ -1915,6 +1914,94 @@ func TestAccAthenaWorkGroup_monitoringConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_QueryResultsS3AccessGrantsConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+	iamRoleResourceName := "aws_iam_role.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_QueryResultsS3AccessGrantsConfiguration(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execution_role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.0.enable_identity_center", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.enable_s3_access_grants", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.create_user_level_prefix", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.authentication_type", "DIRECTORY_IDENTITY"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_QueryResultsS3AccessGrantsConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workgroup2 types.WorkGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_QueryResultsS3AccessGrantsConfiguration(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.enable_s3_access_grants", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.create_user_level_prefix", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_QueryResultsS3AccessGrantsConfiguration(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, t, resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.enable_s3_access_grants", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.query_results_s3_access_grants_configuration.0.create_user_level_prefix", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -2712,4 +2799,152 @@ resource "aws_athena_workgroup" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWorkGroupConfig_QueryResultsS3AccessGrantsConfiguration(rName string, enableS3AccessGrants, createUserLevelPrefix bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_ssoadmin_instances" "test" {}
+
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+# IAM role for S3 Access Grants location
+resource "aws_iam_role" "access_grants" {
+  name = "%[1]s-ag"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = ["sts:AssumeRole", "sts:SetSourceIdentity"],
+      Principal = {
+        Service = "access-grants.s3.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "access_grants" {
+  name = "%[1]s-ag"
+  role = aws_iam_role.access_grants.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "s3:*"
+      Resource = "*"
+    }]
+  })
+}
+
+# S3 Access Grants Instance with Identity Center
+resource "aws_s3control_access_grants_instance" "test" {
+  identity_center_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+
+# S3 Access Grants Location - global scope
+resource "aws_s3control_access_grants_location" "test" {
+  depends_on = [aws_iam_role_policy.access_grants, aws_s3control_access_grants_instance.test]
+
+  iam_role_arn   = aws_iam_role.access_grants.arn
+  location_scope = "s3://"
+}
+
+# IAM role for Athena execution
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "athena.amazonaws.com"
+        }
+        Effect = "Allow"
+      },
+      {
+        Action = ["sts:AssumeRole", "sts:SetContext"]
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "s3:*"
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "athena:*"
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "glue:*"
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetAccessGrantsInstanceForPrefix",
+          "s3:GetDataAccess"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "lakeformation:*"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Wait for IAM propagation - using depends_on
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    execution_role = aws_iam_role.test.arn
+
+    identity_center_configuration {
+      enable_identity_center       = true
+      identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+    }
+
+    query_results_s3_access_grants_configuration {
+      enable_s3_access_grants  = %[2]t
+      create_user_level_prefix = %[3]t
+      authentication_type      = "DIRECTORY_IDENTITY"
+    }
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/output/"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test, aws_s3control_access_grants_location.test]
+}
+`, rName, enableS3AccessGrants, createUserLevelPrefix)
 }

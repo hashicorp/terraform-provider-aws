@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -70,8 +70,7 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 		dirInput := s3.ListDirectoryBucketsInput{
 			MaxDirectoryBuckets: aws.Int32(int32(limit)),
 		}
-		for result := range l.list(ctx, request, gpConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
-			count++
+		for result := range l.list(ctx, request, dirConn, listDirectoryBuckets(ctx, dirConn, &dirInput)) {
 			if !yield(result) {
 				return
 			}
@@ -79,7 +78,7 @@ func (l *listResourceBucketPolicy) List(ctx context.Context, request list.ListRe
 	}
 }
 
-func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[types.Bucket, error]) iter.Seq[list.ListResult] {
+func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRequest, conn *s3.Client, buckets iter.Seq2[awstypes.Bucket, error]) iter.Seq[list.ListResult] {
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
@@ -96,7 +95,7 @@ func (l *listResourceBucketPolicy) list(ctx context.Context, request list.ListRe
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1-0..1)
+			// A Bucket Policy is optionally associated with a Bucket (1:0..1)
 			// So always try to read it to see if it is present.
 			tflog.Info(ctx, "Reading S3 Bucket Policy")
 			policy, err := findBucketPolicy(ctx, conn, bucketName)

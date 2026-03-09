@@ -9,33 +9,31 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 )
 
 func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_drt_access_log_bucket_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -50,27 +48,27 @@ func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
 
 func testAccDRTAccessLogBucketAssociation_multiBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var buckets = []string{}
 	for range 2 {
-		buckets = append(buckets, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+		buckets = append(buckets, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
 	}
 	resourceName1 := "aws_shield_drt_access_log_bucket_association.test1"
 	resourceName2 := "aws_shield_drt_access_log_bucket_association.test2"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1),
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, t, resourceName1),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, t, resourceName2),
 				),
 			},
 		},
@@ -79,22 +77,22 @@ func testAccDRTAccessLogBucketAssociation_multiBucket(t *testing.T) {
 
 func testAccDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_shield_drt_access_log_bucket_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -103,9 +101,9 @@ func testAccDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_drt_access_log_bucket_association" {
@@ -129,14 +127,14 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context) resou
 	}
 }
 
-func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 		_, err := tfshield.FindDRTLogBucketAssociation(ctx, conn, rs.Primary.ID)
 
@@ -145,7 +143,7 @@ func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, n stri
 }
 
 func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ShieldClient(ctx)
 
 	input := &shield.DescribeDRTAccessInput{}
 	_, err := conn.DescribeDRTAccess(ctx, input)

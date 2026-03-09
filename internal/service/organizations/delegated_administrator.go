@@ -222,11 +222,11 @@ func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
 	return delegatedAdministratorCreateResourceID(d.Get(names.AttrAccountID).(string), d.Get("service_principal").(string))
 }
 
-func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
+func (delegatedAdministratorImportID) Parse(id string) (string, map[string]any, error) {
 	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		result := map[string]string{
+		result := map[string]any{
 			names.AttrAccountID: parts[0],
 			"service_principal": parts[1],
 		}

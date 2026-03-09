@@ -12,7 +12,6 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -175,8 +174,8 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.ScalingPolicy
 
-	randClusterName := fmt.Sprintf("cluster%s", sdkacctest.RandString(10))
-	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", sdkacctest.RandString(5))
+	randClusterName := fmt.Sprintf("cluster%s", acctest.RandString(t, 10))
+	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -257,7 +256,7 @@ func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy awstypes.ScalingPolicy
 
-	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
+	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(t, 5))
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -357,9 +356,9 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 	var readPolicy1 awstypes.ScalingPolicy
 	var readPolicy2 awstypes.ScalingPolicy
 
-	tableName1 := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
-	tableName2 := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
-	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", sdkacctest.RandString(5))
+	tableName1 := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(t, 5))
+	tableName2 := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(t, 5))
+	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -392,8 +391,8 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	var readPolicy awstypes.ScalingPolicy
 	var writePolicy awstypes.ScalingPolicy
 
-	tableName := fmt.Sprintf("tf-autoscaled-table-%s", sdkacctest.RandString(5))
-	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", sdkacctest.RandString(5))
+	tableName := fmt.Sprintf("tf-autoscaled-table-%s", acctest.RandString(t, 5))
+	namePrefix := fmt.Sprintf("tf-appautoscaling-policy-%s", acctest.RandString(t, 5))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

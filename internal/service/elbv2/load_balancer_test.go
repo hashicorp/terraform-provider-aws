@@ -87,7 +87,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}$", rName))),
+					matchApplicationLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_logs.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
@@ -134,7 +134,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/net/%s/[a-z0-9]{16}$", rName))),
+					matchNetworkLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_logs.#"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "dns_record_client_routing_policy", "any_availability_zone"),
@@ -174,7 +174,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 				Config: testAccLoadBalancerConfig_typeGateway(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					matchGatewayLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", string(awstypes.LoadBalancerTypeEnumGateway)),
 				),
 			},
@@ -395,7 +395,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				Config: testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					matchGatewayLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", string(awstypes.LoadBalancerTypeEnumGateway)),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", acctest.CtTrue),
 				),
@@ -415,7 +415,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				Config: testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					matchGatewayLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", string(awstypes.LoadBalancerTypeEnumGateway)),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", acctest.CtFalse),
 				),
@@ -442,7 +442,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", rName))),
+					matchApplicationLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
@@ -485,7 +485,7 @@ func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/net/%s/[a-z0-9]{16}$", rName))),
+					matchNetworkLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
@@ -561,7 +561,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/[a-z0-9]{16}$", rName))),
+					matchApplicationLoadBalancerARN(ctx, resourceName, names.AttrARN, rName),
 				),
 			},
 		},
@@ -2457,6 +2457,33 @@ func TestAccELBV2LoadBalancer_updateCapacityReservation(t *testing.T) {
 	})
 }
 
+func TestAccELBV2LoadBalancer_albMoreThan20Attributes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_albMoreThan20Attributes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckLoadBalancerNotRecreated(i, j *awstypes.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(i.LoadBalancerArn) != aws.ToString(j.LoadBalancerArn) {
@@ -2581,6 +2608,50 @@ func testAccPreCheckGatewayLoadBalancer(ctx context.Context, t *testing.T) {
 	}
 
 	t.Skip("skipping acceptance testing: region does not support ELBv2 Gateway Load Balancers")
+}
+
+func matchApplicationLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(applicationLoadBalancerARNPattern(lbName)+`$`))
+}
+
+func matchGatewayLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(gatewayLoadBalancerARNPattern(lbName)+`$`))
+}
+
+func matchNetworkLoadBalancerARN(ctx context.Context, resourceName, attributeName, lbName string) resource.TestCheckFunc {
+	return acctest.MatchResourceAttrRegionalARN(ctx, resourceName, attributeName, "elasticloadbalancing", regexache.MustCompile(networkLoadBalancerARNPattern(lbName)+`$`))
+}
+
+func applicationLoadBalancerARNPattern(lbName string) string {
+	return loadBalancerARNPattern(applicationPattern(lbName))
+}
+
+func gatewayLoadBalancerARNPattern(lbName string) string {
+	return loadBalancerARNPattern(gatewayPattern(lbName))
+}
+
+func networkLoadBalancerARNPattern(lbName string) string {
+	return loadBalancerARNPattern(networkPattern(lbName))
+}
+
+func loadBalancerARNPattern(s string) string {
+	return `loadbalancer/` + s
+}
+
+func generalLoadBalancerPattern(lbName string) string {
+	return fmt.Sprintf(`%s/[a-z0-9]{16}`, lbName)
+}
+
+func applicationPattern(lbName string) string {
+	return `app/` + generalLoadBalancerPattern(lbName)
+}
+
+func gatewayPattern(lbName string) string {
+	return `gwy/` + generalLoadBalancerPattern(lbName)
+}
+
+func networkPattern(lbName string) string {
+	return `net/` + generalLoadBalancerPattern(lbName)
 }
 
 func testAccLoadBalancerConfig_baseInternal(rName string, subnetCount int) string {
@@ -3872,4 +3943,42 @@ resource "aws_lb" "test" {
   }
 }
 `, rName, unit))
+}
+
+func testAccLoadBalancerConfig_albMoreThan20Attributes(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseALBAccessLogs(rName), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  desync_mitigation_mode                      = "monitor"
+  drop_invalid_header_fields                  = true
+  enable_http2                                = true
+  enable_tls_version_and_cipher_suite_headers = true
+  enable_waf_fail_open                        = true
+  enable_xff_client_port                      = true
+  internal                                    = true
+  ip_address_type                             = "ipv4"
+  load_balancer_type                          = "application"
+  name                                        = %[1]q
+  preserve_host_header                        = true
+  subnets                                     = aws_subnet.test[*].id
+  xff_header_processing_mode                  = "append"
+
+  access_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = true
+    prefix  = "%[1]s/access-logs"
+  }
+
+  connection_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = true
+    prefix  = "%[1]s/connection-logs"
+  }
+
+  health_check_logs {
+    bucket  = aws_s3_bucket_policy.test.bucket
+    enabled = true
+    prefix  = "%[1]s/health-check-logs"
+  }
+}
+`, rName))
 }

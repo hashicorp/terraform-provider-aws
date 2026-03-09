@@ -1770,7 +1770,7 @@ type testImportID struct {
 	t *testing.T
 }
 
-func (t testImportID) Parse(id string) (string, map[string]string, error) {
+func (t testImportID) Parse(id string) (string, map[string]any, error) {
 	t.t.Helper()
 
 	if id == "invalid" {
@@ -1784,7 +1784,7 @@ func (t testImportID) Parse(id string) (string, map[string]string, error) {
 		t.t.Fatalf("Parsing test Import ID: %s", err)
 	}
 
-	return id, map[string]string{
+	return id, map[string]any{
 		"name": parts[0],
 		"type": parts[1],
 	}, nil

@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ import (
 func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
@@ -67,7 +66,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_method_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
@@ -115,7 +114,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_resp_header_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
@@ -167,7 +166,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-	rString := sdkacctest.RandString(8)
+	rString := acctest.RandString(t, 8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	resourceName := "aws_api_gateway_documentation_part.test"

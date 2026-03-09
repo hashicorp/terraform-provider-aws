@@ -9,7 +9,7 @@ import (
 	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
@@ -20,7 +20,7 @@ func Name(ctx context.Context, name string, namePrefix string) string {
 
 // hasResourceUniqueIDPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
 func hasResourceUniqueIDPlusAdditionalSuffix(s string, additionalSuffix string) bool {
-	re := regexache.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", id.UniqueIDSuffixLength, additionalSuffix))
+	re := regexache.MustCompile(fmt.Sprintf("[[:xdigit:]]{%d}%s$", sdkid.UniqueIDSuffixLength, additionalSuffix))
 	return re.MatchString(s)
 }
 
@@ -41,7 +41,7 @@ func NamePrefixFromNameWithSuffix(name, nameSuffix string) *string {
 		return nil
 	}
 
-	namePrefixIndex := len(name) - id.UniqueIDSuffixLength - len(nameSuffix)
+	namePrefixIndex := len(name) - sdkid.UniqueIDSuffixLength - len(nameSuffix)
 
 	if namePrefixIndex <= 0 {
 		return nil
@@ -98,7 +98,7 @@ func WithSuffix(suffix string) NameGeneratorOptionsFunc {
 
 // NewNameGenerator returns a new name generator from the specified varidaic list of functional options.
 func NewNameGenerator(optFns ...NameGeneratorOptionsFunc) *nameGenerator {
-	g := &nameGenerator{defaultPrefix: id.UniqueIdPrefix}
+	g := &nameGenerator{defaultPrefix: sdkid.UniqueIdPrefix}
 
 	for _, optFn := range optFns {
 		optFn(g)
@@ -131,5 +131,5 @@ func prefixedUniqueId(ctx context.Context, prefix string) string {
 		// Pad the generated int64 to match the length of the id.PrefixUniqueId (26 characters)
 		return fmt.Sprintf("%s%026x", prefix, rng.Int63())
 	}
-	return id.PrefixedUniqueId(prefix)
+	return sdkid.PrefixedUniqueId(prefix)
 }

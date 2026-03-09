@@ -36,6 +36,7 @@ nav:
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
+      - AI Usage: ai-usage.md
   - Developer Reference:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - AI Agents: ai-agents.md
@@ -61,6 +62,7 @@ nav:
       - Provider Scaffolding (skaff): skaff.md
       - Regular Expressions: regular-expressions.md
       - Resource Identity: resource-identity.md
+      - List Resources: list-resources.md
       - Retries and Waiters: retries-and-waiters.md
       - Terraform Plugin Development Packages: terraform-plugin-development-packages.md
       - Terraform Plugin Migrations: terraform-plugin-migrations.md

@@ -34,7 +34,7 @@ func TestAccVPCSubnet_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -42,7 +42,7 @@ func TestAccVPCSubnet_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Subnet/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -193,14 +193,14 @@ func TestAccVPCSubnet_Identity_ExistingResource_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSubnetDestroy(ctx),
+		CheckDestroy: testAccCheckSubnetDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Subnet/basic_v6.8.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -246,7 +246,7 @@ func TestAccVPCSubnet_Identity_ExistingResource_noRefreshNoChange(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSubnetDestroy(ctx),
+		CheckDestroy: testAccCheckSubnetDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -258,7 +258,7 @@ func TestAccVPCSubnet_Identity_ExistingResource_noRefreshNoChange(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/Subnet/basic_v6.8.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &v),
+					testAccCheckSubnetExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

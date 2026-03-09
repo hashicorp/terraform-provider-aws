@@ -36,7 +36,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckRuleAssociationDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -47,7 +47,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_basic(t *testing.T) {
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleAssociationExists(ctx, resourceName, &v),
+					testAccCheckRuleAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -219,7 +219,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_basic(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -229,7 +229,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_basic(t *te
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleAssociationExists(ctx, resourceName, &v),
+					testAccCheckRuleAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -280,7 +280,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_noRefreshNo
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -295,7 +295,7 @@ func TestAccRoute53ResolverRuleAssociation_Identity_ExistingResource_noRefreshNo
 					"domain":        config.StringVariable(domain),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleAssociationExists(ctx, resourceName, &v),
+					testAccCheckRuleAssociationExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

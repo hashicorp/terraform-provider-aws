@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -157,9 +156,8 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	output, err := conn.GetServiceSetting(ctx, &input)
 
 	if errs.IsA[*awstypes.ServiceSettingNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -174,8 +172,8 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	return output.ServiceSetting, nil
 }
 
-func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServiceSetting(conn *ssm.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceSettingByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -191,10 +189,10 @@ func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) sdkr
 }
 
 func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
-		Refresh: statusServiceSetting(ctx, conn, id),
+		Refresh: statusServiceSetting(conn, id),
 		Timeout: timeout,
 	}
 
@@ -208,10 +206,10 @@ func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string,
 }
 
 func waitServiceSettingReset(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
-		Refresh: statusServiceSetting(ctx, conn, id),
+		Refresh: statusServiceSetting(conn, id),
 		Timeout: timeout,
 	}
 

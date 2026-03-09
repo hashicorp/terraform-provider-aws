@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,7 +28,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccIoTTopicRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -82,7 +81,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 
 func TestAccIoTTopicRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -105,7 +104,7 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 
 func TestAccIoTTopicRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -150,7 +149,7 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -234,7 +233,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -320,7 +319,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -402,7 +401,7 @@ func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -486,7 +485,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 
 func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -576,7 +575,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 
 func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -651,7 +650,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 
 func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -733,7 +732,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 
 func TestAccIoTTopicRule_firehose(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -823,7 +822,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 
 func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -903,7 +902,7 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 
 func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -983,7 +982,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_http(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1151,7 +1150,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1224,7 +1223,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1299,7 +1298,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1344,7 +1343,7 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 
 func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1422,7 +1421,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 func TestAccIoTTopicRule_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1573,7 +1572,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 
 func TestAccIoTTopicRule_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1651,7 +1650,7 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 
 func TestAccIoTTopicRule_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1697,7 +1696,7 @@ func TestAccIoTTopicRule_lambda(t *testing.T) {
 
 func TestAccIoTTopicRule_republish(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1777,7 +1776,7 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 
 func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1827,7 +1826,7 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 
 func TestAccIoTTopicRule_s3(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1909,7 +1908,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 
 func TestAccIoTTopicRule_sns(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1987,7 +1986,7 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 
 func TestAccIoTTopicRule_sqs(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2067,7 +2066,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 
 func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2147,7 +2146,7 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 
 func TestAccIoTTopicRule_Timestream(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2251,7 +2250,7 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 
 func TestAccIoTTopicRule_errorAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2321,7 +2320,7 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16115
 func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := testAccTopicRuleName()
+	rName := testAccTopicRuleName(t)
 	resourceName := "aws_iot_topic_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -2462,8 +2461,8 @@ func testAccCheckTopicRuleExists(ctx context.Context, t *testing.T, n string) re
 	}
 }
 
-func testAccTopicRuleName() string {
-	return fmt.Sprintf("tf_acc_test_%[1]s", sdkacctest.RandString(20))
+func testAccTopicRuleName(t *testing.T) string {
+	return fmt.Sprintf("tf_acc_test_%[1]s", acctest.RandString(t, 20))
 }
 
 func testAccTopicRuleConfig_destinationRole(rName string) string {

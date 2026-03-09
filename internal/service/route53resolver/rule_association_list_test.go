@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -25,7 +24,7 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_route53_resolver_rule_association.test[0]"
 	resourceName2 := "aws_route53_resolver_rule_association.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
 
 	id1 := tfstatecheck.StateValue()
@@ -39,7 +38,7 @@ func TestAccRoute53ResolverRuleAssociation_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ResolverServiceID),
-		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx),
+		CheckDestroy: testAccCheckRuleAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

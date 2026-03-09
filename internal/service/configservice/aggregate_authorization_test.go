@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -52,7 +51,7 @@ func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -78,7 +77,7 @@ func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
+	accountID := acctest.RandStringFromCharSet(t, 12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

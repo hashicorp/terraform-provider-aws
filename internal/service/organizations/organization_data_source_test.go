@@ -17,7 +17,7 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 	dataSourceName := "data.aws_organizations_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
@@ -52,7 +52,7 @@ func testAccOrganizationDataSource_memberAccount(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
@@ -87,7 +87,7 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -121,7 +121,7 @@ func testAccOrganizationDataSource_returnOrganizationOnly(t *testing.T) {
 	resourceName := "aws_organizations_organization.test"
 	dataSourceName := "data.aws_organizations_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)

@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,19 +32,19 @@ func TestAccSESV2ContactList_serial(t *testing.T) {
 
 func testAccContactList_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_contact_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactListDestroy(ctx),
+		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactListExists(ctx, resourceName),
+					testAccCheckContactListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "contact_list_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -65,19 +63,19 @@ func testAccContactList_basic(t *testing.T) {
 
 func testAccContactList_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_contact_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactListDestroy(ctx),
+		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactListExists(ctx, resourceName),
+					testAccCheckContactListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -89,7 +87,7 @@ func testAccContactList_description(t *testing.T) {
 			{
 				Config: testAccContactListConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactListExists(ctx, resourceName),
+					testAccCheckContactListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -99,19 +97,19 @@ func testAccContactList_description(t *testing.T) {
 
 func testAccContactList_topic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_contact_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactListDestroy(ctx),
+		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_topic1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactListExists(ctx, resourceName),
+					testAccCheckContactListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_IN"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", ""),
@@ -127,7 +125,7 @@ func testAccContactList_topic(t *testing.T) {
 			{
 				Config: testAccContactListConfig_topic2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactListExists(ctx, resourceName),
+					testAccCheckContactListExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_OUT"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", names.AttrDescription),
@@ -141,19 +139,19 @@ func testAccContactList_topic(t *testing.T) {
 
 func testAccContactList_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_contact_list.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContactListDestroy(ctx),
+		CheckDestroy:             testAccCheckContactListDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContactListExists(ctx, resourceName),
+					testAccCheckContactListExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceContactList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -162,9 +160,9 @@ func testAccContactList_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckContactListDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContactListDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_contact_list" {
@@ -188,14 +186,14 @@ func testAccCheckContactListDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckContactListExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckContactListExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindContactListByID(ctx, conn, rs.Primary.ID)
 

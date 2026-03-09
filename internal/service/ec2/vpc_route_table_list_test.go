@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -25,7 +24,7 @@ func TestAccVPCRouteTable_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_route_table.test[0]"
 	resourceName2 := "aws_route_table.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	id1 := tfstatecheck.StateValue()
 	id2 := tfstatecheck.StateValue()
@@ -36,7 +35,7 @@ func TestAccVPCRouteTable_List_basic(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckRouteTableDestroy(ctx),
+		CheckDestroy: testAccCheckRouteTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
@@ -92,7 +91,7 @@ func TestAccVPCRouteTable_List_regionOverride(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckRouteTableDestroy(ctx),
+		CheckDestroy: testAccCheckRouteTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

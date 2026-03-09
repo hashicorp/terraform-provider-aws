@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,7 +28,7 @@ func TestAccWorkSpacesWebUserSettings_basic(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -37,12 +36,12 @@ func TestAccWorkSpacesWebUserSettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "copy_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "download_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "paste_allowed", "Enabled"),
@@ -67,7 +66,7 @@ func TestAccWorkSpacesWebUserSettings_disappears(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -75,12 +74,12 @@ func TestAccWorkSpacesWebUserSettings_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,7 +94,7 @@ func TestAccWorkSpacesWebUserSettings_complete(t *testing.T) {
 	resourceName := "aws_workspacesweb_user_settings.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -103,12 +102,12 @@ func TestAccWorkSpacesWebUserSettings_complete(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_complete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "copy_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "download_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "paste_allowed", "Enabled"),
@@ -157,7 +156,7 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -165,12 +164,12 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_updateBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "copy_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "download_allowed", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "paste_allowed", "Enabled"),
@@ -204,7 +203,7 @@ func TestAccWorkSpacesWebUserSettings_update(t *testing.T) {
 			{
 				Config: testAccUserSettingsConfig_updateAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "copy_allowed", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "download_allowed", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "paste_allowed", "Disabled"),
@@ -251,7 +250,7 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKey(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -259,12 +258,12 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_customerManagedKey(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", names.AttrARN),
 				),
 			},
@@ -286,7 +285,7 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKeyUpdate(t *testing.T) {
 	kmsKeyResourceName1 := "aws_kms_key.test1"
 	kmsKeyResourceName2 := "aws_kms_key.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -294,12 +293,12 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKeyUpdate(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_customerManagedKeyBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName1, names.AttrARN),
 				),
 			},
@@ -313,7 +312,7 @@ func TestAccWorkSpacesWebUserSettings_customerManagedKeyUpdate(t *testing.T) {
 			{
 				Config: testAccUserSettingsConfig_customerManagedKeyAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", kmsKeyResourceName2, names.AttrARN),
 				),
 			},
@@ -326,7 +325,7 @@ func TestAccWorkSpacesWebUserSettings_additionalEncryptionContextUpdate(t *testi
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -334,12 +333,12 @@ func TestAccWorkSpacesWebUserSettings_additionalEncryptionContextUpdate(t *testi
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_additionalEncryptionContextBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Development"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Test"),
 				),
@@ -354,7 +353,7 @@ func TestAccWorkSpacesWebUserSettings_additionalEncryptionContextUpdate(t *testi
 			{
 				Config: testAccUserSettingsConfig_additionalEncryptionContextAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.Project", "Live"),
 				),
@@ -368,7 +367,7 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -376,12 +375,12 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_toolbarConfigurationBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Docked"),
 					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Dark"),
 					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "1"),
@@ -398,7 +397,7 @@ func TestAccWorkSpacesWebUserSettings_toolbarConfiguration(t *testing.T) {
 			{
 				Config: testAccUserSettingsConfig_toolbarConfigurationAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.toolbar_type", "Floating"),
 					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.visual_mode", "Light"),
 					resource.TestCheckResourceAttr(resourceName, "toolbar_configuration.0.hidden_toolbar_items.#", "2"),
@@ -422,7 +421,7 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *test
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -430,12 +429,12 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *test
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserSettingsConfig_cookieSynchronizationBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
@@ -452,7 +451,7 @@ func TestAccWorkSpacesWebUserSettings_cookieSynchronizationConfiguration(t *test
 			{
 				Config: testAccUserSettingsConfig_cookieSynchronizationAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.domain", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "cookie_synchronization_configuration.0.allowlist.0.path", "/path1"),
@@ -479,14 +478,14 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -497,7 +496,7 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5(t *testing.T) {
 				},
 				Config: testAccUserSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -512,7 +511,7 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccUserSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -535,14 +534,14 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5AndUpdate(t *testing.T) {
 	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
-		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
+		CheckDestroy: testAccCheckUserSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -553,7 +552,7 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5AndUpdate(t *testing.T) {
 				},
 				Config: testAccUserSettingsConfig_toolbarConfigurationBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -578,7 +577,7 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5AndUpdate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccUserSettingsConfig_toolbarConfigurationAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsExists(ctx, resourceName, &userSettings),
+					testAccCheckUserSettingsExists(ctx, t, resourceName, &userSettings),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -610,9 +609,9 @@ func TestAccWorkSpacesWebUserSettings_upgradeFromV5AndUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckUserSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_user_settings" {
@@ -636,14 +635,14 @@ func testAccCheckUserSettingsDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckUserSettingsExists(ctx context.Context, n string, v *awstypes.UserSettings) resource.TestCheckFunc {
+func testAccCheckUserSettingsExists(ctx context.Context, t *testing.T, n string, v *awstypes.UserSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindUserSettingsByARN(ctx, conn, rs.Primary.Attributes["user_settings_arn"])
 

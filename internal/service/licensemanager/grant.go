@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -105,7 +105,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	name := d.Get(names.AttrName).(string)
 	input := &licensemanager.CreateGrantInput{
 		AllowedOperations: flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set)),
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		GrantName:         aws.String(name),
 		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
@@ -157,7 +157,7 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	input := &licensemanager.CreateGrantVersionInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(sdkid.UniqueId()),
 		GrantArn:    aws.String(d.Id()),
 	}
 

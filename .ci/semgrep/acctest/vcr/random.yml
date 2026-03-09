@@ -1,0 +1,122 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-acctest-randomwithprefix
+    languages: [go]
+    message: "Use acctest.RandomWithPrefix instead of sdkacctest.RandomWithPrefix for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandomWithPrefix($P)
+    fix: |
+      acctest.RandomWithPrefix(t, $P)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-randint
+    languages: [go]
+    message: "Use acctest.RandInt instead of sdkacctest.RandInt for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandInt()
+    fix: |
+      acctest.RandInt(t)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-randintrange
+    languages: [go]
+    message: "Use acctest.RandIntRange instead of sdkacctest.RandIntRange for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandIntRange($X, $Y)
+    fix: |
+      acctest.RandIntRange(t, $X, $Y)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-randstring
+    languages: [go]
+    message: "Use acctest.RandString instead of sdkacctest.RandString for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandString($L)
+    fix: |
+      acctest.RandString(t, $L)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-randstringfromcharset
+    languages: [go]
+    message: "Use acctest.RandStringFromCharSet instead of sdkacctest.RandStringFromCharSet for VCR-compatible acceptance testing"
+    severity: WARNING
+    pattern: |
+      sdkacctest.RandStringFromCharSet($L, $S)
+    fix: |
+      acctest.RandStringFromCharSet(t, $L, $S)
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-charsetalpha
+    languages: [go]
+    message: "Use acctest.CharSetAlpha instead of sdkacctest.CharSetAlpha"
+    severity: WARNING
+    pattern: |
+      sdkacctest.CharSetAlpha
+    fix: |
+      acctest.CharSetAlpha
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"
+
+  - id: use-acctest-charsetalphanum
+    languages: [go]
+    message: "Use acctest.CharSetAlphaNum instead of sdkacctest.CharSetAlphaNum"
+    severity: WARNING
+    pattern: |
+      sdkacctest.CharSetAlphaNum
+    fix: |
+      acctest.CharSetAlphaNum
+    paths:
+      include:
+        - "**/*_test.go"
+      exclude:
+        - "/internal/provider/sdkv2"
+        - "/internal/service/ec2"
+        - "/internal/service/networkflowmonitor"
+        - "/internal/service/odb"

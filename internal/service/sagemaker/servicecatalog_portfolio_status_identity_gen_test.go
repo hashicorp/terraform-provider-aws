@@ -56,7 +56,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_basic(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/ServicecatalogPortfolioStatus/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &v),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
@@ -240,7 +240,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_bas
 				ConfigDirectory: config.StaticDirectory("testdata/ServicecatalogPortfolioStatus/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &v),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -252,7 +252,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_bas
 				ConfigDirectory: config.StaticDirectory("testdata/ServicecatalogPortfolioStatus/basic_v6.0.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &v),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, t, resourceName, &v),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -318,7 +318,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_noR
 				ConfigDirectory: config.StaticDirectory("testdata/ServicecatalogPortfolioStatus/basic_v5.100.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &v),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -331,7 +331,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource_noR
 				ConfigDirectory:          config.StaticDirectory("testdata/ServicecatalogPortfolioStatus/basic/"),
 				ConfigVariables:          config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckServicecatalogPortfolioStatusExists(ctx, resourceName, &v),
+					testAccCheckServicecatalogPortfolioStatusExists(ctx, t, resourceName, &v),
 				),
 			},
 		},

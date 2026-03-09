@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfobservabilityadmin "github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,10 +27,10 @@ import (
 func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -45,12 +43,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -76,10 +74,10 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_basic(t *testing
 func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -91,12 +89,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfobservabilityadmin.ResourceCentralizationRuleForOrganization, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -116,10 +114,10 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_disappears(t *te
 func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -131,12 +129,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -163,7 +161,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_basic(rName, endpoints.EuWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -191,7 +189,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_updated(rName, endpoints.EuWest1RegionID, endpoints.UsWest1RegionID, endpoints.ApSoutheast1RegionID, endpoints.UsEast1RegionID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -230,10 +228,10 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_update(t *testin
 func TestAccObservabilityAdminCentralizationRuleForOrganization_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule observabilityadmin.GetCentralizationRuleForOrganizationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_observabilityadmin_centralization_rule_for_organization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -245,12 +243,12 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_tags(t *testing.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx),
+		CheckDestroy:             testAccCheckCentralizationRuleForOrganizationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -273,7 +271,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_tags(t *testing.
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -290,7 +288,7 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_tags(t *testing.
 			{
 				Config: testAccCentralizationRuleForOrganizationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCentralizationRuleForOrganizationExists(ctx, resourceName, &rule),
+					testAccCheckCentralizationRuleForOrganizationExists(ctx, t, resourceName, &rule),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -307,9 +305,9 @@ func TestAccObservabilityAdminCentralizationRuleForOrganization_tags(t *testing.
 	})
 }
 
-func testAccCheckCentralizationRuleForOrganizationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckCentralizationRuleForOrganizationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_observabilityadmin_centralization_rule_for_organization" {
@@ -333,14 +331,14 @@ func testAccCheckCentralizationRuleForOrganizationDestroy(ctx context.Context) r
 	}
 }
 
-func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, n string, v *observabilityadmin.GetCentralizationRuleForOrganizationOutput) resource.TestCheckFunc {
+func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, t *testing.T, n string, v *observabilityadmin.GetCentralizationRuleForOrganizationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
 		output, err := tfobservabilityadmin.FindCentralizationRuleForOrganizationByID(ctx, conn, rs.Primary.Attributes["rule_name"])
 
@@ -355,7 +353,7 @@ func testAccCheckCentralizationRuleForOrganizationExists(ctx context.Context, n 
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAdminClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ObservabilityAdminClient(ctx)
 
 	input := observabilityadmin.ListCentralizationRulesForOrganizationInput{}
 	_, err := conn.ListCentralizationRulesForOrganization(ctx, &input)

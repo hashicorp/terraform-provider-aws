@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -404,7 +404,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	inputC := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		FileSystemType:     awstypes.FileSystemTypeOpenzfs,
 		OpenZFSConfiguration: &awstypes.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
@@ -415,7 +415,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		OpenZFSConfiguration: &awstypes.CreateFileSystemOpenZFSConfiguration{
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
@@ -597,7 +597,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		names.AttrTagsAll,
 	) {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(id.UniqueId()),
+			ClientRequestToken:   aws.String(sdkid.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &awstypes.UpdateFileSystemOpenZFSConfiguration{},
 		}
@@ -671,7 +671,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("root_volume_configuration") {
 			rootVolumeID := d.Get("root_volume_id").(string)
 			input := &fsx.UpdateVolumeInput{
-				ClientRequestToken:   aws.String(id.UniqueId()),
+				ClientRequestToken:   aws.String(sdkid.UniqueId()),
 				OpenZFSConfiguration: expandUpdateOpenZFSVolumeConfiguration(d.Get("root_volume_configuration").([]any)),
 				VolumeId:             aws.String(rootVolumeID),
 			}

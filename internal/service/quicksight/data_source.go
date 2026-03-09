@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,7 +43,6 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSource")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -356,9 +354,8 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	output, err := conn.DescribeDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -386,9 +383,8 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	output, err := conn.DescribeDataSourcePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -403,8 +399,8 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	return output.Permissions, nil
 }
 
-func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDataSource(conn *quicksight.Client, awsAccountID, dataSourceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
 		if retry.NotFound(err) {
@@ -423,10 +419,10 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
-		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
+		Refresh: statusDataSource(conn, awsAccountID, dataSourceID),
 		Timeout: timeout,
 	}
 
@@ -447,10 +443,10 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful),
-		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
+		Refresh: statusDataSource(conn, awsAccountID, dataSourceID),
 		Timeout: timeout,
 	}
 

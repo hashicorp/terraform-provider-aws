@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,16 +20,16 @@ func testAccAccessGrantsInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_grants_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsInstanceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_id"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
@@ -52,16 +51,16 @@ func testAccAccessGrantsInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_grants_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrantsInstance, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -74,16 +73,16 @@ func testAccAccessGrantsInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_grants_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsInstanceConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -96,7 +95,7 @@ func testAccAccessGrantsInstance_tags(t *testing.T) {
 			{
 				Config: testAccAccessGrantsInstanceConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -105,7 +104,7 @@ func testAccAccessGrantsInstance_tags(t *testing.T) {
 			{
 				Config: testAccAccessGrantsInstanceConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -118,16 +117,16 @@ func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_grants_instance.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckAccessGrantsInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessGrantsInstanceConfig_identityCenter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_center_arn"),
 				),
@@ -141,7 +140,7 @@ func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
 			{
 				Config: testAccAccessGrantsInstanceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
 				),
@@ -149,7 +148,7 @@ func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
 			{
 				Config: testAccAccessGrantsInstanceConfig_identityCenter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
+					testAccCheckAccessGrantsInstanceExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_center_application_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_center_arn"),
 				),
@@ -158,9 +157,9 @@ func testAccAccessGrantsInstance_identityCenter(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_access_grants_instance" {
@@ -184,14 +183,14 @@ func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckAccessGrantsInstanceExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccessGrantsInstanceExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
 
 		_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 

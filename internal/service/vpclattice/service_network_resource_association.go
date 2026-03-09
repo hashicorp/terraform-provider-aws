@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -39,7 +38,6 @@ import (
 // @FrameworkResource("aws_vpclattice_service_network_resource_association", name="Service Network Resource Association")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetServiceNetworkResourceAssociationOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &serviceNetworkResourceAssociationResource{}
 
@@ -214,9 +212,8 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	output, err := conn.GetServiceNetworkResourceAssociation(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -231,8 +228,8 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	return output, nil
 }
 
-func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServiceNetworkResourceAssociation(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceNetworkResourceAssociationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -248,10 +245,10 @@ func statusServiceNetworkResourceAssociation(ctx context.Context, conn *vpclatti
 }
 
 func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive),
-		Refresh:                   statusServiceNetworkResourceAssociation(ctx, conn, id),
+		Refresh:                   statusServiceNetworkResourceAssociation(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -268,10 +265,10 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 }
 
 func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkResourceAssociationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ServiceNetworkServiceAssociationStatusActive, awstypes.ServiceNetworkServiceAssociationStatusDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusServiceNetworkResourceAssociation(ctx, conn, id),
+		Refresh: statusServiceNetworkResourceAssociation(conn, id),
 		Timeout: timeout,
 	}
 

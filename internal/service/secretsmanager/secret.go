@@ -18,8 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,7 +41,6 @@ import (
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 // @ArnIdentity
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -162,7 +160,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &secretsmanager.CreateSecretInput{
-		ClientRequestToken:          aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		ClientRequestToken:          aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		ForceOverwriteReplicaSecret: d.Get("force_overwrite_replica_secret").(bool),
 		Name:                        aws.String(name),
@@ -320,7 +318,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if d.HasChanges(names.AttrDescription, names.AttrKMSKeyID) {
 		input := &secretsmanager.UpdateSecretInput{
-			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			ClientRequestToken: aws.String(sdkid.UniqueId()), // Needed because we're handling our own retries
 			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			SecretId:           aws.String(d.Id()),
 		}
@@ -480,9 +478,8 @@ func findSecret(ctx context.Context, conn *secretsmanager.Client, input *secrets
 	output, err := conn.DescribeSecret(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -509,7 +506,7 @@ func findSecretByID(ctx context.Context, conn *secretsmanager.Client, id string)
 	}
 
 	if output.DeletedDate != nil {
-		return nil, &sdkretry.NotFoundError{LastRequest: input}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

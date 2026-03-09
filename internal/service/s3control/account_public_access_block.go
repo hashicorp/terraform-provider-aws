@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -33,7 +32,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3control/types;awstypes;awstypes.PublicAccessBlockConfiguration")
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,
@@ -200,9 +198,8 @@ func findPublicAccessBlockByAccountID(ctx context.Context, conn *s3control.Clien
 	output, err := conn.GetPublicAccessBlock(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchPublicAccessBlockConfiguration) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -217,8 +214,8 @@ func findPublicAccessBlockByAccountID(ctx context.Context, conn *s3control.Clien
 	return output.PublicAccessBlockConfiguration, nil
 }
 
-func statusPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusPublicAccessBlockEqual(conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findPublicAccessBlockByAccountID(ctx, conn, accountID)
 
 		if retry.NotFound(err) {
@@ -234,10 +231,10 @@ func statusPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, a
 }
 
 func waitPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, accountID string, target *types.PublicAccessBlockConfiguration) (*types.PublicAccessBlockConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{strconv.FormatBool(false)},
 		Target:                    []string{strconv.FormatBool(true)},
-		Refresh:                   statusPublicAccessBlockEqual(ctx, conn, accountID, target),
+		Refresh:                   statusPublicAccessBlockEqual(conn, accountID, target),
 		Timeout:                   s3PropagationTimeout,
 		MinTimeout:                5 * time.Second,
 		ContinuousTargetOccurence: 2,

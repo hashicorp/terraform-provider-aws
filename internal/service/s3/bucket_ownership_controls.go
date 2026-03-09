@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,7 +28,6 @@ import (
 // @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
@@ -198,9 +196,8 @@ func findOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) 
 	output, err := conn.GetBucketOwnershipControls(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeOwnershipControlsNotFoundError) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

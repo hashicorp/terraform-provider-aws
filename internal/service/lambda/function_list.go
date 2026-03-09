@@ -64,16 +64,22 @@ func (l *listResourceFunction) List(ctx context.Context, request list.ListReques
 			rd.Set("function_name", functionName)
 
 			tflog.Info(ctx, "Reading Lambda Function")
-			diags := resourceFunctionRead(ctx, rd, l.Meta())
+			getFunctionInput := lambda.GetFunctionInput{FunctionName: aws.String(functionName)}
+			output, err := findFunction(ctx, conn, &getFunctionInput)
+			if err != nil {
+				tflog.Error(ctx, "Reading Lambda Function", map[string]any{
+					names.AttrID: functionName,
+					"err":        err.Error(),
+				})
+				continue
+			}
+
+			diags := resourceFunctionFlatten(ctx, l.Meta(), rd, output, getFunctionInput, false)
 			if diags.HasError() {
 				tflog.Error(ctx, "Reading Lambda Function", map[string]any{
 					names.AttrID: functionName,
 					"diags":      sdkdiag.DiagnosticsString(diags),
 				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
 				continue
 			}
 

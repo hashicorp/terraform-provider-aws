@@ -9,7 +9,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/querycheck"
@@ -27,7 +26,7 @@ func TestAccSecretsManagerSecret_List_basic(t *testing.T) {
 
 	resourceName1 := "aws_secretsmanager_secret.test[0]"
 	resourceName2 := "aws_secretsmanager_secret.test[1]"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	arn1 := tfstatecheck.StateValue()
 	arn2 := tfstatecheck.StateValue()
@@ -40,7 +39,7 @@ func TestAccSecretsManagerSecret_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		CheckDestroy: testAccCheckSecretDestroy(ctx),
+		CheckDestroy: testAccCheckSecretDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{

@@ -8,14 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 
 func TestAccSSMDocument_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("document/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
@@ -58,20 +56,20 @@ func TestAccSSMDocument_basic(t *testing.T) {
 
 func TestAccSSMDocument_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
@@ -83,7 +81,7 @@ func TestAccSSMDocument_name(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -93,19 +91,19 @@ func TestAccSSMDocument_name(t *testing.T) {
 
 func TestAccSSMDocument_Target_type(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_basicTargetType(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "/"),
 				),
 			},
@@ -117,7 +115,7 @@ func TestAccSSMDocument_Target_type(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_basicTargetType(rName, "/AWS::EC2::Instance"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "/AWS::EC2::Instance"),
 				),
 			},
@@ -127,19 +125,19 @@ func TestAccSSMDocument_Target_type(t *testing.T) {
 
 func TestAccSSMDocument_versionName(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_basicVersionName(rName, "release-1.0.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.0"),
 				),
 			},
@@ -151,7 +149,7 @@ func TestAccSSMDocument_versionName(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_basicVersionName(rName, "release-1.0.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.1"),
 				),
 			},
@@ -161,19 +159,19 @@ func TestAccSSMDocument_versionName(t *testing.T) {
 
 func TestAccSSMDocument_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_20(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "2.0"),
 					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
@@ -193,7 +191,7 @@ func TestAccSSMDocument_update(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_20Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
@@ -210,19 +208,19 @@ func TestAccSSMDocument_update(t *testing.T) {
 
 func TestAccSSMDocument_Permission_public(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_publicPermission(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", "all"),
 				),
@@ -238,20 +236,20 @@ func TestAccSSMDocument_Permission_public(t *testing.T) {
 
 func TestAccSSMDocument_Permission_private(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 	ids := acctest.Ct12Digit
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_privatePermission(rName, ids),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
 				),
 			},
@@ -266,20 +264,20 @@ func TestAccSSMDocument_Permission_private(t *testing.T) {
 
 func TestAccSSMDocument_Permission_batching(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 	ids := "123456789012,123456789013,123456789014,123456789015,123456789016,123456789017,123456789018,123456789019,123456789020,123456789021,123456789022,123456789023,123456789024,123456789025,123456789026,123456789027,123456789028,123456789029,123456789030,123456789031,123456789032"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_privatePermission(rName, ids),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
 				),
 			},
@@ -294,22 +292,22 @@ func TestAccSSMDocument_Permission_batching(t *testing.T) {
 
 func TestAccSSMDocument_Permission_change(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 	idsInitial := "123456789012,123456789013"
 	idsRemove := acctest.Ct12Digit
 	idsAdd := "123456789012,123456789014"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_privatePermission(rName, idsInitial),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", idsInitial),
 				),
@@ -322,7 +320,7 @@ func TestAccSSMDocument_Permission_change(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_privatePermission(rName, idsRemove),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", idsRemove),
 				),
@@ -330,7 +328,7 @@ func TestAccSSMDocument_Permission_change(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_privatePermission(rName, idsAdd),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", idsAdd),
 				),
@@ -341,19 +339,19 @@ func TestAccSSMDocument_Permission_change(t *testing.T) {
 
 func TestAccSSMDocument_params(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_param(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.0.name", "commands"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.0.type", "StringList"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.1.name", "workingDirectory"),
@@ -373,19 +371,19 @@ func TestAccSSMDocument_params(t *testing.T) {
 
 func TestAccSSMDocument_automation(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_typeAutomation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Automation"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("automation-definition/%s", rName)),
 				),
@@ -401,21 +399,21 @@ func TestAccSSMDocument_automation(t *testing.T) {
 
 func TestAccSSMDocument_package(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rInt1 := sdkacctest.RandInt()
-	rInt2 := sdkacctest.RandInt()
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rInt1 := acctest.RandInt(t)
+	rInt2 := acctest.RandInt(t)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_typePackage(rName, rInt1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
 				),
 			},
@@ -428,7 +426,7 @@ func TestAccSSMDocument_package(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_typePackage(rName, rInt2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
 				),
 			},
@@ -438,19 +436,19 @@ func TestAccSSMDocument_package(t *testing.T) {
 
 func TestAccSSMDocument_SchemaVersion_1(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_schemaVersion1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
 				),
 			},
@@ -462,7 +460,7 @@ func TestAccSSMDocument_SchemaVersion_1(t *testing.T) {
 			{
 				Config: testAccDocumentConfig_schemaVersion1Update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
 				),
 			},
@@ -472,19 +470,19 @@ func TestAccSSMDocument_SchemaVersion_1(t *testing.T) {
 
 func TestAccSSMDocument_session(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_typeSession(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Session"),
 				),
 			},
@@ -499,7 +497,7 @@ func TestAccSSMDocument_session(t *testing.T) {
 
 func TestAccSSMDocument_DocumentFormat_yaml(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 	content1 := `
 ---
@@ -523,16 +521,16 @@ mainSteps:
     runCommand:
       - Get-Process
 `
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_formatYAML(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content1+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 				),
@@ -545,7 +543,7 @@ mainSteps:
 			{
 				Config: testAccDocumentConfig_formatYAML(rName, content2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content2+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 				),
@@ -556,19 +554,19 @@ mainSteps:
 
 func TestAccSSMDocument_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
+					testAccCheckDocumentExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceDocument(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -577,14 +575,14 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDocumentExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		_, err := tfssm.FindDocumentByName(ctx, conn, rs.Primary.ID)
 
@@ -592,9 +590,9 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 	}
 }
 
-func testAccCheckDocumentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDocumentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_document" {

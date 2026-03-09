@@ -232,34 +232,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", d.Id(), err)
 	}
 
-	if aws.ToBool(key.metadata.MultiRegion) && key.metadata.MultiRegionConfiguration.MultiRegionKeyType != awstypes.MultiRegionKeyTypePrimary {
-		return sdkdiag.AppendErrorf(diags, "KMS Key (%s) is not a multi-Region primary key", d.Id())
-	}
-
-	d.Set(names.AttrARN, key.metadata.Arn)
-	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
-	d.Set("customer_master_key_spec", key.metadata.KeySpec)
-	d.Set(names.AttrDescription, key.metadata.Description)
-	d.Set("enable_key_rotation", key.rotation)
-	d.Set("is_enabled", key.metadata.Enabled)
-	d.Set(names.AttrKeyID, key.metadata.KeyId)
-	d.Set("key_usage", key.metadata.KeyUsage)
-	d.Set("multi_region", key.metadata.MultiRegion)
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set(names.AttrPolicy, policyToSet)
-	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
-	if v := key.metadata.XksKeyConfiguration; v != nil {
-		d.Set("xks_key_id", v.Id)
-	} else {
-		d.Set("xks_key_id", nil)
-	}
-
-	setTagsOut(ctx, key.tags)
-
-	return diags
+	return append(diags, resourceKeyFlatten(ctx, d, key)...)
 }
 
 func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -769,4 +742,37 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	)
 
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
+}
+
+func resourceKeyFlatten(ctx context.Context, d *schema.ResourceData, key *kmsKeyInfo) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if aws.ToBool(key.metadata.MultiRegion) && key.metadata.MultiRegionConfiguration.MultiRegionKeyType != awstypes.MultiRegionKeyTypePrimary {
+		return sdkdiag.AppendErrorf(diags, "KMS Key (%s) is not a multi-Region primary key", d.Id())
+	}
+
+	d.Set(names.AttrARN, key.metadata.Arn)
+	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
+	d.Set("customer_master_key_spec", key.metadata.KeySpec)
+	d.Set(names.AttrDescription, key.metadata.Description)
+	d.Set("enable_key_rotation", key.rotation)
+	d.Set("is_enabled", key.metadata.Enabled)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
+	d.Set("key_usage", key.metadata.KeyUsage)
+	d.Set("multi_region", key.metadata.MultiRegion)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
+	if v := key.metadata.XksKeyConfiguration; v != nil {
+		d.Set("xks_key_id", v.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
+
+	setTagsOut(ctx, key.tags)
+
+	return diags
 }

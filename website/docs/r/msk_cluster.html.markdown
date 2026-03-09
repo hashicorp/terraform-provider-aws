@@ -225,7 +225,7 @@ This resource supports the following arguments:
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently, the only valid value is `DEFAULT`.
 * `connectivity_info` - (Optional) Information about the cluster access configuration. See [broker_node_group_info connectivity_info Argument Reference](#broker_node_group_info-connectivity_info-argument-reference) below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
-* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See [broker_node_group_info storage_info Argument Reference](#broker_node_group_info-storage_info-argument-reference) below.
+* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See [broker_node_group_info storage_info Argument Reference](#broker_node_group_info-storage_info-argument-reference) below. This block must not be specified when an Express instance type is specified for `instance_type`.
 
 ### broker_node_group_info connectivity_info Argument Reference
 

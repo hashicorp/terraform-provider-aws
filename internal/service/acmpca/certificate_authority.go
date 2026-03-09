@@ -11,11 +11,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -256,6 +257,21 @@ func resourceCertificateAuthority() *schema.Resource {
 											return true
 										},
 									},
+									"custom_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 253),
+											validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*$`), "must match pattern [-a-zA-Z0-9;?:@&=+$,%_.!~*()']+(/[-a-zA-Z0-9;?:@&=+$,%_.!~*()']+)*"),
+										),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
+									},
 									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -353,7 +369,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 	input := acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]any)),
 		CertificateAuthorityType:          types.CertificateAuthorityType(d.Get(names.AttrType).(string)),
-		IdempotencyToken:                  aws.String(id.UniqueId()),
+		IdempotencyToken:                  aws.String(sdkid.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]any)),
 		Tags:                              getTagsIn(ctx),
 	}
@@ -706,6 +722,9 @@ func expandCrlConfiguration(l []any) *types.CrlConfiguration {
 		if v, ok := m["custom_cname"]; ok && v.(string) != "" {
 			config.CustomCname = aws.String(v.(string))
 		}
+		if v, ok := m["custom_path"]; ok && v.(string) != "" {
+			config.CustomPath = aws.String(v.(string))
+		}
 		if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
 			config.ExpirationInDays = aws.Int32(int32(v.(int)))
 		}
@@ -798,6 +817,7 @@ func flattenCrlConfiguration(config *types.CrlConfiguration) []any {
 
 	m := map[string]any{
 		"custom_cname":         aws.ToString(config.CustomCname),
+		"custom_path":          aws.ToString(config.CustomPath),
 		names.AttrEnabled:      aws.ToBool(config.Enabled),
 		"expiration_in_days":   int(aws.ToInt32(config.ExpirationInDays)),
 		names.AttrS3BucketName: aws.ToString(config.S3BucketName),

@@ -22,15 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +36,8 @@ import (
 // @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(tagsTest=false)
+// @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecondarySubnetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &secondarySubnetResource{}
 
@@ -52,7 +49,7 @@ func newSecondarySubnetResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type secondarySubnetResource struct {
-	framework.ResourceWithModel[SecondarySubnetResourceModel]
+	framework.ResourceWithModel[secondarySubnetResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
@@ -90,7 +87,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[IPv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[ipv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
 			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -135,7 +132,7 @@ func (r *secondarySubnetResource) Schema(ctx context.Context, request resource.S
 }
 
 func (r *secondarySubnetResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data SecondarySubnetResourceModel
+	var data secondarySubnetResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -174,7 +171,7 @@ func (r *secondarySubnetResource) Create(ctx context.Context, request resource.C
 }
 
 func (r *secondarySubnetResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data SecondarySubnetResourceModel
+	var data secondarySubnetResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -210,7 +207,7 @@ func (r *secondarySubnetResource) Read(ctx context.Context, request resource.Rea
 }
 
 func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data SecondarySubnetResourceModel
+	var data secondarySubnetResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -241,14 +238,14 @@ func (r *secondarySubnetResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-type SecondarySubnetResourceModel struct {
+type secondarySubnetResourceModel struct {
 	framework.WithRegionModel
 	ARN                       types.String                                                   `tfsdk:"arn"`
 	AvailabilityZone          types.String                                                   `tfsdk:"availability_zone"`
 	AvailabilityZoneID        types.String                                                   `tfsdk:"availability_zone_id"`
 	ID                        types.String                                                   `tfsdk:"id"`
 	IPv4CidrBlock             types.String                                                   `tfsdk:"ipv4_cidr_block"`
-	IPv4CidrBlockAssociations fwtypes.ListNestedObjectValueOf[IPv4CidrBlockAssociationModel] `tfsdk:"ipv4_cidr_block_associations"`
+	IPv4CidrBlockAssociations fwtypes.ListNestedObjectValueOf[ipv4CidrBlockAssociationModel] `tfsdk:"ipv4_cidr_block_associations"`
 	OwnerID                   types.String                                                   `tfsdk:"owner_id"`
 	SecondaryNetworkID        types.String                                                   `tfsdk:"secondary_network_id"`
 	SecondaryNetworkType      types.String                                                   `tfsdk:"secondary_network_type"`
@@ -257,99 +254,4 @@ type SecondarySubnetResourceModel struct {
 	Tags                      tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                 `tfsdk:"timeouts"`
-}
-
-func findSecondarySubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecondarySubnetsInput) ([]awstypes.SecondarySubnet, error) {
-	output, err := conn.DescribeSecondarySubnets(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSecondarySubnetIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return output.SecondarySubnets, nil
-}
-
-func findSecondarySubnetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecondarySubnet, error) {
-	input := ec2.DescribeSecondarySubnetsInput{
-		SecondarySubnetIds: []string{id},
-	}
-
-	output, err := findSecondarySubnets(ctx, conn, &input)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := tfresource.AssertSingleValueResult(output)
-	if err != nil {
-		return nil, err
-	}
-
-	// Treat "delete-complete" state as NotFound
-	if result.State == awstypes.SecondarySubnetStateDeleteComplete {
-		return nil, &retry.NotFoundError{
-			Message: "SecondarySubnet is in delete-complete state",
-		}
-	}
-
-	return result, nil
-}
-
-func statusSecondarySubnet(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findSecondarySubnetByID(ctx, conn, id)
-
-		if retry.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
-func waitSecondarySubnetCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SecondarySubnetStateCreateInProgress),
-		Target:  enum.Slice(awstypes.SecondarySubnetStateCreateComplete),
-		Refresh: statusSecondarySubnet(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitSecondarySubnetDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.SecondarySubnet, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SecondarySubnetStateDeleteInProgress, awstypes.SecondarySubnetStateCreateComplete),
-		Target:  []string{},
-		Refresh: statusSecondarySubnet(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SecondarySubnet); ok {
-		return output, err
-	}
-
-	return nil, err
 }

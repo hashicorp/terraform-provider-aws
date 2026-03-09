@@ -8,6 +8,7 @@ package guardduty
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
@@ -15,7 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -46,12 +52,10 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	adminAccountID := d.Get("admin_account_id").(string)
-
-	input := &guardduty.EnableOrganizationAdminAccountInput{
+	input := guardduty.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
 	}
-
-	_, err := conn.EnableOrganizationAdminAccount(ctx, input)
+	_, err := conn.EnableOrganizationAdminAccount(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling GuardDuty Organization Admin Account (%s): %s", adminAccountID, err)
@@ -59,8 +63,8 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(adminAccountID)
 
-	if _, err := waitAdminAccountEnabled(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Organization Admin Account (%s) to enable: %s", d.Id(), err)
+	if _, err := waitAdminAccountCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Organization Admin Account (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
@@ -70,16 +74,14 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	adminAccount, err := getOrganizationAdminAccount(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
-	}
-
-	if adminAccount == nil {
+	adminAccount, err := findOrganizationAdminAccountByID(ctx, conn, d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set("admin_account_id", adminAccount.AdminAccountId)
@@ -91,28 +93,41 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	input := &guardduty.DisableOrganizationAdminAccountInput{
+	input := guardduty.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
 	}
-
-	_, err := conn.DisableOrganizationAdminAccount(ctx, input)
-
+	_, err := conn.DisableOrganizationAdminAccount(ctx, &input)
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request failed because the delegated administrator account has already been disabled and/or GuardDuty protection has been disabled.") {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitAdminAccountNotFound(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Organization Admin Account (%s) to disable: %s", d.Id(), err)
+	if _, err := waitAdminAccountDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Organization Admin Account (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func getOrganizationAdminAccount(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+func findOrganizationAdminAccountByID(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
 	var input guardduty.ListOrganizationAdminAccountsInput
+	output, err := findOrganizationAdminAccounts(ctx, conn, &input)
 
-	pages := guardduty.NewListOrganizationAdminAccountsPaginator(conn, &input)
+	if err != nil {
+		return nil, err
+	}
 
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.AdminAccount) bool {
+		return aws.ToString(v.AdminAccountId) == adminAccountID
+	}))
+}
+
+func findOrganizationAdminAccounts(ctx context.Context, conn *guardduty.Client, input *guardduty.ListOrganizationAdminAccountsInput) ([]awstypes.AdminAccount, error) {
+	var output []awstypes.AdminAccount
+
+	pages := guardduty.NewListOrganizationAdminAccountsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -120,12 +135,62 @@ func getOrganizationAdminAccount(ctx context.Context, conn *guardduty.Client, ad
 			return nil, err
 		}
 
-		for _, account := range page.AdminAccounts {
-			if aws.ToString(account.AdminAccountId) == adminAccountID {
-				return &account, nil
-			}
-		}
+		output = append(output, page.AdminAccounts...)
 	}
 
-	return nil, nil
+	return output, nil
+}
+
+func statusAdminAccount(conn *guardduty.Client, adminAccountID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findOrganizationAdminAccountByID(ctx, conn, adminAccountID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.AdminStatus), nil
+	}
+}
+
+func waitAdminAccountCreated(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target:  enum.Slice(awstypes.AdminStatusEnabled),
+		Refresh: statusAdminAccount(conn, adminAccountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.AdminAccount); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAdminAccountDeleted(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AdminStatusDisableInProgress),
+		Target:  []string{},
+		Refresh: statusAdminAccount(conn, adminAccountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*awstypes.AdminAccount); ok {
+		return output, err
+	}
+
+	return nil, err
 }

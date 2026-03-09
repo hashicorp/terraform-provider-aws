@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -268,7 +268,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImagePipelineInput{
-		ClientToken:                  aws.String(id.UniqueId()),
+		ClientToken:                  aws.String(sdkid.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -408,7 +408,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &imagebuilder.UpdateImagePipelineInput{
-			ClientToken:                  aws.String(id.UniqueId()),
+			ClientToken:                  aws.String(sdkid.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 			ImagePipelineArn:             aws.String(d.Id()),
 		}
