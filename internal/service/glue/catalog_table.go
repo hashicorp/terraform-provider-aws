@@ -782,6 +782,10 @@ func expandIcebergInput(tfMap map[string]any) *awstypes.IcebergInput {
 
 	apiObject := &awstypes.IcebergInput{}
 
+	if v, ok := tfMap["create_iceberg_table_input"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CreateIcebergTableInput = expandCreateIcebergTableInput(v[0].(map[string]any))
+	}
+
 	if v, ok := tfMap["metadata_operation"].(string); ok && v != "" {
 		apiObject.MetadataOperation = awstypes.MetadataOperation(v)
 	}
