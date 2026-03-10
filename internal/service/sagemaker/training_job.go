@@ -1250,30 +1250,55 @@ func serverlessJobConfigBlock(ctx context.Context) schema.Block {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"accept_eula": schema.BoolAttribute{Optional: true},
+				"accept_eula": schema.BoolAttribute{
+					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
+				},
 				"base_model_arn": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
 						stringvalidator.RegexMatches(regexp.MustCompile(`(arn:[a-z0-9-\.]{1,63}:sagemaker:\w+(?:-\w+)+:(\d{12}|aws):hub-content\/)[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}\/Model\/[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}(\/\d{1,4}.\d{1,4}.\d{1,4})?`), "must be a valid SageMaker Public Hub model ARN (hub-content)"),
 					},
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"customization_technique": schema.StringAttribute{
 					Optional:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.CustomizationTechnique](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"evaluation_type": schema.StringAttribute{
 					Optional:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.EvaluationType](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
-				"evaluator_arn": schema.StringAttribute{Optional: true},
+				"evaluator_arn": schema.StringAttribute{
+					Optional: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
 				"job_type": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.ServerlessJobType](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"peft": schema.StringAttribute{
 					Optional:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.Peft](),
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1290,6 +1315,9 @@ func sessionChainingConfigBlock(ctx context.Context) schema.Block {
 			Attributes: map[string]schema.Attribute{
 				"enable_session_tag_chaining": schema.BoolAttribute{
 					Optional: true,
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
 				},
 			},
 		},
@@ -1449,6 +1477,9 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "no identity-based policy allows the s3:ListBucket action") {
 			return true, err
 		}
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied to hub content") {
+			return true, err
+		}
 		return false, err
 	})
 	if err != nil {
@@ -1461,21 +1492,21 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// Save the user-configured AlgorithmSpecification before flatten overwrites it.
-	// SageMaker auto-populates MetricDefinitions for built-in algorithms, which would
-	// cause drift if we let the API response overwrite the plan's empty list.
 	planAlgoSpec := plan.AlgorithmSpecification
+	planStoppingCondition := plan.StoppingCondition
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Restore only MetricDefinitions from the plan to avoid drift from API defaults.
-	// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are kept from the API response.
 	restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if planStoppingCondition.IsNull() {
+		plan.StoppingCondition = planStoppingCondition
 	}
 	plan.ID = plan.TrainingJobName
 	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
@@ -1500,10 +1531,13 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// Restore only MetricDefinitions again after the waiter flatten.
 	restoreAlgoSpecMetricDefinitions(ctx, planAlgoSpec, &plan.AlgorithmSpecification, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if planStoppingCondition.IsNull() {
+		plan.StoppingCondition = planStoppingCondition
 	}
 	plan.ID = plan.TrainingJobName
 	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &plan))
@@ -1537,22 +1571,21 @@ func (r *resourceTrainingJob) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	// Save the user-configured AlgorithmSpecification before flatten overwrites it.
-	// SageMaker auto-populates MetricDefinitions for built-in algorithms, which would
-	// cause drift if we let the API response overwrite the state's list.
 	stateAlgoSpec := state.AlgorithmSpecification
+	stateStoppingCondition := state.StoppingCondition
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Restore only MetricDefinitions from state to avoid drift from API defaults.
-	// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are kept from the API response.
-	// On fresh import (stateAlgoSpec is null), clears API-injected metrics so plan is NoOp.
 	restoreAlgoSpecMetricDefinitions(ctx, stateAlgoSpec, &state.AlgorithmSpecification, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !state.ServerlessJobConfig.IsNull() && stateStoppingCondition.IsNull() {
+		state.StoppingCondition = stateStoppingCondition
 	}
 	state.ID = state.TrainingJobName
 	smerr.AddEnrich(ctx, &resp.Diagnostics, normalizeOutputDataConfigKMSKeyID(ctx, &state))
@@ -1582,7 +1615,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			TrainingJobName: plan.TrainingJobName.ValueStringPointer(),
 		}
 
-		// ProfilerConfig
 		pc, d := plan.ProfilerConfig.ToPtr(ctx)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
@@ -1604,7 +1636,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			}
 		}
 
-		// ProfilerRuleConfigurations
 		prcs, d := plan.ProfilerRuleConfigurations.ToSlice(ctx)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
@@ -1674,8 +1705,6 @@ func (r *resourceTrainingJob) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		// Preserve only MetricDefinitions in AlgorithmSpecification to avoid drift from API defaults.
-		// Other fields (e.g. EnableSageMakerMetricsTimeSeries) are kept from the API response.
 		planAlgoSpec := plan.AlgorithmSpecification
 
 		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
@@ -1731,7 +1760,6 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	// Clean up ENIs created by SageMaker in the VPC.
 	if !state.VPCConfig.IsNull() && !state.VPCConfig.IsUnknown() {
 		vpcConfigs, diags := state.VPCConfig.ToSlice(ctx)
 		resp.Diagnostics.Append(diags...)
@@ -1747,6 +1775,22 @@ func (r *resourceTrainingJob) Delete(ctx context.Context, req resource.DeleteReq
 					resp.Diagnostics.AddWarning(
 						"Error cleaning up VPC ENIs",
 						fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up VPC network interfaces: %s", state.TrainingJobName.ValueString(), err),
+					)
+				}
+			}
+		}
+	}
+
+	if !state.ModelPackageConfig.IsNull() && !state.ModelPackageConfig.IsUnknown() {
+		mpConfigs, diags := state.ModelPackageConfig.ToSlice(ctx)
+		resp.Diagnostics.Append(diags...)
+		if !resp.Diagnostics.HasError() && len(mpConfigs) > 0 {
+			groupARN := mpConfigs[0].ModelPackageGroupARN.ValueString()
+			if groupARN != "" {
+				if err := deleteTrainingJobModelPackages(ctx, conn, groupARN); err != nil {
+					resp.Diagnostics.AddWarning(
+						"Error cleaning up Model Packages",
+						fmt.Sprintf("SageMaker training job %s was deleted, but there was an error cleaning up model packages in group %s: %s", state.TrainingJobName.ValueString(), groupARN, err),
 					)
 				}
 			}
@@ -1779,6 +1823,28 @@ func deleteTrainingJobVPCENIs(ctx context.Context, ec2Conn *ec2.Client, security
 		}
 	}
 
+	return nil
+}
+
+func deleteTrainingJobModelPackages(ctx context.Context, conn *sagemaker.Client, groupARN string) error {
+	pages := sagemaker.NewListModelPackagesPaginator(conn, &sagemaker.ListModelPackagesInput{
+		ModelPackageGroupName: aws.String(groupARN),
+	})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("listing SageMaker AI Model Packages for group (%s): %w", groupARN, err)
+		}
+		for _, mp := range page.ModelPackageSummaryList {
+			if _, err := conn.DeleteModelPackage(ctx, &sagemaker.DeleteModelPackageInput{
+				ModelPackageName: mp.ModelPackageArn,
+			}); err != nil {
+				if !errs.Contains(err, "does not exist") {
+					return fmt.Errorf("deleting SageMaker AI Model Package (%s): %w", aws.ToString(mp.ModelPackageArn), err)
+				}
+			}
+		}
+	}
 	return nil
 }
 
