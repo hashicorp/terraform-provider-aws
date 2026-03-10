@@ -22,9 +22,6 @@ import (
 
 func TestAccWorkMailOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
@@ -65,9 +62,6 @@ func TestAccWorkMailOrganization_basic(t *testing.T) {
 
 func TestAccWorkMailOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
@@ -100,9 +94,6 @@ func TestAccWorkMailOrganization_disappears(t *testing.T) {
 
 func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"
@@ -143,9 +134,6 @@ func TestAccWorkMailOrganization_deleteDirectory(t *testing.T) {
 
 func TestAccWorkMailOrganization_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_workmail_organization.test"

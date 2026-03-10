@@ -67,13 +67,12 @@ func (r *organizationListResource) List(ctx context.Context, request list.ListRe
 			var data organizationResourceModel
 
 			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
-				if diags := fwflex.Flatten(ctx, out, &data); diags.HasError() {
+				if diags := fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("Organization")); diags.HasError() {
 					result.Diagnostics.Append(diags...)
 					yield(result)
 					return
 				}
 
-				data.OrganizationAlias = fwflex.StringToFramework(ctx, out.Alias)
 				result.DisplayName = orgID
 			})
 

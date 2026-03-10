@@ -83,6 +83,12 @@ func (r *organizationResource) Schema(ctx context.Context, req resource.SchemaRe
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"delete_identity_center_application": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"directory_id": schema.StringAttribute{
 				Computed: true,
 				Optional: true,
@@ -153,12 +159,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	var input workmail.CreateOrganizationInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Organization")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input.Alias = plan.OrganizationAlias.ValueStringPointer()
 	input.EnableInteroperability = plan.InteroperabilityEnabled.ValueBool()
 
 	out, err := conn.CreateOrganization(ctx, &input)
@@ -180,12 +185,11 @@ func (r *organizationResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, createOutput, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, createOutput, &plan, flex.WithFieldNamePrefix("Organization")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.OrganizationAlias = types.StringPointerValue(createOutput.Alias)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
@@ -227,8 +231,9 @@ func (r *organizationResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// delete_directory is a local-only flag, no AWS API call needed, copy only this value into state
+	// these are local-only flags, no AWS API call needed, copy only this value into state
 	state.DeleteDirectory = plan.DeleteDirectory
+	state.DeleteIdentityCenterApplication = plan.DeleteIdentityCenterApplication
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
@@ -243,7 +248,7 @@ func (r *organizationResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	input := workmail.DeleteOrganizationInput{
 		DeleteDirectory:                 state.DeleteDirectory.ValueBool(),
-		DeleteIdentityCenterApplication: true,
+		DeleteIdentityCenterApplication: state.DeleteIdentityCenterApplication.ValueBool(),
 		OrganizationId:                  state.OrganizationId.ValueStringPointer(),
 	}
 
@@ -351,19 +356,20 @@ func findOrganizationByID(ctx context.Context, conn *workmail.Client, id string)
 
 type organizationResourceModel struct {
 	framework.WithRegionModel
-	ARN                     types.String      `tfsdk:"arn"`
-	CompletedDate           timetypes.RFC3339 `tfsdk:"completed_date"`
-	DefaultMailDomain       types.String      `tfsdk:"default_mail_domain"`
-	DeleteDirectory         types.Bool        `tfsdk:"delete_directory"`
-	DirectoryId             types.String      `tfsdk:"directory_id"`
-	DirectoryType           types.String      `tfsdk:"directory_type"`
-	InteroperabilityEnabled types.Bool        `tfsdk:"interoperability_enabled"`
-	KmsKeyARN               fwtypes.ARN       `tfsdk:"kms_key_arn"`
-	MigrationAdmin          types.String      `tfsdk:"migration_admin"`
-	OrganizationAlias       types.String      `tfsdk:"organization_alias"`
-	OrganizationId          types.String      `tfsdk:"organization_id"`
-	State                   types.String      `tfsdk:"state"`
-	Tags                    tftags.Map        `tfsdk:"tags"`
-	TagsAll                 tftags.Map        `tfsdk:"tags_all"`
-	Timeouts                timeouts.Value    `tfsdk:"timeouts"`
+	ARN                             types.String      `tfsdk:"arn"`
+	CompletedDate                   timetypes.RFC3339 `tfsdk:"completed_date"`
+	DefaultMailDomain               types.String      `tfsdk:"default_mail_domain"`
+	DeleteDirectory                 types.Bool        `tfsdk:"delete_directory"`
+	DeleteIdentityCenterApplication types.Bool        `tfsdk:"delete_identity_center_application"`
+	DirectoryId                     types.String      `tfsdk:"directory_id"`
+	DirectoryType                   types.String      `tfsdk:"directory_type"`
+	InteroperabilityEnabled         types.Bool        `tfsdk:"interoperability_enabled"`
+	KmsKeyARN                       fwtypes.ARN       `tfsdk:"kms_key_arn"`
+	MigrationAdmin                  types.String      `tfsdk:"migration_admin"`
+	OrganizationAlias               types.String      `tfsdk:"organization_alias"`
+	OrganizationId                  types.String      `tfsdk:"organization_id"`
+	State                           types.String      `tfsdk:"state"`
+	Tags                            tftags.Map        `tfsdk:"tags"`
+	TagsAll                         tftags.Map        `tfsdk:"tags_all"`
+	Timeouts                        timeouts.Value    `tfsdk:"timeouts"`
 }
