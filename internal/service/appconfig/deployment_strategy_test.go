@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -30,7 +31,7 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStrategyConfig_name(rName),
+				Config: testAccDeploymentStrategyConfig_name(rName, 3, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`deploymentstrategy/[0-9a-z]{4,7}`)),
@@ -40,11 +41,33 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replicate_to", string(awstypes.ReplicateToNone)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeploymentStrategyConfig_name(rName, 2, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentStrategyExists(ctx, t, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`deploymentstrategy/[0-9a-z]{4,7}`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "growth_factor", "20"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "replicate_to", string(awstypes.ReplicateToNone)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -122,7 +145,7 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 			},
 			{
 				// Test FinalBakeTimeInMinutes Removal
-				Config: testAccDeploymentStrategyConfig_name(rName),
+				Config: testAccDeploymentStrategyConfig_name(rName, 3, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, t, resourceName),
 				),
@@ -143,7 +166,7 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentStrategyConfig_name(rName),
+				Config: testAccDeploymentStrategyConfig_name(rName, 3, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfappconfig.ResourceDeploymentStrategy(), resourceName),
@@ -195,15 +218,15 @@ func testAccCheckDeploymentStrategyExists(ctx context.Context, t *testing.T, n s
 	}
 }
 
-func testAccDeploymentStrategyConfig_name(rName string) string {
+func testAccDeploymentStrategyConfig_name(rName string, deploymentDurationInMinutes int, growthFactor float64) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_deployment_strategy" "test" {
   name                           = %[1]q
-  deployment_duration_in_minutes = 3
-  growth_factor                  = 10
+  deployment_duration_in_minutes = %[2]d
+  growth_factor                  = %[3]f
   replicate_to                   = "NONE"
 }
-`, rName)
+`, rName, deploymentDurationInMinutes, growthFactor)
 }
 
 func testAccDeploymentStrategyConfig_description(rName, description string) string {

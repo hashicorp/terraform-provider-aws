@@ -1,15 +1,32 @@
 ## 6.36.0 (Unreleased)
 
+NOTES:
+
+* provider: Update Go version to v1.25.8. Addresses `GO-2026-4602, FileInfo can escape from a Root in os`, `GO-2026-4603, URLs in meta content attribute actions are not escaped in html/template`, and `GO-2026-4601, Incorrect parsing of IPv6 host literals in net/url` ([#46820](https://github.com/hashicorp/terraform-provider-aws/issues/46820))
+
 FEATURES:
 
+* **New Data Source:** `aws_iam_outbound_web_identity_federation` ([#46503](https://github.com/hashicorp/terraform-provider-aws/issues/46503))
+* **New Ephemeral Resource:** `aws_sts_web_identity_token` ([#46173](https://github.com/hashicorp/terraform-provider-aws/issues/46173))
 * **New List Resource:** `aws_s3_bucket_versioning` ([#46802](https://github.com/hashicorp/terraform-provider-aws/issues/46802))
 
 ENHANCEMENTS:
 
+* resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_config.custom_jwt_authorizer.allowed_scopes` argument ([#46828](https://github.com/hashicorp/terraform-provider-aws/issues/46828))
+* resource/aws_cloudwatch_log_resource_policy: Add `resource_arn` argument and `policy_scope` and `revision_id` attributes. `policy_name` is now optional ([#46813](https://github.com/hashicorp/terraform-provider-aws/issues/46813))
 * resource/aws_guardduty_ipset: Add `ip_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add `arn` and `destination_id` attributes ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add tagging support ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_threatintelset: Add `threat_intel_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
+* resource/aws_observabilityadmin_centralization_rule_for_organization: Add `rule.destination.destination_logs_configuration.log_group_name_configuration` block ([#46811](https://github.com/hashicorp/terraform-provider-aws/issues/46811))
+
+BUG FIXES:
+
+* list-resource/aws_iam_role_policy_attachment: Prevent infinite loop when IAM Role deleted during list ([#46763](https://github.com/hashicorp/terraform-provider-aws/issues/46763))
+* resource/aws_appconfig_deployment_strategy: Fix panic due to "interface conversion: interface {} is float64, not float32" when updating `growth_factor` ([#46810](https://github.com/hashicorp/terraform-provider-aws/issues/46810))
+* resource/aws_vpc_endpoint: Allow in-place update of `private_dns_enabled` when `vpc_endpoint_type` is `Interface` ([#46800](https://github.com/hashicorp/terraform-provider-aws/issues/46800))
+* resource/aws_vpc_endpoint: Set new computed value for `network_interface_ids` attribute when changing `subnet_configuration` or `subnet_ids` ([#46800](https://github.com/hashicorp/terraform-provider-aws/issues/46800))
+* resource/aws_vpn_concentrator: Retry `VpnConcentratorLimitExceeded: The maximum number of mutating objects has been reached` errors on Create ([#46823](https://github.com/hashicorp/terraform-provider-aws/issues/46823))
 
 ## 6.35.1 (March 5, 2026)
 

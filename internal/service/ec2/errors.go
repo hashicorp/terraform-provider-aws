@@ -151,6 +151,7 @@ const (
 	errCodeTransitGatewayRouteTablePropagationNotFound             = "TransitGatewayRouteTablePropagation.NotFound"
 	errCodeUnauthorizedOperation                                   = "UnauthorizedOperation"
 	errCodeUnsupportedOperation                                    = "UnsupportedOperation"
+	errCodeVPNConcentratorLimitExceeded                            = "VpnConcentratorLimitExceeded"
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"
 	errCodeVolumeInUse                                             = "VolumeInUse"

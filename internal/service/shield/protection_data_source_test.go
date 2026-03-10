@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,7 +15,7 @@ import (
 
 func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(10)
+	rName := acctest.RandString(t, 10)
 
 	dataSourceName := "data.aws_shield_protection.test"
 	protectionResourceName := "aws_shield_protection.test"
