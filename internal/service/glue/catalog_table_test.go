@@ -1668,7 +1668,7 @@ EOF
           spec_id = 0
         }
 
-        write_order {
+        sort_order {
           fields {
             direction  = "asc"
             null_order = "nulls-last"
@@ -1754,7 +1754,7 @@ EOF
           spec_id = 1
         }
 
-        write_order {
+        sort_order {
           fields {
             direction  = "asc"
             null_order = "nulls-last"

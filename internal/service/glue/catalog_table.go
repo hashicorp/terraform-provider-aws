@@ -193,7 +193,7 @@ func resourceCatalogTable() *schema.Resource {
 														},
 													},
 												},
-												"write_order": {
+												"sort_order": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -992,7 +992,7 @@ func expandCreateIcebergTableInput(tfMap map[string]any) *awstypes.CreateIceberg
 		apiObject.Schema = expandIcebergSchema(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["write_order"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["sort_order"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.WriteOrder = expandIcebergSortOrder(v[0].(map[string]any))
 	}
 
@@ -1235,7 +1235,7 @@ func expandUpdateIcebergTableInput(tfMap map[string]any) *awstypes.UpdateIceberg
 		apiObject.Schema = expandIcebergSchema(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["write_order"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["sort_order"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SortOrder = expandIcebergSortOrder(v[0].(map[string]any))
 	}
 

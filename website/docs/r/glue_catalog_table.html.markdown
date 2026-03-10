@@ -135,7 +135,7 @@ EOF
           spec_id = 0
         }
 
-        write_order {
+        sort_order {
           fields {
             direction  = "asc"
             null_order = "nulls-last"
@@ -198,7 +198,7 @@ This will destroy and recreate the table, possibly resulting in data loss.
 * `partition_spec` - (Optional) The partitioning specification that defines how the Iceberg table data will be organized and partitioned for optimal query performance. See [`partition_spec`](#partition_spec) below.
 * `properties` - (Optional) Key-value pairs of additional table properties and configuration settings for the Iceberg table.
 * `schema` - (Required) The schema definition that specifies the structure, field types, and metadata for the Iceberg table. See [`schema`](#schema) below.
-* `write_order` - (Optional) The sort order specification that defines how data should be ordered within each partition to optimize query performance. See [`write_order`](#write_order) below.
+* `sort_order` - (Optional) The sort order specification that defines how data should be ordered within each partition to optimize query performance. See [`sort_order`](#sort_order) below.
 
 ### partition_spec
 
@@ -229,7 +229,7 @@ This will destroy and recreate the table, possibly resulting in data loss.
 * `type` - (Required) The data type definition for this field as a JSON string, specifying the structure and format of the data it contains. Examples: `"long"`, `"string"`, `"timestamp"`, `"decimal(10,2)"`.
 * `write_default` - (Optional) Default value as JSON used to populate the field's value for any records written after the field was added to the schema, if the writer does not supply the field's value.
 
-### write_order
+### sort_order
 
 * `fields` - (Required) The list of fields and their sort directions that define the ordering criteria for the Iceberg table data. See [`fields`](#sort-fields) below.
 * `order_id` - (Required) The unique identifier for this sort order specification within the Iceberg table's metadata.
