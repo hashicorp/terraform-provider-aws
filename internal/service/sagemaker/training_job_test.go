@@ -10,7 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
@@ -444,8 +448,9 @@ func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.channel_name", "training"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.input_mode", "File"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_source.0.s3_data_source.0.s3_uri", fmt.Sprintf("s3://%s/input/", rName)),
 				),
 			},
 			{
@@ -454,8 +459,9 @@ func TestAccSageMakerTrainingJob_inputDataConfig(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.channel_name", "training"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.input_mode", "File"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_source.0.s3_data_source.0.s3_uri", fmt.Sprintf("s3://%s/input-v2/", rName)),
 				),
 			},
 			{
@@ -493,8 +499,7 @@ func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.compression_type", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.kms_key_id"),
 				),
 			},
 			{
@@ -504,8 +509,7 @@ func TestAccSageMakerTrainingJob_outputDataConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.kms_key_id"),
 				),
 			},
 			{
@@ -542,8 +546,8 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.name", "validation:accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.regex", "validation: accuracy = ([0-9\\.]+)"),
 				),
 			},
 			{
@@ -551,15 +555,17 @@ func TestAccSageMakerTrainingJob_algorithmSpecificationMetrics(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.0.name", "validation:accuracy"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.1.name", "train:loss"),
+					resource.TestCheckResourceAttr(resourceName, "algorithm_specification.0.metric_definitions.1.regex", "train: loss = ([0-9\\.]+)"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"algorithm_specification.0.metric_definitions"},
 			},
 		},
 	})
@@ -591,8 +597,6 @@ func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.maximum_retry_attempts", "3"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
 				),
 			},
 			{
@@ -601,9 +605,7 @@ func TestAccSageMakerTrainingJob_retryStrategy(t *testing.T) {
 					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.maximum_retry_attempts", "3"),
-					resource.TestCheckResourceAttr(resourceName, "enable_inter_container_traffic_encryption", "true"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "7200"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.maximum_retry_attempts", "5"),
 				),
 			},
 			{
@@ -641,6 +643,13 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", "false"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.customization_technique", "SFT"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverless_job_config.0.base_model_arn"),
+					resource.TestCheckResourceAttr(resourceName, "model_package_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "model_package_config.0.model_package_group_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.channel_name", "train"),
 				),
 			},
 			{
@@ -650,13 +659,95 @@ func TestAccSageMakerTrainingJob_serverless(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "training_job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.job_type", "FineTuning"),
-					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.accept_eula", "true"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_job_config.0.customization_technique", "DPO"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverless_job_config.0.base_model_arn"),
+					resource.TestCheckResourceAttr(resourceName, "model_package_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "model_package_config.0.model_package_group_arn"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.channel_name", "train"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerTrainingJob_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var trainingjob sagemaker.DescribeTrainingJobOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_training_job.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrainingJobDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrainingJobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"algorithm_specification.0.metric_definitions"},
+			},
+			{
+				Config: testAccTrainingJobConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccTrainingJobConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrainingJobExists(ctx, t, resourceName, &trainingjob),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -1801,7 +1892,14 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "input" {
+  bucket  = aws_s3_bucket.test.id
+  key     = "input/placeholder.csv"
+  content = "feature1,label\n1.0,0\n"
 }
 
 resource "aws_sagemaker_training_job" "test" {
@@ -1814,36 +1912,36 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   input_data_config {
-    channel_name = "training"
-    compression_type = "None"
-    content_type   = "text/csv"
-    input_mode     = "File"
+    channel_name        = "training"
+    compression_type    = "None"
+    content_type        = "text/csv"
+    input_mode          = "File"
     record_wrapper_type = "None"
 
     data_source {
       s3_data_source {
         s3_data_distribution_type = "FullyReplicated"
-        s3_data_type = "S3Prefix"
-        s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+        s3_data_type              = "S3Prefix"
+        s3_uri                    = "s3://${aws_s3_bucket.test.bucket}/input/"
       }
     }
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
     max_runtime_in_seconds = 3600
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_s3_object.input]
 }
 `, rName)
 }
@@ -1871,14 +1969,19 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "input_v2" {
+  bucket  = aws_s3_bucket.test.id
+  key     = "input-v2/placeholder.csv"
+  content = "feature1,label\n1.0,0\n"
 }
 
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
-
-  enable_inter_container_traffic_encryption = true
 
   algorithm_specification {
     training_input_mode = "File"
@@ -1886,36 +1989,36 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   input_data_config {
-    channel_name = "training"
-    compression_type = "None"
-    content_type   = "text/csv"
-    input_mode     = "File"
+    channel_name        = "training"
+    compression_type    = "None"
+    content_type        = "text/csv"
+    input_mode          = "File"
     record_wrapper_type = "None"
 
     data_source {
       s3_data_source {
         s3_data_distribution_type = "FullyReplicated"
-        s3_data_type = "S3Prefix"
-        s3_uri       = "s3://${aws_s3_bucket.test.bucket}/input/"
+        s3_data_type              = "S3Prefix"
+        s3_uri                    = "s3://${aws_s3_bucket.test.bucket}/input-v2/"
       }
     }
   }
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   resource_config {
-		instance_type      = "ml.m5.large"
-		instance_count     = 1
-		volume_size_in_gb  = 30
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds = 3600
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  depends_on = [aws_iam_role_policy_attachment.test, aws_s3_object.input_v2]
 }
 `, rName)
 }
@@ -2014,8 +2117,6 @@ resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-  enable_inter_container_traffic_encryption = true
-
   algorithm_specification {
     training_input_mode = "File"
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
@@ -2034,7 +2135,7 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds = 3600
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -2131,8 +2232,6 @@ resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-  enable_inter_container_traffic_encryption = true
-
   algorithm_specification {
     training_input_mode = "File"
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
@@ -2140,6 +2239,11 @@ resource "aws_sagemaker_training_job" "test" {
     metric_definitions {
       name  = "validation:accuracy"
       regex = "validation: accuracy = ([0-9\\.]+)"
+    }
+
+    metric_definitions {
+      name  = "train:loss"
+      regex = "train: loss = ([0-9\\.]+)"
     }
   }
 
@@ -2154,7 +2258,7 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds = 3600
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -2250,8 +2354,6 @@ resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-  enable_inter_container_traffic_encryption = true
-
   algorithm_specification {
     training_input_mode = "File"
     training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
@@ -2268,11 +2370,11 @@ resource "aws_sagemaker_training_job" "test" {
   }
 
   retry_strategy {
-    maximum_retry_attempts = 3
+    maximum_retry_attempts = 5
   }
 
   stopping_condition {
-    max_runtime_in_seconds = 7200
+    max_runtime_in_seconds = 3600
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -2302,25 +2404,74 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
+resource "aws_iam_role_policy" "s3" {
+  name = "%[1]s-s3"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
+      Resource = [
+        "arn:aws:s3:::%[1]s",
+        "arn:aws:s3:::%[1]s/*"
+      ]
+    }]
+  })
+}
+
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "training" {
+  bucket  = aws_s3_bucket.test.id
+  key     = "train/placeholder.jsonl"
+  content = "{\"prompt\": \"hello\", \"completion\": \"world\"}\n"
+}
+
+resource "aws_sagemaker_model_package_group" "test" {
+  model_package_group_name = %[1]q
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-	}
+  input_data_config {
+    channel_name = "train"
+    content_type = "application/jsonlines"
+    input_mode   = "File"
 
-  serverless_job_config {
-    accept_eula = false
-    base_model_arn = "arn:aws:sagemaker:us-west-2:aws:hub-content/HuggingFace/llm-models/huggingface-llm-falcon-7b-instruct-bf16/1.1.0"
-    job_type = "FineTuning"
+    data_source {
+      s3_data_source {
+        s3_data_distribution_type = "FullyReplicated"
+        s3_data_type              = "S3Prefix"
+        s3_uri                    = "s3://${aws_s3_bucket.test.bucket}/train/"
+      }
+    }
   }
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
+
+  serverless_job_config {
+    accept_eula             = false
+    base_model_arn          = "arn:aws:sagemaker:us-west-2:aws:hub-content/SageMakerPublicHub/Model/protopia-llama-3-1-8b-instruct/1.0.2"
+    job_type                = "FineTuning"
+    customization_technique = "SFT"
+  }
+
+  model_package_config {
+    model_package_group_arn = aws_sagemaker_model_package_group.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.s3, aws_s3_object.training]
 }
 `, rName)
 }
@@ -2347,30 +2498,191 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
+resource "aws_iam_role_policy" "s3" {
+  name = "%[1]s-s3"
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:DeleteObject"]
+      Resource = [
+        "arn:aws:s3:::%[1]s",
+        "arn:aws:s3:::%[1]s/*"
+      ]
+    }]
+  })
 }
 
-resource "aws_kms_key" "test" {
-  description = "KMS key for SageMaker training job"
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "training" {
+  bucket  = aws_s3_bucket.test.id
+  key     = "train/placeholder.jsonl"
+  content = "{\"prompt\": \"hello\", \"completion\": \"world\"}\n"
+}
+
+resource "aws_sagemaker_model_package_group" "test" {
+  model_package_group_name = %[1]q
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 
 resource "aws_sagemaker_training_job" "test" {
   training_job_name = %[1]q
   role_arn          = aws_iam_role.test.arn
 
-	output_data_config {
-		s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
-		kms_key_id     = aws_kms_key.test.arn
-	}
+  input_data_config {
+    channel_name = "train"
+    content_type = "application/jsonlines"
+    input_mode   = "File"
+
+    data_source {
+      s3_data_source {
+        s3_data_distribution_type = "FullyReplicated"
+        s3_data_type              = "S3Prefix"
+        s3_uri                    = "s3://${aws_s3_bucket.test.bucket}/train/"
+      }
+    }
+  }
+
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
 
   serverless_job_config {
-    accept_eula = false
-    base_model_arn = "arn:aws:sagemaker:us-west-2:aws:hub-content/HuggingFace/llm-models/huggingface-llm-falcon-7b-instruct-bf16/1.1.0"
-    job_type = "FineTuning"
+    accept_eula             = true
+    base_model_arn          = "arn:aws:sagemaker:us-west-2:aws:hub-content/SageMakerPublicHub/Model/protopia-llama-3-1-8b-instruct/1.0.2"
+    job_type                = "FineTuning"
+    customization_technique = "DPO"
+  }
+
+  model_package_config {
+    model_package_group_arn = aws_sagemaker_model_package_group.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test, aws_iam_role_policy.s3, aws_s3_object.training]
+}
+`, rName)
+}
+
+func testAccTrainingJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
+
+  resource_config {
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 3600
+  }
+
+  tags = {
+    %[2]q = %[3]q
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccTrainingJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:SetSourceIdentity"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_sagemaker_training_job" "test" {
+  training_job_name = %[1]q
+  role_arn          = aws_iam_role.test.arn
+
+  algorithm_specification {
+    training_input_mode = "File"
+    training_image      = "382416733822.dkr.ecr.us-west-2.amazonaws.com/linear-learner:1"
+  }
+
+  output_data_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/output/"
+  }
+
+  resource_config {
+    instance_type     = "ml.m5.large"
+    instance_count    = 1
+    volume_size_in_gb = 30
+  }
+
+  stopping_condition {
+    max_runtime_in_seconds = 3600
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
