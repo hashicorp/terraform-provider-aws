@@ -15,7 +15,7 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 ### Basic Table
 
 ```terraform
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
+resource "aws_glue_catalog_table" "example" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 }
@@ -24,7 +24,7 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 ### Parquet Table for Athena
 
 ```terraform
-resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
+resource "aws_glue_catalog_table" "example" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 
@@ -75,6 +75,77 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
       name    = "my_struct"
       type    = "struct<my_nested_string:string>"
       comment = ""
+    }
+  }
+}
+```
+
+### Iceberg Table
+
+```terraform
+resource "aws_glue_catalog_table" "example" {
+  name          = "transactiontable1"
+  database_name = "bankdata_icebergdb"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+
+      iceberg_table_input {
+        location = "s3://sampledatabucket/bankdataiceberg/transactiontable1/"
+
+        schema {
+          schema_id = 0
+          type      = "struct"
+
+          fields {
+            id       = 1
+            name     = "transaction_id"
+            required = true
+            type     = <<EOF
+            "string"
+EOF
+          }
+          fields {
+            id       = 2
+            name     = "transaction_date"
+            required = true
+            type     = <<EOF
+            "date"
+EOF
+          }
+          fields {
+            id       = 3
+            name     = "monthly_balance"
+            required = true
+            type     = <<EOF
+            "float"
+EOF
+          }
+        }
+
+        partition_spec {
+          fields {
+            name      = "by_year"
+            source_id = 2
+            transform = "year"
+          }
+
+          spec_id = 0
+        }
+
+        write_order {
+          fields {
+            direction  = "asc"
+            null_order = "nulls-last"
+            source_id  = 1
+            transform  = "none"
+          }
+
+          order_id = 1
+        }
+      }
     }
   }
 }
