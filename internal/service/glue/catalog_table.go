@@ -657,7 +657,6 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 	if v, ok := d.GetOk("partition_index"); ok && len(v.([]any)) > 0 {
 		input.PartitionIndexes = expandPartitionIndexes(v.([]any))
 	}
-
 	if input.OpenTableFormatInput != nil && input.OpenTableFormatInput.IcebergInput != nil && input.OpenTableFormatInput.IcebergInput.CreateIcebergTableInput != nil {
 		// "InvalidInputException: Location information cannot be null while creating an iceberg table".
 		input.Name = aws.String(name)
@@ -771,7 +770,9 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	input := glue.UpdateTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
-		TableInput:   expandTableInput(d),
+	}
+	if v, ok := d.GetOk("open_table_format_input"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.UpdateOpenTableFormatInput = expandUpdateOpenTableFormatInput(v.([]any)[0].(map[string]any))
 	}
 	if allParameters := table.Parameters; allParameters["table_type"] == "ICEBERG" {
 		for _, k := range []string{"table_type", "metadata_location"} {
@@ -782,6 +783,14 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 				input.TableInput.Parameters[k] = v
 			}
 		}
+	}
+
+	if input.UpdateOpenTableFormatInput != nil && input.UpdateOpenTableFormatInput.UpdateIcebergInput != nil && input.UpdateOpenTableFormatInput.UpdateIcebergInput.UpdateIcebergTableInput != nil {
+		// "InvalidInputException: Location information cannot be null while creating an iceberg table".
+		input.Name = aws.String(name)
+	} else {
+		// "InvalidInputException: CreateIcebergTableInput cannot be equal to null".
+		input.TableInput = expandTableInput(d)
 	}
 
 	_, err = conn.UpdateTable(ctx, &input)
@@ -1173,6 +1182,64 @@ func expandIcebergSortFields(tfList []any) []awstypes.IcebergSortField {
 	}
 
 	return apiObjects
+}
+
+func expandUpdateOpenTableFormatInput(tfMap map[string]any) *awstypes.UpdateOpenTableFormatInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.UpdateOpenTableFormatInput{}
+
+	if v, ok := tfMap["iceberg_input"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UpdateIcebergInput = expandUpdateIcebergInput(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandUpdateIcebergInput(tfMap map[string]any) *awstypes.UpdateIcebergInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.UpdateIcebergInput{}
+
+	if v, ok := tfMap["iceberg_table_input"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UpdateIcebergTableInput = expandUpdateIcebergTableInput(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandUpdateIcebergTableInput(tfMap map[string]any) *awstypes.UpdateIcebergTableInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := awstypes.IcebergTableUpdate{}
+
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
+		apiObject.Location = aws.String(v)
+	}
+
+	if v, ok := tfMap["partition_spec"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PartitionSpec = expandIcebergPartitionSpec(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap[names.AttrProperties].(map[string]any); ok && len(v) > 0 {
+		apiObject.Properties = flex.ExpandStringValueMap(v)
+	}
+
+	if v, ok := tfMap[names.AttrSchema].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Schema = expandIcebergSchema(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["write_order"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SortOrder = expandIcebergSortOrder(v[0].(map[string]any))
+	}
+
+	return &awstypes.UpdateIcebergTableInput{Updates: []awstypes.IcebergTableUpdate{apiObject}}
 }
 
 func expandPartitionIndexes(tfList []any) []awstypes.PartitionIndex {
