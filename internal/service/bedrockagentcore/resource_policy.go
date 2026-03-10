@@ -51,7 +51,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta any) error {
 
 	policy, err := structure.NormalizeJsonString(policyRaw)
 	if err != nil {
-		return fmt.Errorf("invalid policy JSON: %s", err)
+		return fmt.Errorf("invalid policy JSON: %w", err)
 	}
 
 	input := bedrockagentcorecontrol.PutResourcePolicyInput{
@@ -61,7 +61,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta any) error {
 
 	_, err = conn.PutResourcePolicy(context.Background(), &input)
 	if err != nil {
-		return fmt.Errorf("creating Bedrock Agent Core Resource Policy (%s): %s", arn, err)
+		return fmt.Errorf("creating Bedrock Agent Core Resource Policy (%s): %w", arn, err)
 	}
 
 	// Use the resource ARN as the Terraform ID.
@@ -92,7 +92,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta any) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("reading Bedrock Agent Core Resource Policy (%s): %s", id, err)
+		return fmt.Errorf("reading Bedrock Agent Core Resource Policy (%s): %w", id, err)
 	}
 
 	if out != nil {
@@ -124,7 +124,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta any) error {
 
 	policy, err := structure.NormalizeJsonString(policyRaw)
 	if err != nil {
-		return fmt.Errorf("invalid policy JSON: %s", err)
+		return fmt.Errorf("invalid policy JSON: %w", err)
 	}
 
 	input := bedrockagentcorecontrol.PutResourcePolicyInput{
@@ -134,7 +134,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta any) error {
 
 	_, err = conn.PutResourcePolicy(context.Background(), &input)
 	if err != nil {
-		return fmt.Errorf("updating Bedrock Agent Core Resource Policy (%s): %s", arn, err)
+		return fmt.Errorf("updating Bedrock Agent Core Resource Policy (%s): %w", arn, err)
 	}
 
 	return resourcePolicyRead(d, meta)
@@ -159,7 +159,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta any) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Bedrock Agent Core Resource Policy (%s): %s", arn, err)
+		return fmt.Errorf("deleting Bedrock Agent Core Resource Policy (%s): %w", arn, err)
 	}
 
 	d.SetId("")
