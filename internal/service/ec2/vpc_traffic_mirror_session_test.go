@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +27,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	description := "test session"
 	session := acctest.RandIntRange(t, 1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 	pLen := acctest.RandIntRange(t, 1, 255)
 	vni := acctest.RandIntRange(t, 1, 16777216)
 
@@ -91,7 +90,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 	var v awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := acctest.RandIntRange(t, 1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -141,7 +140,7 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 	var v awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := acctest.RandIntRange(t, 1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -169,7 +168,7 @@ func TestAccVPCTrafficMirrorSession_updateTrafficMirrorTarget(t *testing.T) {
 	var v1, v2 awstypes.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := acctest.RandIntRange(t, 1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 10))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
