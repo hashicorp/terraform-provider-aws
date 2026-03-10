@@ -171,7 +171,7 @@ func resourceCatalogTable() *schema.Resource {
 																			Type:     schema.TypeBool,
 																			Required: true,
 																		},
-																		names.AttrType:  sdkv2.JSONDocumentSchemaOptional(),
+																		names.AttrType:  sdkv2.JSONDocumentSchemaRequired(),
 																		"write_default": sdkv2.JSONDocumentSchemaOptional(),
 																	},
 																},
