@@ -5228,26 +5228,20 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 func findTransitGatewayMeteringPolicies(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMeteringPoliciesInput) ([]awstypes.TransitGatewayMeteringPolicy, error) {
 	var output []awstypes.TransitGatewayMeteringPolicy
 
-	for {
-		page, err := conn.DescribeTransitGatewayMeteringPolicies(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
+	err := describeTransitGatewayMeteringPoliciesPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayMeteringPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		output = append(output, page.TransitGatewayMeteringPolicies...)
 
-		if aws.ToString(page.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = page.NextToken
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
 	}
 
 	return output, nil
@@ -5291,26 +5285,20 @@ func findTransitGatewayMeteringPolicyByID(ctx context.Context, conn *ec2.Client,
 func findTransitGatewayMeteringPolicyEntries(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayMeteringPolicyEntriesInput) ([]awstypes.TransitGatewayMeteringPolicyEntry, error) {
 	var output []awstypes.TransitGatewayMeteringPolicyEntry
 
-	for {
-		page, err := conn.GetTransitGatewayMeteringPolicyEntries(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
+	err := getTransitGatewayMeteringPolicyEntriesPages(ctx, conn, input, func(page *ec2.GetTransitGatewayMeteringPolicyEntriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		output = append(output, page.TransitGatewayMeteringPolicyEntries...)
 
-		if aws.ToString(page.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = page.NextToken
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
 	}
 
 	return output, nil
@@ -5321,24 +5309,27 @@ func findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx context.Context, conn
 		TransitGatewayMeteringPolicyId: aws.String(policyID),
 	}
 
-	output, err := findTransitGatewayMeteringPolicyEntries(ctx, conn, &input)
+	transitGatewayMeteringPolicyEntries, err := findTransitGatewayMeteringPolicyEntries(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, entry := range output {
-		if aws.ToString(entry.PolicyRuleNumber) == ruleNumber {
-			if state := entry.State; state == awstypes.TransitGatewayMeteringPolicyEntryStateDeleted {
-				return nil, &retry.NotFoundError{
-					Message: string(state),
-				}
-			}
-			return &entry, nil
+	output, err := tfresource.AssertSingleValueResult(tfslices.Filter(transitGatewayMeteringPolicyEntries, func(v awstypes.TransitGatewayMeteringPolicyEntry) bool {
+		return aws.ToString(v.PolicyRuleNumber) == ruleNumber
+	}))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayMeteringPolicyEntryStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return output, nil
 }
 
 func findTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*awstypes.TransitGatewayPolicyTable, error) {
