@@ -29,7 +29,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `delete_directory` - (Optional) Whether to delete the AWS Directory Service directory associated with the organization on destroy. To update this value after creation, run `terraform apply` before running `terraform destroy`. Defaults to `false`.
-* `delete_identity_center_application` - Whether to delete the IAM Identity Center directory associated with the organization on destroy. To update this value after creation, run `terraform apply` before running `terraform destroy`. Defaults to `false`.
+* `delete_identity_center_application` - Whether to delete the IAM Identity Center application associated with the organization on destroy. To update this value after creation, run `terraform apply` before running `terraform destroy`. Defaults to `false`.
 * `directory_id` - (Optional) ID of an existing directory to associate with the organization. Changing this creates a new resource.
 * `interoperability_enabled` - (Optional) Whether to enable interoperability between WorkMail and Microsoft Exchange. Changing this creates a new resource.
 * `kms_key_arn` - (Optional) ARN of a customer-managed KMS key to encrypt the organization's data. If omitted, AWS managed keys are used. Changing this creates a new resource.
