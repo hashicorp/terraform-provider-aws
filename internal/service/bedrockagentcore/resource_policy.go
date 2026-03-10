@@ -99,16 +99,16 @@ func resourcePolicyRead(d *schema.ResourceData, meta any) error {
 	}
 
 	if out != nil {
-			if out.Policy != nil {
-				// normalize returned policy JSON
-				policy, err := structure.NormalizeJsonString(aws.ToString(out.Policy))
-				if err == nil {
-					d.Set(names.AttrPolicy, policy)
-				} else {
-					// fall back to raw value if normalization fails
-					d.Set(names.AttrPolicy, aws.ToString(out.Policy))
-				}
+		if out.Policy != nil {
+			// normalize returned policy JSON
+			policy, err := structure.NormalizeJsonString(aws.ToString(out.Policy))
+			if err == nil {
+				d.Set(names.AttrPolicy, policy)
+			} else {
+				// fall back to raw value if normalization fails
+				d.Set(names.AttrPolicy, aws.ToString(out.Policy))
 			}
+		}
 		// Resource ARN is known from state (ID or attribute); ensure attribute is set.
 		if id != "" {
 			d.Set(names.AttrResourceARN, id)
