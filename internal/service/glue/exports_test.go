@@ -30,7 +30,7 @@ var (
 	FindClassifierByName            = findClassifierByName
 	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey
 	FindCrawlerByName               = findCrawlerByName
-	FindDatabaseByName              = findDatabaseByName
+	FindDatabaseByTwoPartKey        = findDatabaseByTwoPartKey
 	FindDataQualityRulesetByName    = findDataQualityRulesetByName
 	FindDevEndpointByName           = findDevEndpointByName
 	FindJobByName                   = findJobByName
