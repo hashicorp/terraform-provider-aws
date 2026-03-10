@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -50,6 +51,7 @@ type transitGatewayMeteringPolicyResource struct {
 func (r *transitGatewayMeteringPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"middlebox_attachment_ids": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
@@ -82,7 +84,8 @@ func (r *transitGatewayMeteringPolicyResource) Create(ctx context.Context, reque
 		return
 	}
 
-	conn := r.Meta().EC2Client(ctx)
+	c := r.Meta()
+	conn := c.EC2Client(ctx)
 
 	input := ec2.CreateTransitGatewayMeteringPolicyInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayMeteringPolicy),
@@ -100,6 +103,7 @@ func (r *transitGatewayMeteringPolicyResource) Create(ctx context.Context, reque
 	}
 
 	id := aws.ToString(output.TransitGatewayMeteringPolicy.TransitGatewayMeteringPolicyId)
+	data.ARN = fwflex.StringValueToFramework(ctx, transitGatewayMeteringPolicyARN(ctx, c, id))
 	data.TransitGatewayMeteringPolicyID = fwflex.StringValueToFramework(ctx, id)
 
 	if _, err := waitTransitGatewayMeteringPolicyCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
@@ -117,7 +121,8 @@ func (r *transitGatewayMeteringPolicyResource) Read(ctx context.Context, request
 		return
 	}
 
-	conn := r.Meta().EC2Client(ctx)
+	c := r.Meta()
+	conn := c.EC2Client(ctx)
 
 	id := fwflex.StringValueFromFramework(ctx, data.TransitGatewayMeteringPolicyID)
 	policy, err := findTransitGatewayMeteringPolicyByID(ctx, conn, id)
@@ -133,6 +138,7 @@ func (r *transitGatewayMeteringPolicyResource) Read(ctx context.Context, request
 		return
 	}
 
+	data.ARN = fwflex.StringValueToFramework(ctx, transitGatewayMeteringPolicyARN(ctx, c, id))
 	data.MiddleboxAttachmentIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, policy.MiddleboxAttachmentIds)
 	data.TransitGatewayID = fwflex.StringToFramework(ctx, policy.TransitGatewayId)
 
@@ -219,10 +225,15 @@ func (r *transitGatewayMeteringPolicyResource) ImportState(ctx context.Context, 
 
 type transitGatewayMeteringPolicyResourceModel struct {
 	framework.WithRegionModel
+	ARN                            types.String        `tfsdk:"arn"`
 	MiddleboxAttachmentIDs         fwtypes.SetOfString `tfsdk:"middlebox_attachment_ids"`
 	Tags                           tftags.Map          `tfsdk:"tags"`
 	TagsAll                        tftags.Map          `tfsdk:"tags_all"`
 	Timeouts                       timeouts.Value      `tfsdk:"timeouts"`
 	TransitGatewayID               types.String        `tfsdk:"transit_gateway_id"`
 	TransitGatewayMeteringPolicyID types.String        `tfsdk:"transit_gateway_metering_policy_id"`
+}
+
+func transitGatewayMeteringPolicyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.EC2, "transit-gateway-metering-policy/"+id)
 }

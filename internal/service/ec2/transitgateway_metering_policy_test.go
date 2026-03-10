@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -43,6 +44,7 @@ func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Se
 				Config: testAccTransitGatewayMeteringPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayMeteringPolicyExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgm-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
