@@ -44,7 +44,7 @@ func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Se
 				Config: testAccTransitGatewayMeteringPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayMeteringPolicyExists(ctx, t, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgm-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-policy-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

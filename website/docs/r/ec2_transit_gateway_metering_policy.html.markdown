@@ -70,7 +70,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_metering_policy` using the EC2 Transit Gateway Metering Policy identifier. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ec2_transit_gateway_metering_policy.example
+  identity = {
+    id = "tgw-policy-12345678"
+  }
+}
+
+resource "aws_ec2_transit_gateway_metering_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the EC2 Transit Gateway Metering Policy.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Transit Gateway Metering Policies using the `transit_gateway_metering_policy_id`. For example:
 
 ```terraform
 import {
@@ -79,7 +105,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_ec2_transit_gateway_metering_policy` using the EC2 Transit Gateway Metering Policy identifier. For example:
+Using `terraform import`, import EC2 Transit Gateway Metering Policies using the `transit_gateway_metering_policy_id`. For example:
 
 ```console
 % terraform import aws_ec2_transit_gateway_metering_policy.example tgw-policy-12345678

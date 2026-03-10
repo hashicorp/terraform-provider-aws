@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -32,7 +31,10 @@ import (
 
 // @FrameworkResource("aws_ec2_transit_gateway_metering_policy", name="Transit Gateway Metering Policy")
 // @Tags(identifierAttribute="transit_gateway_metering_policy_id")
+// @IdentityAttribute("transit_gateway_metering_policy_id")
 // @Testing(tagsTest=false)
+// @Testing(hasNoPreExistingResource=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayMeteringPolicy")
 func newTransitGatewayMeteringPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transitGatewayMeteringPolicyResource{}
 
@@ -45,6 +47,7 @@ func newTransitGatewayMeteringPolicyResource(_ context.Context) (resource.Resour
 
 type transitGatewayMeteringPolicyResource struct {
 	framework.ResourceWithModel[transitGatewayMeteringPolicyResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -217,10 +220,6 @@ func (r *transitGatewayMeteringPolicyResource) Delete(ctx context.Context, reque
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Transit Gateway Metering Policy (%s) delete", id), err.Error())
 		return
 	}
-}
-
-func (r *transitGatewayMeteringPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("transit_gateway_metering_policy_id"), request, response)
 }
 
 type transitGatewayMeteringPolicyResourceModel struct {
