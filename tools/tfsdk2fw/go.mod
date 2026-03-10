@@ -149,7 +149,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.11 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.53.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.18 // indirect
@@ -191,7 +191,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12 // indirect
-	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/mgn v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.20 // indirect
@@ -207,7 +207,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.10.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/odb v1.9.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.60.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.12 // indirect
