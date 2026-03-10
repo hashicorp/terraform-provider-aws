@@ -15,7 +15,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-randint
@@ -31,7 +30,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-randintrange
@@ -47,7 +45,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-randstring
@@ -63,7 +60,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-randstringfromcharset
@@ -79,7 +75,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-charsetalpha
@@ -95,7 +90,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-charsetalphanum
@@ -111,5 +105,4 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
