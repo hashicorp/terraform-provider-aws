@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: Fix sending email_mfa_configuration when mfa_configuration is OFF
+```
