@@ -15,7 +15,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-paralleltest
@@ -31,7 +30,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
   - id: use-acctest-providermeta
@@ -47,5 +45,4 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
