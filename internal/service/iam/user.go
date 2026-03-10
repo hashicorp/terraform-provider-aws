@@ -29,18 +29,19 @@ import (
 )
 
 // @SDKResource("aws_iam_user", name="User")
+// @IdentityAttribute("name")
+// @MutableIdentity
 // @Tags(identifierAttribute="id", resourceType="User")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User", importIgnore="force_destroy")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.User")
+// @Testing(importIgnore="force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.35.1")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
