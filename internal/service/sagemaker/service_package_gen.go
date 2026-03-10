@@ -67,6 +67,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newResourceTrainingJob,
 			TypeName: "aws_sagemaker_training_job",
 			Name:     "Training Job",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalSingleParameterIdentity("training_job_name"),
 			Import: inttypes.FrameworkImport{

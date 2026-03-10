@@ -45,11 +45,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_sagemaker_training_job", name="Training Job")
+// @Tags(identifierAttribute="arn")
 // @IdentityAttribute("training_job_name")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeTrainingJobOutput")
 // @Testing(importIgnore="algorithm_specification.0.metric_definitions")
@@ -145,6 +147,8 @@ func (r *resourceTrainingJob) Schema(ctx context.Context, req resource.SchemaReq
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"training_job_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -426,6 +430,9 @@ func debugHookConfigBlock(ctx context.Context) schema.Block {
 func debugRuleConfigurationsBlock(ctx context.Context) schema.Block {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[trainingJobDebugRuleConfigurationModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeBetween(0, 20),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"instance_type": schema.StringAttribute{
@@ -904,6 +911,7 @@ func outputDataConfigBlock(ctx context.Context) schema.Block {
 						stringvalidator.RegexMatches(regexp.MustCompile(`[a-zA-Z0-9:/_-]*`), "must match the KMS key ID pattern"),
 					},
 					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
@@ -1424,6 +1432,8 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	input.Tags = getTagsIn(ctx)
+
 	out, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*sagemaker.CreateTrainingJobOutput, error) {
 		return conn.CreateTrainingJob(ctx, &input)
 	}, func(err error) (bool, error) {
@@ -1431,6 +1441,12 @@ func (r *resourceTrainingJob) Create(ctx context.Context, req resource.CreateReq
 			return true, err
 		}
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Unauthorized to List objects under S3 URL") {
+			return true, err
+		}
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Access denied to OutputDataConfig S3 bucket") {
+			return true, err
+		}
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "no identity-based policy allows the s3:ListBucket action") {
 			return true, err
 		}
 		return false, err
@@ -1910,6 +1926,8 @@ type resourceTrainingJobModel struct {
 	framework.WithRegionModel
 	AlgorithmSpecification                fwtypes.ListNestedObjectValueOf[trainingJobAlgorithmSpecificationModel]  `tfsdk:"algorithm_specification"`
 	TrainingJobARN                        types.String                                                             `tfsdk:"arn"`
+	Tags                                  tftags.Map                                                               `tfsdk:"tags"`
+	TagsAll                               tftags.Map                                                               `tfsdk:"tags_all"`
 	CheckpointConfig                      fwtypes.ListNestedObjectValueOf[trainingJobCheckpointConfigModel]        `tfsdk:"checkpoint_config"`
 	DebugHookConfig                       fwtypes.ListNestedObjectValueOf[trainingJobDebugHookConfigModel]         `tfsdk:"debug_hook_config"`
 	DebugRuleConfigurations               fwtypes.ListNestedObjectValueOf[trainingJobDebugRuleConfigurationModel]  `tfsdk:"debug_rule_configurations"`
