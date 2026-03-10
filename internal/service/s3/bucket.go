@@ -837,10 +837,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, bucketARN(ctx, c, d.Id()))
 	d.Set(names.AttrBucket, d.Id())
-	d.Set("bucket_domain_name", c.PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
+
+	if err := resourceBucketFlatten(ctx, meta.(*conns.AWSClient), d.Id(), d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	//
 	// Bucket Policy.
@@ -1631,6 +1633,19 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	return diags
+}
+
+func resourceBucketFlatten(ctx context.Context, awsClient *conns.AWSClient, bucketName string, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, bucketARN(ctx, awsClient, bucketName))
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucketName+".s3"))
+
+	region := awsClient.Region(ctx)
+	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucketName, region))
+	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
+	}
+
+	return nil
 }
 
 func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
