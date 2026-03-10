@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.11
-	github.com/aws/aws-sdk-go-v2/service/iam v1.53.4
+	github.com/aws/aws-sdk-go-v2/service/iam v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.2
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.30.18
@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.19
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.19
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12
-	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.3
+	github.com/aws/aws-sdk-go-v2/service/mgn v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/mpa v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.17
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.20
@@ -190,7 +190,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.13
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/odb v1.9.1
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.21.12
