@@ -135,7 +135,7 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 													},
 												},
 												"log_group_name_configuration": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfiguration](ctx),
+													CustomType: fwtypes.NewListNestedObjectTypeOf[logGroupNameConfigurationModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
@@ -472,7 +472,7 @@ type centralizationRuleSourceModel struct {
 
 type destinationLogsConfigurationModel struct {
 	BackupConfiguration         fwtypes.ListNestedObjectValueOf[logsBackupConfigurationModel]     `tfsdk:"backup_configuration"`
-	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfiguration]        `tfsdk:"log_group_name_configuration"`
+	LogGroupNameConfiguration   fwtypes.ListNestedObjectValueOf[logGroupNameConfigurationModel]   `tfsdk:"log_group_name_configuration"`
 	LogsEncryptionConfiguration fwtypes.ListNestedObjectValueOf[logsEncryptionConfigurationModel] `tfsdk:"logs_encryption_configuration"`
 }
 
@@ -486,7 +486,7 @@ type logsBackupConfigurationModel struct {
 	Region    types.String `tfsdk:"region"`
 }
 
-type logGroupNameConfiguration struct {
+type logGroupNameConfigurationModel struct {
 	LogGroupNamePattern types.String `tfsdk:"log_group_name_pattern"`
 }
 
