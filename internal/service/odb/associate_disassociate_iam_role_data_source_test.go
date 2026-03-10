@@ -70,11 +70,19 @@ func TestAccODBAssociateDisassociateIAMRoleDataSource_basic(t *testing.T) {
 
 func (iamRoleAssociationDisassociationDSTest) testAccAssociateDisassociateIAMRoleDataSourceAutonomousCloudVmClusterConfig() string {
 	return fmt.Sprintf(`
+data "aws_iam_role" "test" {
+  name = "OracleDBKMS_avmc_hvlokll3j2"
+}
+
+data "aws_odb_cloud_autonomous_vm_cluster" "test" {
+  id       = "avmc_hvlokll3j2"
+}
+
 
 data "aws_odb_associate_disassociate_iam_role" "test" {
-  composite_arn{
- 	iam_role_arn = "arn:aws:iam::711387093194:role/OracleDBKMS_avmc_wxdhmnurzo"
- 	resource_arn = "arn:aws:odb:us-east-1:711387093194:cloud-autonomous-vm-cluster/avmc_wxdhmnurzo"
+  composite_arn {
+ 	iam_role_arn = data.aws_iam_role.test.arn
+ 	resource_arn = data.aws_odb_cloud_autonomous_vm_cluster.test.arn
   }
 }
 

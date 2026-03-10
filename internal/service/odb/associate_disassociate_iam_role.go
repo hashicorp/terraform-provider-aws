@@ -227,7 +227,75 @@ func (r *resourceAssociateDisassociateIAMRole) Delete(ctx context.Context, req r
 	}
 }
 func (r *resourceAssociateDisassociateIAMRole) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	const (
+		keyIAMRoleARN  = "iam_role_arn"
+		keyResourceARN = "resource_arn"
+	)
+
+	kvPairs := strings.Split(req.ID, ",")
+	if len(kvPairs) != 2 {
+		resp.Diagnostics.AddError(
+			"Invalid import identifier",
+			"Expected import identifier in the format iam_role_arn=<value>,resource_arn=<value>.",
+		)
+		return
+	}
+
+	values := map[string]string{}
+	for _, kvPair := range kvPairs {
+		parts := strings.SplitN(strings.TrimSpace(kvPair), "=", 2)
+		if len(parts) != 2 {
+			resp.Diagnostics.AddError(
+				"Invalid import identifier",
+				"Expected key-value pairs in the format key=value.",
+			)
+			return
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		switch key {
+		case keyIAMRoleARN, keyResourceARN:
+			if value == "" {
+				resp.Diagnostics.AddError(
+					"Invalid import identifier",
+					"Import value for key "+key+" must be non-empty.",
+				)
+				return
+			}
+			values[key] = value
+		default:
+			resp.Diagnostics.AddError(
+				"Invalid import identifier",
+				"Unsupported key "+key+". Supported keys are iam_role_arn and resource_arn.",
+			)
+			return
+		}
+	}
+
+	iamRoleARN, hasIAMRoleARN := values[keyIAMRoleARN]
+	resourceARN, hasResourceARN := values[keyResourceARN]
+	if !hasIAMRoleARN || !hasResourceARN {
+		resp.Diagnostics.AddError(
+			"Invalid import identifier",
+			"Both iam_role_arn and resource_arn must be specified in the import identifier.",
+		)
+		return
+	}
+
+	compositeARN, diags := fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []resourceCompositeARNModel{
+		{
+			IAMRoleARN:  types.StringValue(iamRoleARN),
+			ResourceARN: types.StringValue(resourceARN),
+		},
+	})
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("composite_arn"), compositeARN)...)
 }
 
 func waitAssociateDisassociateIAMRoleCreated(ctx context.Context, conn *odb.Client, resourceARN *string, iamRoleARN *string, timeout time.Duration) (*odb.AssociateIamRoleToResourceOutput, error) {
