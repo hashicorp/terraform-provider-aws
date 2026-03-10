@@ -238,11 +238,13 @@ func resourceCatalogTable() *schema.Resource {
 									"metadata_operation": {
 										Type:             schema.TypeString,
 										Required:         true,
+										ForceNew:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.MetadataOperation](),
 									},
 									names.AttrVersion: {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 								},

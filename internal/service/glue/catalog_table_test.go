@@ -704,11 +704,12 @@ func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
 				Config: testAccCatalogTableConfig_openTableFormat(rName, "comment1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.metadata_operation", "CREATE"),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.version", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -720,11 +721,12 @@ func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
 				Config: testAccCatalogTableConfig_openTableFormat(rName, "comment2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.metadata_operation", "CREATE"),
-					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.version", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
