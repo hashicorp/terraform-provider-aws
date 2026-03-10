@@ -5,8 +5,8 @@ package bedrockagentcore
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -23,13 +24,13 @@ func ResourcePolicy() *schema.Resource {
 		Update: resourcePolicyUpdate,
 		Delete: resourcePolicyDelete,
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "The ARN of the Bedrock Agent Core resource to attach the policy to.",
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The JSON policy document.",
@@ -46,12 +47,12 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
 
-	arn := d.Get("resource_arn").(string)
-	policyRaw := d.Get("policy").(string)
+	arn := d.Get(names.AttrResourceARN).(string)
+	policyRaw := d.Get(names.AttrPolicy).(string)
 
 	policy, err := structure.NormalizeJsonString(policyRaw)
 	if err != nil {
-		return fmt.Errorf("invalid policy JSON: %w", err)
+		return smarterr.NewError(err)
 	}
 
 	input := bedrockagentcorecontrol.PutResourcePolicyInput{
@@ -61,7 +62,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta any) error {
 
 	_, err = conn.PutResourcePolicy(context.Background(), &input)
 	if err != nil {
-		return fmt.Errorf("creating Bedrock Agent Core Resource Policy (%s): %w", arn, err)
+		return smarterr.NewError(err)
 	}
 
 	// Use the resource ARN as the Terraform ID.
@@ -76,7 +77,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta any) error {
 	id := d.Id()
 	if id == "" {
 		// fallback to resource_arn attribute
-		if v, ok := d.GetOk("resource_arn"); ok {
+		if v, ok := d.GetOk(names.AttrResourceARN); ok {
 			id = v.(string)
 		}
 	}
@@ -88,27 +89,29 @@ func resourcePolicyRead(d *schema.ResourceData, meta any) error {
 	out, err := conn.GetResourcePolicy(context.Background(), &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		// resource missing -> remove from state
-		d.SetId("")
+		if !d.IsNewResource() {
+			d.SetId("")
+		}
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("reading Bedrock Agent Core Resource Policy (%s): %w", id, err)
+		return smarterr.NewError(err)
 	}
 
 	if out != nil {
-		if out.Policy != nil {
-			// normalize returned policy JSON
-			policy, err := structure.NormalizeJsonString(aws.ToString(out.Policy))
-			if err == nil {
-				d.Set("policy", policy)
-			} else {
-				// fall back to raw value if normalization fails
-				d.Set("policy", aws.ToString(out.Policy))
+			if out.Policy != nil {
+				// normalize returned policy JSON
+				policy, err := structure.NormalizeJsonString(aws.ToString(out.Policy))
+				if err == nil {
+					d.Set(names.AttrPolicy, policy)
+				} else {
+					// fall back to raw value if normalization fails
+					d.Set(names.AttrPolicy, aws.ToString(out.Policy))
+				}
 			}
-		}
 		// Resource ARN is known from state (ID or attribute); ensure attribute is set.
 		if id != "" {
-			d.Set("resource_arn", id)
+			d.Set(names.AttrResourceARN, id)
 			d.SetId(id)
 		}
 	}
@@ -119,12 +122,12 @@ func resourcePolicyRead(d *schema.ResourceData, meta any) error {
 func resourcePolicyUpdate(d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
 
-	arn := d.Get("resource_arn").(string)
-	policyRaw := d.Get("policy").(string)
+	arn := d.Get(names.AttrResourceARN).(string)
+	policyRaw := d.Get(names.AttrPolicy).(string)
 
 	policy, err := structure.NormalizeJsonString(policyRaw)
 	if err != nil {
-		return fmt.Errorf("invalid policy JSON: %w", err)
+		return smarterr.NewError(err)
 	}
 
 	input := bedrockagentcorecontrol.PutResourcePolicyInput{
@@ -134,7 +137,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta any) error {
 
 	_, err = conn.PutResourcePolicy(context.Background(), &input)
 	if err != nil {
-		return fmt.Errorf("updating Bedrock Agent Core Resource Policy (%s): %w", arn, err)
+		return smarterr.NewError(err)
 	}
 
 	return resourcePolicyRead(d, meta)
@@ -145,7 +148,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta any) error {
 
 	arn := d.Id()
 	if arn == "" {
-		arn = d.Get("resource_arn").(string)
+		arn = d.Get(names.AttrResourceARN).(string)
 	}
 
 	input := bedrockagentcorecontrol.DeleteResourcePolicyInput{
@@ -159,9 +162,8 @@ func resourcePolicyDelete(d *schema.ResourceData, meta any) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Bedrock Agent Core Resource Policy (%s): %w", arn, err)
+		return smarterr.NewError(err)
 	}
 
-	d.SetId("")
 	return nil
 }

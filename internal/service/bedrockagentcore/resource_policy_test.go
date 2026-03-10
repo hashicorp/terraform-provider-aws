@@ -35,8 +35,8 @@ func TestAccBedrockAgentCoreResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, t, resourceName, &out),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
-					resource.TestCheckResourceAttr(resourceName, "policy", "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowAccess\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[],\"Resource\":\"*\"}]}"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowAccess\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":[],\"Resource\":\"*\"}]}"),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context, t *testing.T) resour
 				continue
 			}
 
-			arn := rs.Primary.Attributes["resource_arn"]
+			arn := rs.Primary.Attributes[names.AttrResourceARN]
 			input := bedrockagentcorecontrol.GetResourcePolicyInput{
 				ResourceArn: &arn,
 			}
@@ -110,7 +110,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, t *testing.T, name st
 
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
 
-		arn := rs.Primary.Attributes["resource_arn"]
+		arn := rs.Primary.Attributes[names.AttrResourceARN]
 		input := bedrockagentcorecontrol.GetResourcePolicyInput{
 			ResourceArn: &arn,
 		}
