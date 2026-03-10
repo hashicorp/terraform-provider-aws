@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_config.custom_jwt_authorizer.allowed_scopes` argument ([#46828](https://github.com/hashicorp/terraform-provider-aws/issues/46828))
 * resource/aws_cloudwatch_log_resource_policy: Add `resource_arn` argument and `policy_scope` and `revision_id` attributes. `policy_name` is now optional ([#46813](https://github.com/hashicorp/terraform-provider-aws/issues/46813))
 * resource/aws_guardduty_ipset: Add `ip_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add `arn` and `destination_id` attributes ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
