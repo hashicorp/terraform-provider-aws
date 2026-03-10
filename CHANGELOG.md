@@ -7,10 +7,12 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_iam_outbound_web_identity_federation` ([#46503](https://github.com/hashicorp/terraform-provider-aws/issues/46503))
+* **New Ephemeral Resource:** `aws_sts_web_identity_token` ([#46173](https://github.com/hashicorp/terraform-provider-aws/issues/46173))
 * **New List Resource:** `aws_s3_bucket_versioning` ([#46802](https://github.com/hashicorp/terraform-provider-aws/issues/46802))
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_log_resource_policy: Add `resource_arn` argument and `policy_scope` and `revision_id` attributes. `policy_name` is now optional ([#46813](https://github.com/hashicorp/terraform-provider-aws/issues/46813))
 * resource/aws_guardduty_ipset: Add `ip_set_id` attribute ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add `arn` and `destination_id` attributes ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
 * resource/aws_guardduty_publishing_destination: Add tagging support ([#46703](https://github.com/hashicorp/terraform-provider-aws/issues/46703))
