@@ -141,7 +141,7 @@ func resourceCatalogTable() *schema.Resource {
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
-												"schema": {
+												names.AttrSchema: {
 													Type:     schema.TypeList,
 													Required: true,
 													MaxItems: 1,
@@ -979,7 +979,7 @@ func expandCreateIcebergTableInput(tfMap map[string]any) *awstypes.CreateIceberg
 		apiObject.Properties = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["schema"].([]any); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrSchema].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Schema = expandIcebergSchema(v[0].(map[string]any))
 	}
 
