@@ -792,6 +792,17 @@ func TestAccGlueCatalogTable_icebergTableInput(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"open_table_format_input"},
 			},
+			{
+				Config: testAccCatalogTableConfig_icebergTableInputUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -1666,6 +1677,92 @@ EOF
           }
 
           order_id = 1
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccCatalogTableConfig_icebergTableInputUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = "%[1]sd"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = "%[1]sb"
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = "%[1]st"
+  database_name = aws_glue_catalog_database.test.name
+
+  # https://aws.amazon.com/es/blogs/big-data/create-and-update-apache-iceberg-tables-with-partitions-in-the-aws-glue-data-catalog-using-the-aws-sdk-and-aws-cloudformation/.
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+
+      iceberg_table_input {
+        location = "s3://${aws_s3_bucket.bucket.bucket}/${aws_glue_catalog_database.test.name}/%[1]st/"
+
+        schema {
+          schema_id = 1
+          type      = "struct"
+
+          fields {
+            id       = 1
+            name     = "transaction_id"
+            required = true
+            type     = <<EOF
+            "string"
+EOF
+          }
+          fields {
+            id       = 2
+            name     = "transaction_date"
+            required = true
+            type     = <<EOF
+            "date"
+EOF
+          }
+          fields {
+            id       = 3
+            name     = "monthly_balance"
+            required = true
+            type     = <<EOF
+            "float"
+EOF
+          }
+        }
+
+        partition_spec {
+          fields {
+            name      = "by_year"
+            source_id = 2
+            transform = "year"
+          }
+          fields {
+            name      = "by_transactionid"
+            source_id = 1
+            transform = "identity"
+          }
+
+          spec_id = 1
+        }
+
+        write_order {
+          fields {
+            direction  = "asc"
+            null_order = "nulls-last"
+            source_id  = 1
+            transform  = "none"
+          }
+
+          order_id = 2
         }
       }
     }
