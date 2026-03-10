@@ -771,26 +771,25 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 	}
-	if v, ok := d.GetOk("open_table_format_input"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.UpdateOpenTableFormatInput = expandUpdateOpenTableFormatInput(v.([]any)[0].(map[string]any))
-	}
-	if allParameters := table.Parameters; allParameters["table_type"] == "ICEBERG" {
-		for _, k := range []string{"table_type", "metadata_location"} {
-			if v := allParameters[k]; v != "" {
-				if input.TableInput.Parameters == nil {
-					input.TableInput.Parameters = make(map[string]string)
-				}
-				input.TableInput.Parameters[k] = v
-			}
+	if d.HasChange("open_table_format_input") {
+		if v, ok := d.GetOk("open_table_format_input"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.UpdateOpenTableFormatInput = expandUpdateOpenTableFormatInput(v.([]any)[0].(map[string]any))
 		}
 	}
-
 	if input.UpdateOpenTableFormatInput != nil && input.UpdateOpenTableFormatInput.UpdateIcebergInput != nil && input.UpdateOpenTableFormatInput.UpdateIcebergInput.UpdateIcebergTableInput != nil {
-		// "InvalidInputException: Location information cannot be null while creating an iceberg table".
 		input.Name = aws.String(name)
 	} else {
-		// "InvalidInputException: CreateIcebergTableInput cannot be equal to null".
 		input.TableInput = expandTableInput(d)
+		if allParameters := table.Parameters; allParameters["table_type"] == "ICEBERG" {
+			for _, k := range []string{"table_type", "metadata_location"} {
+				if v := allParameters[k]; v != "" {
+					if input.TableInput.Parameters == nil {
+						input.TableInput.Parameters = make(map[string]string)
+					}
+					input.TableInput.Parameters[k] = v
+				}
+			}
+		}
 	}
 
 	_, err = conn.UpdateTable(ctx, &input)
