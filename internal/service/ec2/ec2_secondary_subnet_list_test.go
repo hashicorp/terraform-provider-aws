@@ -28,6 +28,7 @@ func testAccEC2SecondarySubnet_listSerial(t *testing.T) {
 		acctest.CtBasic:   testAccEC2SecondarySubnet_List_basic,
 		"includeResource": testAccEC2SecondarySubnet_List_includeResource,
 		"regionOverride":  testAccEC2SecondarySubnet_List_regionOverride,
+		"filtered":        testAccEC2SecondarySubnet_List_filtered,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -50,13 +51,13 @@ func testAccEC2SecondarySubnet_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_basic/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_basic/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 				},
@@ -71,9 +72,8 @@ func testAccEC2SecondarySubnet_List_basic(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_basic/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_basic/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 				},
@@ -86,7 +86,7 @@ func testAccEC2SecondarySubnet_List_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecondarySubnet_List_filtered(t *testing.T) {
+func testAccEC2SecondarySubnet_List_filtered(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceNameExpected1 := "aws_ec2_secondary_subnet.expected[0]"
@@ -107,13 +107,13 @@ func TestAccEC2SecondarySubnet_List_filtered(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_filtered/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_filtered/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 				},
@@ -134,9 +134,8 @@ func TestAccEC2SecondarySubnet_List_filtered(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_filtered/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_filtered/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 				},
@@ -176,13 +175,13 @@ func testAccEC2SecondarySubnet_List_includeResource(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_include_resource/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(1),
 				},
@@ -194,9 +193,8 @@ func testAccEC2SecondarySubnet_List_includeResource(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_include_resource/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_include_resource/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(1),
 				},
@@ -229,13 +227,13 @@ func testAccEC2SecondarySubnet_List_regionOverride(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSecondaryNetwork(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckSecondarySubnetDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_region_override/"),
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_region_override/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
@@ -251,9 +249,8 @@ func testAccEC2SecondarySubnet_List_regionOverride(t *testing.T) {
 
 			// Step 2: Query
 			{
-				Query:                    true,
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SecondarySubnet/list_region_override/"),
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/list_region_override/"),
 				ConfigVariables: config.Variables{
 					"resource_count": config.IntegerVariable(2),
 					"region":         config.StringVariable(acctest.AlternateRegion()),
