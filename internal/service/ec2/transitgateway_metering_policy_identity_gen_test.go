@@ -21,14 +21,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing.T) {
+func testAccTransitGatewayTransitGatewayMeteringPolicy_identitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic,
+		"RegionOverride": testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.TransitGatewayMeteringPolicy
 	resourceName := "aws_ec2_transit_gateway_metering_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -106,13 +117,13 @@ func TestAccTransitGatewayTransitGatewayMeteringPolicy_Identity_basic(t *testing
 	})
 }
 
-func TestAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t *testing.T) {
+func testAccTransitGatewayTransitGatewayMeteringPolicy_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_transit_gateway_metering_policy.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

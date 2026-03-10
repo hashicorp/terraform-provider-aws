@@ -44,7 +44,7 @@ func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Se
 				Config: testAccTransitGatewayMeteringPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayMeteringPolicyExists(ctx, t, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-policy-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway-metering-policy/tgw-mp-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -227,6 +227,10 @@ func testAccTransitGatewayMeteringPolicy_middleboxAttachments(t *testing.T, sema
 			},
 		},
 	})
+}
+
+func testAccTransitGatewayMeteringPolicy_identity(t *testing.T, semaphore tfsync.Semaphore) {
+	testAccTransitGatewayTransitGatewayMeteringPolicy_identitySerial(t)
 }
 
 func testAccCheckTransitGatewayMeteringPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {

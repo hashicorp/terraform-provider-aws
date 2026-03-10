@@ -76,7 +76,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ec2_transit_gateway_metering_policy.example
   identity = {
-    id = "tgw-policy-12345678"
+    id = "tgw-mp-12345678"
   }
 }
 
@@ -101,12 +101,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ec2_transit_gateway_metering_policy.example
-  id = "tgw-policy-12345678"
+  id = "tgw-mp-12345678"
 }
 ```
 
 Using `terraform import`, import EC2 Transit Gateway Metering Policies using the `transit_gateway_metering_policy_id`. For example:
 
 ```console
-% terraform import aws_ec2_transit_gateway_metering_policy.example tgw-policy-12345678
+% terraform import aws_ec2_transit_gateway_metering_policy.example tgw-mp-12345678
 ```

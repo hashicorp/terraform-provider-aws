@@ -35,6 +35,7 @@ import (
 // @Testing(tagsTest=false)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.TransitGatewayMeteringPolicy")
+// @Testing(serialize=true)
 func newTransitGatewayMeteringPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &transitGatewayMeteringPolicyResource{}
 
