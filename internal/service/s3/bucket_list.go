@@ -84,12 +84,7 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 				continue
 			}
 			if request.IncludeResource {
-				if err := resourceBucketFlatten(ctx, l.Meta(), bucketName, rd); err != nil {
-					tflog.Error(ctx, "Reading Resource", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
+				resourceBucketFlatten(ctx, l.Meta(), bucketName, rd)
 			}
 
 			result.DisplayName = bucketName
