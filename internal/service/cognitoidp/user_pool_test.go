@@ -2554,14 +2554,14 @@ resource "aws_ses_configuration_set" "test" {
 }
 
 resource "aws_cognito_user_pool" "test" {
-  mfa_configuration = "OFF"
+  mfa_configuration = "ON"
   name              = %[1]q
 
   email_configuration {
-    reply_to_email_address = %[5]q
-    source_arn             = %[6]q
-    from_email_address     = %[7]q
-    email_sending_account  = %[8]q
+    reply_to_email_address = %[2]q
+    source_arn             = %[3]q
+    from_email_address     = %[4]q
+    email_sending_account  = %[5]q
     configuration_set      = aws_ses_configuration_set.test.name
   }
 
@@ -2575,8 +2575,10 @@ resource "aws_cognito_user_pool" "test" {
       priority = 2
     }
   }
+
+  email_mfa_configuration {}
 }
-	`, rName, email, arn, from, account)
+`, rName, email, arn, from, account)
 }
 
 func testAccUserPoolConfig_passwordHistorySize(rName string, passwordHistorySize int) string {
