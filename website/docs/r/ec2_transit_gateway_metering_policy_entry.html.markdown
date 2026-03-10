@@ -51,24 +51,21 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Resource identifier, a composite of `{transit_gateway_metering_policy_id}_{policy_rule_number}`.
-* `state` - The state of the EC2 Transit Gateway Metering Policy Entry.
+This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_metering_policy_entry` using the composite identifier `{transit_gateway_metering_policy_id}_{policy_rule_number}`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_metering_policy_entry` using the composite identifier `{transit_gateway_metering_policy_id},{policy_rule_number}`. For example:
 
 ```terraform
 import {
   to = aws_ec2_transit_gateway_metering_policy_entry.example
-  id = "tgw-policy-12345678_100"
+  id = "tgw-policy-12345678,100"
 }
 ```
 
 Using `terraform import`, import `aws_ec2_transit_gateway_metering_policy_entry` using the composite identifier. For example:
 
 ```console
-% terraform import aws_ec2_transit_gateway_metering_policy_entry.example tgw-policy-12345678_100
+% terraform import aws_ec2_transit_gateway_metering_policy_entry.example tgw-policy-12345678,100
 ```

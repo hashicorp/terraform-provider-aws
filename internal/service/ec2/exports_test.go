@@ -245,7 +245,6 @@ var (
 	FindTransitGatewayPeeringAttachmentByID                     = findTransitGatewayPeeringAttachmentByID
 	FindTransitGatewayMeteringPolicyByID                        = findTransitGatewayMeteringPolicyByID
 	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
-	TransitGatewayMeteringPolicyEntryParseResourceID            = transitGatewayMeteringPolicyEntryParseResourceID
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey

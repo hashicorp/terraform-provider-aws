@@ -6,8 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -74,7 +73,6 @@ func (r *transitGatewayMeteringPolicyEntryResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"metered_account": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TransitGatewayMeteringPayerType](),
 				Required:   true,
@@ -119,12 +117,6 @@ func (r *transitGatewayMeteringPolicyEntryResource) Schema(ctx context.Context, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrState: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"transit_gateway_metering_policy_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -150,42 +142,17 @@ func (r *transitGatewayMeteringPolicyEntryResource) Create(ctx context.Context, 
 
 	conn := r.Meta().EC2Client(ctx)
 
-	policyID := fwflex.StringValueFromFramework(ctx, data.TransitGatewayMeteringPolicyID)
-	ruleNumber := data.PolicyRuleNumber.ValueInt64()
-
-	input := ec2.CreateTransitGatewayMeteringPolicyEntryInput{
-		TransitGatewayMeteringPolicyId:        aws.String(policyID),
-		PolicyRuleNumber:                      aws.Int32(int32(ruleNumber)),
-		MeteredAccount:                        awstypes.TransitGatewayMeteringPayerType(data.MeteredAccount.ValueString()),
-		DestinationCidrBlock:                  fwflex.StringFromFramework(ctx, data.DestinationCidrBlock),
-		DestinationPortRange:                  fwflex.StringFromFramework(ctx, data.DestinationPortRange),
-		DestinationTransitGatewayAttachmentId: fwflex.StringFromFramework(ctx, data.DestinationTransitGatewayAttachmentID),
-		Protocol:                              fwflex.StringFromFramework(ctx, data.Protocol),
-		SourceCidrBlock:                       fwflex.StringFromFramework(ctx, data.SourceCidrBlock),
-		SourcePortRange:                       fwflex.StringFromFramework(ctx, data.SourcePortRange),
-		SourceTransitGatewayAttachmentId:      fwflex.StringFromFramework(ctx, data.SourceTransitGatewayAttachmentID),
+	var input ec2.CreateTransitGatewayMeteringPolicyEntryInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if !data.DestinationTransitGatewayAttachmentType.IsNull() && !data.DestinationTransitGatewayAttachmentType.IsUnknown() {
-		input.DestinationTransitGatewayAttachmentType = awstypes.TransitGatewayAttachmentResourceType(data.DestinationTransitGatewayAttachmentType.ValueString())
-	}
-
-	if !data.SourceTransitGatewayAttachmentType.IsNull() && !data.SourceTransitGatewayAttachmentType.IsUnknown() {
-		input.SourceTransitGatewayAttachmentType = awstypes.TransitGatewayAttachmentResourceType(data.SourceTransitGatewayAttachmentType.ValueString())
-	}
-
-	output, err := conn.CreateTransitGatewayMeteringPolicyEntry(ctx, &input)
+	_, err := conn.CreateTransitGatewayMeteringPolicyEntry(ctx, &input)
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Transit Gateway Metering Policy Entry", err.Error())
 		return
 	}
-
-	id := transitGatewayMeteringPolicyEntryCreateResourceID(policyID, strconv.FormatInt(ruleNumber, 10))
-	data.ID = fwflex.StringValueToFramework(ctx, id)
-
-	entry := output.TransitGatewayMeteringPolicyEntry
-	data.State = fwflex.StringValueToFramework(ctx, string(entry.State))
-	transitGatewayMeteringPolicyEntryFlattenRule(ctx, entry.MeteringPolicyRule, &data)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -199,13 +166,8 @@ func (r *transitGatewayMeteringPolicyEntryResource) Read(ctx context.Context, re
 
 	conn := r.Meta().EC2Client(ctx)
 
-	policyID, ruleNumberStr, err := transitGatewayMeteringPolicyEntryParseResourceID(data.ID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError("parsing EC2 Transit Gateway Metering Policy Entry ID", err.Error())
-		return
-	}
-
-	entry, err := findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx, conn, policyID, ruleNumberStr)
+	policyID, ruleNumber := fwflex.StringValueFromFramework(ctx, data.TransitGatewayMeteringPolicyID), intflex.Int32ValueToStringValue(fwflex.Int32ValueFromFrameworkInt64(ctx, data.PolicyRuleNumber))
+	entry, err := findTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx, conn, policyID, ruleNumber)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -214,13 +176,18 @@ func (r *transitGatewayMeteringPolicyEntryResource) Read(ctx context.Context, re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Transit Gateway Metering Policy Entry (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Transit Gateway Metering Policy (%s) Entry (%s)", policyID, ruleNumber), err.Error())
 		return
 	}
 
-	data.MeteredAccount = fwtypes.StringEnumValue(entry.MeteredAccount)
-	data.State = fwflex.StringValueToFramework(ctx, string(entry.State))
-	transitGatewayMeteringPolicyEntryFlattenRule(ctx, entry.MeteringPolicyRule, &data)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, entry, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(fwflex.Flatten(ctx, entry.MeteringPolicyRule, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -234,23 +201,12 @@ func (r *transitGatewayMeteringPolicyEntryResource) Delete(ctx context.Context, 
 
 	conn := r.Meta().EC2Client(ctx)
 
-	policyID, ruleNumberStr, err := transitGatewayMeteringPolicyEntryParseResourceID(data.ID.ValueString())
-	if err != nil {
-		response.Diagnostics.AddError("parsing EC2 Transit Gateway Metering Policy Entry ID", err.Error())
-		return
-	}
-
-	ruleNumber, err := strconv.ParseInt(ruleNumberStr, 10, 32)
-	if err != nil {
-		response.Diagnostics.AddError("parsing EC2 Transit Gateway Metering Policy Entry rule number", err.Error())
-		return
-	}
-
+	policyID, ruleNumber := fwflex.StringValueFromFramework(ctx, data.TransitGatewayMeteringPolicyID), fwflex.Int32ValueFromFrameworkInt64(ctx, data.PolicyRuleNumber)
 	input := ec2.DeleteTransitGatewayMeteringPolicyEntryInput{
+		PolicyRuleNumber:               aws.Int32(ruleNumber),
 		TransitGatewayMeteringPolicyId: aws.String(policyID),
-		PolicyRuleNumber:               aws.Int32(int32(ruleNumber)),
 	}
-	_, err = conn.DeleteTransitGatewayMeteringPolicyEntry(ctx, &input)
+	_, err := conn.DeleteTransitGatewayMeteringPolicyEntry(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMeteringPolicyIdNotFound, errCodeInvalidTransitGatewayMeteringPolicyEntryNotFound) ||
 		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "RuleNumber provided does not exists") {
@@ -258,81 +214,39 @@ func (r *transitGatewayMeteringPolicyEntryResource) Delete(ctx context.Context, 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Transit Gateway Metering Policy Entry (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Transit Gateway Metering Policy (%s) Entry (%d)", policyID, ruleNumber), err.Error())
 		return
 	}
 }
 
 func (r *transitGatewayMeteringPolicyEntryResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	policyID, ruleNumberStr, err := transitGatewayMeteringPolicyEntryParseResourceID(request.ID)
+	const (
+		transitGatewayMeteringPolicyEntryIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, transitGatewayMeteringPolicyEntryIDParts, true)
+
 	if err != nil {
-		response.Diagnostics.AddError("importing EC2 Transit Gateway Metering Policy Entry", err.Error())
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
-	ruleNumber, err := strconv.ParseInt(ruleNumberStr, 10, 64)
-	if err != nil {
-		response.Diagnostics.AddError("importing EC2 Transit Gateway Metering Policy Entry", fmt.Sprintf("invalid rule number %q: %s", ruleNumberStr, err))
-		return
-	}
-
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("transit_gateway_metering_policy_id"), policyID)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("policy_rule_number"), ruleNumber)...)
-}
-
-const transitGatewayMeteringPolicyEntryIDSeparator = "_"
-
-func transitGatewayMeteringPolicyEntryCreateResourceID(policyID, ruleNumber string) string {
-	return strings.Join([]string{policyID, ruleNumber}, transitGatewayMeteringPolicyEntryIDSeparator)
-}
-
-func transitGatewayMeteringPolicyEntryParseResourceID(id string) (string, string, error) {
-	// Policy IDs look like "tgw-mp-12345678" (hyphens, no underscores).
-	// Rule numbers are integers. Separator is "_".
-	idx := strings.LastIndex(id, transitGatewayMeteringPolicyEntryIDSeparator)
-	if idx < 1 || idx >= len(id)-1 {
-		return "", "", fmt.Errorf("invalid EC2 Transit Gateway Metering Policy Entry ID: %q, expected POLICY-ID_RULE-NUMBER", id)
-	}
-	return id[:idx], id[idx+1:], nil
-}
-
-// transitGatewayMeteringPolicyEntryFlattenRule sets the traffic-matching rule fields
-// in the model from the AWS SDK MeteringPolicyRule struct.
-func transitGatewayMeteringPolicyEntryFlattenRule(ctx context.Context, rule *awstypes.TransitGatewayMeteringPolicyRule, data *transitGatewayMeteringPolicyEntryResourceModel) {
-	if rule == nil {
-		return
-	}
-	data.DestinationCidrBlock = fwflex.StringToFramework(ctx, rule.DestinationCidrBlock)
-	data.DestinationPortRange = fwflex.StringToFramework(ctx, rule.DestinationPortRange)
-	data.DestinationTransitGatewayAttachmentID = fwflex.StringToFramework(ctx, rule.DestinationTransitGatewayAttachmentId)
-	if rule.DestinationTransitGatewayAttachmentType != "" {
-		data.DestinationTransitGatewayAttachmentType = fwtypes.StringEnumValue(rule.DestinationTransitGatewayAttachmentType)
-	}
-	data.Protocol = fwflex.StringToFramework(ctx, rule.Protocol)
-	data.SourceCidrBlock = fwflex.StringToFramework(ctx, rule.SourceCidrBlock)
-	data.SourcePortRange = fwflex.StringToFramework(ctx, rule.SourcePortRange)
-	data.SourceTransitGatewayAttachmentID = fwflex.StringToFramework(ctx, rule.SourceTransitGatewayAttachmentId)
-	if rule.SourceTransitGatewayAttachmentType != "" {
-		data.SourceTransitGatewayAttachmentType = fwtypes.StringEnumValue(rule.SourceTransitGatewayAttachmentType)
-	}
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("transit_gateway_metering_policy_id"), parts[0])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("policy_rule_number"), intflex.StringValueToInt64Value(parts[1]))...)
 }
 
 type transitGatewayMeteringPolicyEntryResourceModel struct {
 	framework.WithRegionModel
-	DestinationCidrBlock                    types.String                                                      `tfsdk:"destination_cidr_block"`
+	DestinationCIDRBlock                    types.String                                                      `tfsdk:"destination_cidr_block"`
 	DestinationPortRange                    types.String                                                      `tfsdk:"destination_port_range"`
 	DestinationTransitGatewayAttachmentID   types.String                                                      `tfsdk:"destination_transit_gateway_attachment_id"`
 	DestinationTransitGatewayAttachmentType fwtypes.StringEnum[awstypes.TransitGatewayAttachmentResourceType] `tfsdk:"destination_transit_gateway_attachment_type"`
-	ID                                      types.String                                                      `tfsdk:"id"`
 	MeteredAccount                          fwtypes.StringEnum[awstypes.TransitGatewayMeteringPayerType]      `tfsdk:"metered_account"`
-	PolicyRuleNumber                        types.Int64                                                       `tfsdk:"policy_rule_number"`
+	PolicyRuleNumber                        types.Int64                                                       `tfsdk:"policy_rule_number" autoflex:",noflatten"`
 	Protocol                                types.String                                                      `tfsdk:"protocol"`
-	SourceCidrBlock                         types.String                                                      `tfsdk:"source_cidr_block"`
+	SourceCIDRBlock                         types.String                                                      `tfsdk:"source_cidr_block"`
 	SourcePortRange                         types.String                                                      `tfsdk:"source_port_range"`
 	SourceTransitGatewayAttachmentID        types.String                                                      `tfsdk:"source_transit_gateway_attachment_id"`
 	SourceTransitGatewayAttachmentType      fwtypes.StringEnum[awstypes.TransitGatewayAttachmentResourceType] `tfsdk:"source_transit_gateway_attachment_type"`
-	State                                   types.String                                                      `tfsdk:"state"`
 	Timeouts                                timeouts.Value                                                    `tfsdk:"timeouts"`
 	TransitGatewayMeteringPolicyID          types.String                                                      `tfsdk:"transit_gateway_metering_policy_id"`
 }

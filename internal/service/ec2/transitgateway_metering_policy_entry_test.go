@@ -5,10 +5,13 @@ package ec2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,16 +55,16 @@ func testAccTransitGatewayMeteringPolicyEntry_basic(t *testing.T, semaphore tfsy
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_rule_number"), knownvalue.Int64Exact(100)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("metered_account"), knownvalue.StringExact(string(awstypes.TransitGatewayMeteringPayerTypeSourceAttachmentOwner))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), knownvalue.StringExact("available")),
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_metering_policy_id", "policy_rule_number"),
 			},
 		},
 	})
@@ -86,7 +90,21 @@ func testAccTransitGatewayMeteringPolicyEntry_disappears(t *testing.T, semaphore
 				Config: testAccTransitGatewayMeteringPolicyEntryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayMeteringPolicyEntryExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayMeteringPolicyEntry, resourceName),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfec2.ResourceTransitGatewayMeteringPolicyEntry, resourceName, func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+						v, ok := is.Attributes["transit_gateway_metering_policy_id"]
+						if !ok {
+							return errors.New(`Identifying attribute "transit_gateway_metering_policy_id" not defined`)
+						}
+						state.SetAttribute(ctx, path.Root("transit_gateway_metering_policy_id"), v)
+
+						v, ok = is.Attributes["policy_rule_number"]
+						if !ok {
+							return errors.New(`Identifying attribute "policy_rule_number" not defined`)
+						}
+						state.SetAttribute(ctx, path.Root("policy_rule_number"), intflex.StringValueToInt64Value(v))
+
+						return nil
+					}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,9 +147,11 @@ func testAccTransitGatewayMeteringPolicyEntry_fullRule(t *testing.T, semaphore t
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_metering_policy_id", "policy_rule_number"),
 			},
 		},
 	})
@@ -170,9 +190,11 @@ func testAccTransitGatewayMeteringPolicyEntry_portRanges(t *testing.T, semaphore
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_metering_policy_id", "policy_rule_number"),
 			},
 		},
 	})
@@ -210,9 +232,11 @@ func testAccTransitGatewayMeteringPolicyEntry_attachmentTypes(t *testing.T, sema
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_metering_policy_id", "policy_rule_number"),
 			},
 		},
 	})
@@ -253,9 +277,11 @@ func testAccTransitGatewayMeteringPolicyEntry_attachmentIDs(t *testing.T, semaph
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "transit_gateway_metering_policy_id",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "transit_gateway_metering_policy_id", "policy_rule_number"),
 			},
 		},
 	})
@@ -270,12 +296,7 @@ func testAccCheckTransitGatewayMeteringPolicyEntryDestroy(ctx context.Context, t
 				continue
 			}
 
-			policyID, ruleNumber, err := tfec2.TransitGatewayMeteringPolicyEntryParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx, conn, policyID, ruleNumber)
+			_, err := tfec2.FindTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_metering_policy_id"], rs.Primary.Attributes["policy_rule_number"])
 
 			if retry.NotFound(err) {
 				continue
@@ -285,7 +306,7 @@ func testAccCheckTransitGatewayMeteringPolicyEntryDestroy(ctx context.Context, t
 				return err
 			}
 
-			return fmt.Errorf("EC2 Transit Gateway Metering Policy Entry %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EC2 Transit Gateway Metering Policy %s Entry %s still exists", rs.Primary.Attributes["transit_gateway_metering_policy_id"], rs.Primary.Attributes["policy_rule_number"])
 		}
 
 		return nil
@@ -301,12 +322,8 @@ func testAccCheckTransitGatewayMeteringPolicyEntryExists(ctx context.Context, t 
 
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		policyID, ruleNumber, err := tfec2.TransitGatewayMeteringPolicyEntryParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		output, err := tfec2.FindTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_metering_policy_id"], rs.Primary.Attributes["policy_rule_number"])
 
-		output, err := tfec2.FindTransitGatewayMeteringPolicyEntryByTwoPartKey(ctx, conn, policyID, ruleNumber)
 		if err != nil {
 			return err
 		}
