@@ -13,3 +13,7 @@ resource/aws_glue_catalog_table: Add `view_definition` argument
 ```release-note:enhancement
 resource/aws_glue_catalog_table: Add `open_table_format_input.iceberg_input.iceberg_table_input` argument
 ```
+
+```release-note:enhancement
+resource/aws_glue_catalog_table: Change `parameters`, `storage_descriptor`, and `table_type` to Optional and Computed
+```

@@ -258,6 +258,7 @@ func resourceCatalogTable() *schema.Resource {
 			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"partition_index": {
@@ -322,6 +323,7 @@ func resourceCatalogTable() *schema.Resource {
 			"storage_descriptor": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -515,6 +517,7 @@ func resourceCatalogTable() *schema.Resource {
 			"table_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"target_table": {
 				Type:     schema.TypeList,
@@ -642,10 +645,9 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 
 	catalogID, dbName, name := cmp.Or(d.Get(names.AttrCatalogID).(string), c.AccountID(ctx)), d.Get(names.AttrDatabaseName).(string), d.Get(names.AttrName).(string)
 	id := catalogTableCreateResourceID(catalogID, dbName, name)
-	input := &glue.CreateTableInput{
+	input := glue.CreateTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
-		TableInput:   expandTableInput(d),
 	}
 	if v, ok := d.GetOk("open_table_format_input"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.OpenTableFormatInput = expandOpenTableFormatInput(v.([]any)[0].(map[string]any))
@@ -654,7 +656,15 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 		input.PartitionIndexes = expandPartitionIndexes(v.([]any))
 	}
 
-	_, err := conn.CreateTable(ctx, input)
+	if input.OpenTableFormatInput != nil && input.OpenTableFormatInput.IcebergInput != nil && input.OpenTableFormatInput.IcebergInput.CreateIcebergTableInput != nil {
+		// "InvalidInputException: Location information cannot be null while creating an iceberg table".
+		input.Name = aws.String(name)
+	} else {
+		// "InvalidInputException: CreateIcebergTableInput cannot be equal to null".
+		input.TableInput = expandTableInput(d)
+	}
+
+	_, err := conn.CreateTable(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table (%s): %s", id, err)
 	}
@@ -871,6 +881,10 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.Owner = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk(names.AttrParameters); ok {
+		apiObject.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
 	if v, ok := d.GetOk("partition_keys"); ok {
 		apiObject.PartitionKeys = expandColumns(v.([]any))
 	} else if _, ok = d.GetOk("open_table_format_input"); !ok {
@@ -885,10 +899,6 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.StorageDescriptor = expandStorageDescriptor(v.([]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok {
-		apiObject.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
-	}
-
 	if v, ok := d.GetOk("table_type"); ok {
 		apiObject.TableType = aws.String(v.(string))
 	}
@@ -897,16 +907,16 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		apiObject.TargetTable = expandTableIdentifier(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("view_original_text"); ok {
-		apiObject.ViewOriginalText = aws.String(v.(string))
+	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("view_expanded_text"); ok {
 		apiObject.ViewExpandedText = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		apiObject.ViewDefinition = expandViewDefinitionInput(v.([]any)[0].(map[string]any))
+	if v, ok := d.GetOk("view_original_text"); ok {
+		apiObject.ViewOriginalText = aws.String(v.(string))
 	}
 
 	return apiObject
