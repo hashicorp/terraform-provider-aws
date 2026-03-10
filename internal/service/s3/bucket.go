@@ -1175,6 +1175,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
+	//
+	// Bucket Website
+	//
 	if _, ok := d.GetOk("website"); ok {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
