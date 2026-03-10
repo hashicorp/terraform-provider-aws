@@ -73,11 +73,11 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 
 			// Verify access to the Bucket
 			_, err := findBucket(ctx, conn, bucketName)
+			if retry.NotFound(err) {
+				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+				continue
+			}
 			if err != nil {
-				if retry.NotFound(err) {
-					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
-					continue
-				}
 				tflog.Error(ctx, "Reading Resource", map[string]any{
 					"error": err.Error(),
 				})
