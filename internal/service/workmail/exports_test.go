@@ -5,7 +5,11 @@ package workmail
 
 // Exports for use in tests only.
 var (
-	ResourceOrganization = newOrganizationResource
+	ResourceOrganization  = newOrganizationResource
+	ResourceDomain        = newDomainResource
+	ResourceDefaultDomain = newDefaultDomainResource
 
-	FindOrganizationByID = findOrganizationByID
+	FindOrganizationByID     = findOrganizationByID
+	FindDomainByOrgAndName   = findDomainByOrgAndName
+	FindDefaultDomainByOrgID = findDefaultDomainByOrgID
 )

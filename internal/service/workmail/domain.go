@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -37,6 +38,7 @@ func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error
 
 const (
 	ResNameDomain = "Domain"
+	domainIDParts = 2
 )
 
 type domainResource struct {
@@ -47,7 +49,6 @@ type domainResource struct {
 func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -103,32 +104,22 @@ func (r *domainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	orgID := plan.OrganizationId.ValueString()
-	domainName := plan.DomainName.ValueString()
-
-	input := workmail.RegisterMailDomainInput{
-		OrganizationId: aws.String(orgID),
-		DomainName:     aws.String(domainName),
+	var input workmail.RegisterMailDomainInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	_, err := conn.RegisterMailDomain(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, domainName)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DomainName.String())
 		return
 	}
-
-	idParts := []string{orgID, domainName}
-	id, err := intflex.FlattenResourceId(idParts, domainIDParts, false)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, domainName)
-		return
-	}
-	plan.ID = types.StringValue(id)
 
 	// Read back to populate computed fields
-	out, err := findDomainByOrgAndName(ctx, conn, orgID, domainName)
+	out, err := findDomainByOrgAndName(ctx, conn, plan.OrganizationId.String(), plan.DomainName.String())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DomainName.String())
 		return
 	}
 
@@ -149,25 +140,16 @@ func (r *domainResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	orgID, domainName, err := domainParseID(state.ID.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-		return
-	}
-
-	out, err := findDomainByOrgAndName(ctx, conn, orgID, domainName)
+	out, err := findDomainByOrgAndName(ctx, conn, state.OrganizationId.String(), state.DomainName.String())
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.DomainName.String())
 		return
 	}
-
-	state.OrganizationId = types.StringValue(orgID)
-	state.DomainName = types.StringValue(domainName)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
@@ -186,24 +168,19 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	orgID, domainName, err := domainParseID(state.ID.ValueString())
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+	var input workmail.DeregisterMailDomainInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, &state, &input))
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := workmail.DeregisterMailDomainInput{
-		OrganizationId: aws.String(orgID),
-		DomainName:     aws.String(domainName),
-	}
-
-	_, err = conn.DeregisterMailDomain(ctx, &input)
+	_, err := conn.DeregisterMailDomain(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.MailDomainNotFoundException](err) {
 			return
 		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.DomainName.String())
 		return
 	}
 }
@@ -215,21 +192,8 @@ func (r *domainResource) ImportState(ctx context.Context, req resource.ImportSta
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("organization_id"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[1])...)
-}
-
-const (
-	domainIDParts = 2
-)
-
-func domainParseID(id string) (orgID, domainName string, err error) {
-	parts, err := intflex.ExpandResourceId(id, domainIDParts, false)
-	if err != nil {
-		return "", "", err
-	}
-	return parts[0], parts[1], nil
 }
 
 func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, domainName string) (*workmail.GetMailDomainOutput, error) {
@@ -264,13 +228,12 @@ func findDomainByOrgAndName(ctx context.Context, conn *workmail.Client, orgID, d
 }
 
 type domainResourceModel struct {
-	ID                          types.String                                    `tfsdk:"id"`
-	OrganizationId              types.String                                    `tfsdk:"organization_id"`
 	DomainName                  types.String                                    `tfsdk:"domain_name"`
 	DkimVerificationStatus      types.String                                    `tfsdk:"dkim_verification_status"`
-	OwnershipVerificationStatus types.String                                    `tfsdk:"ownership_verification_status"`
 	IsDefault                   types.Bool                                      `tfsdk:"is_default"`
 	IsTestDomain                types.Bool                                      `tfsdk:"is_test_domain"`
+	OrganizationId              types.String                                    `tfsdk:"organization_id"`
+	OwnershipVerificationStatus types.String                                    `tfsdk:"ownership_verification_status"`
 	Records                     fwtypes.ListNestedObjectValueOf[dnsRecordModel] `tfsdk:"records"`
 }
 
