@@ -44,7 +44,7 @@ func ResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
 
 	arn := d.Get("resource_arn").(string)
@@ -71,7 +71,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourcePolicyRead(d, meta)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
 
 	id := d.Id()
@@ -117,7 +117,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
 
 	arn := d.Get("resource_arn").(string)
@@ -141,7 +141,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourcePolicyRead(d, meta)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(d *schema.ResourceData, meta any) error {
 	conn := meta.(*conns.AWSClient).BedrockAgentCoreClient(context.Background())
 
 	arn := d.Id()
