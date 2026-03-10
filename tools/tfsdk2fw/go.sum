@@ -285,8 +285,8 @@ github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.0 h1:z8Yig1cahUXjEg1g34JPCO
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.74.0/go.mod h1:/SfMqAz0ytKbCT02hbjfk4ejmq+e3Uz26Y2RsDvGCOg=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.11 h1:0jmZPwU0LJbN6apUkS15Xo6dGGeocRkkfttJkgSVrXY=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.36.11/go.mod h1:hTkG+QTMaOqotFXFiV0zD0Khzl3bhJf4dtleY3CH978=
-github.com/aws/aws-sdk-go-v2/service/iam v1.53.4 h1:FUWGS7m97SYL0bk9Kb+Q4bVpcSrKOHNiIbEXIRFTRW4=
-github.com/aws/aws-sdk-go-v2/service/iam v1.53.4/go.mod h1:seDE466zJ4haVuAVcRk+yIH4DWb3s6cqt3Od8GxnGAA=
+github.com/aws/aws-sdk-go-v2/service/iam v1.53.5 h1:J8qtztl/SJ6lhk/Rke/F6PgpZ7V6UYq0my0Zc8hdLuc=
+github.com/aws/aws-sdk-go-v2/service/iam v1.53.5/go.mod h1:seDE466zJ4haVuAVcRk+yIH4DWb3s6cqt3Od8GxnGAA=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.3 h1:49Ty0wZtsSGw6s5a2g41a7Rusc8DNjLMXkTQyHHJPoQ=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.36.3/go.mod h1:SmQRp+dMvew7f6kSRkfGnJvlL/dRxfrUUEWMcBkhy9Y=
 github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.51.2 h1:m6HOANG8er1+vu/hG2d87TwrqtcUCk2G2csLT2G/OwU=
@@ -369,8 +369,8 @@ github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.19 h1:Kv5zCgLXQcO88IwWqGJt
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.19/go.mod h1:csvcQANBknUMKeom0XKfe30VkML9c0eYF8xuNxzJTW8=
 github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12 h1:BUd9RyiCSQ3gau/LAh6ZppvuQ1IxjetxpB25pc9YbAg=
 github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.12/go.mod h1:rxCveQsDbPAecIQjIcDlzsH93PrHovX8bz3llcRAgt0=
-github.com/aws/aws-sdk-go-v2/service/mgn v1.39.3 h1:zmRDmRFD8K2U9jRAeP7ZsheNWzcCYJL0FNG8NrpRzAY=
-github.com/aws/aws-sdk-go-v2/service/mgn v1.39.3/go.mod h1:GJRNXCiYcWX+ZYE30m/ENA1O6M989JAp2BS67uY7qjA=
+github.com/aws/aws-sdk-go-v2/service/mgn v1.40.0 h1:K4qiFiWS+0z7sktj+OfIXMLWIQMRr1wkS3q2xilV0hc=
+github.com/aws/aws-sdk-go-v2/service/mgn v1.40.0/go.mod h1:GJRNXCiYcWX+ZYE30m/ENA1O6M989JAp2BS67uY7qjA=
 github.com/aws/aws-sdk-go-v2/service/mpa v1.7.0 h1:WFaQ3undOuH2PXUVBGuTDgsLDz+0R7SfmQAcqr/2bL0=
 github.com/aws/aws-sdk-go-v2/service/mpa v1.7.0/go.mod h1:Ju6Vj/skbEE4IuA1l6t0Pn9SQdgoveWe6ATRQl3k8yQ=
 github.com/aws/aws-sdk-go-v2/service/mq v1.34.17 h1:mW26pSlEZG2OGSoC2ZE0AJs2w8YEXHo1AgJDfGEFQFU=
@@ -401,8 +401,8 @@ github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.10.1 h1:0Vpz0sfYrgHf7
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.10.1/go.mod h1:Eo1qtTesh8GIm27Fh59XmCid9ZB4NZwON1HwLTEf9YQ=
 github.com/aws/aws-sdk-go-v2/service/odb v1.9.1 h1:pqR/tr83UrT4z2Ivk+uC6ASunCUNtno8ywf6UMIUzZI=
 github.com/aws/aws-sdk-go-v2/service/odb v1.9.1/go.mod h1:vpgaOj6Rf65w1Y0XsrBrCUPuVXnNf5N/nuD08UoldCE=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0 h1:rhlLa2SwSeKva0DEUrbRc5DN2bAsIPvcmW7N/c2MUgI=
-github.com/aws/aws-sdk-go-v2/service/opensearch v1.59.0/go.mod h1:ONvZiWIqgJzRaqzynnqCZO7ofBDKJhmeRbrYiGtjFWM=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.60.0 h1:rQyumnSmRkKMTjrIDIXODtJdZWw6mIbDqMaWFkar/rg=
+github.com/aws/aws-sdk-go-v2/service/opensearch v1.60.0/go.mod h1:ONvZiWIqgJzRaqzynnqCZO7ofBDKJhmeRbrYiGtjFWM=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.2 h1:RvgfrAxzsWleE0ve4RQuXfZa/+Y94fIoZ1Uhz4UWdyo=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.2/go.mod h1:3FBfAmkSHi4ZsS3vQW/G0A2NcxfW18PpcpbwKduNqIQ=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.50.4 h1:cxBoPUd3gj7+AmpB0btKhGK/9kbOsiNcgZvoERW6sMI=
