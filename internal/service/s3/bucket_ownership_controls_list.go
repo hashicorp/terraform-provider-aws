@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,7 +51,7 @@ func (l bucketOwnershipControlsListHandler) list(ctx context.Context, request li
 	return func(yield func(list.ListResult) bool) {
 		for bucket, err := range buckets {
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing S3 Bucket Policy resources: %w", err))
+				result := fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("listing S3 Ownership Controls resources: %w", err))
 				yield(result)
 				return
 			}
@@ -63,26 +64,28 @@ func (l bucketOwnershipControlsListHandler) list(ctx context.Context, request li
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			// A Bucket Policy is optionally associated with a Bucket (1:0..1)
-			// So always try to read it to see if it is present.
-			tflog.Info(ctx, "Reading S3 Bucket Policy")
-			policy, err := findBucketOwnershipControls(ctx, conn, bucketName)
-			// if retry.NotFound(err) {
-			// 	tflog.Debug(ctx, "Bucket has no policy, skipping")
-			// 	continue
-			// }
-			if err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
-					"error": err.Error(),
-				})
-				continue
-			}
+			// There is always a Bucket Ownership Control associated with a Bucket (1:1)
+			// So only read it if resource data is requested.
+			if request.IncludeResource {
+				tflog.Info(ctx, "Reading S3 Ownership Controls")
+				policy, err := findBucketOwnershipControls(ctx, conn, bucketName)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					tflog.Error(ctx, "Reading S3 Ownership Controls", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
 
-			if err := resourceBucketOwnershipControlsFlatten(ctx, policy, rd); err != nil {
-				tflog.Error(ctx, "Reading S3 Bucket Policy", map[string]any{
-					"error": err.Error(),
-				})
-				continue
+				if err := resourceBucketOwnershipControlsFlatten(ctx, policy, rd); err != nil {
+					tflog.Error(ctx, "Reading S3 Ownership Controls", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
 			}
 
 			result.DisplayName = bucketName
