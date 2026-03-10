@@ -2519,50 +2519,14 @@ resource "aws_ses_configuration_set" "test" {
   }
 }
 resource "aws_cognito_user_pool" "test" {
-	mfa_configuration = "OFF"
-	name							= %[1]q
-
-	email_configuration {
-		reply_to_email_address = %[5]q
-		source_arn						 = %[6]q
-		from_email_address		 = %[7]q
-		email_sending_account  = %[8]q
-		configuration_set			 = aws_ses_configuration_set.test.name
-	}
-	
-	account_recovery_setting {
-    recovery_mechanism {
-      name     = "verified_email"
-      priority = 1
-    }
-    recovery_mechanism {
-      name     = "verified_phone_number"
-      priority = 2
-    }
-  }
-}
-	`, rName, enabled, message, subject, email, arn, from, account)
-}
-
-func testAccUserPoolConfig_mfaEmailConfigurationEmptyConfiguration(rName string, email, arn, from, account string) string {
-	return fmt.Sprintf(`
-resource "aws_ses_configuration_set" "test" {
-  name = %[1]q
-
-  delivery_options {
-    tls_policy = "Optional"
-  }
-}
-
-resource "aws_cognito_user_pool" "test" {
-  mfa_configuration = "ON"
+  mfa_configuration = "OFF"
   name              = %[1]q
 
   email_configuration {
-    reply_to_email_address = %[2]q
-    source_arn             = %[3]q
-    from_email_address     = %[4]q
-    email_sending_account  = %[5]q
+    reply_to_email_address = %[5]q
+    source_arn             = %[6]q
+    from_email_address     = %[7]q
+    email_sending_account  = %[8]q
     configuration_set      = aws_ses_configuration_set.test.name
   }
 
@@ -2576,10 +2540,43 @@ resource "aws_cognito_user_pool" "test" {
       priority = 2
     }
   }
-
-  email_mfa_configuration {}
+}	`, rName, enabled, message, subject, email, arn, from, account)
 }
-`, rName, email, arn, from, account)
+
+func testAccUserPoolConfig_mfaEmailConfigurationEmptyConfiguration(rName string, email, arn, from, account string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_configuration_set" "test" {
+  name = %[1]q
+
+  delivery_options {
+    tls_policy = "Optional"
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  mfa_configuration = "OFF"
+  name              = %[1]q
+
+  email_configuration {
+    reply_to_email_address = %[5]q
+    source_arn             = %[6]q
+    from_email_address     = %[7]q
+    email_sending_account  = %[8]q
+    configuration_set      = aws_ses_configuration_set.test.name
+  }
+
+  account_recovery_setting {
+    recovery_mechanism {
+      name     = "verified_email"
+      priority = 1
+    }
+    recovery_mechanism {
+      name     = "verified_phone_number"
+      priority = 2
+    }
+  }
+}
+	`, rName, email, arn, from, account)
 }
 
 func testAccUserPoolConfig_passwordHistorySize(rName string, passwordHistorySize int) string {
