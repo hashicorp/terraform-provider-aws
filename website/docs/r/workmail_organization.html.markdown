@@ -99,4 +99,4 @@ Using `terraform import`, import WorkMail Organization using the `organization_i
 % terraform import aws_workmail_organization.example m-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-~> **NOTE:** The `kms_key_arn` and `delete_directory` attributes are not returned by the AWS API and will not be set after import. Add them back to your configuration manually if needed.
+~> **NOTE:** The `kms_key_arn`, `delete_directory`, and `delete_identity_center_application` attributes are not returned by the AWS API and will not be set after import. Add them back to your configuration manually if needed.
