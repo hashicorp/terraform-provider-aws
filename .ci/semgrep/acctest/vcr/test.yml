@@ -15,7 +15,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
@@ -32,7 +31,6 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
 
@@ -49,6 +47,5 @@ rules:
         - "**/*_test.go"
       exclude:
         - "/internal/provider/sdkv2"
-        - "/internal/service/ec2"
         - "/internal/service/networkflowmonitor"
         - "/internal/service/odb"
