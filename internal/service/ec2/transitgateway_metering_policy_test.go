@@ -51,7 +51,6 @@ func testAccTransitGatewayMeteringPolicy_basic(t *testing.T, semaphore tfsync.Se
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrState), knownvalue.StringExact("available")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transit_gateway_metering_policy_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),

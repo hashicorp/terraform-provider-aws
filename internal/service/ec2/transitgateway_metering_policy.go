@@ -25,6 +25,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -53,12 +54,6 @@ func (r *transitGatewayMeteringPolicyResource) Schema(ctx context.Context, reque
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
-			},
-			names.AttrState: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -90,8 +85,8 @@ func (r *transitGatewayMeteringPolicyResource) Create(ctx context.Context, reque
 	conn := r.Meta().EC2Client(ctx)
 
 	input := ec2.CreateTransitGatewayMeteringPolicyInput{
-		TransitGatewayId:  fwflex.StringFromFramework(ctx, data.TransitGatewayID),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayMeteringPolicy),
+		TransitGatewayId:  fwflex.StringFromFramework(ctx, data.TransitGatewayID),
 	}
 
 	if !data.MiddleboxAttachmentIDs.IsNull() && !data.MiddleboxAttachmentIDs.IsUnknown() {
@@ -107,14 +102,10 @@ func (r *transitGatewayMeteringPolicyResource) Create(ctx context.Context, reque
 	id := aws.ToString(output.TransitGatewayMeteringPolicy.TransitGatewayMeteringPolicyId)
 	data.TransitGatewayMeteringPolicyID = fwflex.StringValueToFramework(ctx, id)
 
-	policy, err := waitTransitGatewayMeteringPolicyCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
-	if err != nil {
+	if _, err := waitTransitGatewayMeteringPolicyCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Transit Gateway Metering Policy (%s) create", id), err.Error())
 		return
 	}
-
-	data.State = fwflex.StringValueToFramework(ctx, string(policy.State))
-	data.MiddleboxAttachmentIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, policy.MiddleboxAttachmentIds)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -143,8 +134,8 @@ func (r *transitGatewayMeteringPolicyResource) Read(ctx context.Context, request
 	}
 
 	data.MiddleboxAttachmentIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, policy.MiddleboxAttachmentIds)
-	data.State = fwflex.StringValueToFramework(ctx, string(policy.State))
 	data.TransitGatewayID = fwflex.StringToFramework(ctx, policy.TransitGatewayId)
+
 	setTagsOut(ctx, policy.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -166,15 +157,15 @@ func (r *transitGatewayMeteringPolicyResource) Update(ctx context.Context, reque
 	if !new.MiddleboxAttachmentIDs.Equal(old.MiddleboxAttachmentIDs) {
 		id := fwflex.StringValueFromFramework(ctx, new.TransitGatewayMeteringPolicyID)
 
-		oldIDs := fwflex.ExpandFrameworkStringValueSet(ctx, old.MiddleboxAttachmentIDs)
-		newIDs := fwflex.ExpandFrameworkStringValueSet(ctx, new.MiddleboxAttachmentIDs)
-
-		add, remove := transitGatewayMeteringPolicyAttachmentDiff(oldIDs, newIDs)
+		oldIDs := inttypes.Set[string](fwflex.ExpandFrameworkStringValueSet(ctx, old.MiddleboxAttachmentIDs))
+		newIDs := inttypes.Set[string](fwflex.ExpandFrameworkStringValueSet(ctx, new.MiddleboxAttachmentIDs))
+		add := newIDs.Difference(oldIDs)
+		remove := oldIDs.Difference(newIDs)
 
 		input := ec2.ModifyTransitGatewayMeteringPolicyInput{
-			TransitGatewayMeteringPolicyId: aws.String(id),
 			AddMiddleboxAttachmentIds:      add,
 			RemoveMiddleboxAttachmentIds:   remove,
+			TransitGatewayMeteringPolicyId: aws.String(id),
 		}
 
 		_, err := conn.ModifyTransitGatewayMeteringPolicy(ctx, &input)
@@ -183,14 +174,10 @@ func (r *transitGatewayMeteringPolicyResource) Update(ctx context.Context, reque
 			return
 		}
 
-		policy, err := waitTransitGatewayMeteringPolicyUpdated(ctx, conn, id, r.UpdateTimeout(ctx, new.Timeouts))
-		if err != nil {
+		if _, err := waitTransitGatewayMeteringPolicyUpdated(ctx, conn, id, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Transit Gateway Metering Policy (%s) update", id), err.Error())
 			return
 		}
-
-		new.State = fwflex.StringValueToFramework(ctx, string(policy.State))
-		new.MiddleboxAttachmentIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, policy.MiddleboxAttachmentIds)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -230,34 +217,9 @@ func (r *transitGatewayMeteringPolicyResource) ImportState(ctx context.Context, 
 	resource.ImportStatePassthroughID(ctx, path.Root("transit_gateway_metering_policy_id"), request, response)
 }
 
-// transitGatewayMeteringPolicyAttachmentDiff computes the sets of IDs to add and remove
-// when transitioning from oldIDs to newIDs.
-func transitGatewayMeteringPolicyAttachmentDiff(oldIDs, newIDs []string) (add, remove []string) {
-	oldSet := make(map[string]bool, len(oldIDs))
-	for _, id := range oldIDs {
-		oldSet[id] = true
-	}
-	newSet := make(map[string]bool, len(newIDs))
-	for _, id := range newIDs {
-		newSet[id] = true
-	}
-	for id := range newSet {
-		if !oldSet[id] {
-			add = append(add, id)
-		}
-	}
-	for id := range oldSet {
-		if !newSet[id] {
-			remove = append(remove, id)
-		}
-	}
-	return
-}
-
 type transitGatewayMeteringPolicyResourceModel struct {
 	framework.WithRegionModel
 	MiddleboxAttachmentIDs         fwtypes.SetOfString `tfsdk:"middlebox_attachment_ids"`
-	State                          types.String        `tfsdk:"state"`
 	Tags                           tftags.Map          `tfsdk:"tags"`
 	TagsAll                        tftags.Map          `tfsdk:"tags_all"`
 	Timeouts                       timeouts.Value      `tfsdk:"timeouts"`

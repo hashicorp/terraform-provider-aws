@@ -57,7 +57,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `transit_gateway_metering_policy_id` - EC2 Transit Gateway Metering Policy identifier.
-* `state` - The state of the EC2 Transit Gateway Metering Policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
