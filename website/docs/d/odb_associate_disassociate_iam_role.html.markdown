@@ -26,7 +26,7 @@ Provides details about an AWS Oracle Database@AWS Associate Disassociate IAM Rol
 
 ```terraform
 data "aws_odb_associate_disassociate_iam_role" "example" {
-  composite_arn{
+  composite_arn {
     iam_role_arn = "data.aws_iam_role.arn"
     resource_arn = "aws_odb_cloud_vm_cluster.test.arn"
   }
