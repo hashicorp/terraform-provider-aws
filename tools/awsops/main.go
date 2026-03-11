@@ -13,18 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/tools/awsops/awsops"
 )
 
-type output struct {
-	Resources []resourceBlock `hcl:"resource,block"`
-}
-
-type resourceBlock struct {
-	Type   string   `hcl:"type,label"`
-	Create []string `hcl:"create,optional"`
-	Read   []string `hcl:"read,optional"`
-	Update []string `hcl:"update,optional"`
-	Delete []string `hcl:"delete,optional"`
-}
-
 func main() {
 	log.SetFlags(0)
 
@@ -48,6 +36,18 @@ func main() {
 	} else {
 		fmt.Print(string(hcl))
 	}
+}
+
+type output struct {
+	Resources []resourceBlock `hcl:"resource,block"`
+}
+
+type resourceBlock struct {
+	Type   string   `hcl:"type,label"`
+	Create []string `hcl:"create,optional"`
+	Read   []string `hcl:"read,optional"`
+	Update []string `hcl:"update,optional"`
+	Delete []string `hcl:"delete,optional"`
 }
 
 func formatHCL(results map[string]awsops.ResourceOps) []byte {

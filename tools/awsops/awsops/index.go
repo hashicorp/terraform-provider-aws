@@ -47,22 +47,6 @@ func buildFuncFileIndex(files map[string]*ast.File) map[string]string {
 	return index
 }
 
-// receiverTypeName extracts the type name from a receiver expression,
-// handling both pointer and value receivers.
-func receiverTypeName(expr ast.Expr) string {
-	switch t := expr.(type) {
-	case *ast.StarExpr:
-		return receiverTypeName(t.X)
-	case *ast.Ident:
-		return t.Name
-	case *ast.IndexExpr:
-		return receiverTypeName(t.X)
-	case *ast.IndexListExpr:
-		return receiverTypeName(t.X)
-	}
-	return ""
-}
-
 // buildImportIndex maps import aliases to import paths for all files in the package.
 // The key is the local name (alias or last path component), the value is the import path.
 func buildImportIndex(files map[string]*ast.File) map[string]map[string]string {
@@ -87,6 +71,22 @@ func buildImportIndex(files map[string]*ast.File) map[string]map[string]string {
 	}
 
 	return index
+}
+
+// receiverTypeName extracts the type name from a receiver expression,
+// handling both pointer and value receivers.
+func receiverTypeName(expr ast.Expr) string {
+	switch t := expr.(type) {
+	case *ast.StarExpr:
+		return receiverTypeName(t.X)
+	case *ast.Ident:
+		return t.Name
+	case *ast.IndexExpr:
+		return receiverTypeName(t.X)
+	case *ast.IndexListExpr:
+		return receiverTypeName(t.X)
+	}
+	return ""
 }
 
 func splitImportPath(path string) []string {
